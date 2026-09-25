@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.tmp
+# sitegen が毎回作り直すページ（コミットしない）
+site/index.html
+site/about.html
+site/stats.html
+site/logic.html
+site/targets.html
+site/sitemap.xml
+site/robots.txt
+site/race/
+site/racer/
+site/venue/
+site/tools/
+site/guide/
