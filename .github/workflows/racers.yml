@@ -1,0 +1,27 @@
+name: update-racers
+
+# 選手の氏名・支部・級別（公式の期別成績 fanYYMM.lzh）。期替わり（1月・7月）に合わせて毎月1回確認する
+on:
+  schedule:
+    - cron: "40 20 3 * *"   # 毎月4日 5:40 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  racers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m scraper.fan
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scraper/racers.json
+          git diff --cached --quiet || (git commit -q -m "racers $(TZ=Asia/Tokyo date +%m/%d)" && git pull -q --rebase && git push -q)
