@@ -16,7 +16,7 @@ BASE = "https://www.boatrace.jp/owpc/pc/race"
 SITE_URL = os.environ.get("SITE_URL", "https://example.com")
 UA = f"Mozilla/5.0 (compatible; BoatYosouBot/1.0; +{SITE_URL}/about.html)"
 INTERVAL = float(os.environ.get("FETCH_INTERVAL", "0.5"))
-BUDGET = float(os.environ.get("FETCH_BUDGET", "330"))
+BUDGET = float(os.environ.get("FETCH_BUDGET", "270"))   # 8分の制限に公開(最大2分半)まで収める
 WORKERS = int(os.environ.get("FETCH_WORKERS", "6"))
 
 

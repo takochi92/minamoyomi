@@ -59,9 +59,9 @@ def parse_index(html: str) -> list[dict]:
         grade, timezone = "一般", ""
         for td in tbody.find_all("td"):
             for c in td.get("class") or []:
-                key = c.replace("is-", "")
-                if key in GRADE_CLASSES:
-                    grade = GRADE_LABEL[key]
+                m = re.match(r"is-(SG|PG1|G1|G2|G3|ippan)", c)   # 公式は is-G3b / is-PG1b のように接尾辞がつくことがある
+                if m:
+                    grade = GRADE_LABEL[m.group(1)]
                 if c in TIMEZONE_LABEL:
                     timezone = TIMEZONE_LABEL[c]
         day = ""

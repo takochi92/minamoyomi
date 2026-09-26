@@ -50,7 +50,7 @@ def test_seo_basics(tmp_path):
     assert "20歳未満" in page and "保証するものではありません" in page
     assert "山下 流心" in page
     sm = files["sitemap.xml"]
-    assert sm.count("<url>") == len([p for p in files if p.endswith(".html")])
+    assert sm.count("<url>") == len([p for p in files if p.endswith(".html") and p != "404.html"])
     assert "Sitemap:" in files["robots.txt"]
 
 

@@ -141,3 +141,27 @@ def test_run_cycle(tmp_path, monkeypatch):
         assert "value_hit" in race and race["v_invest"] == 100 * len(race["value"]["bets"])
     stats = json.loads((tmp_path / "stats.json").read_text())
     assert stats["all"]["races"] >= 1
+
+
+def test_midnight_switch(tmp_path, monkeypatch):
+    monkeypatch.setattr(run, "DATA", tmp_path)
+    fake = FakeFetcher()
+    monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
+    run.main(["--now", "2026-09-25T15:14"])
+    # 23時台：当日のまま
+    run.main(["--now", "2026-09-25T23:30"])
+    assert json.loads((tmp_path / "index.json").read_text())["date"] == "20260925"
+    # 0時：翌日の出走表が未公開なら前日を維持
+    monkeypatch.setattr(run, "init_day", lambda f, d: {"date": d, "venues": [{"jcd": "01", "name": "桐生", "races": []}]})
+    run.main(["--now", "2026-09-26T00:05"])
+    assert json.loads((tmp_path / "index.json").read_text())["date"] == "20260925"
+    # 公開されたら一斉に切替、朝のうちに出走表と予想を作る
+    monkeypatch.undo()
+    monkeypatch.setattr(run, "DATA", tmp_path)
+    monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
+    run.main(["--now", "2026-09-26T00:15"])
+    idx = json.loads((tmp_path / "index.json").read_text())
+    assert idx["date"] == "20260926"
+    race = json.loads((tmp_path / "races/20260926/0101.json").read_text())
+    assert race["racelist"] and race["prediction"] and "before" not in race
+    assert (tmp_path / "races/20260925/0101.json").exists()

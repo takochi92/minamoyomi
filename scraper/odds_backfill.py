@@ -13,7 +13,9 @@ from datetime import datetime, timedelta, timezone
 
 from . import odds as O
 from . import parse
-from .fetch import Fetcher
+from concurrent.futures import ThreadPoolExecutor
+
+from .fetch import WORKERS, Fetcher
 from .history import load_all
 
 JST = timezone(timedelta(hours=9))
@@ -23,6 +25,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--max", type=int, default=15000)
     ap.add_argument("--days", type=int, default=365)
+    ap.add_argument("--budget", type=float, default=1200, help="この秒数で打ち切る（続きは次回）")
     a = ap.parse_args(argv)
     today = datetime.now(JST)
     since = (today - timedelta(days=a.days)).strftime("%Y%m%d")
@@ -33,33 +36,44 @@ def main(argv=None):
     todo = sorted(allk - set(have), reverse=True)
     todo_b = sorted(allk - set(have_b), reverse=True)
     print("未取得", len(todo))
-    f = Fetcher(max_requests=a.max)
+    f = Fetcher(max_requests=a.max, budget=a.budget)
     new = defaultdict(dict)
     miss = 0
+
+    def odds_one(k):
+        if f.exhausted:
+            return k, None
+        d, j, r = k.split("-")
+        try:
+            return k, O.parse_odds3t(f.get("odds3t", rno=r, jcd=j, hd=d))
+        except Exception:
+            return k, None
+
+    def before_one(k):
+        if f.exhausted:
+            return k, None
+        d, j, r = k.split("-")
+        try:
+            return k, parse.parse_beforeinfo(f.get("beforeinfo", rno=r, jcd=j, hd=d))
+        except Exception:
+            return k, None
+
     try:
-        for k in todo:
-            if f.exhausted:
-                break
-            d, j, r = k.split("-")
-            v = O.parse_odds3t(f.get("odds3t", rno=r, jcd=j, hd=d))
-            if v:
-                new[d[:6]][k] = v
-            else:
-                miss += 1
-                if miss > 300 and not new:   # 公式に残っていない古い期間に入ったら終了
-                    break
+        with ThreadPoolExecutor(WORKERS) as ex:
+            for k, v in ex.map(odds_one, todo):
+                if v:
+                    new[k[:6]][k] = v
+                elif not f.exhausted:
+                    miss += 1
         newb = {}
-        for k in todo_b:
-            if f.exhausted:
-                break
-            d, j, r = k.split("-")
-            bi = parse.parse_beforeinfo(f.get("beforeinfo", rno=r, jcd=j, hd=d))
-            if bi["start_exhibition"]:
-                w = bi["weather"]
-                newb[k] = {"entry": [s["frame"] for s in bi["start_exhibition"]],
-                           "st": [s["st"] for s in bi["start_exhibition"]],
-                           "tilt": {b["frame"]: b["tilt"] for b in bi["boats"]},
-                           "wind": w.get("wind_speed"), "wind_dir": w.get("wind_dir"), "wave": w.get("wave_cm")}
+        with ThreadPoolExecutor(WORKERS) as ex:
+            for k, bi in ex.map(before_one, todo_b):
+                if bi and bi["start_exhibition"]:
+                    w = bi["weather"]
+                    newb[k] = {"entry": [s["frame"] for s in bi["start_exhibition"]],
+                               "st": [s["st"] for s in bi["start_exhibition"]],
+                               "tilt": {b["frame"]: b["tilt"] for b in bi["boats"]},
+                               "wind": w.get("wind_speed"), "wind_dir": w.get("wind_dir"), "wave": w.get("wave_cm")}
         O.save_before(newb)
         print("直前情報", len(newb))
     finally:

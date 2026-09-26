@@ -322,6 +322,7 @@ class Site:
 {self.reco_block(race, res)}
 <section id="live" class="panel" hidden></section>
 <section id="pick" class="panel" hidden></section>
+{'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
 {self.oriten_block(race)}
@@ -748,11 +749,26 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                 continue
             for p in sorted(day.glob("*.json")):
                 race = load_json(p, {})
-                if race.get("racelist"):
+                if race.get("racelist") or race.get("result"):
                     self.race_page(day.name, race["jcd"], race)
+        # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）
+        d = self.idx.get("date")
+        for v in self.idx.get("venues", []):
+            for r in v.get("races", []):
+                path = f"race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html"
+                if path not in self.files:
+                    stub = {"date": d, "jcd": v["jcd"], "venue": v["name"], "rno": r["rno"], "deadline": r.get("deadline", "")}
+                    if r.get("result"):
+                        stub["result"] = {"trifecta": r["result"], "trifecta_payout": r.get("payout"), "finished": True}
+                    self.race_page(d, v["jcd"], stub)
+
+    def not_found(self):
+        page = Page("404.html")
+        body = f'<h1>ページが見つかりません</h1><p>URLが変わったか、まだ作られていないページです。</p><p><a href="{page.u("index.html")}">今日のレース一覧へ</a></p>'
+        self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
 
     def sitemap(self):
-        urls = [p for p in self.files if p.endswith(".html")]
+        urls = [p for p in self.files if p.endswith(".html") and p != "404.html"]
         today = self.now.strftime("%Y-%m-%d")
         body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{today}</lastmod></url>" for p in sorted(urls))
         self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
@@ -767,6 +783,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.venue_pages()
         self.racer_pages()
         self.static_pages()
+        self.not_found()
         self.sitemap()
         return self.files
 

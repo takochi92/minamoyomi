@@ -154,7 +154,8 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     changed = False
 
     # 1) 出走表
-    if "racelist" not in race and dl - timedelta(hours=2) <= now <= dl + timedelta(minutes=30):
+    # 締切まで2時間以内は必ず、それより先のレースも時間の余裕があれば取る（締切が近い順に処理するので直近が優先）
+    if "racelist" not in race and now <= dl + timedelta(minutes=30):
         rl = parse.parse_racelist(f.racelist(jcd, rno, date))
         if len(rl.get("boats", [])) == 6:
             race["racelist"] = rl
@@ -306,10 +307,23 @@ def main(argv=None):
 
     idx = _load(DATA / "index.json")
     if not idx or idx.get("date") != date:
-        if now.hour < 7:
-            print("race day not started yet")
+        # 日付が変わったら（深夜0時台の実行）その日のレースに切り替え、出走表を一斉に取り込む。
+        # 22時〜0時は前日のまま（当日の結果ページがそのまま見られる）
+        new = init_day(f, date)
+        if not any(v["races"] for v in new["venues"]):
+            # 翌日の出走表がまだ出ていない／取得失敗：前日のページをそのまま残して次回に再挑戦
+            print(f"{date}: race list not published yet; keep {idx.get('date') if idx else '-'}", flush=True)
             return 0
-        idx = init_day(f, date)
+        idx = new
+    else:
+        # 深夜の一斉切替で締切時刻を取り損ねた場を補完
+        for v in idx["venues"]:
+            if not v["races"] and not v.get("cancelled") and not f.exhausted:
+                try:
+                    dl = parse.parse_deadlines(f.racelist(v["jcd"], 1, date))
+                    v["races"] = [{"rno": r, "deadline": t} for r, t in sorted(dl.items())]
+                except Exception:
+                    traceback.print_exc()
 
     # 締切の近い順に処理（リクエスト上限に達しても直近レースを優先）
     jobs = [(v, r) for v in idx["venues"] for r in v["races"]]
