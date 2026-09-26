@@ -1,0 +1,39 @@
+name: update-course-stats
+
+on:
+  schedule:
+    - cron: "15 21 * * *"   # 毎朝 6:15 JST（前日までの競走成績を取り込み）
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "何日分さかのぼって取得するか（初回は 365）"
+        default: "3"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: history
+  cancel-in-progress: false
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: 競走成績を取得してコース戦績を集計
+        run: python -m scraper.history --days ${{ github.event.inputs.days || '3' }}
+      - name: 実力補正のコース巧者スコア（狙い目レーサー用）
+        run: python -m scraper.overperf
+      - name: 前日までの確定オッズと直前情報を保存
+        run: python -m scraper.odds_backfill --days 3 --max 3000
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history scraper/course_stats.json.gz scraper/overperf.json.gz
+          git diff --cached --quiet || (git commit -q -m "course stats $(TZ=Asia/Tokyo date +%m/%d)" && git pull -q --rebase && git push -q)
