@@ -1,0 +1,13 @@
+name: diag-connection
+on: workflow_dispatch
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 公式サイトにつながるか
+        run: |
+          for u in "https://www.boatrace.jp/owpc/pc/race/index?hd=20260926" "https://www1.mbrace.or.jp/od2/K/" "https://race.boatcast.jp/" "https://www.google.com/"; do
+            curl -sS -m 20 -o /dev/null -w "%{http_code} %{time_connect}s %{time_total}s  $u\n" -A "Mozilla/5.0" "$u" || echo "FAIL $u"
+          done
+          curl -sS -m 10 https://ipinfo.io/country || true
