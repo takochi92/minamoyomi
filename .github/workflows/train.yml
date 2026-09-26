@@ -1,0 +1,29 @@
+name: train-model
+on:
+  schedule:
+    - cron: "0 19 1 * *"   # 毎月2日 4:00 JST（最新1年を検証期間にして学習し直す）
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: history
+  cancel-in-progress: false
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: 過去3年のデータで学習・検証
+        run: python -m scraper.train_model
+      - name: オッズ×AIの期待値買いを検証
+        run: python -m scraper.ev_eval
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scraper/model.json scraper/model_report.json
+          git diff --cached --quiet || (git commit -q -m "model $(date +%Y-%m)" && git pull -q --rebase && git push -q)
