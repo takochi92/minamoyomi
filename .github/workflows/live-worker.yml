@@ -1,0 +1,24 @@
+name: deploy-live-worker
+
+# ライブオッズの Worker（worker/）を Cloudflare に公開。worker/ を変更したときと手動で実行
+on:
+  push:
+    paths: ["worker/**"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.LIVE_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node worker/test.mjs
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy --var SITE_URL:${{ vars.SITE_URL }} --var ALLOW_ORIGIN:${{ vars.SITE_URL }}
