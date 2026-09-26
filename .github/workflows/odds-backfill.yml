@@ -1,0 +1,33 @@
+name: odds-backfill
+# 過去1年分の確定オッズと直前情報を、深夜に少しずつ集める（公式サイトへの負荷を抑えるため1秒1リクエスト）
+on:
+  schedule:
+    - cron: "0 16 * * *"   # 毎日 1:00 JST
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "1回で取得する最大リクエスト数"
+        default: "15000"
+permissions:
+  contents: write
+concurrency:
+  group: history
+  cancel-in-progress: false
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m scraper.odds_backfill --max ${{ github.event.inputs.max || '15000' }}
+      - name: 増えたデータで期待値買いを再検証
+        run: python -m scraper.ev_eval
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history/odds history/before scraper/model.json scraper/model_report.json
+          git diff --cached --quiet || (git commit -q -m "odds backfill $(TZ=Asia/Tokyo date +%m/%d)" && git pull -q --rebase && git push -q)
