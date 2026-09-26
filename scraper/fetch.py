@@ -1,7 +1,13 @@
-"""公式サイトへのアクセス。サーバーに負荷をかけないよう 1 リクエストごとに間隔を空ける。"""
+"""公式サイトへのアクセス。
+
+GitHub Actions（米国）から公式サイトまでは1リクエスト約10秒かかる（2026/9/26 実測）。
+そのため同時に数本（WORKERS）まで並行して取り、1回の実行は時間の上限（BUDGET 秒）で打ち切る。
+取り切れなかった分は5分後の次の実行で続きから取る。リクエストの開始は INTERVAL 秒ずつずらす。
+"""
 from __future__ import annotations
 
 import os
+import threading
 import time
 
 import requests
@@ -9,39 +15,51 @@ import requests
 BASE = "https://www.boatrace.jp/owpc/pc/race"
 SITE_URL = os.environ.get("SITE_URL", "https://example.com")
 UA = f"Mozilla/5.0 (compatible; BoatYosouBot/1.0; +{SITE_URL}/about.html)"
-INTERVAL = float(os.environ.get("FETCH_INTERVAL", "1.0"))
+INTERVAL = float(os.environ.get("FETCH_INTERVAL", "0.5"))
+BUDGET = float(os.environ.get("FETCH_BUDGET", "330"))
+WORKERS = int(os.environ.get("FETCH_WORKERS", "6"))
 
 
 class Fetcher:
-    def __init__(self, max_requests: int = 120):
+    def __init__(self, max_requests: int = 400, budget: float | None = None):
         self.s = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(pool_connections=WORKERS, pool_maxsize=WORKERS)
+        self.s.mount("https://", adapter)
         self.s.headers.update({"User-Agent": UA, "Accept-Language": "ja"})
         self.count = 0
         self.max_requests = max_requests
+        self.started = time.time()
+        self.budget = BUDGET if budget is None else budget
         self._last = 0.0
+        self._lock = threading.Lock()
 
     @property
     def exhausted(self) -> bool:
-        return self.count >= self.max_requests
+        return self.count >= self.max_requests or time.time() - self.started > self.budget
+
+    def _slot(self):
+        """リクエストの開始を INTERVAL 秒ずつずらす（並行でも一斉には送らない）"""
+        with self._lock:
+            if self.exhausted:
+                raise RuntimeError("request budget exhausted")
+            wait = self._last + INTERVAL - time.time()
+            if wait > 0:
+                time.sleep(wait)
+            self._last = time.time()
+            self.count += 1
 
     def get(self, page: str, **params) -> str:
-        if self.exhausted:
-            raise RuntimeError("request budget exhausted")
-        wait = INTERVAL - (time.time() - self._last)
-        if wait > 0:
-            time.sleep(wait)
-        for attempt in range(3):
+        for attempt in range(2):
+            self._slot()
             try:
-                self._last = time.time()
-                self.count += 1
-                r = self.s.get(f"{BASE}/{page}", params=params, timeout=20)
+                r = self.s.get(f"{BASE}/{page}", params=params, timeout=(10, 40))
                 r.raise_for_status()
                 r.encoding = "utf-8"
                 return r.text
             except requests.RequestException:
-                if attempt == 2:
+                if attempt == 1:
                     raise
-                time.sleep(3 * (attempt + 1))
+                time.sleep(2)
         raise RuntimeError("unreachable")
 
     def index(self, hd):
@@ -67,11 +85,7 @@ class Fetcher:
 
     def oriten(self, jcd, rno, hd):
         """オリジナル展示データ（一周・まわり足・直線など。各場が計測し BOATCAST が公開）。未公開なら None"""
-        self.count += 1
-        wait = INTERVAL - (time.time() - self._last)
-        if wait > 0:
-            time.sleep(wait)
-        self._last = time.time()
+        self._slot()
         try:
             r = self.s.get(f"https://race.boatcast.jp/txt/{jcd}/bc_oriten_{hd}_{jcd}_{int(rno):02d}.txt", timeout=20)
         except requests.RequestException:

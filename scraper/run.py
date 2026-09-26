@@ -16,12 +16,15 @@ import argparse
 import json
 import shutil
 import sys
+import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from . import parse
-from .fetch import Fetcher
+from concurrent.futures import ThreadPoolExecutor
+
+from .fetch import WORKERS, Fetcher
 from . import odds as O
 from .model import load_model
 from .predict import VENUES, predict
@@ -57,19 +60,21 @@ def race_path(date, jcd, rno) -> Path:
 
 
 def init_day(f: Fetcher, date: str) -> dict:
-    venues = []
-    for v in parse.parse_index(f.index(date)):
-        if v["jcd"] not in VENUES:
-            continue
+    venues = [v for v in parse.parse_index(f.index(date)) if v["jcd"] in VENUES]
+
+    def deadlines(v):
         v["name"] = VENUES[v["jcd"]]["name"]
-        deadlines = {}
+        dl = {}
         if not v["cancelled"]:
             try:
-                deadlines = parse.parse_deadlines(f.racelist(v["jcd"], 1, date))
+                dl = parse.parse_deadlines(f.racelist(v["jcd"], 1, date))
             except Exception:
                 traceback.print_exc()
-        v["races"] = [{"rno": r, "deadline": t} for r, t in sorted(deadlines.items())]
-        venues.append(v)
+        v["races"] = [{"rno": r, "deadline": t} for r, t in sorted(dl.items())]
+        return v
+
+    with ThreadPoolExecutor(WORKERS) as ex:
+        venues = list(ex.map(deadlines, venues))
     return {"date": date, "venues": venues}
 
 
@@ -293,7 +298,7 @@ def prune(today: str):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--now", help="JST 時刻 (例 2026-09-25T15:30)")
-    ap.add_argument("--max-requests", type=int, default=120)
+    ap.add_argument("--max-requests", type=int, default=400)
     a = ap.parse_args(argv)
     now = datetime.fromisoformat(a.now).replace(tzinfo=JST) if a.now else datetime.now(JST)
     date = now.strftime("%Y%m%d")
@@ -310,15 +315,21 @@ def main(argv=None):
     jobs = [(v, r) for v in idx["venues"] for r in v["races"]]
     jobs.sort(key=lambda x: abs((_dl(date, x[1]["deadline"]) - now).total_seconds()))
     summaries = {}
-    for v, r in jobs:
+
+    def one(job):
+        v, r = job
         if f.exhausted:
-            break
+            return
         try:
             race = process_race(f, date, v, r, now)
         except Exception:
-            traceback.print_exc()
+            if not f.exhausted:
+                traceback.print_exc()
             race = _load(race_path(date, v["jcd"], r["rno"])) or {"rno": r["rno"], "deadline": r["deadline"]}
         summaries[(v["jcd"], r["rno"])] = summarize(race)
+
+    with ThreadPoolExecutor(WORKERS) as ex:
+        list(ex.map(one, jobs))
     for v in idx["venues"]:
         v["races"] = [summaries.get((v["jcd"], r["rno"]), r) for r in v["races"]]
 
@@ -329,7 +340,7 @@ def main(argv=None):
         shutil.copyfile(Path(__file__).parent / "model_report.json", DATA / "model_report.json")
     build_stats()
     prune(date)
-    print(f"done: {f.count} requests")
+    print(f"done: {f.count} requests in {time.time() - getattr(f, 'started', time.time()):.0f}s{' (budget reached; rest next run)' if f.exhausted else ''}", flush=True)
     return 0
 
 
