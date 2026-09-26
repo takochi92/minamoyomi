@@ -64,3 +64,19 @@ class Fetcher:
 
     def odds2tf(self, jcd, rno, hd):
         return self.get("odds2tf", rno=rno, jcd=jcd, hd=hd)
+
+    def oriten(self, jcd, rno, hd):
+        """オリジナル展示データ（一周・まわり足・直線など。各場が計測し BOATCAST が公開）。未公開なら None"""
+        self.count += 1
+        wait = INTERVAL - (time.time() - self._last)
+        if wait > 0:
+            time.sleep(wait)
+        self._last = time.time()
+        try:
+            r = self.s.get(f"https://race.boatcast.jp/txt/{jcd}/bc_oriten_{hd}_{jcd}_{int(rno):02d}.txt", timeout=20)
+        except requests.RequestException:
+            return None
+        if r.status_code != 200:
+            return None
+        r.encoding = "utf-8"
+        return r.text

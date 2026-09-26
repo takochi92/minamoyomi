@@ -160,6 +160,13 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     if "racelist" in race and dl - timedelta(minutes=35) <= now < dl and not race.get("before_final"):
         bi = parse.parse_beforeinfo(f.beforeinfo(jcd, rno, date))
         race["before"] = bi
+        if bi["exhibition_done"] and not race.get("oriten"):
+            try:
+                ot = parse.parse_oriten(f.oriten(jcd, rno, date)) if hasattr(f, "oriten") else None
+            except Exception:
+                ot = None
+            if ot:
+                race["oriten"] = ot
         if bi["exhibition_done"] and now >= dl - timedelta(minutes=8):
             race["before_final"] = True
         changed = True

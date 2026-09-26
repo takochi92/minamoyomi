@@ -1,6 +1,6 @@
-# 水面ヨミ ライブオッズ Worker
+# 艇ログ ライブオッズ Worker
 # 初回だけ：npx wrangler kv namespace create LIVE → 出てきた id を下の id に貼る
-name = "minamoyomi-live"
+name = "teilog-live"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
 

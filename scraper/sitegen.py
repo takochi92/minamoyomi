@@ -33,7 +33,7 @@ JST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site"
 DATA = OUT / "data"
-SITE_NAME = "水面ヨミ"
+SITE_NAME = "艇ログ"
 SITE_URL = __import__("os").environ.get("SITE_URL", "https://example.com").rstrip("/")
 SLUG = {"01": "kiryu", "02": "toda", "03": "edogawa", "04": "heiwajima", "05": "tamagawa", "06": "hamanako", "07": "gamagori",
         "08": "tokoname", "09": "tsu", "10": "mikuni", "11": "biwako", "12": "suminoe", "13": "amagasaki", "14": "naruto",
@@ -97,7 +97,7 @@ class Page:
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False):
         nav = [("index.html", "本日のレース"), ("targets.html", "狙い目レーサー"), ("racer/index.html", "選手"),
-               ("tools/composite.html", "合成オッズ計算"), ("stats.html", "的中実績"), ("logic.html", "予想の根拠")]
+               ("stats.html", "的中実績"), ("logic.html", "予想の根拠")]
         navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}>{t}</a>' for h, t in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
@@ -209,6 +209,43 @@ class Site:
 {result}
 <p class="sub">合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。AIの確率が高い順に、合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で最大{r['rule']['max_points']}点（AI確率1%未満、またはAIがオッズの2倍以上に過大評価している目は入れない＝合成オッズを上げるための人気薄の穴埋めはしない）。過去9千レースの検証では、実際の的中率は「AIの見込み」より「オッズからの見込み」に近く出ています。</p></section>"""
 
+    def oriten_block(self, race):
+        """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
+        ot = race.get("oriten")
+        bi = race.get("before") or {}
+        ex = {str(b["frame"]): b.get("exhibit_time") for b in bi.get("boats", [])}
+        if not ot and not any(ex.values()):
+            return ""
+        items = (["展示タイム"] if any(ex.values()) else []) + (ot["items"] if ot else [])
+        cols = {}
+        if any(ex.values()):
+            cols["展示タイム"] = ex
+        for i, it in enumerate(ot["items"] if ot else []):
+            cols[it] = {f: (v[i] if i < len(v) else None) for f, v in ot["rows"].items()}
+        rank = {}
+        for it, col in cols.items():
+            vals = sorted(v for v in col.values() if v)
+            rank[it] = {f: (vals.index(v) + 1 if v else None) for f, v in col.items()}
+        names = {str(b["frame"]): b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
+        head = "".join(f'<th class="r">{e(it)}</th>' for it in items)
+        rows = []
+        for f in map(str, range(1, 7)):
+            cells = []
+            for it in items:
+                v, r = cols[it].get(f), rank[it].get(f)
+                cls = "best" if r == 1 else ("sub" if r and r >= 5 else "")
+                cells.append(f'<td class="r num {cls}">{f"{v:.2f}" if v else "-"}<small class="sub">{f" {r}位" if r else ""}</small></td>')
+            rows.append(f'<tr><td>{bt(int(f))} {e(names.get(f, ""))}</td>{"".join(cells)}</tr>')
+        tops = []
+        for it in items:
+            best = [f for f, r in rank[it].items() if r == 1]
+            if best:
+                tops.append(f"{it}1位 {'・'.join(best)}号艇")
+        note = "展示タイムは公式、一周・まわり足・直線などは各レース場が独自に計測したオリジナル展示データ（BOATCAST掲載）。数字が小さいほど速い。" if ot else "展示タイムは公式。数字が小さいほど速い。"
+        return (f'<section class="panel"><h2>展示の数字 <small>{e("・".join(tops))}</small></h2>'
+                f'<div class="tbl-wrap"><table><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<p class="sub">{note}</p></section>')
+
     def worry_block(self, p):
         w = p.get("in_worry")
         if not w:
@@ -284,8 +321,10 @@ class Site:
 {self.worry_block(p)}
 {self.reco_block(race, res)}
 <section id="live" class="panel" hidden></section>
+<section id="pick" class="panel" hidden></section>
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
+{self.oriten_block(race)}
 {loss}
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
 {ai_rows}
@@ -296,8 +335,10 @@ class Site:
 <p class="sub"><a href="{vp.u('venue/' + SLUG[jcd] + '.html')}">{e(v)}の水面の特徴とコース別成績 →</a></p>
 <div class="ad-slot" data-slot="race_side"></div></aside></div>"""
         live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""),
-                "bets": [b["combo"] for b in (race.get("reco") or {}).get("bets", [])], "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else []}
-        script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script>'
+                "bets": [b["combo"] for b in (race.get("reco") or {}).get("bets", [])], "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
+                "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
+                "p3": (race.get("prediction") or {}).get("p3")}
+        script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
         if not res:
             script += "<script>setTimeout(function(){location.reload()},300000)</script>"
         self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script))
@@ -336,7 +377,7 @@ class Site:
             st = f'{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span>' if nxt else "本日終了"
         tz = {"ナイター": "ナイター", "モーニング": "モーニング", "ミッドナイト": "ミッドナイト", "サマータイム": "サマー"}.get(v.get("timezone", ""), "")
         g = v.get("grade", "")
-        badges = f'<i class="g g-{e(g)}">{e(g)}</i>' + (f'<i class="tz">{tz}</i>' if tz else "")
+        badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz">{tz}</i>' if tz else "")
         return f'<a class="vt on{" done" if st == "本日終了" else ""}" href="{href}"><b>{e(name)}</b><span>{e(day)}</span><span class="st">{st}</span><span class="bd">{badges}</span></a>'
 
     def index_page(self):
@@ -685,8 +726,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
 <section class="panel"><h2>決まり手</h2><ul class="comments"><li><b>逃げ</b>：1コースの艇がそのまま先頭で1マークを回って勝つ。</li><li><b>差し</b>：先に回った艇の内側を突いて抜け出す。2コースに多い。</li><li><b>捲り</b>：外から内側の艇を一気に回り込む。3・4コースに多い。</li><li><b>捲り差し</b>：外の艇が内の艇を捲りつつ、その内側を差す。</li><li><b>抜き・恵まれ</b>：1マーク後に逆転する、他艇の失格などで繰り上がる。</li></ul></section>
 <section class="panel"><h2>選手のコース別成績を見る</h2><p>同じ選手でもコースによって成績は大きく変わります。<a href="../targets.html">狙い目レーサーまとめ</a>や各選手のページで、コース別の1着率や決まり手を確認できます。</p></section>"""
         self.put(page.path, page.render(f"ボートレースのコースと決まり手の基本｜{SITE_NAME}", "ボートレースのコースごとの有利不利（全国の1着率）と、逃げ・差し・捲り・捲り差しなど決まり手の基本を解説。", body, [("", "コースと決まり手")]))
-        for path, title, route, desc in (("stats.html", "的中実績", "stats", "水面ヨミの推奨買い目の的中率・回収率を、締切前に掲載した買い目だけで毎日自動集計。"),
-                                         ("logic.html", "予想の根拠", "logic", "水面ヨミの予想モデルの仕組みと、過去データでの検証結果（的中率・回収率・コース巧者の分析）を公開。")):
+        for path, title, route, desc in (("stats.html", "的中実績", "stats", "艇ログの推奨買い目の的中率・回収率を、締切前に掲載した買い目だけで毎日自動集計。"),
+                                         ("logic.html", "予想の根拠", "logic", "艇ログの予想モデルの仕組みと、過去データでの検証結果（的中率・回収率・コース巧者の分析）を公開。")):
             page = Page(path)
             body = '<div id="app"><p class="empty">読み込み中…</p></div>'
             script = f'<script>window.__ROUTE__="{route}";</script><script src="app.js"></script>'
@@ -694,7 +735,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         about = (OUT / "about_body.html")
         if about.exists():
             page = Page("about.html")
-            self.put("about.html", page.render(f"このサイトについて｜{SITE_NAME}", "水面ヨミの運営者情報、予想の仕組み、免責事項、プライバシーポリシー。", about.read_text(encoding="utf-8"), [("", "このサイトについて")]))
+            self.put("about.html", page.render(f"このサイトについて｜{SITE_NAME}", "艇ログの運営者情報、予想の仕組み、免責事項、プライバシーポリシー。", about.read_text(encoding="utf-8"), [("", "このサイトについて")]))
 
     # ------------------------------------------------------------ 全体
     def races(self):

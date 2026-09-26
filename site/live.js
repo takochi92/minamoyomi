@@ -39,6 +39,7 @@
       box.innerHTML = `<h2>ライブオッズ <small>締切30分前から1分ごとに更新します</small></h2>`;
       return;
     }
+    window.dispatchEvent(new CustomEvent("liveodds", { detail: snaps[snaps.length - 1] }));
     const cur = snaps[snaps.length - 1], b5 = before(snaps, 5) || snaps[0], first = d.first || snaps[0];
     const left = d.left ?? toMin(R.deadline) - nowMin();
     const tf = (cur.tf || []).map((o, i) => `<tr class="${R.targets.includes(i + 1) ? "tg" : ""}"><td>${bt(i + 1)}${R.targets.includes(i + 1) ? ' <span class="chip tg">狙い目</span>' : ""}</td>

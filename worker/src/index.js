@@ -1,5 +1,5 @@
 /**
- * 水面ヨミ ライブオッズ（Cloudflare Worker）
+ * 艇ログ ライブオッズ（Cloudflare Worker）
  *
  * 1分ごと（cron）：
  *   サイトの data/index.json から「締切30分前〜締切」のレースを選び、公式の3連単・単勝オッズを取得して KV に保存。
@@ -66,7 +66,7 @@ export function addSnap(store, key, deadline, snap) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function getText(url, env) {
-  const res = await fetch(url, { headers: { "User-Agent": `Mozilla/5.0 (compatible; MinamoYomiLive/1.0; +${env.SITE_URL}/about.html)` }, cf: { cacheTtl: 0 } });
+  const res = await fetch(url, { headers: { "User-Agent": `Mozilla/5.0 (compatible; TeilogLive/1.0; +${env.SITE_URL}/about.html)` }, cf: { cacheTtl: 0 } });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
   return res.text();
 }

@@ -248,3 +248,10 @@ main>*,.panel{min-width:0}
 .worry{border-left:4px solid var(--warn);display:grid;gap:6px}
 .worry h2{flex-wrap:wrap}
 .worry p{margin:0}
+button.og-r.pk{font:inherit;color:inherit;background:none;border:0;border-top:1px solid var(--line);width:100%;cursor:pointer;text-align:left}
+button.og-r.pk:hover{background:var(--surface2)}
+button.og-r.pk.on{background:color-mix(in srgb,var(--accent) 22%,transparent);font-weight:700}
+#pick{display:grid;gap:10px}
+#pick .tile.warn b{color:var(--bad)}
+[hidden]{display:none!important}
+#pick .tile b input{font:16px var(--mono)}

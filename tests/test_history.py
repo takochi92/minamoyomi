@@ -181,3 +181,11 @@ def test_allocate_equalizes_payout():
     total = sum(alloc.values())
     comp = 1 / sum(1 / o for o in odds)
     assert abs(comp - 5.03) < 0.01 and mn / total >= 0.97 * comp
+
+
+def test_parse_oriten():
+    from scraper import parse
+    t = "data=\n1\t3\n一　周\tまわり足\t直　線\n1\t寺田　　千恵\t36.35\t7.75\t7.63\n2\t石村　日奈那\t37.64\t8.07\t7.63\n"
+    o = parse.parse_oriten(t)
+    assert o["items"] == ["一周", "まわり足", "直線"] and o["rows"]["1"] == [36.35, 7.75, 7.63]
+    assert parse.parse_oriten("data=\n1\t2\n半周\tまわり足\n1\tA\t0.00\t0.00\n") is None

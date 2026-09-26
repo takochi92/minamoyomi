@@ -296,3 +296,35 @@ def parse_result(html: str) -> dict:
             res["refunded"] = [_t(s) for s in table.select(".numberSet1_number")]
     res["finished"] = res["trifecta"] is not None
     return res
+
+
+# ---------------------------------------------------------------- オリジナル展示データ（BOATCAST）
+def parse_oriten(text: str) -> Optional[dict]:
+    """data=\\n1\\t3\\n一　周\\tまわり足\\t直　線\\n1\\t選手名\\t36.35\\t7.75\\t7.63 ...
+    → {"items": ["一周", "まわり足", "直線"], "rows": {"1": [36.35, 7.75, 7.63], ...}}（数値が出ていなければ None）"""
+    if not text:
+        return None
+    lines = [l for l in text.replace("\r", "").split("\n") if l.strip()]
+    if lines and lines[0].startswith("data="):
+        lines[0] = lines[0][5:]
+        if not lines[0].strip():
+            lines = lines[1:]
+    if len(lines) < 3:
+        return None
+    items = [re.sub(r"\s+", "", unicodedata.normalize("NFKC", x)) for x in lines[1].split("\t") if x.strip()]
+    rows = {}
+    for l in lines[2:]:
+        p = l.split("\t")
+        if len(p) < 2 or not p[0].strip().isdigit():
+            continue
+        vals = []
+        for x in p[2:2 + len(items)]:
+            try:
+                v = float(x)
+                vals.append(v if v > 0 else None)
+            except ValueError:
+                vals.append(None)
+        rows[str(int(p[0]))] = vals
+    if not rows or all(v is None for vs in rows.values() for v in vs):
+        return None
+    return {"items": items, "rows": rows}

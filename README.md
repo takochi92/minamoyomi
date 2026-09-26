@@ -1,4 +1,4 @@
-# 水面ヨミ（ボートレース直前予想サイト）
+# 艇ログ（ボートレース直前予想サイト）
 
 BOAT RACE 公式サイトの出走表・直前情報（展示タイム、スタート展示、風向き、風速、波高）を 5 分おきに自動取得し、
 レース場ごとのコース別成績と照らし合わせて参考買い目を掲載する公開サイトです。
@@ -39,7 +39,7 @@ GitHub Actions（5分おき）
 2. このフォルダの中身をすべてアップロード（`.github` フォルダも忘れずに）。
 
 ### 2. Cloudflare Pages を用意する
-1. Cloudflare アカウントを作成 → Workers & Pages → Create → Pages → **Direct Upload** でプロジェクトを作成（名前例：`minamo-yomi`）。最初は `site` フォルダをドラッグ&ドロップでOK。
+1. Cloudflare アカウントを作成 → Workers & Pages → Create → Pages → **Direct Upload** でプロジェクトを作成（名前例：`teilog`）。最初は `site` フォルダをドラッグ&ドロップでOK。
 2. My Profile → API Tokens → Create Token →「Cloudflare Pages: Edit」権限のトークンを作成。
 3. アカウントID（ダッシュボード右側に表示）を控える。
 
@@ -50,8 +50,8 @@ GitHub Actions（5分おき）
 |---|---|---|
 | Secret | `CLOUDFLARE_API_TOKEN` | 手順2で作ったトークン |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | アカウントID |
-| Variable | `CF_PROJECT_NAME` | `minamo-yomi`（手順2の名前） |
-| Variable | `SITE_URL` | 公開URL（例 `https://minamo-yomi.pages.dev`） |
+| Variable | `CF_PROJECT_NAME` | `teilog`（手順2の名前） |
+| Variable | `SITE_URL` | 公開URL（例 `https://teilog.pages.dev`） |
 
 Settings → Actions → General → Workflow permissions を **Read and write** にします。
 
@@ -69,7 +69,7 @@ Actions タブ → `update-races` → Run workflow で手動実行。成功す�
 - `site/about_body.html` の運営者名・お問い合わせ先を必ず埋めてください（多くの ASP・AdSense の審査項目です）。
 
 ### 7. Google 検索に出す
-- GitHub の Settings → Variables に `SITE_URL`（例 `https://minamoyomi.com`）を登録。canonical・サイトマップのURLになります。
+- GitHub の Settings → Variables に `SITE_URL`（例 `https://teilog.com`）を登録。canonical・サイトマップのURLになります。
 - 公開後、[Google Search Console](https://search.google.com/search-console) にサイトを登録し、`https://あなたのドメイン/sitemap.xml` を送信。
 - ページは `python -m scraper.sitegen` が5分ごとに作り直します（コミットはせず、公開時に生成）。
   - トップ / レース（`race/日付/場-R.html`、30日分）/ 24場（`venue/`）/ 選手約1,600人（`racer/`）/ 狙い目レーサー（`targets.html`）
@@ -82,12 +82,17 @@ Actions タブ → `update-races` → Run workflow で手動実行。成功す�
 
 1. Cloudflare のダッシュボード → Workers & Pages → KV → 「LIVE」という名前で作成し、ID を `worker/wrangler.toml` の `id` に貼る。
 2. GitHub の Variables に `LIVE_ENABLED` = `true` を追加 → Actions の `deploy-live-worker` を手動実行。
-3. 出てきた `https://minamoyomi-live.<あなた>.workers.dev/health` を開き、数分後に `updated` が入り `errors` が空なら公式から取れています
+3. 出てきた `https://teilog-live.<あなた>.workers.dev/health` を開き、数分後に `updated` が入り `errors` が空なら公式から取れています
    （エラーが続く＝公式にはじかれている。その場合はすぐ止めて相談を）。
 4. `site/config.js` の `liveApi` に Worker のURLを入れると、レースページにライブ欄が出ます。
 
 注意：KV の無料枠は書き込み1日1,000回。1分1回なので1日約900回で収まりますが、余裕がないので安定運用は Workers Paid（月5ドル）推奨。
 公式データを1分ごとに再表示するため、本格公開の前に公式へ利用の可否を問い合わせてください。
+
+### 9. オリジナル展示データ（一周・まわり足・直線）
+各レース場が独自に計測し、公式映像サービス BOATCAST（一般財団法人BOATRACE振興会）が公開しているデータ。
+展示が終わったレースで `race.boatcast.jp/txt/{場}/bc_oriten_{日付}_{場}_{R}.txt` を1回だけ取得し、レースページの「展示の数字」に順位つきで表示します。
+BOATCAST のサイトポリシーは「私的使用の範囲を超える無断使用（複製・頒布）禁止」「大量アクセス禁止」です。公開前に公式へ問い合わせる際、**BOATCASTのオリジナル展示データの掲載可否もあわせて確認**してください。許可が出るまでは `scraper/run.py` の取得を止める運用も可能です。
 
 ## ローカルで画面を確認する
 
