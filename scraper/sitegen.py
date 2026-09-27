@@ -96,24 +96,24 @@ class Page:
         return "../" * self.depth + target
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False):
-        nav = [("index.html", "本日のレース"), ("targets.html", "狙い目レーサー"), ("racer/index.html", "選手"),
-               ("stats.html", "的中実績"), ("logic.html", "予想の根拠")]
-        navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}>{t}</a>' for h, t in nav)
+        nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手", "選手", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+               ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>')]
+        navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
         ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": i + 1, "name": t, **({"item": f"{SITE_URL}/{h}"} if h else {})} for i, (h, t) in enumerate(crumbs)]}
         return f"""<!doctype html>
-<html lang="ja"><head>
+<html lang="ja" data-theme="dark"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{SITE_URL}/{self.path if self.path != 'index.html' else ''}">
 {'<meta name="robots" content="noindex">' if noindex else ''}
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
-<meta name="theme-color" content="#0F2233">
+<meta name="theme-color" content="#0B1116">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="{self.u('style.css')}">
 <script>window.SITE_ROOT = "{self.u('')}";</script>
 <script src="{self.u('config.js')}"></script>
