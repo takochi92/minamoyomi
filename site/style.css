@@ -329,3 +329,16 @@ a.urgent,.soon a.urgent{border-color:rgba(255,77,77,.7)!important}
 tr.urgent td{background:rgba(255,77,77,.07)}
 .urgent .num::after{content:""}
 h1.urgent::after{content:"まもなく締切";font-size:12px;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:999px;background:#FF4D4D;color:#fff;vertical-align:middle}
+/* 場のレース一覧：スマホで横スクロールさせない */
+html,body{overflow-x:clip}
+@media (max-width:720px){
+  .venue-block .tbl-wrap{overflow:visible}
+  .rtab,.rtab tbody{display:block;width:100%}
+  .rtab tr{display:grid;grid-template-columns:40px 50px minmax(0,1fr) auto;align-items:center;column-gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .rtab td{padding:0!important;border:0!important;min-width:0}
+  .rtab td:nth-child(3){display:flex;flex-wrap:wrap;gap:4px}
+  .rtab .chip{font-size:11px;padding:2px 7px}
+  .rtab td:last-child{text-align:right;white-space:nowrap;font-size:12px}
+  .rtab td:last-child .bt{width:20px;height:20px;font-size:13px}
+}
+.pill.tilt{color:#7FD1FF;border-color:#7FD1FF}
