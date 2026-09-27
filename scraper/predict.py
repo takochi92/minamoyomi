@@ -42,6 +42,14 @@ def wind_info(wind_dir: Optional[int], speed: Optional[float]) -> dict:
 IN_WORRY = {"in_rc_max": -0.15, "mu_min": 0.82, "mu_strong": 1.21, "hist": {1: 0.289, 2: 0.283}, "races": {1: 893, 2: 325}, "all": 0.551}
 
 
+# 展開メモの条件と、過去2年（約11万レース）の実績。壁＝すぐ内のコース
+TENKAI = {"wall_slow": 4.0, "att_fast": 3.0,
+          "follow": {"まくり": {"n": 1969, "win4": 0.230, "w45": 0.125, "base_w45": 0.046, "top6": 0.265, "base_top6": 0.220},
+                     "まくり差し": {"n": 477, "win4": 0.161, "top6": 0.193, "base_top6": 0.220}},
+          "stats": {3: {"n": 4312, "win": 0.211, "base_win": 0.128, "makuri": 0.088, "base_makuri": 0.052},
+                    4: {"n": 4442, "win": 0.199, "base_win": 0.105, "makuri": 0.120, "base_makuri": 0.049}}}
+
+
 def in_worry(X, course_of, frames, cs_comments):
     ci = [i for i, f in enumerate(frames) if course_of[f] == 1]
     if not ci:
@@ -171,9 +179,32 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         if j:
             j.update({"frame": b["frame"], "name": b["name"], "f_count": b.get("f")})
             fs.append(j)
+    # 展開メモ：内の壁のスタートが遅く、外がスタートで行ける → まくり展開
+    rec = fstart.load_recent()
+    byc = {course_of[b["frame"]]: b for b in boats}
+    fsd = {j["frame"]: j for j in fs}
+    tenkai = []
+    for att in (3, 4):
+        wb, ab = byc.get(att - 1), byc.get(att)
+        if not wb or not ab:
+            continue
+        ws, as_ = rec.get(wb.get("toban", "")), rec.get(ab.get("toban", ""))
+        if not ws or not as_:
+            continue
+        wf = fsd.get(wb["frame"])
+        wall_slow = ws[1] >= TENKAI["wall_slow"] or bool(wf and wf.get("slow"))
+        if wall_slow and as_[1] <= TENKAI["att_fast"]:
+            st = TENKAI["stats"][att]
+            tenkai.append({"att": ab["frame"], "att_course": att, "att_name": ab["name"], "att_rank": as_[1],
+                           "wall": wb["frame"], "wall_course": att - 1, "wall_name": wb["name"], "wall_rank": ws[1],
+                           "wall_f": bool(wf and wf.get("slow")), **st})
+            if att == 4 and len(as_) >= 4:
+                mk, ms = as_[2], as_[3]
+                tenkai[-1]["style"] = "まくり" if mk / (mk + ms) >= 0.65 else ("まくり差し" if ms / (mk + ms) >= 0.65 else "両方")
+                tenkai[-1]["style_n"] = [mk, ms]
     iw = in_worry(X, course_of, frames, cs_comments)
     for j in fs:
-        if j["course"] == 1 and j["slow"]:
+        if j["course"] == 1 and j["slow"] and j["n"] >= 3:
             why = f"1コースの{j['name']}はF持ち。F後の1コースはスタート順が平均{j['rank']:.1f}番目（{j['n']}走）と遅め"
             if iw:
                 iw["reasons"] = [why] + iw["reasons"]
@@ -193,6 +224,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "specialists": spec,
         "in_worry": iw,
         "fstart": fs,
+        "tenkai": tenkai,
         "comments": comments,
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},

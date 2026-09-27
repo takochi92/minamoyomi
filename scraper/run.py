@@ -94,7 +94,8 @@ def summarize(race: dict) -> dict:
         rc = race["reco"]
         s["reco"] = {"verdict": rc["verdict"], "comp": rc["comp"], "n": len(rc["bets"]), "top": rc["bets"][0]["combo"] if rc["bets"] else None,
                      "market_hit": rc["market_hit"], "ai_hit": rc["ai_hit"],
-                     "heads": list(dict.fromkeys(b["combo"][0] for b in rc["bets"]))}
+                     "heads": list(dict.fromkeys(b["combo"][0] for b in rc["bets"])),
+                     "boats": sorted({int(x) for b in rc["bets"] for x in b["combo"].split("-")})}
         if "r_hit" in race:
             s["reco"]["hit"] = race["r_hit"]
     if pred and pred.get("in_worry"):

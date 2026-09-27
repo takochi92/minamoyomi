@@ -204,6 +204,11 @@ class Site:
         if not r:
             return '<section class="panel vp"><h2>推奨買い目 <small>締切35分前からオッズを見て、合成オッズ5倍以上になるように組みます</small></h2></section>'
         head = f'<small>{e(r.get("at", ""))}時点のオッズ{"（暫定。締切7分前以降で確定）" if r.get("final") is False else ""}</small>'
+        if r["verdict"] == "購入非推奨" and (race.get("prediction") or {}).get("in_worry"):
+            return (f'<section class="panel vp skip"><h2>見送り（イン人気過剰） {head}</h2>'
+                    f'<p>本命 {combo(r["top"]["combo"])} が <b class="num">{r["top"]["odds"]}倍</b> まで売れていて、人気はインの逃げに集中しています。'
+                    f'一方で下の「イン不安」の材料があり、この人気ほどインが安泰とは言えません。本命を買うには安すぎ、外から組むには根拠が足りないため、このレースは見送りにしています。</p>'
+                    + (f'<p class="sub">結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>' if res else "") + "</section>")
         if r["verdict"] == "購入非推奨":
             return (f'<section class="panel vp skip"><h2>購入非推奨（ガチガチ） {head}</h2>'
                     f'<p>AIの本命 {combo(r["top"]["combo"])} が <b class="num">{r["top"]["odds"]}倍</b>。人気が集中していて、合成オッズ{r["rule"]["min_comp"]:g}倍以上で組むと本命を外すことになるため、購入をおすすめしません。</p>'
@@ -306,6 +311,34 @@ class Site:
 <ul class="comments">{"".join(li)}</ul>
 <p class="sub">過去2年の検証：F後のスタート順が平均4番目以降の選手が2・3コースにいると、すぐ外の艇の1着率が同じ級別の平均より1〜2ポイント高くなっていました。</p></section>"""
 
+    @staticmethod
+    def follow_line(t):
+        """4コースの攻め方（過去の4コース勝ちの決まり手）から、5・6コースの連れ込み"""
+        sty = t.get("style")
+        if not sty or sty == "両方":
+            return ""
+        mk, ms = t.get("style_n", [0, 0])
+        if sty == "まくり":
+            return (f'<br>{t["att_name"]}は4コースで勝つときの多くがまくり（まくり{mk}回・まくり差し{ms}回）。まくり切ると外の5・6コースが連れて来やすく、'
+                    f'<span class="sub">この形で4がまくり型だと「4が1着で5も3着内」が12.5%（全レース平均4.6%）、6の3着内も26.5%（平均22.0%）。4-5・4-6の筋に注意。</span>')
+        return (f'<br>{t["att_name"]}は4コースで勝つときの多くがまくり差し（まくり{mk}回・まくり差し{ms}回）。内に切り込むため外の5・6は残りにくく、'
+                f'<span class="sub">この形でまくり差し型だと6の3着内は19.3%（平均22.0%）。</span>')
+
+    def tenkai_block(self, p):
+        tk = p.get("tenkai") or []
+        if not tk:
+            return ""
+        li = []
+        for t in tk:
+            wall = f'{bt(t["wall"])} {e(t["wall_name"])}（{t["wall_course"]}コース）は最近のスタートが平均{t["wall_rank"]:.1f}番手' + ("、しかもF持ちでF後はさらに慎重" if t["wall_f"] else "")
+            att = f'{bt(t["att"])} {e(t["att_name"])}（{t["att_course"]}コース）は平均{t["att_rank"]:.1f}番手と早い'
+            li.append(f'<li>{wall}。{att}。<b>{t["att_course"]}コースのまくり展開</b>があります。'
+                      f'<span class="sub">過去2年この形（{t["n"]:,}レース）では{t["att_course"]}コースの1着が{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span>'
+                      + self.follow_line(t) + '</li>')
+        return f"""<section class="panel"><h2>展開メモ <small>スタートの早さから見た、まくりが決まりやすい形</small></h2>
+<ul class="comments">{"".join(li)}</ul>
+<p class="sub">この形はオッズにもある程度織り込まれていて、買い目の決め手にはしていません（推奨買い目はAIの確率とオッズで組んでいます）。展開を読む材料としてどうぞ。</p></section>"""
+
     def race_page(self, d, jcd, race):
         rno = race["rno"]
         v = VENUES[jcd]["name"]
@@ -367,8 +400,9 @@ class Site:
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
 {self.worry_block(p)}
-{self.fstart_block(p)}
 {self.reco_block(race, res)}
+{self.tenkai_block(p)}
+{self.fstart_block(p)}
 <section id="live" class="panel" hidden></section>
 <section id="pick" class="panel" hidden></section>
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
@@ -398,10 +432,18 @@ class Site:
         rows = []
         for r in races:
             rc = r.get("reco")
-            chips = [f'<span class="chip tg">狙い目 {bt(f)}</span>' for f in self.targets_in(jcd, r["rno"])]
-            if r.get("in_worry"):
+            gachi = bool(rc and rc["verdict"] == "購入非推奨")
+            tg = self.targets_in(jcd, r["rno"])
+            if rc:
+                # 狙い目は「推奨買い目に入っている艇」だけ出す（買い目と言うことをそろえる）。ガチガチ（買い目なし）では出さない
+                tg = [f for f in tg if f in (rc.get("boats") or [])] if "boats" in rc else ([] if gachi else tg)
+            chips = [f'<span class="chip tg">狙い目 {bt(f)}</span>' for f in tg]
+            if r.get("in_worry") and gachi:
+                # 人気はインに集中しているのに、イン不安の材料がある → 1つのラベルにまとめる
+                chips.insert(0, '<span class="chip gc">イン人気過剰</span>')
+            elif r.get("in_worry"):
                 chips.insert(0, f'<span class="chip iw{r["in_worry"]}">イン不安</span>')
-            if rc and rc["verdict"] == "購入非推奨":
+            elif gachi:
                 chips.append('<span class="chip gc">ガチガチ</span>')
             if rc and rc["verdict"] == "自信あり":
                 chips.insert(0, '<span class="chip cf">自信あり</span>')

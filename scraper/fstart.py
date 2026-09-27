@@ -24,6 +24,8 @@ F_DAYS = 150        # F後この日数は「F持ち」として扱う
 PRE_DAYS = 180      # F前の比較期間
 SLOW_RANK = 4.0     # F後のスタート順の平均がこれ以上 → スタートが遅い（壁にならない）
 MIN_N = 2           # F後に同じコースでこれだけ走っていれば判定する
+RECENT = 30         # 展開メモ用：直近この走数のスタート順
+RECENT_MIN = 6
 
 
 def _d(s):
@@ -33,18 +35,22 @@ def _d(s):
 def build(races: list) -> dict:
     races = sorted(races, key=lambda r: (r[0], r[1], r[2]))
     starts = defaultdict(list)      # toban -> [(date, course, st, rank)]
+    kim4 = defaultdict(list)        # toban -> 4コースで勝ったときの決まり手（新しい順に最大40）
     lastF = {}
     for r in races:
         E = r[11]
         sts = sorted((e[3], i) for i, e in enumerate(E) if e[3] is not None and e[4] == "")
         rank = {i: k + 1 for k, (_, i) in enumerate(sts)}
+        w = next((e for e in E if e[5] == 1), None)
+        if w and w[2] == 4 and r[3]:
+            kim4[w[1]].append(r[3])
         for i, e in enumerate(E):
             if e[4] == "F":
                 lastF[e[1]] = r[0]
             elif e[3] is not None and i in rank:
                 starts[e[1]].append((r[0], e[2], e[3], rank[i]))
     if not races:
-        return {"asof": "", "racers": {}}
+        return {"asof": "", "racers": {}, "recent": {}}
     asof = races[-1][0]
     lim = (_d(asof) - timedelta(days=F_DAYS)).strftime("%Y%m%d")
     out = {}
@@ -60,7 +66,18 @@ def build(races: list) -> dict:
                 pre[c].append((st, rk))
         summ = lambda xs: [len(xs), round(sum(x[0] for x in xs) / len(xs), 1), round(sum(x[1] for x in xs) / len(xs), 1)] if xs else [0, None, None]
         out[t] = {"f": f, "post": {str(c): summ(v) for c, v in post.items()}, "pre": {str(c): summ(v) for c, v in pre.items()}}
-    return {"asof": asof, "racers": out}
+    # 全選手の直近30走のスタート順（6艇中の何番目に早かったか）の平均
+    recent = {}
+    for t, xs in starts.items():
+        xs = xs[-RECENT:]
+        if len(xs) >= RECENT_MIN:
+            recent[t] = [len(xs), round(sum(x[3] for x in xs) / len(xs), 2)]
+    for t, ks in kim4.items():
+        ks = ks[-40:]
+        mk, ms = ks.count("まくり"), ks.count("まくり差し")
+        if mk + ms >= 3 and t in recent:
+            recent[t].extend([mk, ms])
+    return {"asof": asof, "racers": out, "recent": recent}
 
 
 def load() -> dict:
@@ -68,6 +85,13 @@ def load() -> dict:
         return {}
     with gzip.open(OUT, "rt", encoding="utf-8") as f:
         return json.load(f).get("racers", {})
+
+
+def load_recent() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("recent", {})
 
 
 def judge(info: dict | None, course: int) -> dict | None:
