@@ -30,10 +30,12 @@ jobs:
         run: python -m scraper.history --days ${{ github.event.inputs.days || '3' }}
       - name: 実力補正のコース巧者スコア（狙い目レーサー用）
         run: python -m scraper.overperf
+      - name: F持ち選手のF後スタート集計
+        run: python -m scraper.fstart
       - name: 前日までの確定オッズと直前情報を保存
         run: python -m scraper.odds_backfill --days 3 --max 3000
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add history scraper/course_stats.json.gz scraper/overperf.json.gz
+          git add history scraper/course_stats.json.gz scraper/overperf.json.gz scraper/fstart.json.gz
           git diff --cached --quiet || (git commit -q -m "course stats $(TZ=Asia/Tokyo date +%m/%d)" && git pull -q --rebase && git push -q)
