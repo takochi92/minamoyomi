@@ -310,3 +310,22 @@ td a:hover{color:var(--accent);text-decoration:underline}
 h1{font-weight:700}
 .hero{display:grid;place-items:center;margin:-4px 0 -8px}
 .hero img{width:min(560px,92vw);height:auto;display:block;filter:drop-shadow(0 6px 24px rgba(30,95,191,.25))}
+.chip.hitc{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:800;letter-spacing:.08em}
+.rs{display:inline-flex;align-items:center;gap:6px}
+.rs .bt{width:26px;height:26px;font-size:16px}
+.rs-n{font:700 17px var(--mono);margin-left:4px}
+.brand img{height:34px;width:auto;display:block}
+.top .wrap{flex-wrap:nowrap}
+.tagline{font-size:12px;color:var(--ink2);line-height:1.35;border-left:1px solid var(--line);padding-left:12px;min-width:0}
+@media (max-width:720px){.tagline{font-size:11px;padding-left:10px}.brand{font-size:20px;gap:8px}.brand img{height:30px}}
+@media (max-width:340px){.tagline{display:none}}
+.brand{white-space:nowrap;flex-shrink:0}
+.chip.cf{background:linear-gradient(90deg,#FF6B35,#FF9A3D);color:#fff;border-color:transparent;font-weight:800;letter-spacing:.06em}
+.conf h2{color:#fff}
+.cfc{border:1px solid rgba(255,107,53,.55)!important;box-shadow:0 0 0 1px rgba(255,107,53,.15),0 8px 24px -12px rgba(255,107,53,.45)}
+/* 締切10分前 */
+.urgent,.urgent .num,.urgent strong,.urgent a{color:#FF4D4D!important}
+a.urgent,.soon a.urgent{border-color:rgba(255,77,77,.7)!important}
+tr.urgent td{background:rgba(255,77,77,.07)}
+.urgent .num::after{content:""}
+h1.urgent::after{content:"まもなく締切";font-size:12px;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:999px;background:#FF4D4D;color:#fff;vertical-align:middle}
