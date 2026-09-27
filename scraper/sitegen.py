@@ -330,12 +330,17 @@ class Site:
             return ""
         li = []
         for t in tk:
+            if t.get("type") == "tilt":
+                over = "オッズではそれ以上に売れやすく、頭で買うなら妙味は薄め" if t["mkt"] > t["win"] else "オッズの評価とほぼ同じ"
+                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}（{t["course"]}コース）はチルト<b>{t["tilt"]:+.1f}</b>の伸び型。スタート後の伸びで一気に攻める形があります。'
+                          f'<span class="sub">過去1年、{t["course"]}コースでチルト1.0以上（{t["n"]}回）の1着は{pct(t["win"])}（通常{pct(t["base_win"])}）、3着内は{pct(t["top3"])}（通常{pct(t["base_top3"])}）。{over}（オッズの見込み{pct(t["mkt"])}）。</span></li>')
+                continue
             wall = f'{bt(t["wall"])} {e(t["wall_name"])}（{t["wall_course"]}コース）は最近のスタートが平均{t["wall_rank"]:.1f}番手' + ("、しかもF持ちでF後はさらに慎重" if t["wall_f"] else "")
             att = f'{bt(t["att"])} {e(t["att_name"])}（{t["att_course"]}コース）は平均{t["att_rank"]:.1f}番手と早い'
             li.append(f'<li>{wall}。{att}。<b>{t["att_course"]}コースのまくり展開</b>があります。'
                       f'<span class="sub">過去2年この形（{t["n"]:,}レース）では{t["att_course"]}コースの1着が{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span>'
                       + self.follow_line(t) + '</li>')
-        return f"""<section class="panel"><h2>展開メモ <small>スタートの早さから見た、まくりが決まりやすい形</small></h2>
+        return f"""<section class="panel"><h2>展開メモ <small>スタートの早さ・チルトから見た展開</small></h2>
 <ul class="comments">{"".join(li)}</ul>
 <p class="sub">この形はオッズにもある程度織り込まれていて、買い目の決め手にはしていません（推奨買い目はAIの確率とオッズで組んでいます）。展開を読む材料としてどうぞ。</p></section>"""
 
@@ -350,6 +355,7 @@ class Site:
         bmap = {b["frame"]: b for b in rl["boats"]}
         pb = {b["frame"]: b for b in p.get("boats", [])}
         cs = (p.get("course_stats") or {}).get("boats", {})
+        tilts = {bb["frame"]: bb.get("tilt") for bb in bi.get("boats", [])}
         rows = []
         for f in range(1, 7):
             b, q = bmap.get(f, {}), pb.get(f, {})
@@ -358,6 +364,9 @@ class Site:
             nm = f'<a href="{link}">{e(name)}</a>' if link else e(name)
             c = cs.get(str(f)) or cs.get(f) or {}
             fl = f' <span class="pill lv1">F{b["f"]}</span>' if b.get("f") else ""
+            tl = tilts.get(f)
+            if tl is not None and tl >= 1.0:
+                fl += f' <span class="pill tilt">伸び型 チルト{tl:+.1f}</span>'
             rows.append(f'<tr><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
                         f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{b.get("motor_2") or "-"}</td>'
                         f'<td class="r num">{q.get("exhibit_time") or "-"}</td><td class="r num">{pct(c.get("win"))}<span class="sub">/{c.get("starts", 0)}走</span></td>'
@@ -781,7 +790,7 @@ class Site:
             todayh = ""
             if today:
                 todayh = (f'<section class="panel venue-block"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
-                          f'<div class="tbl-wrap"><table><tbody>{self.race_rows(page, self.idx["date"], jcd, today["races"])}</tbody></table></div></section>')
+                          f'<div class="tbl-wrap"><table class="rtab"><tbody>{self.race_rows(page, self.idx["date"], jcd, today["races"])}</tbody></table></div></section>')
             body = f"""<h1>{e(v['name'])}ボートレース場の特徴とコース別成績</h1>
 <p>{e(lead)}{e(v.get('note', ''))}</p>
 <p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}</p>

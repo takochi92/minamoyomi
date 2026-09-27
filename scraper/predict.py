@@ -42,6 +42,11 @@ def wind_info(wind_dir: Optional[int], speed: Optional[float]) -> dict:
 IN_WORRY = {"in_rc_max": -0.15, "mu_min": 0.82, "mu_strong": 1.21, "hist": {1: 0.289, 2: 0.283}, "races": {1: 893, 2: 325}, "all": 0.551}
 
 
+# チルト1.0以上（伸び型）の過去1年の実績（2025/9〜2026/9・展示の進入・確定オッズのある約9千レース）
+TILT_STATS = {4: {"n": 92, "win": 0.239, "base_win": 0.101, "mkt": 0.183, "top3": 0.598, "base_top3": 0.469},
+              5: {"n": 130, "win": 0.146, "base_win": 0.060, "mkt": 0.143, "top3": 0.469, "base_top3": 0.364},
+              6: {"n": 311, "win": 0.071, "base_win": 0.023, "mkt": 0.100, "top3": 0.299, "base_top3": 0.232}}
+
 # 展開メモの条件と、過去2年（約11万レース）の実績。壁＝すぐ内のコース
 TENKAI = {"wall_slow": 4.0, "att_fast": 3.0,
           "follow": {"まくり": {"n": 1969, "win4": 0.230, "w45": 0.125, "base_w45": 0.046, "top6": 0.265, "base_top6": 0.220},
@@ -202,6 +207,12 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 mk, ms = as_[2], as_[3]
                 tenkai[-1]["style"] = "まくり" if mk / (mk + ms) >= 0.65 else ("まくり差し" if ms / (mk + ms) >= 0.65 else "両方")
                 tenkai[-1]["style_n"] = [mk, ms]
+    # チルトを跳ねた伸び型（4〜6コースでチルト1.0以上）
+    for b in boats:
+        t = bb.get(b["frame"], {}).get("tilt")
+        c = course_of[b["frame"]]
+        if t is not None and t >= 1.0 and c >= 4:
+            tenkai.append({"type": "tilt", "frame": b["frame"], "name": b["name"], "course": c, "tilt": t, **TILT_STATS[c]})
     iw = in_worry(X, course_of, frames, cs_comments)
     for j in fs:
         if j["course"] == 1 and j["slow"] and j["n"] >= 3:
