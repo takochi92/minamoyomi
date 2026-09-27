@@ -33,7 +33,7 @@ JST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site"
 DATA = OUT / "data"
-SITE_NAME = "艇ログ"
+SITE_NAME = "艇ろぐ"
 SITE_URL = __import__("os").environ.get("SITE_URL", "https://example.com").rstrip("/")
 SLUG = {"01": "kiryu", "02": "toda", "03": "edogawa", "04": "heiwajima", "05": "tamagawa", "06": "hamanako", "07": "gamagori",
         "08": "tokoname", "09": "tsu", "10": "mikuni", "11": "biwako", "12": "suminoe", "13": "amagasaki", "14": "naruto",
@@ -118,10 +118,12 @@ class Page:
 <link rel="stylesheet" href="{self.u('style.css')}">
 <script>window.SITE_ROOT = "{self.u('')}";</script>
 <script src="{self.u('config.js')}"></script>
+<script src="{self.u('clock.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="{self.u('index.html')}"><i></i>{SITE_NAME}</a>
+  <a class="brand" href="{self.u('index.html')}"><img src="{self.u('img/boat.webp')}" width="58" height="34" alt=""><span>{SITE_NAME}</span></a>
+  {f'<span class="tagline">{e(TAGLINE)}</span>' if TAGLINE else ''}
   <nav class="nav">{navh}</nav>
 </div></header>
 <main class="wrap">
@@ -135,6 +137,22 @@ class Page:
 </div></footer>
 {script}
 </body></html>"""
+
+
+def _tagline():
+    rep = load_json(Path(__file__).parent / "model_report.json", {}) or {}
+    n = (rep.get("n_train") or 0) + (rep.get("n_test") or 0)
+    per = rep.get("period") or {}
+    try:
+        y0 = int(per["train"][0][:4]); y1 = int(per["test"][1][:4])
+        years = max(1, round((datetime.strptime(per["test"][1], "%Y%m%d") - datetime.strptime(per["train"][0], "%Y%m%d")).days / 365))
+    except Exception:
+        return "全場の出走表・展示・オッズから買い目を判定"
+    man = f"約{n // 10000}万" if n >= 10000 else f"{n:,}"
+    return f"過去{years}年・{man}レースのデータで予想"
+
+
+TAGLINE = _tagline()
 
 
 class Site:
@@ -254,10 +272,39 @@ class Site:
         inb = next((b for b in p.get("boats", []) if b.get("course") == 1), {})
         att = next((b for b in p.get("boats", []) if b.get("frame") == w["attacker"]), {})
         rs = "".join(f"<li>{e(x)}</li>" for x in w.get("reasons", []))
+        if w.get("by") == "fstart":
+            return f"""<section class="panel worry lv1"><h2><span class="chip iw1">イン不安</span> {bt(inb.get('frame', 1))} {e(inb.get('name', ''))}のスタートに注意</h2>
+<ul class="comments">{rs}</ul>
+<p class="sub">過去2年、F持ちでF後のスタートが遅めの1コースは、同じ級別の選手と比べて1着率が6〜9ポイント低く（A1 72→66%、A2 60→51%、B1 41→33%）、決まり手は差しより<b>まくり</b>が増えます（まくり 15→22%）。3連単の配当の中央値も2,490円→3,120円と高めでした。</p></section>"""
         return f"""<section class="panel worry lv{w['level']}"><h2><span class="chip iw{w['level']}">イン不安</span> {bt(inb.get('frame', 1))} {e(inb.get('name', ''))}は逃げ切れない可能性</h2>
 <ul class="comments">{rs}<li>一番かみ合う攻め手は {bt(att.get('frame', 0))} {e(att.get('name', ''))}（{att.get('course', '')}コース）。</li></ul>
 <p class="sub">過去1年で同じ条件（インのコース成績が下位・攻め手がかみ合う）だったレース{w['hist_races']}件では、インの1着は<b>{pct(w['hist_in_win'])}</b>（全レースでは{pct(w['hist_all'])}）。
 ただし3〜4回に1回はインが逃げていて、インを買い目から外すと的中・回収率とも下がったため、推奨買い目は確率どおりに組んでいます。外から狙うかどうかの判断材料にしてください。</p></section>"""
+
+    def fstart_block(self, p):
+        fs = p.get("fstart") or []
+        if not fs:
+            return ""
+        li = []
+        for j in fs:
+            head = f'{bt(j["frame"])} {e(j["name"])}（F{j.get("f_count", 1)}・{j["course"]}コース）'
+            if j.get("slow") is None:
+                li.append(f"<li>{head}：F後にこのコースで走ったのは{j['n']}回で、判断できるほどのデータがありません。</li>")
+                continue
+            pre = f"（F前は平均ST {j['pre_st'] / 100:.2f}・{j['pre_rank']:.1f}番目）" if j.get("pre_n") else ""
+            base = f"F後のこのコース{j['n']}走で平均ST {j['st'] / 100:.2f}・スタート順は平均{j['rank']:.1f}番目{pre}。"
+            if j["slow"] and j["course"] == 1:
+                tail = "スタートで後手を踏みやすく、イン逃げには不安があります。"
+            elif j["slow"] and j["course"] < 6:
+                tail = f"内から壁になりにくく、{j['course'] + 1}コースの攻めが決まりやすい形です。"
+            elif j["slow"]:
+                tail = "スタートは控えめです。"
+            else:
+                tail = "F後もスタートは遅れておらず、F持ちの影響は小さそうです。"
+            li.append(f"<li>{head}：{base}{tail}</li>")
+        return f"""<section class="panel"><h2>F持ちのスタート <small>フライング後、同じコースでのスタートの変化</small></h2>
+<ul class="comments">{"".join(li)}</ul>
+<p class="sub">過去2年の検証：F後のスタート順が平均4番目以降の選手が2・3コースにいると、すぐ外の艇の1着率が同じ級別の平均より1〜2ポイント高くなっていました。</p></section>"""
 
     def race_page(self, d, jcd, race):
         rno = race["rno"]
@@ -317,9 +364,10 @@ class Site:
         desc = f"{jdate(d)}のボートレース{v} {rno}R（締切{race.get('deadline', '')}）の推奨買い目、合成オッズ、展示タイム、選手のコース別成績、結果。"
         vp = Page(page.path)
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
-<h1>{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
+<h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
 {self.worry_block(p)}
+{self.fstart_block(p)}
 {self.reco_block(race, res)}
 <section id="live" class="panel" hidden></section>
 <section id="pick" class="panel" hidden></section>
@@ -355,10 +403,19 @@ class Site:
                 chips.insert(0, f'<span class="chip iw{r["in_worry"]}">イン不安</span>')
             if rc and rc["verdict"] == "購入非推奨":
                 chips.append('<span class="chip gc">ガチガチ</span>')
+            if rc and rc["verdict"] == "自信あり":
+                chips.insert(0, '<span class="chip cf">自信あり</span>')
+            if rc and rc.get("hit") and r.get("result") and self.finished(r):
+                chips.insert(0, '<span class="chip hitc">的中</span>')
             tag = "".join(chips)
             resh = f'{combo(r["result"])}<br><span class="num sub">{yen(r.get("payout"))}</span>' if r.get("result") and self.finished(r) else ""
-            rows.append(f'<tr><td><a href="{self.race_link(page, d, jcd, r["rno"])}"><strong>{r["rno"]}R</strong></a></td><td class="num">{r["deadline"]}</td><td>{tag}</td><td>{resh}</td></tr>')
+            rows.append(f'<tr data-dl="{d} {r["deadline"]}"><td><a href="{self.race_link(page, d, jcd, r["rno"])}"><strong>{r["rno"]}R</strong></a></td><td class="num">{r["deadline"]}</td><td>{tag}</td><td>{resh}</td></tr>')
         return "".join(rows)
+
+    @staticmethod
+    def reco_summary(rc):
+        """一覧用の要約：点数と合成オッズだけ（中身はレースページで）"""
+        return f'<span class="rs"><span class="sub">推奨買い目</span><span class="rs-n">{rc["n"]}点</span></span><span class="num">合成 {rc["comp"]}倍</span>'
 
     def finished(self, r):
         return bool(r.get("result")) and r["deadline"] <= self.now.strftime("%H:%M")
@@ -376,7 +433,7 @@ class Site:
             st = "中止"
         else:
             nxt = next((r for r in v["races"] if not self.finished(r)), None)
-            st = f'{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span>' if nxt else "本日終了"
+            st = f'<span data-dl="{self.idx.get("date")} {nxt["deadline"]}">{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span></span>' if nxt else "本日終了"
         tz = {"ナイター": "ナイター", "モーニング": "モーニング", "ミッドナイト": "ミッドナイト", "サマータイム": "サマー"}.get(v.get("timezone", ""), "")
         g = v.get("grade", "")
         badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz">{tz}</i>' if tz else "")
@@ -406,29 +463,31 @@ class Site:
             if rc and rc["verdict"] == "購入非推奨":
                 line = '<span class="sub">購入非推奨（ガチガチ）</span>'
             elif rc and rc.get("top"):
-                line = f'{combo(rc["top"])}<span class="num">合成 {rc["comp"]}倍</span>'
+                line = self.reco_summary(rc)
             else:
                 line = '<span class="sub">締切35分前に買い目を出します</span>'
-            soonh.append(f'<a href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong>'
+            cfh = '<span class="chip cf">自信あり</span> ' if rc and rc["verdict"] == "自信あり" else ""
+            soonh.append(f'<a data-dl="{d} {r["deadline"]}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{cfh}{e(v["name"])} {r["rno"]}R</strong>'
                          f'<span class="num">{r["deadline"]}締切</span></div><div class="row">{line}</div></a>')
         soonh = "".join(soonh)
         cards = []
+        conf.sort(key=lambda x: (self.finished(x[1]), x[1]["deadline"]))
         for v, r in conf:
             rc = r["reco"]
             hp = ""
             if "hit" in rc:
                 hp = f'<span class="pill {"hit" if rc["hit"] else "miss"}">{"的中" if rc["hit"] else "不的中"}</span>'
-            cards.append(f'<a href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}</span></div>'
-                         f'<div class="row">{combo(rc["top"])}<span class="sub">ほか{rc["n"] - 1}点</span></div><div class="row"><span class="num">合成 {rc["comp"]}倍</span>{hp}</div></a>')
+            cards.append(f'<a class="cfc" data-dl="{d} {r["deadline"]}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong><span class="chip cf">自信あり</span> {e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div>'
+                         f'<div class="row">{self.reco_summary(rc)}</div>{f"<div class=row>{hp}</div>" if hp else ""}</a>')
         cards = "".join(cards)
         targets = self.today_targets(page)
         body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の推奨買い目と合成オッズ</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズとAIの着順予想を突き合わせ、合成オッズ5倍以上で組んだ推奨買い目を全レースに出しています。本命が売れすぎているレースは「購入非推奨」です。</p></section>
+{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示タイムまで見たうえで、合成オッズ5倍以上・AIの見込みが高いレース</small></h2><div class="soon">{cards}</div></section>' if cards else ''}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
-{f'<section style="display:grid;gap:10px"><h2>自信ありレース <small>合成オッズ5倍以上で組めて、AIの見込みが高いレース</small></h2><div class="soon">{cards}</div></section>' if cards else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}

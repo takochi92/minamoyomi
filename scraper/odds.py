@@ -200,6 +200,8 @@ def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None
     mk_hit = sum(q[j] for j in picked)
     if not ok[top] or odds[top] < r["gachi_top_odds"]:
         verdict = "購入非推奨"
+        # ガチガチと判断したレースでは、本命を外して無理に組んだ買い目は出さない
+        picked, comp, ai_hit, mk_hit = [], None, 0.0, 0.0
     elif not picked:
         verdict = "見送り"
     elif ai_hit >= r["confident_ai"]:

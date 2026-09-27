@@ -13,7 +13,7 @@ from typing import Optional
 
 import numpy as np
 
-from . import coursestats
+from . import coursestats, fstart
 from .model import FEATS, FEATURE_LABEL, features, load_model, load_stats, stage_scores
 from .odds import SPECIALIST_RULE
 
@@ -160,6 +160,26 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
     cs_view, cs_comments = coursestats.view(S, jcd, [{"frame": b["frame"], "course": course_of[b["frame"]],
                                                        "toban": b.get("toban", ""), "name": b["name"]} for b in boats])
     comments = cs_comments + _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats)
+
+    # F持ち選手の「F後のスタート」（同じコースでの平均STとスタート順）
+    fs_all = fstart.load()
+    fs = []
+    for b in boats:
+        if not b.get("f"):
+            continue
+        j = fstart.judge(fs_all.get(b.get("toban", "")), course_of[b["frame"]])
+        if j:
+            j.update({"frame": b["frame"], "name": b["name"], "f_count": b.get("f")})
+            fs.append(j)
+    iw = in_worry(X, course_of, frames, cs_comments)
+    for j in fs:
+        if j["course"] == 1 and j["slow"]:
+            why = f"1コースの{j['name']}はF持ち。F後の1コースはスタート順が平均{j['rank']:.1f}番目（{j['n']}走）と遅め"
+            if iw:
+                iw["reasons"] = [why] + iw["reasons"]
+            else:
+                iw = {"level": 1, "attacker": None, "reasons": [why], "hist_in_win": None, "hist_races": None,
+                      "hist_all": IN_WORRY["all"], "by": "fstart"}
     return {
         "stage": "直前" if has_ex else "事前",
         "entry": [f for f, _ in sorted(course_of.items(), key=lambda x: x[1])],
@@ -171,7 +191,8 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "points": len(main) + len(sub),
         "p3": p3,
         "specialists": spec,
-        "in_worry": in_worry(X, course_of, frames, cs_comments),
+        "in_worry": iw,
+        "fstart": fs,
         "comments": comments,
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},
