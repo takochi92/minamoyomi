@@ -303,7 +303,7 @@ class Site:
             elif j["slow"] and j["course"] < 6:
                 tail = f"内から壁になりにくく、{j['course'] + 1}コースの攻めが決まりやすい形です。"
             elif j["slow"]:
-                tail = "スタートは控えめです。"
+                tail = "スタートは控えめですが、6コースから3着に残る分にはF持ちの影響は小さめです。"
             else:
                 tail = "F後もスタートは遅れておらず、F持ちの影響は小さそうです。"
             li.append(f"<li>{head}：{base}{tail}</li>")

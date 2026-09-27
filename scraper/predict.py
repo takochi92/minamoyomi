@@ -251,7 +251,18 @@ def _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats) 
         out.append(f"展示タイム1位は{top['frame']}号艇 {top['name']}（{top['exhibit_time']:.2f}）。")
     else:
         out.append("※展示前の暫定予想です。展示タイムの反映後に更新されます。")
-    fh = [b for b in boats if b.get("f", 0) >= 1]
-    if fh:
-        out.append("F持ち：" + "、".join(f"{b['frame']}号艇" for b in fh) + "（過去データでもF持ちは1着率が下がる）。")
+    # F持ちの一言は、その艇の「このレースでの見込み」と合わせて書く（F＝来ない、と読めないように）
+    rw = {r["frame"]: r for r in rows}
+    for b in boats:
+        if b.get("f", 0) < 1:
+            continue
+        r = rw.get(b["frame"], {})
+        c = course_of[b["frame"]]
+        if c == 1:
+            txt = "スタートを慎重にしやすく、インの逃げには割り引きが必要。"
+        elif r.get("p_top3", 0) >= 0.35:
+            txt = f"頭（1着）は狙いにくいが、3着内は十分（AIの見込み{r['p_top3'] * 100:.0f}%）。外から残る分には影響は小さい。"
+        else:
+            txt = "スタートを慎重にしやすく、自分から攻めて勝ち切る形は取りにくい。"
+        out.append(f"F持ち：{b['frame']}号艇 {b['name']}（{c}コース）。{txt}")
     return out
