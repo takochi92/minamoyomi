@@ -26,16 +26,17 @@ WARMUP = 365
 ABILITY = ["nat", "loc", "A1", "A2", "B2", "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent"]
 WEATHER = ["wave_in", "wave_out", "wind_in", "wind_out"]
 STAGE_COLS = {
-    "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER,
-    "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER,
-    "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER,
+    "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
+    "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
+    "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
 }
 VARIANTS = {
     "コースだけ（場のコース別1着率）": ["base_w"],
     "＋選手力・機力・展示": ["base_w"] + ABILITY,
     "＋選手のコース別成績": ["base_w"] + ABILITY + ["rc_win"],
     "＋インの負け方×攻め手": ["base_w"] + ABILITY + ["rc_win", "mu"],
-    "＋波・風（最終モデル）": STAGE_COLS["1"],
+    "＋波・風": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER,
+    "＋インでの成績（最終モデル）": STAGE_COLS["1"],
 }
 
 

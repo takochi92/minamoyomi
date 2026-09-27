@@ -20,12 +20,12 @@ ATTACK = ["差し", "まくり", "まくり差し"]
 M = 20        # 選手成績を全国平均に寄せる強さ（出走数換算）
 MV = 50       # 場成績を全国平均に寄せる強さ
 FEATS = ["base_w", "base_2", "base_3", "rc_win", "rc_place", "mu", "nat", "loc", "A1", "A2", "B2",
-         "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out"]
+         "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out", "rc_in"]
 FEATURE_LABEL = {
     "base_w": "場のコース別1着率", "rc_win": "選手のコース別成績", "rc_place": "選手のコース別連対", "mu": "インの負け方×攻め手",
     "nat": "全国勝率", "loc": "当地勝率", "A1": "級別", "A2": "級別", "B2": "級別", "motor": "モーター", "boat": "ボート",
     "ex_dev": "展示タイム", "ex_top": "展示タイム", "avg_st": "平均ST", "f_recent": "F持ち",
-    "wave_in": "波・風", "wave_out": "波・風", "wind_in": "波・風", "wind_out": "波・風",
+    "wave_in": "波・風", "wave_out": "波・風", "wind_in": "波・風", "wind_out": "波・風", "rc_in": "インでの成績",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"
@@ -169,6 +169,9 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict]) -> np.ndar
             X[i, fi[name]] = math.log(max(pv, 0.003))
         me = S.rc[toban][c]
         X[i, fi["rc_win"]] = math.log(((me[1] + M * p[c][0]) / (me[0] + M)) / p[c][0])
+        if c == 1:
+            # インは選手ごとの差が大きい（逃げ率17%の選手も70%の選手もいる）ため、インでの成績を別に効かせる
+            X[i, fi["rc_in"]] = X[i, fi["rc_win"]]
         X[i, fi["rc_place"]] = math.log(((me[2] + me[3] + M * (p[c][1] + p[c][2])) / (me[0] + M)) / (p[c][1] + p[c][2]))
         if c != 1 and inb and S.nn:
             num = den = 0.0

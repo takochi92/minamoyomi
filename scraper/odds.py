@@ -174,6 +174,15 @@ def parse_odds2t(html: str) -> dict | None:
 RECO_RULE = {"min_comp": 5.0, "max_points": 10, "min_p": 0.01, "gachi_top_odds": 5.0, "confident_ai": 0.25, "max_over_market": 2.0}
 
 
+def _head_ok(model_p3, picked, min_head=0.5):
+    """買い目の1着が1艇だけ（頭固定）なら、その艇の1着確率が5割以上のときだけ「自信あり」にする"""
+    heads = {COMBOS[j].split("-")[0] for j in picked}
+    if len(heads) != 1:
+        return True
+    h = heads.pop()
+    return sum(p for p, c in zip(model_p3, COMBOS) if c.startswith(h + "-")) >= min_head
+
+
 def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None) -> dict:
     """AIの確率が高い順に3連単を足し、合成オッズ（1/Σ(1/オッズ)）が下限を割らない範囲で最大10点選ぶ。
 
@@ -204,7 +213,7 @@ def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None
         picked, comp, ai_hit, mk_hit = [], None, 0.0, 0.0
     elif not picked:
         verdict = "見送り"
-    elif ai_hit >= r["confident_ai"]:
+    elif ai_hit >= r["confident_ai"] and _head_ok(model_p3, picked):
         verdict = "自信あり"
     else:
         verdict = "推奨"
