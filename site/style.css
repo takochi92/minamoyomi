@@ -308,3 +308,5 @@ td a:hover{color:var(--accent);text-decoration:underline}
 .nav .ic{display:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:720px){.nav .ic{display:block}}
 h1{font-weight:700}
+.hero{display:grid;place-items:center;margin:-4px 0 -8px}
+.hero img{width:min(560px,92vw);height:auto;display:block;filter:drop-shadow(0 6px 24px rgba(30,95,191,.25))}
