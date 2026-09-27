@@ -111,6 +111,7 @@ class Page:
 <link rel="canonical" href="{SITE_URL}/{self.path if self.path != 'index.html' else ''}">
 {'<meta name="robots" content="noindex">' if noindex else ''}
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
+<meta property="og:image" content="{SITE_URL}/img/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
 <meta name="theme-color" content="#0B1116">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
@@ -421,7 +422,8 @@ class Site:
                          f'<div class="row">{combo(rc["top"])}<span class="sub">ほか{rc["n"] - 1}点</span></div><div class="row"><span class="num">合成 {rc["comp"]}倍</span>{hp}</div></a>')
         cards = "".join(cards)
         targets = self.today_targets(page)
-        body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
+        body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
+<section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の推奨買い目と合成オッズ</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズとAIの着順予想を突き合わせ、合成オッズ5倍以上で組んだ推奨買い目を全レースに出しています。本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small></h2><div class="vtiles">{tiles}</div></section>
