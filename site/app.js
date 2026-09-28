@@ -384,7 +384,19 @@
         <text x="34" y="${174 - k * 150}" text-anchor="end" font-size="10" fill="var(--ink2)">${Math.round((maxV * k) / 1000)}k</text>`).join("");
       const vroi = t.v_invest ? t.v_return / t.v_invest : 0;
       $("#stats-body").innerHTML = `
-        <h2>推奨買い目（合成オッズ5倍以上）<small>主な成績・合成オッズ配分（1,000円）で購入した場合</small></h2>
+        <h2>本線・押さえ<small>全レースの本線・押さえを各100円で購入した場合</small></h2>
+        <div class="tiles">
+          <div class="tile"><small>レース</small><b>${(t.races || 0).toLocaleString()}</b></div>
+          <div class="tile"><small>的中</small><b>${t.hits || 0}${t.races ? `<small style="display:inline"> (${pct(t.hits / t.races)})</small>` : ""}</b></div>
+          <div class="tile"><small>回収率</small><b class="${t.invest && t.return >= t.invest ? "up" : "down"}">${t.invest ? pct(t.return / t.invest, 1) : "-"}</b></div>
+        </div>
+        <h2>高回収狙い（検証中）<small>頭固定の買い目を各100円で購入した場合</small></h2>
+        <div class="tiles">
+          <div class="tile"><small>レース</small><b>${(t.a_races || 0).toLocaleString()}</b></div>
+          <div class="tile"><small>的中</small><b>${t.a_hits || 0}</b></div>
+          <div class="tile"><small>回収率</small><b class="${t.a_invest && t.a_return >= t.a_invest ? "up" : "down"}">${t.a_invest ? pct(t.a_return / t.a_invest, 1) : "-"}</b></div>
+        </div>
+        <h2>自信ありの絞り込み（合成オッズ5倍以上）<small>自信ありレースで、合成オッズ配分どおりに購入した場合</small></h2>
         <div class="tiles">
           <div class="tile"><small>推奨したレース</small><b>${(t.r_races || 0).toLocaleString()}</b></div>
           <div class="tile"><small>的中</small><b>${t.r_hits || 0}${t.r_races ? `<small style="display:inline"> (${pct(t.r_hits / t.r_races)})</small>` : ""}</b></div>

@@ -342,3 +342,6 @@ html,body{overflow-x:clip}
   .rtab td:last-child .bt{width:20px;height:20px;font-size:13px}
 }
 .pill.tilt{color:#7FD1FF;border-color:#7FD1FF}
+.chip.an{background:#7C3AED;color:#fff;border-color:transparent;font-weight:800}
+.ana{border-color:rgba(124,58,237,.6)!important}
+.ana .bets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
