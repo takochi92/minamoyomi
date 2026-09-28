@@ -90,6 +90,7 @@ def summarize(race: dict) -> dict:
     if race.get("result", {}).get("finished"):
         s["result"] = race["result"]["trifecta"]
         s["payout"] = race["result"]["trifecta_payout"]
+        s["ninki"] = race["result"].get("trifecta_ninki")
         s["hit"] = race.get("hit")
     if race.get("reco"):
         rc = race["reco"]
@@ -220,7 +221,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 race["win_odds"] = {"at": now.strftime("%H:%M"), "v": [None if x != x else x for x in wo]}
 
     # 3) 結果
-    if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 6:
+    if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:
         res = parse.parse_result(f.result(jcd, rno, date))
         race["result_tries"] = race.get("result_tries", 0) + 1
         race["result"] = res

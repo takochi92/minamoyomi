@@ -550,6 +550,52 @@ class Site:
 <ul class="comments">{"".join(li)}</ul>
 <p class="sub">この形はオッズにもある程度織り込まれていて、買い目の決め手にはしていません（推奨買い目はAIの確率とオッズで組んでいます）。展開を読む材料としてどうぞ。</p></section>"""
 
+    def result_block(self, d, race, p, res, page):
+        """レース結果（出走表のすぐ下）。締切後で結果待ちなら、その旨だけ出す。"""
+        if not res:
+            dl = race.get("deadline") or ""
+            if dl and d == self.idx.get("date") and dl <= self.now.strftime("%H:%M"):
+                return ('<section class="panel result"><h2>レース結果</h2><p class="sub" style="margin:0">締切済み。結果は締切の15分後ごろに反映します（5分ごとに自動更新）。</p></section>')
+            return ""
+        names = {b["frame"]: b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
+        order = res.get("order") or []
+        if not order and res.get("trifecta"):
+            order = [{"place": str(i + 1), "frame": int(x), "name": names.get(int(x), ""), "time": ""} for i, x in enumerate(res["trifecta"].split("-"))]
+        orows = "".join(f'<tr><td class="num">{e(o["place"])}</td><td>{bt(o["frame"])}</td><td>{e(o["name"] or names.get(o["frame"], ""))}</td><td class="r num sub">{e(o.get("time", ""))}</td></tr>' for o in order)
+        nk = res.get("trifecta_ninki")
+        pay = res.get("trifecta_payout") or 0
+        man = ' man' if pay >= 10000 else ''
+        pays = (f'<div class="rpay"><span>3連単</span>{combo(res["trifecta"])}<b class="num{man}">{yen(res.get("trifecta_payout"))}</b><span class="sub">{f"{nk}番人気" if nk else ""}</span></div>')
+        if res.get("exacta"):
+            pays += f'<div class="rpay"><span>2連単</span>{combo(res["exacta"])}<b class="num">{yen(res.get("exacta_payout"))}</b><span></span></div>'
+        if res.get("win"):
+            pays += f'<div class="rpay"><span>単勝</span>{combo(res["win"])}<b class="num">{yen(res.get("win_payout"))}</b><span></span></div>'
+        extra = []
+        if res.get("kimarite"):
+            extra.append(f'決まり手 <b>{e(res["kimarite"])}</b>')
+        if res.get("refunded"):
+            extra.append("返還 " + "".join(bt(x) for x in res["refunded"]))
+        # 予想との答え合わせ
+        bets = p.get("bets") or {}
+        t = res["trifecta"]
+        marks = []
+        for key, lab in (("main", "本線"), ("sub", "押さえ"), ("ana", "穴")):
+            if key == "ana" and not bets.get("ana_reason"):
+                continue
+            if bets.get(key):
+                h = t in [b["combo"] for b in bets[key]]
+                marks.append(f'<span class="pill {"hit" if h else "miss"}">{lab} {"的中" if h else "×"}</span>')
+        rc = race.get("reco") or {}
+        if rc.get("verdict") == "自信あり" and "r_hit" in race:
+            marks.append(f'<span class="pill {"hit" if race["r_hit"] else "miss"}">自信あり {"的中" if race["r_hit"] else "×"}</span>')
+        if "a_hit" in race:
+            marks.append(f'<span class="pill {"hit" if race["a_hit"] else "miss"}">高回収狙い {"的中" if race["a_hit"] else "×"}</span>')
+        exh = '<p class="sub" style="margin:4px 0 0">' + "　".join(extra) + "</p>" if extra else ""
+        mkh = '<div class="rmarks">' + "".join(marks) + "</div>" if marks else ""
+        return (f'<section class="panel result"><h2>レース結果 <small><a href="{page.u(f"results/{d}.html")}">{jdate(d)}の払戻金一覧 →</a></small></h2>'
+                f'<div class="rres"><div class="tbl-wrap"><table class="rorder"><thead><tr><th>着</th><th>枠</th><th>選手</th><th class="r">タイム</th></tr></thead><tbody>{orows}</tbody></table></div>'
+                f'<div class="rpays">{pays}{exh}{mkh}</div></div></section>')
+
     def race_page(self, d, jcd, race):
         rno = race["rno"]
         v = VENUES[jcd]["name"]
@@ -623,6 +669,7 @@ class Site:
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
+{self.result_block(d, race, p, res, page)}
 {self.slit_block(race, page.u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))}
 {self.oriten_block(race)}
 {ai_rows}
@@ -768,7 +815,7 @@ class Site:
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small></h2><div class="vtiles">{tiles}</div></section>
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
@@ -780,6 +827,80 @@ class Site:
 <li><a href="{page.u('targets.html')}">狙い目レーサーまとめ（コース巧者・捲られやすいイン）</a></li></ul></section>"""
         self.put("index.html", page.render(f"今日のボートレース予想｜全場の推奨買い目・合成オッズ｜{SITE_NAME}",
                                            "ボートレース全場の今日の予想。公式データと展示・オッズから、合成オッズ5倍以上の推奨買い目、購入非推奨レース、選手のコース別成績を毎日自動更新。", body))
+
+    # ------------------------------------------------------------ 払戻金一覧
+    def results_pages(self):
+        today = self.idx.get("date")
+        days = sorted(set(getattr(self, "day_races", {}) or {}) | ({today} if today else set()))
+        for i, d in enumerate(days):
+            if d > (today or d):
+                continue
+            venues = {}
+            if d == today:
+                for v in self.idx.get("venues", []):
+                    venues[v["jcd"]] = {"name": v["name"], "day": v.get("day", ""), "grade": v.get("grade", ""), "cancelled": v.get("cancelled"),
+                                        "races": [{"rno": r["rno"], "deadline": r.get("deadline", ""), "result": r.get("result") if self.finished(r) else None,
+                                                   "payout": r.get("payout"), "ninki": r.get("ninki"), "hit": r.get("hit")} for r in v.get("races", [])]}
+            for race in (self.day_races.get(d) or []):
+                jcd = race["jcd"]
+                res = race["result"] if race.get("result", {}).get("finished") else None
+                row = {"rno": race["rno"], "deadline": race.get("deadline", ""), "result": res["trifecta"] if res else None,
+                       "payout": res.get("trifecta_payout") if res else None, "ninki": res.get("trifecta_ninki") if res else None, "hit": race.get("hit")}
+                v = venues.setdefault(jcd, {"name": VENUES[jcd]["name"], "day": "", "grade": "", "races": []})
+                old = next((x for x in v["races"] if x["rno"] == row["rno"]), None)
+                if old is None:
+                    v["races"].append(row)
+                elif row["result"] and not old.get("result"):
+                    old.update({k: row[k] for k in ("result", "payout", "ninki", "hit")})
+                elif row["result"] and old.get("result") and not old.get("ninki"):
+                    old["ninki"] = row["ninki"]
+            self.results_page(d, venues, days[i - 1] if i > 0 else None, days[i + 1] if i + 1 < len(days) else None, d == today)
+
+    def results_page(self, d, venues, prev, nxt, is_today):
+        path = f"results/{d}.html"
+        page = Page(path)
+        cards, n_done, n_man, n_hit, n_all = [], 0, 0, 0, 0
+        for jcd in sorted(venues):
+            v = venues[jcd]
+            rows = []
+            for r in sorted(v["races"], key=lambda x: x["rno"]):
+                n_all += 1
+                href = self.race_link(page, d, jcd, r["rno"])
+                if r.get("result"):
+                    n_done += 1
+                    pay = r.get("payout") or 0
+                    n_man += pay >= 10000
+                    n_hit += bool(r.get("hit"))
+                    hitc = '<span class="chip hitc">的中</span>' if r.get("hit") else ""
+                    rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a></td><td><a href="{href}">{combo(r["result"])}</a></td>'
+                                f'<td class="r num{" man" if pay >= 10000 else ""}">{yen(r.get("payout"))}</td><td class="r num sub">{r.get("ninki") or ""}</td><td>{hitc}</td></tr>')
+                else:
+                    dl = r.get("deadline", "")
+                    st = f'<span data-dl="{d} {dl}">{dl}締切</span>' if is_today and dl else ("中止・結果なし" if not is_today else "")
+                    rows.append(f'<tr class="pend"><td><a href="{href}"><b>{r["rno"]}R</b></a></td><td colspan="4" class="sub num">{st}</td></tr>')
+            if v.get("cancelled"):
+                rows = ['<tr><td colspan="5" class="sub">中止</td></tr>']
+            g = v.get("grade", "")
+            head = f'<a href="{page.u("venue/" + SLUG[jcd] + ".html")}"><b>{e(v["name"])}</b></a>' + (f' <i class="g g-{e(g)}">{e(g)}</i>' if g else "") + f' <span class="sub">{e(v.get("day", ""))}</span>'
+            cards.append(f'<section class="rcard panel"><h3>{head}</h3><table class="rtbl"><thead><tr><th>R</th><th>3連単</th><th class="r">払戻</th><th class="r">人気</th><th></th></tr></thead><tbody>{"".join(rows)}</tbody></table></section>')
+        nav = " ".join(x for x in (
+            f'<a href="{page.u(f"results/{prev}.html")}">← {jdate(prev)}</a>' if prev else "",
+            f'<a href="{page.u(f"results/{nxt}.html")}">{jdate(nxt)} →</a>' if nxt else "") if x)
+        summary = (f'{len(venues)}場・{n_done}/{n_all}R 確定・万舟 <b class="man">{n_man}</b>本・本線押さえ的中 <b>{n_hit}</b>R' if venues else "この日のデータはありません。")
+        body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}</span>
+<h1>{jdate(d)}のボートレース 払戻金一覧</h1>
+<p class="sub">{summary}{'　最終更新 ' + e((self.idx.get('updated_at') or '')[11:]) + '（5分ごとに自動更新）' if is_today else ''}</p>
+<p class="sub">3連単の組番・払戻金・人気。1万円以上（万舟）は赤字、「的中」は艇ろぐの本線・押さえに入っていたレースです。組番をタップするとレースの予想と結果へ。</p>
+{f'<p class="rnav">{nav}</p>' if nav else ''}</section>
+<div class="rgrid">{''.join(cards)}</div>"""
+        script = "<script>setTimeout(function(){location.reload()},300000)</script>" if is_today else ""
+        title = f"{jdate(d)}のボートレース結果・払戻金一覧（全場3連単）｜{SITE_NAME}"
+        desc = f"{jdate(d)}のボートレース全場の3連単の結果・払戻金・人気の一覧。万舟の数と、艇ろぐの予想の的中レースもひと目でわかります。"
+        self.put(path, page.render(title, desc, body, [("", "払戻金一覧")], script=script))
+        if is_today:
+            tp = Page("results.html")
+            body2 = body.replace('href="../', 'href="')
+            self.put("results.html", tp.render(f"今日のボートレース結果・払戻金一覧｜{SITE_NAME}", desc, body2, [("", "本日の払戻金一覧")], script=script))
 
     # ------------------------------------------------------------ 狙い目レーサー
     def rankings(self):
@@ -1222,6 +1343,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         if not base.exists():
             return
         limit = (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d")
+        self.day_races = {}
         for day in sorted(base.iterdir()):
             if not day.is_dir() or day.name < limit:
                 continue
@@ -1229,6 +1351,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                 race = load_json(p, {})
                 if race.get("racelist") or race.get("result"):
                     self.race_page(day.name, race["jcd"], race)
+                if race.get("jcd"):
+                    self.day_races.setdefault(day.name, []).append(race)
         # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）
         d = self.idx.get("date")
         for v in self.idx.get("venues", []):
@@ -1256,6 +1380,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         if self.S is None:
             raise RuntimeError("course_stats.json.gz がありません")
         self.races()
+        self.results_pages()
         self.index_page()
         self.targets_page()
         self.venue_pages()

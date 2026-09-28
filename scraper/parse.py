@@ -280,8 +280,10 @@ def parse_result(html: str) -> dict:
             nums = [_t(s) for s in first.select(".numberSet1_number")]
             pay = _num(_t(first.select_one(".is-payout1")).replace(",", "")) if first.select_one(".is-payout1") else None
             combo = "-".join(nums) if nums else None
+            nk = _num(_t(tds[3])) if len(tds) > 3 else None
             if kind == "3連単" and combo:
                 res["trifecta"], res["trifecta_payout"] = combo, int(pay) if pay else None
+                res["trifecta_ninki"] = int(nk) if nk else None
             elif kind == "2連単" and combo:
                 res["exacta"], res["exacta_payout"] = combo, int(pay) if pay else None
             elif kind == "単勝" and combo:
@@ -294,8 +296,35 @@ def parse_result(html: str) -> dict:
                 res["kimarite"] = _t(tds[0])
         if head.startswith("返還"):
             res["refunded"] = [_t(s) for s in table.select(".numberSet1_number")]
+    res["order"] = _result_order(soup)
     res["finished"] = res["trifecta"] is not None
     return res
+
+
+def _result_order(soup) -> list:
+    """着順表（着・枠・ボートレーサー・レースタイム）。取れなければ空のリスト。"""
+    out = []
+    try:
+        for table in soup.select("table"):
+            head = unicodedata.normalize("NFKC", _t(table.find("thead") or table.find("tr")))
+            if "着" not in head or "枠" not in head or "レースタイム" not in head:
+                continue
+            for tr in table.select("tbody tr"):
+                tds = tr.find_all("td")
+                if len(tds) < 3:
+                    continue
+                place = unicodedata.normalize("NFKC", _t(tds[0]))
+                fr = unicodedata.normalize("NFKC", _t(tds[1]))
+                if not fr.isdigit():
+                    continue
+                spans = tds[2].find_all("span")
+                name = re.sub(r"\s+", "", _t(spans[-1])) if spans else re.sub(r"[\d\s]+", "", _t(tds[2]))
+                tm = unicodedata.normalize("NFKC", _t(tds[3])) if len(tds) > 3 else ""
+                out.append({"place": place, "frame": int(fr), "name": name, "time": tm})
+            break
+    except Exception:
+        return []
+    return out
 
 
 # ---------------------------------------------------------------- オリジナル展示データ（BOATCAST）
