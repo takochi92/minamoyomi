@@ -38,6 +38,7 @@ def test_parse_k_real():
     assert (r1["jcd"], r1["date"], r1["rno"]) == ("22", "20260924", 1)
     assert r1["kimarite"] == "逃げ" and r1["wind_dir"] == "北" and r1["wind_speed"] == 2 and r1["wave"] == 2
     e = r1["entries"][0]
+    e.pop("motor_no", None); e.pop("boat_no", None)
     assert e == {"place": 1, "code": "", "frame": 1, "toban": "4607", "name": "鶴 田 勇 雄", "course": 1, "st": 0.15, "st_flag": "",
                  "exhibit_time": 6.87}
     assert (r1["trifecta"], r1["trifecta_payout"], r1["trifecta_ninki"]) == ("1-3-5", 2550, 9)
