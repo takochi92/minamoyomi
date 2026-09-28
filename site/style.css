@@ -345,3 +345,22 @@ html,body{overflow-x:clip}
 .chip.an{background:#7C3AED;color:#fff;border-color:transparent;font-weight:800}
 .ana{border-color:rgba(124,58,237,.6)!important}
 .ana .bets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+details.cr summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+details.cr summary::before{content:"▸";color:var(--accent)}
+details.cr[open] summary::before{content:"▾"}
+details.cr[open]{border-color:rgba(255,107,53,.5)}
+details.cr table{font-size:13px}
+details.cr th,details.cr td{padding:7px 5px}
+/* 自信あり：これからのレースは横スワイプ、終わったレースは流れる帯 */
+.strip{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.strip a{flex:0 0 min(78%,260px);scroll-snap-align:start;display:grid;gap:6px;text-decoration:none;background:var(--surface);border-radius:12px;padding:12px 14px}
+.strip .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ticker{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px;overflow:hidden}
+.tk-h{flex:0 0 auto;font-size:12px;font-weight:800;color:var(--accent)}
+.tk-w{overflow:hidden;flex:1;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.tk-t{display:inline-flex;gap:18px;white-space:nowrap;animation:tk linear infinite}
+.tk-t a{text-decoration:none;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.tk-t .pill{font-size:10px}
+@keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.tk-t{animation:none}}
+.strip .rs .sub{white-space:nowrap}

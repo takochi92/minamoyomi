@@ -8,7 +8,7 @@
   const COMBOS = [];
   for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) if (a !== b && b !== c && a !== c) COMBOS.push(`${a}-${b}-${c}`);
   let odds = R.odds, at = R.odds_at, budget = 1000;
-  const sel = new Set(R.bets || []);
+  const sel = new Set();   // 買い目は入れず、使う人が選ぶ
   const bt = (n) => `<span class="bt bt${n}">${n}</span>`;
   const f1 = (v) => (v == null ? "-" : v >= 100 ? v.toFixed(0) : v.toFixed(1));
   const yen = (v) => "¥" + Math.round(v).toLocaleString("ja-JP");
@@ -35,7 +35,7 @@
       <div class="tile"><small>点数</small><b>${chosen.length}点</b></div><div class="tile"><small>的中の目安（オッズから）</small><b>${chosen.length ? Math.round(mk * 100) + "%" : "-"}</b></div>
       <div class="tile"><small>予算</small><b><input id="pk-budget" type="number" step="100" min="100" value="${budget}" inputmode="numeric" style="width:90px"> 円</b></div></div>
       ${rows ? `<div class="tbl-wrap"><table><thead><tr><th>3連単</th><th class="r">オッズ</th><th class="r">配分（計${yen(tot)}）</th><th class="r">当たれば</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="sub">どれが当たっても ${yen(minRet)} 以上。<button type="button" class="btn" id="pk-clear">選択をクリア</button> ${R.bets.length ? '<button type="button" class="btn" id="pk-reco">推奨買い目に戻す</button>' : ""}</p>` : '<p class="sub">下の表から買いたい目を押してください。</p>'}
+      <p class="sub">どれが当たっても ${yen(minRet)} 以上。<button type="button" class="btn" id="pk-clear">選択をクリア</button> ${R.bets.length ? '<button type="button" class="btn" id="pk-reco">自信ありの買い目を入れる</button>' : ""}</p>` : '<p class="sub">下の表から買いたい目を押してください。</p>'}
       <div class="ogrid">${grid}</div>`;
     box.querySelectorAll(".pk").forEach((b) => b.addEventListener("click", () => { const c = b.dataset.c; sel.has(c) ? sel.delete(c) : sel.add(c); render(); }));
     const bi = box.querySelector("#pk-budget");
