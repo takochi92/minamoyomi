@@ -37,5 +37,5 @@ jobs:
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add history scraper/course_stats.json.gz scraper/overperf.json.gz scraper/fstart.json.gz
+          git add history scraper/course_stats.json.gz scraper/overperf.json.gz scraper/fstart.json.gz scraper/motor.json.gz
           git diff --cached --quiet || (git commit -q -m "course stats $(TZ=Asia/Tokyo date +%m/%d)" && git pull -q --rebase && git push -q)
