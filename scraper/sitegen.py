@@ -607,7 +607,8 @@ class Site:
                 hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
             ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b"><div class="bet-group"><span>本線</span><div class="bets">{cells(p['bets']['main'])}</div></div>
-<div class="bet-group"><span>押さえ</span><div class="bets">{cells(p['bets']['sub'])}</div></div></div></section>"""
+<div class="bet-group"><span>押さえ</span><div class="bets">{cells(p['bets']['sub'])}</div></div>
+{f'<div class="bet-group"><span>穴</span><div class="bets">{cells(p["bets"]["ana"])}</div></div><p class="sub" style="margin:4px 0 0">穴：{e(p["bets"]["ana_reason"])}の艇の頭を2点だけ（的中の見込みは低めですが、決まれば高配当）。</p>' if p['bets'].get('ana_reason') and p['bets'].get('ana') else ''}</div></section>"""
         inp = (p.get("course_stats") or {}).get("in")
         loss = ""
         if inp and inp.get("starts"):

@@ -168,7 +168,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
     sub = [{"combo": k, "p": round(p, 4)} for k, p in combos if k not in used][:4]
     used |= {s["combo"] for s in sub}
     fav2 = {r["frame"] for r in sorted(rows, key=lambda r: -r["p_win"])[:2]}
-    ana = [{"combo": k, "p": round(p, 4)} for k, p in combos if int(k[0]) not in fav2 and k not in used and p >= 0.008][:2]
+    ana_list = [{"combo": k, "p": round(p, 4)} for k, p in combos if int(k[0]) not in fav2 and k not in used and p >= 0.008][:2]
     ex2 = {}
     for k, p in combos:
         ex2[k[:3]] = ex2.get(k[:3], 0) + p
@@ -283,6 +283,19 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 others = sorted((r for r in rows if r["frame"] != a["frame"]), key=lambda r: -r["p_top3"])[:3]
                 combos_ = [f"{a['frame']}-{x['frame']}-{y['frame']}" for x in others for y in others if x is not y]
                 ana = {**ANA_RULE, "frame": a["frame"], "name": a["name"], "course": c, "gap": gap, "bets": combos_}
+    # 穴目：展開メモで「外から一撃」の材料がある艇がいれば、その艇の頭を2点だけ押さえる
+    ana_reason = ""
+    ana_bets = ana_list
+    hot = [t for t in tenkai if t.get("type") in ("tilt", "exgap")] + [t for t in tenkai if not t.get("type") and t.get("att")]
+    if hot:
+        t0 = hot[0]
+        hf = t0.get("frame") or t0.get("att")
+        if hf and course_of.get(hf, 1) >= 2:
+            others = sorted((r for r in rows if r["frame"] != hf), key=lambda r: -r["p_top3"])[:2]
+            pmap = dict(combos)
+            ana_bets = [{"combo": f"{hf}-{x['frame']}-{y['frame']}", "p": round(pmap.get(f"{hf}-{x['frame']}-{y['frame']}", 0), 4)}
+                   for x, y in ((others[0], others[1]), (others[1], others[0]))]
+            ana_reason = {"tilt": "チルトを上げた伸び型", "exgap": "展示タイムが内より速い"}.get(t0.get("type"), "スタートが早くまくり展開")
     iw = in_worry(X, course_of, frames, cs_comments)
     for j in fs:
         if j["course"] == 1 and j["slow"] and j["n"] >= 3:
@@ -299,7 +312,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "wind": wind, "wave_cm": wave,
         "boats": rows, "marks": marks,
         "confidence": {"label": conf[0], "level": conf[1], "top_win": round(pmax, 3)},
-        "bets": {"main": main, "sub": sub, "ana": ana, "exacta": exacta},
+        "bets": {"main": main, "sub": sub, "ana": ana_bets, "exacta": exacta, "ana_reason": ana_reason},
         "points": len(main) + len(sub),
         "p3": p3,
         "specialists": spec,
