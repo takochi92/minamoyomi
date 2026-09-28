@@ -20,11 +20,11 @@ from __future__ import annotations
 import html
 import json
 import math
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import overperf
+from . import fstart, overperf
 from .history import load_all
 from .model import KIM, load_stats
 from .predict import VENUES
@@ -221,22 +221,34 @@ class Site:
         if not r["bets"]:
             return f'<section class="panel vp skip"><h2>見送り {head}</h2><p>条件を満たす買い目が組めませんでした。</p></section>'
         total = sum(r["alloc"].values())
+        fin = race.get("odds_final")
+        def fo(c):
+            if not fin:
+                return ""
+            j = COMBO_LIST.index(c)
+            return f'{fin[j]}倍' if fin[j] else "-"
         rows = "".join(
             f'<tr class="{"won" if res and res["trifecta"] == b["combo"] else ""}"><td>{combo(b["combo"])}</td><td class="r num">{b["odds"]}倍</td>'
-            f'<td class="r num">{yen(r["alloc"].get(b["combo"]))}</td><td class="r num">{yen(round(r["alloc"].get(b["combo"], 0) * b["odds"]))}</td>'
-            f'<td class="r num sub">{pct(b["p"], 1)}</td></tr>' for b in r["bets"])
+            + (f'<td class="r num"><b>{fo(b["combo"])}</b></td>' if fin else "")
+            + f'<td class="r num">{yen(r["alloc"].get(b["combo"]))}</td>'
+            + ("" if fin else f'<td class="r num">{yen(round(r["alloc"].get(b["combo"], 0) * b["odds"]))}</td>')
+            + f'<td class="r num sub">{pct(b["p"], 1)}</td></tr>' for b in r["bets"])
         result = ""
         if res:
             hit = race.get("r_hit")
-            result = f'<p><span class="pill {"hit" if hit else "miss"}">{"的中" if hit else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
+            ret = race.get("r_return", 0)
+            inv = race.get("r_invest", total)
+            result = (f'<p><span class="pill {"hit" if hit else "miss"}">{"的中" if hit else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
+                      f'<p><b>実際の払戻 {yen(ret)}</b>（{yen(inv)}で購入・回収率 {pct(ret / inv if inv else 0)}）。'
+                      f'<span class="sub">上の配分は{e(r.get("at", ""))}時点のオッズで組んだもので、締切までに人気の目ほどオッズが下がるため、確定オッズでの払戻は見込みより少なくなることがあります。</span></p>')
         conf = r["verdict"] == "自信あり"
         return f"""<section class="panel vp go"><h2><span class="chip cf">自信あり</span> 本線・押さえから合成{r['rule']['min_comp']:g}倍以上に絞った買い目 {head}</h2>
 <div class="tiles"><div class="tile"><small>合成オッズ</small><b>{r['comp']:.2f}倍</b></div><div class="tile"><small>点数</small><b>{len(r['bets'])}点</b></div>
 <div class="tile"><small>的中見込み（オッズから）</small><b>{pct(r['market_hit'])}</b></div><div class="tile"><small>AIの見込み</small><b>{pct(r['ai_hit'])}</b></div></div>
-<div class="tbl-wrap"><table><thead><tr><th>3連単</th><th class="r">オッズ</th><th class="r">配分（計{yen(total)}）</th><th class="r">当たれば</th><th class="r">AI確率</th></tr></thead><tbody>{rows}</tbody></table></div>
-{f'<p>この配分なら、どれが当たっても <b class="num">{yen(r["alloc_min_return"])}</b> 以上（実質 <b class="num">{r["alloc_min_return"] / total:.2f}倍</b>）。予算に合わせて全部を同じ割合で増減してください。</p>' if r.get('alloc_min_return') else ''}
+<div class="tbl-wrap"><table><thead><tr><th>3連単</th><th class="r">{e(r.get("at", ""))}時点</th>{'<th class="r">確定オッズ</th>' if fin else ''}<th class="r">配分（計{yen(total)}）</th>{'' if fin else '<th class="r">当たれば</th>'}<th class="r">AI確率</th></tr></thead><tbody>{rows}</tbody></table></div>
+{f'<p>この配分なら、{e(r.get("at", ""))}時点のオッズで、どれが当たっても <b class="num">{yen(r["alloc_min_return"])}</b> 以上（実質 <b class="num">{r["alloc_min_return"] / total:.2f}倍</b>）。<span class="sub">締切直前は人気の目のオッズが下がりやすいので、購入直前のオッズで確かめてください。</span></p>' if r.get('alloc_min_return') and not res else ''}
 {result}
-<p class="sub">本線・押さえの中から、AIの確率が高い順に合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で選び、AIの的中見込みが{r['rule']['confident_ai'] * 100:.0f}%以上になるレースだけ「自信あり」として出しています（本線・押さえ以外の目は使いません）。合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。</p></section>"""
+<p class="sub">本線・押さえの中から、AIの確率が高い順に合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で選び、AIの的中見込みが{r['rule']['confident_ai'] * 100:.0f}%以上、かつオッズから見た見込みの{r['rule'].get('confident_edge', 1):g}倍以上ある（市場よりAIが強く見ている）レースだけ「自信あり」として出しています（本線・押さえ以外の目は使いません）。合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。</p></section>"""
 
     def oriten_block(self, race):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -358,7 +370,7 @@ class Site:
                 f'<path d="M-90 2 h10" stroke="#8A949E" stroke-width="2"/>'
                 '</g>')
 
-    def slit_block(self, race):
+    def slit_block(self, race, link=""):
         bi = race.get("before") or {}
         se = bi.get("start_exhibition") or []
         if len(se) != 6:
@@ -396,7 +408,8 @@ class Site:
                + "".join(rows) +
                f'<line x1="{SLIT}" y1="{TOP - 2}" x2="{SLIT}" y2="{H - 6}" stroke="#F5C542" stroke-width="2.5"/></svg>')
         return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
-<p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p></section>"""
+<p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p>
+<p style="margin:0"><a href="{link}">この6人の「展示ST → 本番ST」のくせを見る →</a></p></section>"""
 
     # ------------------------------------------------------------ 1周1マークの展開イメージ（上から見た図）
     DEFAULT_MOVE = {2: "差し", 3: "まくり", 4: "まくり", 5: "まくり差し", 6: "展開待ち"}
@@ -504,6 +517,11 @@ class Site:
             return ""
         li = []
         for t in tk:
+            if t.get("type") == "motor":
+                extra = f"前節は{t['last_n']}走でまくり・まくり差しの1着{t['last_makuri']}回。" if t.get("last_makuri") else ""
+                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}の<b>{t["motor_no"]}号機</b>：{"、".join(e(x) for x in t["reasons"])}。'
+                          f'<span class="sub">このモーターの直近{t["n"]}走で1着{t["win"]}回（うちまくり系{t["makuri"]}回）。{extra}モーターの数字は乗り手の実力も混ざるので、参考程度に。</span></li>')
+                continue
             if t.get("type") == "resist":
                 ws = "・".join(f"{c}コース{pct(v)}" for c, v in t["wins"].items())
                 if t["style"] == "飛び付き":
@@ -549,6 +567,8 @@ class Site:
             b, q = bmap.get(f, {}), pb.get(f, {})
             name = b.get("name", "")
             link = self.racer_link(page, b.get("toban", ""))
+            if link:
+                link += f"#c{q.get('course', f)}"
             nm = f'<a href="{link}">{e(name)}</a>' if link else e(name)
             c = cs.get(str(f)) or cs.get(f) or {}
             fl = f' <span class="pill lv1">F{b["f"]}</span>' if b.get("f") else ""
@@ -599,21 +619,21 @@ class Site:
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-{self.slit_block(race)}
-{self.worry_block(p)}
-{ai_rows}
-{self.reco_block(race, res)}
-{self.ana_block(race, p)}
-{self.tenkai_block(p)}
-{self.fstart_block(p)}
-<section id="live" class="panel" hidden></section>
-<section id="pick" class="panel" hidden></section>
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
+{self.slit_block(race, page.u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))}
 {self.oriten_block(race)}
+{ai_rows}
+{self.reco_block(race, res)}
+{self.ana_block(race, p)}
+{self.worry_block(p)}
+{self.tenkai_block(p)}
+{self.fstart_block(p)}
 {loss}
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
+<section id="live" class="panel" hidden></section>
+<section id="pick" class="panel" hidden></section>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
@@ -622,7 +642,7 @@ class Site:
 <p class="sub"><a href="{vp.u('venue/' + SLUG[jcd] + '.html')}">{e(v)}の水面の特徴とコース別成績 →</a></p>
 <div class="ad-slot" data-slot="race_side"></div></aside></div>"""
         live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""),
-                "bets": [b["combo"] for b in (race.get("reco") or {}).get("bets", [])], "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
+                "bets": [b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else [], "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
                 "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
                 "p3": (race.get("prediction") or {}).get("p3")}
         script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
@@ -662,7 +682,7 @@ class Site:
     @staticmethod
     def reco_summary(rc):
         """一覧用の要約：点数と合成オッズだけ（中身はレースページで）"""
-        return f'<span class="rs"><span class="sub">絞り込み</span><span class="rs-n">{rc["n"]}点</span></span><span class="num">合成 {rc["comp"]}倍</span>'
+        return f'<span class="rs"><span class="sub">絞り込み</span><span class="rs-n">{rc["n"]}点</span></span><span class="num" style="white-space:nowrap">合成 {float(rc["comp"]):.2f}倍</span>'
 
     def finished(self, r):
         return bool(r.get("result")) and r["deadline"] <= self.now.strftime("%H:%M")
@@ -719,22 +739,34 @@ class Site:
             soonh.append(f'<a data-dl="{d} {r["deadline"]}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{cfh}{e(v["name"])} {r["rno"]}R</strong>'
                          f'<span class="num">{r["deadline"]}締切</span></div><div class="row">{line}</div></a>')
         soonh = "".join(soonh)
-        cards = []
-        conf.sort(key=lambda x: (self.finished(x[1]), x[1]["deadline"]))
+        cards, done = [], []
+        conf.sort(key=lambda x: x[1]["deadline"])
         for v, r in conf:
             rc = r["reco"]
-            hp = ""
-            if "hit" in rc:
-                hp = f'<span class="pill {"hit" if rc["hit"] else "miss"}">{"的中" if rc["hit"] else "不的中"}</span>'
-            cards.append(f'<a class="cfc" data-dl="{d} {r["deadline"]}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong><span class="chip cf">自信あり</span> {e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div>'
-                         f'<div class="row">{self.reco_summary(rc)}</div>{f"<div class=row>{hp}</div>" if hp else ""}</a>')
-        cards = "".join(cards)
+            href = self.race_link(page, d, v["jcd"], r["rno"])
+            if self.finished(r):
+                h = rc.get("hit")
+                pay = f" {yen(r.get('payout'))}" if h else ""
+                done.append(f'<a href="{href}"><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> {e(v["name"])}{r["rno"]}R{pay}</a>')
+                continue
+            cards.append(f'<a class="cfc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div>'
+                         f'<div class="row">{self.reco_summary(rc)}</div></a>')
+        n_done = len(done)
+        n_hit = sum(1 for v, r in conf if self.finished(r) and r["reco"].get("hit"))
+        ticker = ""
+        if done:
+            items = "".join(done)
+            ticker = (f'<div class="ticker" aria-label="終わった自信ありレース"><span class="tk-h">本日 {n_done}R中{n_hit}的中</span>'
+                      f'<div class="tk-w"><div class="tk-t" style="animation-duration:{max(12, n_done * 5)}s">{items}{items}</div></div></div>')
+        cards = ("<div class=\"strip\">" + "".join(cards) + "</div>" if cards else '<p class="sub">これから締切の自信ありレースはありません。</p>') if (cards or done) else ""
+        if cards:
+            cards = ticker + cards
         targets = self.today_targets(page)
         body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
-{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2><div class="soon">{cards}</div></section>' if cards else ''}
+{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
@@ -876,16 +908,144 @@ class Site:
 
     # ------------------------------------------------------------ 選手
     def recent_index(self):
-        since = (self.now - timedelta(days=150)).strftime("%Y%m%d")
+        since = (self.now - timedelta(days=365)).strftime("%Y%m%d")
         rec = defaultdict(list)
         for r in load_all(since):
+            w = next((y for y in r[11] if y[5] == 1), None)
+            s2 = next((y for y in r[11] if y[5] == 2), None)
             for x in r[11]:
-                rec[x[1]].append((r[0], r[1], r[2], x[0], x[2], x[5], r[3] if x[5] == 1 else ""))
+                # (日付, 場, R, 枠, コース, 着, 決まり手(自分が1着のとき), ST, 1着艇のコース, 2着艇のコース, レースの決まり手)
+                rec[x[1]].append((r[0], r[1], r[2], x[0], x[2], x[5], r[3] if x[5] == 1 else "",
+                                  (x[3] / 100 if x[3] is not None else None), (x[4] or ""), w[2] if w else None, s2[2] if s2 else None, r[3] or ""))
         for t in rec:
             rec[t].sort(reverse=True)
         return rec
 
+    # ------------------------------------------------------------ 展示ST と 本番ST
+    COURSE_COL = {1: "#E9EDF1", 2: "#8B97A3", 3: "#FF5A4E", 4: "#4C8DFF", 5: "#F2D231", 6: "#3DD68C"}
+
+    def st_chart(self, pairs, course=None, ex_now=None, w=300, h=210):
+        """横＝展示ST、縦＝本番ST。course を指定するとそのコースを強調"""
+        X0, X1, Y0, Y1 = -0.12, 0.36, 0.0, 0.36
+        L, R, T, B = 34, 8, 8, 26
+        sx = lambda v: L + (min(max(v, X0), X1) - X0) / (X1 - X0) * (w - L - R)
+        sy = lambda v: h - B - (min(max(v, Y0), Y1) - Y0) / (Y1 - Y0) * (h - T - B)
+        g = [f'<rect x="{L}" y="{T}" width="{w - L - R}" height="{h - T - B}" fill="rgba(255,255,255,.02)" stroke="var(--line)"/>']
+        for v in (0.0, 0.1, 0.2, 0.3):
+            g.append(f'<line x1="{sx(v)}" y1="{T}" x2="{sx(v)}" y2="{h - B}" stroke="var(--line)" stroke-width=".6"/>'
+                     f'<text x="{sx(v)}" y="{h - B + 12}" text-anchor="middle" font-size="9" fill="var(--ink2)">{v:.1f}</text>'
+                     f'<line x1="{L}" y1="{sy(v)}" x2="{w - R}" y2="{sy(v)}" stroke="var(--line)" stroke-width=".6"/>'
+                     f'<text x="{L - 4}" y="{sy(v) + 3}" text-anchor="end" font-size="9" fill="var(--ink2)">{v:.1f}</text>')
+        g.append(f'<line x1="{sx(0)}" y1="{sy(0)}" x2="{sx(0.36)}" y2="{sy(0.36)}" stroke="#F5C542" stroke-dasharray="3 3" stroke-width="1"/>')
+        for c, ex, st, _ in pairs:
+            hi = course is None or c == course
+            g.append(f'<circle cx="{sx(ex / 100):.1f}" cy="{sy(st / 100):.1f}" r="{3.4 if hi else 2.2}" fill="{self.COURSE_COL.get(c, "#888")}" '
+                     f'fill-opacity="{0.9 if hi else 0.25}"/>')
+        if ex_now is not None:
+            g.append(f'<line x1="{sx(ex_now)}" y1="{T}" x2="{sx(ex_now)}" y2="{h - B}" stroke="#FF6B35" stroke-width="2"/>'
+                     f'<text x="{sx(ex_now) + 4}" y="{T + 11}" font-size="10" font-weight="700" fill="#FF6B35">今回の展示</text>')
+        g.append(f'<text x="{(L + w - R) / 2}" y="{h - 2}" text-anchor="middle" font-size="9.5" fill="var(--ink2)">展示のST →</text>'
+                 f'<text x="10" y="{(T + h - B) / 2}" font-size="9.5" fill="var(--ink2)" transform="rotate(-90 10 {(T + h - B) / 2})" text-anchor="middle">本番のST →</text>')
+        return f'<svg viewBox="0 0 {w} {h}" width="100%" style="display:block;max-width:420px" role="img" aria-label="展示STと本番STの関係">{"".join(g)}</svg>'
+
+    @staticmethod
+    def st_summary(pairs, course=None):
+        ps = [p for p in pairs if course is None or p[0] == course]
+        if len(ps) < 3:
+            ps = pairs
+        if len(ps) < 3:
+            return None
+        ex = [p[1] / 100 for p in ps]
+        st = [p[2] / 100 for p in ps]
+        n = len(ps)
+        mx, my = sum(ex) / n, sum(st) / n
+        vx = sum((a - mx) ** 2 for a in ex)
+        vy = sum((b - my) ** 2 for b in st)
+        cor = sum((a - mx) * (b - my) for a, b in zip(ex, st)) / math.sqrt(vx * vy) if vx > 0 and vy > 0 else 0.0
+        sd = math.sqrt(vy / n)
+        typ = "展示と本番が連動" if cor >= 0.4 and n >= 12 else "展示とはあまり連動しない"
+        return {"n": n, "ex": mx, "st": my, "sd": sd, "cor": cor, "type": typ, "same_course": course is not None and len([p for p in pairs if p[0] == course]) >= 3}
+
+    def st_pages(self):
+        """各レースの「展示STと本番ST」ページ（出走6人分）"""
+        pairs = fstart.load_pairs()
+        d = self.idx.get("date")
+        if not d:
+            return
+        for v in self.idx.get("venues", []):
+            for r in v["races"]:
+                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
+                rl = (race.get("racelist") or {}).get("boats") or []
+                if len(rl) != 6:
+                    continue
+                page = Page(f"race/{d}/{SLUG[v['jcd']]}-{r['rno']}-st.html")
+                back = page.u(f"race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html")
+                se = {x["frame"]: x for x in (race.get("before") or {}).get("start_exhibition") or []}
+                crs = {f: (se[f]["course"] if f in se else f) for f in range(1, 7)}
+                cards = []
+                for b in sorted(rl, key=lambda b: crs[b["frame"]]):
+                    f, c = b["frame"], crs[b["frame"]]
+                    ps = pairs.get(b.get("toban", ""), [])
+                    sm = self.st_summary(ps, c)
+                    exn = se.get(f, {}).get("st")
+                    exl = ("-" if exn is None else (f'<span style="color:#FF4D4D">F{abs(exn):.2f}</span>'.replace("0.", ".") if exn < 0 else f"{exn:.2f}".replace("0.", ".")))
+                    if sm:
+                        where = f"{c}コース" if sm["same_course"] else "全コース"
+                        info = (f'<p style="margin:4px 0">今回の展示ST <b class="num">{exl}</b> → 本番の目安 <b class="num">{sm["st"]:.2f}</b> 付近'
+                                f'<span class="sub">（{where}の本番平均・ばらつき±{sm["sd"]:.2f}）</span></p>'
+                                f'<p class="sub" style="margin:0">{sm["n"]}走：展示の平均 {sm["ex"]:.2f} → 本番の平均 {sm["st"]:.2f}。<b>{sm["type"]}</b>（相関 {sm["cor"]:.2f}）</p>')
+                    else:
+                        info = '<p class="sub">展示と本番の両方がそろったデータがまだ少ない選手です。</p>'
+                    link = self.racer_link(page, b.get("toban", ""))
+                    nm = f'<a href="{link}#c{c}">{e(b.get("name", ""))}</a>' if link else e(b.get("name", ""))
+                    cards.append(f'<section class="panel" style="display:grid;gap:6px"><h2>{bt(f)} {nm} <small>{c}コース・{e(b.get("class", ""))}</small></h2>'
+                                 f'{self.st_chart(ps, c, exn)}{info}</section>')
+                body = (f'<section style="display:grid;gap:6px"><span class="eyebrow">{e(v["name"])} · {jdate(d)}</span>'
+                        f'<h1>{e(v["name"])} {r["rno"]}R 展示STと本番ST</h1>'
+                        f'<p class="sub">点1つが1走。横が展示のスタートタイミング、縦が本番のスタートタイミング。黄色い点線より上なら「本番の方が遅い」。色はコース（今回のコースを濃く表示）、オレンジの縦線が今回の展示ST。</p>'
+                        f'<p><a href="{back}">← {e(v["name"])} {r["rno"]}R の予想に戻る</a></p></section>'
+                        + "".join(cards) +
+                        '<section class="panel"><h2>展示STは当てになる？</h2><p>公式データ約5万5千走で調べると、展示のSTと本番のSTの相関はほぼ0（0.05）でした。展示でFを切っても本番は普通に行く人、展示で遅くても本番は早い人がたくさんいます。'
+                        '本番のSTを読むなら、展示の数字そのものより「その選手がそのコースで普段何秒で行っているか」の方がずっと当たります（誤差 0.095秒 → 0.054秒）。上のグラフで、点が縦に散らばっている選手ほど展示を気にしなくてよい選手です。</p></section>')
+                self.put(page.path, page.render(f"{v['name']}{r['rno']}R 展示STと本番ST｜{SITE_NAME}",
+                                                f"{jdate(d)} {v['name']}{r['rno']}Rの出走選手6人の、展示スタートと本番スタートの関係。", body,
+                                                [(f"venue/{SLUG[v['jcd']]}.html", v["name"]), (f"race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html", f"{r['rno']}R"), ("", "展示STと本番ST")], noindex=True))
+
+    @staticmethod
+    def course_recent(xs):
+        """コースごとの最近10走（直近1年）。1コースは「逃げたときの2着のコース」も"""
+        out = []
+        for c in range(1, 7):
+            ys = [x for x in xs if x[4] == c][:10]
+            allc = [x for x in xs if x[4] == c]
+            if not ys:
+                continue
+            def stf(x):
+                if x[8] == "F":
+                    return '<span style="color:#FF4D4D">F</span>'
+                return f"{x[7]:.2f}".replace("0.", ".") if x[7] is not None else "-"
+            rows = "".join(
+                f'<tr><td class="num">{int(x[0][4:6])}/{int(x[0][6:])}</td><td>{e(VENUES.get(x[1], {}).get("name", x[1]))} {x[2]}R</td>'
+                f'<td class="r num"><b>{x[5]}</b></td><td class="r num">{stf(x)}</td><td>{e(x[11])}</td>'
+                f'<td class="r num">{x[9] or "-"}</td><td class="r num">{x[10] or "-"}</td></tr>' for x in ys)
+            n = len(allc)
+            wins = sum(1 for x in allc if x[5] == 1)
+            top3 = sum(1 for x in allc if isinstance(x[5], int) and x[5] <= 3)
+            sts = [x[7] for x in allc if x[7] is not None and x[8] != "F"]
+            extra = ""
+            if c == 1:
+                sec = Counter(x[10] for x in allc if x[5] == 1 and x[10])
+                if sec:
+                    extra = ('<p class="sub">逃げたときの2着：' + "・".join(f"{k}コース{v}回" for k, v in sorted(sec.items())) + "</p>")
+            out.append(f"""<details class="panel cr" id="c{c}"><summary><b>{c}コースのとき</b> <span class="sub">{n}走・1着{wins}・3着内{pct(top3 / n)}・平均ST {f"{sum(sts) / len(sts):.2f}" if sts else "-"}</span></summary>
+{extra}<p class="sub" style="margin:0">「1着」「2着」の列は、そのレースで1着・2着になった艇のコース番号です。</p><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">着</th><th class="r">ST</th><th>決まり手</th><th class="r">1着</th><th class="r">2着</th></tr></thead><tbody>{rows}</tbody></table></div></details>""")
+        if not out:
+            return ""
+        return ('<section style="display:grid;gap:8px"><h2>コースごとの最近のレース <small>直近1年・各コース最新10走</small></h2>' + "".join(out) +
+                '<script>(function(){var h=location.hash;var d=h&&document.querySelector("details"+h);if(d){d.open=true;d.scrollIntoView();}})()</script></section>')
+
     def racer_pages(self):
+        self._pairs = fstart.load_pairs()
         rec = self.recent_index()
         today = self.today_entries()
         listing = []
@@ -928,6 +1088,11 @@ class Site:
             recent = "".join(
                 f'<tr><td class="num">{int(x[0][4:6])}/{int(x[0][6:])}</td><td>{e(VENUES.get(x[1], {}).get("name", x[1]))} {x[2]}R</td><td class="r num">{x[3]}</td><td class="r num">{x[4] or "-"}</td><td class="r num"><b>{x[5]}</b></td><td>{e(x[6])}</td></tr>'
                 for x in rec.get(t, [])[:12])
+            bycourse = self.course_recent(rec.get(t, []))
+            ps = self._pairs.get(t, [])
+            sm = self.st_summary(ps)
+            stsec = (f'<section class="panel" style="display:grid;gap:6px"><h2>展示ST → 本番ST <small>{sm["n"]}走・{sm["type"]}（相関 {sm["cor"]:.2f}）</small></h2>{self.st_chart(ps)}'
+                     f'<p class="sub">展示の平均 {sm["ex"]:.2f} → 本番の平均 {sm["st"]:.2f}（ばらつき±{sm["sd"]:.2f}）。色はコース（1白・2灰・3赤・4青・5黄・6緑）。</p></section>') if sm else ""
             tod = "".join(f'<li><a href="{page.u(f"race/{dd}/{SLUG[j]}-{rn}.html")}">{e(VENUES[j]["name"])} {rn}R</a>（{f}号艇）</li>' for dd, j, rn, f in today.get(t, []))
             tagh = " ".join(f'<span class="pill lv4">{e(x)}</span>' for x in tags)
             body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">登録番号 {t}</span>
@@ -937,7 +1102,9 @@ class Site:
 <section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
 <div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
 {loss}
-<section class="panel"><h2>最近のレース</h2><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">枠</th><th class="r">コース</th><th class="r">着</th><th>決まり手</th></tr></thead><tbody>{recent or '<tr><td colspan="6" class="empty">直近のデータなし</td></tr>'}</tbody></table></div></section>
+{bycourse}
+{stsec}
+<section class="panel"><h2>最近のレース <small>全コース</small></h2><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">枠</th><th class="r">コース</th><th class="r">着</th><th>決まり手</th></tr></thead><tbody>{recent or '<tr><td colspan="6" class="empty">直近のデータなし</td></tr>'}</tbody></table></div></section>
 <p class="sub">データ：BOAT RACE公式の競走成績（直近1年）・期別成績。</p>"""
             desc = f"ボートレーサー{name}（{t}・{info.get('branch', '')}支部）のコース別1着率・連対率・決まり手、インでの負け方、最近の成績。"
             self.put(page.path, page.render(f"{name}（{t}）コース別成績・決まり手｜{SITE_NAME}", desc, body, [("racer/index.html", "選手"), ("", name)]))
@@ -1078,7 +1245,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
 
     def sitemap(self):
-        urls = [p for p in self.files if p.endswith(".html") and p != "404.html"]
+        urls = [p for p in self.files if p.endswith(".html") and p != "404.html" and not p.endswith("-st.html")]
         today = self.now.strftime("%Y-%m-%d")
         body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{today}</lastmod></url>" for p in sorted(urls))
         self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
@@ -1092,6 +1259,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.targets_page()
         self.venue_pages()
         self.racer_pages()
+        self.st_pages()
         self.static_pages()
         self.not_found()
         self.sitemap()

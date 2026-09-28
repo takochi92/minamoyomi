@@ -123,11 +123,47 @@ def judge(info: dict | None, course: int) -> dict | None:
             "slow": rk >= SLOW_RANK}
 
 
+def st_pairs(races: list, before: dict) -> dict:
+    """展示のスタートタイミングと本番のスタートタイミングの組（選手ごとに直近80走）"""
+    out = defaultdict(list)
+    for r in sorted(races, key=lambda r: (r[0], r[1], r[2])):
+        b = before.get(f"{r[0]}-{r[1]}-{r[2]}")
+        if not b or len(b.get("st") or []) != len(b.get("entry") or []) or not b.get("entry"):
+            continue
+        for e in r[11]:
+            if e[3] is None or e[4] or not e[2] or e[0] not in b["entry"]:
+                continue
+            ex = b["st"][b["entry"].index(e[0])]
+            if ex is None:
+                continue
+            out[e[1]].append([e[2], round(ex * 100), e[3], r[0]])
+    return {t: v[-80:] for t, v in out.items()}
+
+
+def load_pairs() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("stpairs", {})
+
+
 def main():
-    data = build(load_all((datetime.now() - timedelta(days=F_DAYS + PRE_DAYS + 30)).strftime("%Y%m%d")))
+    races = load_all((datetime.now() - timedelta(days=400)).strftime("%Y%m%d"))
+    lim = (datetime.now() - timedelta(days=F_DAYS + PRE_DAYS + 30)).strftime("%Y%m%d")
+    data = build([r for r in races if r[0] >= lim])
+    try:
+        from .odds import load_before
+        data["stpairs"] = st_pairs(races, load_before())
+    except Exception:
+        data["stpairs"] = {}
     with gzip.open(OUT, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print(f"fstart: {len(data['racers'])} racers with F (asof {data['asof']})")
+    try:
+        from . import motor
+        motor.main()
+    except Exception as ex:
+        print("motor skipped:", ex)
 
 
 if __name__ == "__main__":

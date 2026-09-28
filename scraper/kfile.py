@@ -95,4 +95,6 @@ def _entry(m) -> dict:
         "st": st,
         "st_flag": flag,
         "exhibit_time": ex,
+        "motor_no": int(m.group(5)),
+        "boat_no": int(m.group(6)),
     }

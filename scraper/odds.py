@@ -171,7 +171,7 @@ def parse_odds2t(html: str) -> dict | None:
 # ---------------------------------------------------------------- 推奨買い目（合成オッズの下限つき）
 # max_over_market: AIの確率がオッズから見た確率の2倍を超える目は入れない。
 #   合成オッズを保つために、勝率・戦績の低い艇の人気薄を「穴埋め」で拾わないため（過去9千レースで回収率は変わらず、市場0.5%未満の超穴は0に）
-RECO_RULE = {"min_comp": 5.0, "max_points": 10, "min_p": 0.01, "gachi_top_odds": 5.0, "confident_ai": 0.20, "max_over_market": 2.0}
+RECO_RULE = {"min_comp": 5.0, "max_points": 10, "min_p": 0.01, "gachi_top_odds": 5.0, "confident_ai": 0.20, "confident_edge": 1.5, "max_over_market": 2.0}
 
 
 def _head_ok(model_p3, picked, min_head=0.5):
@@ -217,7 +217,7 @@ def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None
         picked, comp, ai_hit, mk_hit = [], None, 0.0, 0.0
     elif not picked:
         verdict = "見送り"
-    elif ai_hit >= r["confident_ai"] and _head_ok(model_p3, picked):
+    elif ai_hit >= r["confident_ai"] and ai_hit >= r.get("confident_edge", 0) * mk_hit and _head_ok(model_p3, picked):
         verdict = "自信あり"
     else:
         verdict = "推奨"

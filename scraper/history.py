@@ -41,7 +41,7 @@ def to_record(race: dict, b: dict) -> list:
                   round(e["st"] * 100) if e["st"] is not None else None, e["st_flag"],
                   e["place"] if e["place"] is not None else e["code"],
                   round(e["exhibit_time"] * 100) if e.get("exhibit_time") else None,
-                  b.get((race["jcd"], race["rno"], e["frame"]))])
+                  b.get((race["jcd"], race["rno"], e["frame"])), e.get("motor_no")])
     return [race["date"], race["jcd"], race["rno"], race["kimarite"], race["wind_dir"], race["wind_speed"], race["wave"],
             int(race["fixed"]), race.get("trifecta"), race.get("trifecta_payout"), race.get("trifecta_ninki"), E]
 

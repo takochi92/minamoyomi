@@ -242,6 +242,32 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             tenkai.append({"type": "resist", "in": inb["frame"], "in_name": inb["name"], "style": ityp, "beaten": ir[0], "out": ir[1],
                            "att": a["frame"], "att_name": a["name"], "att_course": ac, **RESIST_STATS[(ac, ityp)]})
 
+    # モーターの機歴（場・モーター番号ごと）：展示タイムが場の中で上位、または前節のオリジナル展示が抜けている
+    try:
+        from . import motor as _motor
+        mstat = _motor.load().get(jcd, {})
+    except Exception:
+        mstat = {}
+    for b in boats:
+        ms = mstat.get(str(b.get("motor_no")))
+        if not ms or ms["n"] < 10:
+            continue
+        L = ms.get("last") or {}
+        ori = L.get("ori") or {}
+        good = []
+        if ms["rank"] <= max(3, round(ms["of"] * 0.15)):
+            good.append(f"展示タイムは場の{ms['of']}基中{ms['rank']}位（6艇平均より{-ms['ex']:.2f}秒速い）")
+        if L.get("ex") is not None and L["ex"] <= -0.05 and L.get("n", 0) >= 4:
+            good.append(f"前節（{int(L['from'][4:6])}/{int(L['from'][6:])}〜）は展示タイムが平均より{-L['ex']:.2f}秒速い")
+        for it, lab in (("直線", "伸び"), ("一周", "回り"), ("まわり足", "出足")):
+            v = ori.get(it)
+            if v is not None and v <= -0.08:
+                good.append(f"前節の{it}タイムが平均より{-v:.2f}秒速い（{lab}型）")
+        if good:
+            tenkai.append({"type": "motor", "frame": b["frame"], "name": b["name"], "motor_no": b.get("motor_no"),
+                           "reasons": good, "win": ms["win"], "n": ms["n"], "makuri": ms["makuri"],
+                           "last_makuri": L.get("makuri", 0), "last_n": L.get("n", 0)})
+
     # 展示タイムが内の艇より0.1秒以上速い → まくりが決まりやすい
     ana = None
     if has_ex:
