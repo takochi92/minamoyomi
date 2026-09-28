@@ -511,6 +511,25 @@ class Site:
 <div class="bets">{cells}</div>{hit}
 <p class="sub">過去1年、5コースが4コースより0.15秒以上速かった{a["n"]}レースでは、5の1着が{pct(a["win"])}（オッズの見込み{pct(a["mkt"])}）。前半・後半に分けてもどちらも頭の回収率が100%を超えていましたが、件数が少なく偶然の可能性もあるため「検証中」です。成績は実績ページで別に集計します。</p></section>"""
 
+    def tsuke_block(self, race, p, res):
+        tp = p.get("tsuke_pick")
+        if not tp:
+            return ""
+        tk = race.get("tsuke") or {}
+        od = tk.get("odds") or {}
+        cells = "".join(f'<span class="bet">{combo(c)}{f"<b class=odds>{od[c]}倍</b>" if od.get(c) else ""}</span>' for c in tp["bets"])
+        comp = f'合成オッズ <b class="num">{tk["comp"]:.2f}倍</b>（{e(tk.get("at", ""))}時点）' if tk.get("comp") else "合成オッズは締切35分前から表示"
+        hit = ""
+        if res:
+            h = res["trifecta"] in tp["bets"]
+            hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
+        pre = "" if p.get("stage") == "直前" else '<p class="sub">※展示前の判定です。展示後に条件が崩れると消えます（成績は展示後に残ったレースだけで集計）。</p>'
+        return f"""<section class="panel tsuke"><h2><span class="chip tk">穴狙い</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）のツケマイ <small>検証中</small></h2>
+<ul class="comments">{"".join(f"<li>{e(w)}</li>" for w in tp["why"])}</ul>
+<p>まくり切ったときにイン（{bt(tp["in"])} {e(tp["in_name"])}）ごと沈めやすい形。<b>頭固定・インを2・3着から外した{len(tp["bets"])}点</b>。{comp}</p>
+<div class="bets">{cells}</div>{hit}{pre}
+<p class="sub">的中はめったにありません。過去約9,000レースの検証では、この条件の回収率は70〜80%台（本線・押さえと同程度）で、100%は超えていません。当たれば大きい代わりに外れが続く買い方なので、買うならこの枠だけで長く見る前提で。成績は実績ページで別に集計します。</p></section>"""
+
     def tenkai_block(self, p):
         tk = p.get("tenkai") or []
         if not tk:
@@ -588,6 +607,8 @@ class Site:
         rc = race.get("reco") or {}
         if rc.get("verdict") == "自信あり" and "r_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["r_hit"] else "miss"}">自信あり {"的中" if race["r_hit"] else "×"}</span>')
+        if "t_hit" in race:
+            marks.append(f'<span class="pill {"hit" if race["t_hit"] else "miss"}">穴狙い {"的中" if race["t_hit"] else "×"}</span>')
         if "a_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["a_hit"] else "miss"}">高回収狙い {"的中" if race["a_hit"] else "×"}</span>')
         exh = '<p class="sub" style="margin:4px 0 0">' + "　".join(extra) + "</p>" if extra else ""
@@ -674,6 +695,7 @@ class Site:
 {self.oriten_block(race)}
 {ai_rows}
 {self.reco_block(race, res)}
+{self.tsuke_block(race, p, res)}
 {self.ana_block(race, p)}
 {self.worry_block(p)}
 {self.tenkai_block(p)}
@@ -711,6 +733,8 @@ class Site:
             chips = [f'<span class="chip tg">狙い目 {bt(f)}</span>' for f in tg]
             if r.get("ana"):
                 chips.insert(0, '<span class="chip an">高回収狙い</span>')
+            if r.get("tsuke"):
+                chips.insert(0, '<span class="chip tk">穴狙い</span>')
             if r.get("in_worry") and gachi:
                 # 人気はインに集中しているのに、イン不安の材料がある → 1つのラベルにまとめる
                 chips.insert(0, '<span class="chip gc">イン人気過剰</span>')
@@ -809,12 +833,29 @@ class Site:
         cards = ("<div class=\"strip\">" + "".join(cards) + "</div>" if cards else '<p class="sub">これから締切の自信ありレースはありません。</p>') if (cards or done) else ""
         if cards:
             cards = ticker + cards
+        ana_cards = []
+        for v in self.idx.get("venues", []):
+            for r in v["races"]:
+                t = r.get("tsuke")
+                if not t:
+                    continue
+                href = self.race_link(page, d, v["jcd"], r["rno"])
+                if self.finished(r):
+                    h = t.get("hit")
+                    ana_cards.append((1, r["deadline"], f'<a class="cfc tkc" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span></div><div class="row"><span class="sub">{bt(t["frame"])}の頭・{t["n"]}点</span>{("<span class=num>" + yen(r.get("payout")) + "</span>") if h else ""}</div></a>'))
+                else:
+                    cp = f'<span class="num">合成 {t["comp"]:.1f}倍</span>' if t.get("comp") else '<span class="sub">オッズ待ち</span>'
+                    ana_cards.append((0, r["deadline"], f'<a class="cfc tkc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div><div class="row"><span class="sub">{bt(t["frame"])}の頭・{t["n"]}点</span>{cp}</div></a>'))
+        ana_cards.sort(key=lambda x: (x[0], x[1]))
+        anah = (f'<section style="display:grid;gap:10px"><h2>穴狙いレース <small>ツケマイ型のまくり屋がいて、インごと沈める形があるレース（検証中）</small></h2>'
+                f'<div class="strip">{"".join(c for _, _, c in ana_cards)}</div></section>') if ana_cards else ""
         targets = self.today_targets(page)
         body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
+{anah}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}

@@ -37,6 +37,7 @@ def build(races: list) -> dict:
     starts = defaultdict(list)      # toban -> [(date, course, st, rank)]
     kim4 = defaultdict(list)        # toban -> 4コースで勝ったときの決まり手（新しい順に最大40）
     inpl = defaultdict(list)        # toban -> 1コースでの着順（最大60走）
+    tsuke = defaultdict(list)       # toban -> 3・4コースからまくりで勝ったときのインの着順
     lastF = {}
     for r in races:
         E = r[11]
@@ -45,6 +46,10 @@ def build(races: list) -> dict:
         w = next((e for e in E if e[5] == 1), None)
         if w and w[2] == 4 and r[3]:
             kim4[w[1]].append(r[3])
+        if w and w[2] in (3, 4) and r[3] == "まくり":
+            ib = next((e for e in E if e[2] == 1), None)
+            if ib and isinstance(ib[5], int):
+                tsuke[w[1]].append(ib[5])
         for e in E:
             if e[2] == 1 and isinstance(e[5], int):
                 inpl[e[1]].append(e[5])
@@ -87,7 +92,9 @@ def build(races: list) -> dict:
         beaten = [p for p in ps[-60:] if p != 1]
         if len(beaten) >= 8:
             inres[t] = [len(beaten), sum(1 for p in beaten if p >= 4)]
-    return {"asof": asof, "racers": out, "recent": recent, "inres": inres}
+    # ツケマイ型：3・4コースからまくりで勝ったとき、インを4着以下に沈めた回数
+    tk = {t: [len(ps), sum(1 for p in ps if p >= 4)] for t, ps in tsuke.items() if len(ps) >= 3}
+    return {"asof": asof, "racers": out, "recent": recent, "inres": inres, "tsuke": tk}
 
 
 def load() -> dict:
@@ -102,6 +109,13 @@ def load_recent() -> dict:
         return {}
     with gzip.open(OUT, "rt", encoding="utf-8") as f:
         return json.load(f).get("recent", {})
+
+
+def load_tsuke() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("tsuke", {})
 
 
 def load_inres() -> dict:

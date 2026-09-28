@@ -56,6 +56,10 @@ EXGAP_STATS = {3: {"n": 597, "win": 0.209, "base_win": 0.128, "makuri": 0.095, "
                5: {"n": 675, "win": 0.108, "base_win": 0.061, "makuri": 0.044, "base_makuri": 0.012}}
 # 高回収狙い（検証中）：5コースの展示タイムが4コースより0.15秒以上速い → 5の頭
 # 過去1年 177レースで5の1着18.1%（オッズの見込み12.8%）。偶数日・奇数日とも頭の回収率100%以上だったが件数が少ない
+# 穴狙い（ツケマイ型）：3・4コースのまくり屋で、まくって勝つとインが4着以下に沈む選手。
+# 過去約9,000レースの検証（イン抜き12点）：ツケマイ7割以上＋スタート3番手以内 回収72%、
+# ツケマイ5割以上＋スタート3番手以内＋展示タイム2位以内＋インの逃げ率55%未満 回収80%（確定オッズ・楽観寄り）
+TSUKE = {"n": 3, "rate": 0.5, "rate_hi": 0.7, "st": 3.0, "ex_rank": 2, "in_esc": 0.55}
 ANA_RULE = {"gap": 0.15, "n": 177, "win": 0.181, "mkt": 0.128}
 
 # チルト1.0以上（伸び型）の過去1年の実績（2025/9〜2026/9・展示の進入・確定オッズのある約9千レース）
@@ -283,6 +287,41 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 others = sorted((r for r in rows if r["frame"] != a["frame"]), key=lambda r: -r["p_top3"])[:3]
                 combos_ = [f"{a['frame']}-{x['frame']}-{y['frame']}" for x in others for y in others if x is not y]
                 ana = {**ANA_RULE, "frame": a["frame"], "name": a["name"], "course": c, "gap": gap, "bets": combos_}
+    # 穴狙い（ツケマイ型）
+    tsuke_pick = None
+    try:
+        tkd = fstart.load_tsuke()
+    except Exception:
+        tkd = {}
+    inp = (cs_view or {}).get("in") or {}
+    in_esc = inp.get("escape") if inp.get("starts", 0) >= 10 else None
+    inb_ = byc.get(1)
+    for c in (3, 4):
+        a = byc.get(c)
+        if not a or not inb_:
+            continue
+        tk = tkd.get(a.get("toban", ""))
+        stv = rec.get(a.get("toban", ""))
+        if not tk or not stv or tk[0] < TSUKE["n"]:
+            continue
+        rate = tk[1] / tk[0]
+        exr = next((r.get("exhibit_rank") for r in rows if r["frame"] == a["frame"]), None)
+        ok_hi = rate >= TSUKE["rate_hi"] and stv[1] <= TSUKE["st"]
+        ok_lo = (rate >= TSUKE["rate"] and stv[1] <= TSUKE["st"] and exr is not None and exr <= TSUKE["ex_rank"]
+                 and in_esc is not None and in_esc < TSUKE["in_esc"])
+        if not (ok_hi or ok_lo):
+            continue
+        others = [f for f in frames if f not in (a["frame"], inb_["frame"])]
+        bets_ = [f"{a['frame']}-{x}-{y}" for x in others for y in others if x != y]
+        why = [f"まくりで勝った{tk[0]}回のうち{tk[1]}回はインが4着以下（ツケマイ型）", f"最近のスタートは平均{stv[1]:.1f}番手"]
+        if exr is not None and exr <= TSUKE["ex_rank"]:
+            why.append(f"展示タイム{exr}位")
+        if in_esc is not None and in_esc < TSUKE["in_esc"]:
+            why.append(f"インの{inb_['name']}は逃げ率{in_esc * 100:.0f}%")
+        cand = {"frame": a["frame"], "name": a["name"], "course": c, "n": tk[0], "t": tk[1], "rate": round(rate, 2),
+                "st": stv[1], "in": inb_["frame"], "in_name": inb_["name"], "why": why, "bets": bets_}
+        if not tsuke_pick or cand["rate"] > tsuke_pick["rate"]:
+            tsuke_pick = cand
     # 穴目：展開メモで「外から一撃」の材料がある艇がいれば、その艇の頭を2点だけ押さえる
     ana_reason = ""
     ana_bets = ana_list
@@ -320,6 +359,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "fstart": fs,
         "tenkai": tenkai,
         "ana_pick": ana,
+        "tsuke_pick": tsuke_pick,
         "comments": comments,
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},

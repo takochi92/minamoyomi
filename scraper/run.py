@@ -104,6 +104,11 @@ def summarize(race: dict) -> dict:
         s["ana"] = pred["ana_pick"]["frame"]
         if "a_hit" in race:
             s["ana_hit"] = race["a_hit"]
+    if pred and pred.get("tsuke_pick") and pred.get("stage") == "直前":
+        s["tsuke"] = {"frame": pred["tsuke_pick"]["frame"], "course": pred["tsuke_pick"]["course"], "n": len(pred["tsuke_pick"]["bets"]),
+                      "comp": (race.get("tsuke") or {}).get("comp")}
+        if "t_hit" in race:
+            s["tsuke"]["hit"] = race["t_hit"]
     if pred and pred.get("in_worry"):
         s["in_worry"] = pred["in_worry"]["level"]
     spec = pred.get("specialists") if pred else None
@@ -138,6 +143,11 @@ def judge(race: dict):
         race["a_hit"] = res["trifecta"] in ap["bets"]
         race["a_invest"] = 100 * len(ap["bets"])
         race["a_return"] = (res["trifecta_payout"] or 0) if race["a_hit"] else 0
+    tp = pred.get("tsuke_pick")
+    if tp and pred.get("stage") == "直前":
+        race["t_hit"] = res["trifecta"] in tp["bets"]
+        race["t_invest"] = 100 * len(tp["bets"])
+        race["t_return"] = (res["trifecta_payout"] or 0) if race["t_hit"] else 0
     reco = race.get("reco")
     if reco and reco["bets"] and reco["verdict"] == "自信あり" and reco.get("final", True):
         # 表示している「合成オッズ配分（1,000円）」どおりに買った場合で集計
@@ -214,6 +224,13 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 # 展示を見るまでは「自信あり」を出さない（出走表だけの自信は当てにしない）
                 reco["verdict"] = "推奨"
             race["reco"] = reco
+            tp = race["prediction"].get("tsuke_pick")
+            if tp:
+                od = dict(zip(O.COMBOS, ov))
+                vs = [od.get(c) for c in tp["bets"]]
+                inv = sum(1 / x for x in vs if x and x == x and x > 0)
+                race["tsuke"] = {"at": at, "final": val["final"], "comp": round(1 / inv, 2) if inv else None,
+                                 "odds": {c: (x if x and x == x else None) for c, x in zip(tp["bets"], vs)}}
             changed = True
         if race["prediction"].get("specialists"):
             wo = O.parse_oddstf(f.oddstf(jcd, rno, date))
@@ -250,7 +267,8 @@ def build_stats():
                "v_checked": 0, "v_races": 0, "v_hits": 0, "v_invest": 0, "v_return": 0, "v_best": [],
                "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
                "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
-               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0}
+               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0,
+               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0}
         for p in sorted((DATA / "races" / d).glob("*.json")):
             r = _load(p, {})
             if r.get("hit") is None:
@@ -261,6 +279,8 @@ def build_stats():
                 agg["gachi"] += 1
             if "a_hit" in r:
                 agg["a_races"] += 1; agg["a_hits"] += int(r["a_hit"]); agg["a_invest"] += r["a_invest"]; agg["a_return"] += r["a_return"]
+            if "t_hit" in r:
+                agg["t_races"] += 1; agg["t_hits"] += int(r["t_hit"]); agg["t_invest"] += r["t_invest"]; agg["t_return"] += r["t_return"]
             if "r_hit" in r:
                 agg["r_races"] += 1; agg["r_hits"] += int(r["r_hit"]); agg["r_invest"] += r["r_invest"]; agg["r_return"] += r["r_return"]
                 if r.get("r_conf"):
@@ -298,7 +318,8 @@ def build_stats():
              "v_checked": 0, "v_races": 0, "v_hits": 0, "v_invest": 0, "v_return": 0,
              "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
              "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
-               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0}
+               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0,
+               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0}
         for k in keys:
             for f in t:
                 t[f] += hist[k].get(f, 0)
