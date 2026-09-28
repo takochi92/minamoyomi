@@ -524,11 +524,11 @@ class Site:
             h = res["trifecta"] in tp["bets"]
             hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
         pre = "" if p.get("stage") == "直前" else '<p class="sub">※展示前の判定です。展示後に条件が崩れると消えます（成績は展示後に残ったレースだけで集計）。</p>'
-        return f"""<section class="panel tsuke"><h2><span class="chip tk">穴狙い</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）のツケマイ <small>検証中</small></h2>
+        return f"""<section class="panel tsuke"><h2><span class="chip tk">穴狙い</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）{"のツケマイ" if tp.get("kind", "tsuke") == "tsuke" else "の展示の足"} <small>検証中</small></h2>
 <ul class="comments">{"".join(f"<li>{e(w)}</li>" for w in tp["why"])}</ul>
-<p>まくり切ったときにイン（{bt(tp["in"])} {e(tp["in_name"])}）ごと沈めやすい形。<b>頭固定・インを2・3着から外した{len(tp["bets"])}点</b>。{comp}</p>
+<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定・インを2・3着から外した{len(tp["bets"])}点</b>。{comp}</p>
 <div class="bets">{cells}</div>{hit}{pre}
-<p class="sub">的中はめったにありません。過去約9,000レースの検証では、この条件の回収率は70〜80%台（本線・押さえと同程度）で、100%は超えていません。当たれば大きい代わりに外れが続く買い方なので、買うならこの枠だけで長く見る前提で。成績は実績ページで別に集計します。</p></section>"""
+<p class="sub">的中はめったにありません。過去約9,000レースの検証では、これらの条件の回収率は70〜80%台（本線・押さえと同程度）で、100%は超えていません。当たれば大きい代わりに外れが続く買い方なので、買うならこの枠だけで長く見る前提で。成績は実績ページで別に集計します。</p></section>"""
 
     def tenkai_block(self, p):
         tk = p.get("tenkai") or []

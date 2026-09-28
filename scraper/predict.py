@@ -322,6 +322,17 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 "st": stv[1], "in": inb_["frame"], "in_name": inb_["name"], "why": why, "bets": bets_}
         if not tsuke_pick or cand["rate"] > tsuke_pick["rate"]:
             tsuke_pick = cand
+    # 5コースの展示の足（旧・高回収狙い）も穴狙いに統合：ツケマイ型がいなければこちらを採用
+    if not tsuke_pick and ana and inb_:
+        others = [f for f in frames if f not in (ana["frame"], inb_["frame"])]
+        tsuke_pick = {"kind": "exgap", "frame": ana["frame"], "name": ana["name"], "course": ana["course"], "rate": 0,
+                      "in": inb_["frame"], "in_name": inb_["name"],
+                      "why": [f"展示タイムが4コースより{ana['gap']:.2f}秒速い（外から一気に行ける足）",
+                              f"過去1年この形の5コース1着は{ana['win'] * 100:.0f}%（オッズの見込み{ana['mkt'] * 100:.0f}%）"],
+                      "bets": [f"{ana['frame']}-{x}-{y}" for x in others for y in others if x != y]}
+    elif tsuke_pick:
+        tsuke_pick["kind"] = "tsuke"
+    ana = None
     # 穴目：展開メモで「外から一撃」の材料がある艇がいれば、その艇の頭を2点だけ押さえる
     ana_reason = ""
     ana_bets = ana_list
@@ -334,7 +345,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             pmap = dict(combos)
             ana_bets = [{"combo": f"{hf}-{x['frame']}-{y['frame']}", "p": round(pmap.get(f"{hf}-{x['frame']}-{y['frame']}", 0), 4)}
                    for x, y in ((others[0], others[1]), (others[1], others[0]))]
-            ana_reason = {"tilt": "チルトを上げた伸び型", "exgap": "展示タイムが内より速い"}.get(t0.get("type"), "スタートが早くまくり展開")
+            ana_reason = ""  # 穴狙いに一本化したため、本線・押さえの下の穴2点は出さない
     iw = in_worry(X, course_of, frames, cs_comments)
     for j in fs:
         if j["course"] == 1 and j["slow"] and j["n"] >= 3:
