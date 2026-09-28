@@ -36,6 +36,7 @@ def build(races: list) -> dict:
     races = sorted(races, key=lambda r: (r[0], r[1], r[2]))
     starts = defaultdict(list)      # toban -> [(date, course, st, rank)]
     kim4 = defaultdict(list)        # toban -> 4コースで勝ったときの決まり手（新しい順に最大40）
+    inpl = defaultdict(list)        # toban -> 1コースでの着順（最大60走）
     lastF = {}
     for r in races:
         E = r[11]
@@ -44,6 +45,9 @@ def build(races: list) -> dict:
         w = next((e for e in E if e[5] == 1), None)
         if w and w[2] == 4 and r[3]:
             kim4[w[1]].append(r[3])
+        for e in E:
+            if e[2] == 1 and isinstance(e[5], int):
+                inpl[e[1]].append(e[5])
         for i, e in enumerate(E):
             if e[4] == "F":
                 lastF[e[1]] = r[0]
@@ -77,7 +81,13 @@ def build(races: list) -> dict:
         mk, ms = ks.count("まくり"), ks.count("まくり差し")
         if mk + ms >= 3 and t in recent:
             recent[t].extend([mk, ms])
-    return {"asof": asof, "racers": out, "recent": recent}
+    # インで負けたときの着順：4着以下が多い＝攻められると飛び付いて抵抗する型
+    inres = {}
+    for t, ps in inpl.items():
+        beaten = [p for p in ps[-60:] if p != 1]
+        if len(beaten) >= 8:
+            inres[t] = [len(beaten), sum(1 for p in beaten if p >= 4)]
+    return {"asof": asof, "racers": out, "recent": recent, "inres": inres}
 
 
 def load() -> dict:
@@ -92,6 +102,13 @@ def load_recent() -> dict:
         return {}
     with gzip.open(OUT, "rt", encoding="utf-8") as f:
         return json.load(f).get("recent", {})
+
+
+def load_inres() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("inres", {})
 
 
 def judge(info: dict | None, course: int) -> dict | None:

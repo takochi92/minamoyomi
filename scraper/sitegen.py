@@ -85,6 +85,10 @@ def load_json(p, default=None):
         return default
 
 
+from itertools import permutations as _perm
+COMBO_LIST = [f"{a}-{b}-{c}" for a, b, c in _perm(range(1, 7), 3)]
+
+
 class Page:
     """1ページ分。path はサイトルートからの相対パス（例 race/20260925/kiryu-12.html）"""
 
@@ -201,8 +205,9 @@ class Site:
     # ------------------------------------------------------------ レース
     def reco_block(self, race, res):
         r = race.get("reco")
-        if not r:
-            return '<section class="panel vp"><h2>推奨買い目 <small>締切35分前からオッズを見て、合成オッズ5倍以上になるように組みます</small></h2></section>'
+        if not r or r["verdict"] in ("推奨", "見送り"):
+            # 基本は上の「本線・押さえ」。合成5倍に絞るのは自信ありのときだけ
+            return ""
         head = f'<small>{e(r.get("at", ""))}時点のオッズ{"（暫定。締切7分前以降で確定）" if r.get("final") is False else ""}</small>'
         if r["verdict"] == "購入非推奨" and (race.get("prediction") or {}).get("in_worry"):
             return (f'<section class="panel vp skip"><h2>見送り（イン人気過剰） {head}</h2>'
@@ -225,13 +230,13 @@ class Site:
             hit = race.get("r_hit")
             result = f'<p><span class="pill {"hit" if hit else "miss"}">{"的中" if hit else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
         conf = r["verdict"] == "自信あり"
-        return f"""<section class="panel vp {'go' if conf else ''}"><h2>{'推奨買い目・自信あり' if conf else '推奨買い目'} {head}</h2>
+        return f"""<section class="panel vp go"><h2><span class="chip cf">自信あり</span> 本線・押さえから合成{r['rule']['min_comp']:g}倍以上に絞った買い目 {head}</h2>
 <div class="tiles"><div class="tile"><small>合成オッズ</small><b>{r['comp']:.2f}倍</b></div><div class="tile"><small>点数</small><b>{len(r['bets'])}点</b></div>
 <div class="tile"><small>的中見込み（オッズから）</small><b>{pct(r['market_hit'])}</b></div><div class="tile"><small>AIの見込み</small><b>{pct(r['ai_hit'])}</b></div></div>
 <div class="tbl-wrap"><table><thead><tr><th>3連単</th><th class="r">オッズ</th><th class="r">配分（計{yen(total)}）</th><th class="r">当たれば</th><th class="r">AI確率</th></tr></thead><tbody>{rows}</tbody></table></div>
 {f'<p>この配分なら、どれが当たっても <b class="num">{yen(r["alloc_min_return"])}</b> 以上（実質 <b class="num">{r["alloc_min_return"] / total:.2f}倍</b>）。予算に合わせて全部を同じ割合で増減してください。</p>' if r.get('alloc_min_return') else ''}
 {result}
-<p class="sub">合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。AIの確率が高い順に、合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で最大{r['rule']['max_points']}点（AI確率1%未満、またはAIがオッズの2倍以上に過大評価している目は入れない＝合成オッズを上げるための人気薄の穴埋めはしない）。過去9千レースの検証では、実際の的中率は「AIの見込み」より「オッズからの見込み」に近く出ています。</p></section>"""
+<p class="sub">本線・押さえの中から、AIの確率が高い順に合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で選び、AIの的中見込みが{r['rule']['confident_ai'] * 100:.0f}%以上になるレースだけ「自信あり」として出しています（本線・押さえ以外の目は使いません）。合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。</p></section>"""
 
     def oriten_block(self, race):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -324,12 +329,195 @@ class Site:
         return (f'<br>{t["att_name"]}は4コースで勝つときの多くがまくり差し（まくり{mk}回・まくり差し{ms}回）。内に切り込むため外の5・6は残りにくく、'
                 f'<span class="sub">この形でまくり差し型だと6の3着内は19.3%（平均22.0%）。</span>')
 
+    # ------------------------------------------------------------ スタート展示（スリット図）
+    BOAT = {1: ("#F4F6F8", "#1B1B1B"), 2: ("#23272B", "#FFFFFF"), 3: ("#E0362C", "#FFFFFF"),
+            4: ("#2566D0", "#FFFFFF"), 5: ("#F2D231", "#1B1B1B"), 6: ("#2E9D4E", "#FFFFFF")}
+
+    @staticmethod
+    def boat_svg(nx, wy, hull, ink, num):
+        """横から見た競艇ボート（舳先の先端が nx、喫水線が wy）"""
+        return (f'<g transform="translate({nx:.1f},{wy})">'
+                # 引き波・しぶき
+                f'<path d="M-118 1 q8 -5 16 0 t16 0 t16 0" stroke="rgba(170,220,255,.55)" stroke-width="2" fill="none"/>'
+                f'<path d="M-92 -2 l-10 -7 M-94 1 l-14 -3 M-90 3 l-12 3" stroke="rgba(235,248,255,.8)" stroke-width="1.6" stroke-linecap="round"/>'
+                # 船体
+                f'<path d="M0 -5 L-12 -12 L-74 -13 L-80 -11 L-80 -2 L-62 1 L-12 1 Z" fill="{hull}" stroke="rgba(0,0,0,.55)" stroke-width="1"/>'
+                f'<path d="M-14 -9 L-72 -9.5" stroke="{ink}" stroke-opacity=".55" stroke-width="1.4"/>'
+                f'<path d="M-2 -3 L-60 -2" stroke="rgba(0,0,0,.35)" stroke-width="1"/>'
+                # 艇番プレート
+                f'<rect x="-66" y="-12" width="11" height="9" rx="1.5" fill="{ink}"/>'
+                f'<text x="-60.5" y="-4.6" text-anchor="middle" font-size="8" font-weight="900" fill="{hull}">{num}</text>'
+                # 選手（前かがみ）
+                f'<path d="M-50 -13 C-47 -22 -38 -25 -30 -21 L-26 -15 Z" fill="{hull}" stroke="rgba(0,0,0,.55)" stroke-width="1"/>'
+                f'<circle cx="-27" cy="-24" r="6" fill="{hull}" stroke="rgba(0,0,0,.6)" stroke-width="1"/>'
+                f'<path d="M-25 -26 a4 3 0 0 1 4 3 l-5 1 z" fill="#15191D"/>'
+                f'<path d="M-30 -18 L-18 -13" stroke="rgba(0,0,0,.6)" stroke-width="1.6" stroke-linecap="round"/>'
+                # モーター
+                f'<rect x="-92" y="-25" width="14" height="10" rx="3" fill="#2B3137" stroke="rgba(255,255,255,.2)"/>'
+                f'<rect x="-88" y="-16" width="6" height="18" fill="#3A424A"/>'
+                f'<path d="M-90 2 h10" stroke="#8A949E" stroke-width="2"/>'
+                '</g>')
+
+    def slit_block(self, race):
+        bi = race.get("before") or {}
+        se = bi.get("start_exhibition") or []
+        if len(se) != 6:
+            return ""
+        ex = {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
+        W, H, ROW, TOP = 360, 0, 44, 26
+        SLIT, K = 252, 400          # スリット線の位置と、ST 0.01秒あたり5.2px
+        rows = []
+        for i, x in enumerate(sorted(se, key=lambda z: z["course"])):
+            f, c, st, flag = x["frame"], x["course"], x.get("st"), x.get("flag") or ""
+            y = TOP + i * ROW
+            hull, ink = self.BOAT.get(f, ("#888", "#fff"))
+            if st is None:
+                nose, lab, col = SLIT - 190, "L" if flag == "L" else "-", "#FF4D4D"
+            else:
+                nose = SLIT - st * K
+                lab = (f"F{abs(st):.2f}".replace("0.", ".") if st < 0 or flag == "F" else f"{st:.2f}".replace("0.", "."))
+                col = "#FF4D4D" if (st < 0 or flag == "F") else "var(--ink)"
+            nose = max(130, min(W - 64, nose))
+            et = ex.get(f)
+            rows.append(
+                f'<g><rect x="0" y="{y}" width="{W}" height="{ROW}" fill="{"rgba(255,255,255,.025)" if i % 2 else "transparent"}"/>'
+                f'<rect x="8" y="{y + 9}" width="26" height="26" rx="5" fill="{hull}" stroke="rgba(255,255,255,.25)"/>'
+                f'<text x="21" y="{y + 28}" text-anchor="middle" font-size="16" font-weight="800" fill="{ink}">{c}</text>'
+                + self.boat_svg(nose, y + 33, hull, ink, f)
+                + f'<text x="{W - 12}" y="{y + 25}" text-anchor="end" font-size="17" font-weight="800" fill="{col}" class="num">{lab}</text>'
+                + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示 {et}</text>' if et else "")
+                + '</g>')
+        H = TOP + 6 * ROW + 8
+        svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="スタート展示のスリット" style="display:block;max-width:560px">'
+               f'<rect x="0" y="0" width="{W}" height="{H}" rx="10" fill="#0E2A3B"/>'
+               f'<text x="21" y="17" text-anchor="middle" font-size="10" fill="var(--ink2)">コース</text>'
+               f'<text x="{SLIT}" y="17" text-anchor="middle" font-size="10" fill="#F5C542">スリット</text>'
+               f'<text x="{W - 12}" y="17" text-anchor="end" font-size="10" fill="var(--ink2)">ST</text>'
+               + "".join(rows) +
+               f'<line x1="{SLIT}" y1="{TOP - 2}" x2="{SLIT}" y2="{H - 6}" stroke="#F5C542" stroke-width="2.5"/></svg>')
+        return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
+<p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p></section>"""
+
+    # ------------------------------------------------------------ 1周1マークの展開イメージ（上から見た図）
+    DEFAULT_MOVE = {2: "差し", 3: "まくり", 4: "まくり", 5: "まくり差し", 6: "展開待ち"}
+
+    def turn_block(self, race, p):
+        pb = p.get("boats") or []
+        if len(pb) != 6:
+            return ""
+        bi = race.get("before") or {}
+        st = {x["frame"]: x.get("st") for x in bi.get("start_exhibition") or []}
+        csb = (p.get("course_stats") or {}).get("boats", {})
+        boats = sorted(pb, key=lambda b: b["course"])
+        top = max(pb, key=lambda b: b.get("p_win", 0))
+        # スタート順（展示）
+        valid = sorted((v, f) for f, v in st.items() if v is not None)
+        srank = {f: i + 1 for i, (v, f) in enumerate(valid)}
+        moves = {}
+        for b in boats:
+            f, c = b["frame"], b["course"]
+            if c == 1:
+                moves[f] = "逃げ"
+                continue
+            k = (csb.get(str(f)) or csb.get(f) or {}).get("kimarite") or {}
+            cand = {m: k.get(m, 0) for m in ("差し", "まくり", "まくり差し")}
+            mv = max(cand, key=cand.get) if sum(cand.values()) >= 2 else self.DEFAULT_MOVE[c]
+            if c == 6 and sum(cand.values()) < 2:
+                mv = "展開待ち"
+            if srank.get(f, 3) >= 5 and mv != "差し":
+                mv = "展開待ち"      # 展示でスタートが遅い艇は攻めきれない
+            moves[f] = mv
+        W, H = 360, 236
+        MX, MY = 300, 46            # 1マーク
+        SL = 146                    # スタートライン
+        lanes = {b["frame"]: 84 + (b["course"] - 1) * 24 for b in boats}
+
+        def bx(f):                  # 舳先の位置：展示STが早いほど前
+            v = st.get(f)
+            v = 0.15 if v is None else max(v, 0)
+            return max(118, SL + 20 - v * 200)
+
+        def path(mv, x, y):
+            if mv == "逃げ":
+                return f"M{x} {y} L{MX - 40} {y} C{MX - 6} {y}, {MX + 22} {MY + 10}, {MX + 10} {MY - 16} S{MX - 50} {MY - 32}, {MX - 90} {MY - 30}"
+            if mv == "差し":
+                return f"M{x} {y} L{MX - 70} {y} C{MX - 40} {y}, {MX - 30} {MY + 22}, {MX - 56} {MY + 8} S{MX - 100} {MY - 4}, {MX - 130} {MY - 4}"
+            if mv == "まくり":
+                return f"M{x} {y} L{MX - 60} {y} C{MX + 20} {y}, {MX + 46} {MY + 20}, {MX + 30} {MY - 26} S{MX - 50} {MY - 44}, {MX - 100} {MY - 40}"
+            if mv == "まくり差し":
+                return f"M{x} {y} L{MX - 60} {y} C{MX + 10} {y}, {MX + 16} {MY + 40}, {MX - 30} {MY + 22} S{MX - 90} {MY + 14}, {MX - 120} {MY + 14}"
+            return f"M{x} {y} L{MX - 40} {y} C{MX + 20} {y}, {MX + 44} {y - 20}, {MX + 44} {y - 50}"
+
+        g, lab = [], []
+        for b in reversed(boats):
+            f, c = b["frame"], b["course"]
+            x, y = bx(f), lanes[f]
+            hull, ink = self.BOAT.get(f, ("#888", "#fff"))
+            line = "#AEB8C2" if f == 2 else hull
+            strong = f == top["frame"]
+            g.append(f'<path d="{path(moves[f], x, y)}" fill="none" stroke="{line}" stroke-width="{3.4 if strong else 2}" stroke-opacity="{1 if strong else 0.6}" '
+                     f'stroke-dasharray="{"none" if strong else "5 5"}" stroke-linecap="round"/>')
+        for b in boats:
+            f, c = b["frame"], b["course"]
+            x, y = bx(f), lanes[f]
+            hull, ink = self.BOAT.get(f, ("#888", "#fff"))
+            g.append(f'<g transform="translate({x},{y})"><path d="M0 0 L-10 -6 L-30 -6 L-30 6 L-10 6 Z" fill="{hull}" stroke="rgba(0,0,0,.6)"/>'
+                     f'<circle cx="-17" cy="0" r="3.4" fill="#15191D" stroke="rgba(255,255,255,.55)" stroke-width=".8"/>'
+                     f'<rect x="-35" y="-3" width="5" height="6" fill="#3A424A"/></g>')
+            lab.append(f'<rect x="8" y="{y - 9}" width="18" height="18" rx="4" fill="{hull}" stroke="rgba(255,255,255,.25)"/>'
+                       f'<text x="17" y="{y + 4.5}" text-anchor="middle" font-size="12" font-weight="800" fill="{ink}">{c}</text>'
+                       f'<text x="31" y="{y + 4}" font-size="11" font-weight="700" fill="var(--ink)">{moves[f]}</text>')
+        svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="1周1マークの展開イメージ" style="display:block;max-width:560px">'
+               f'<rect width="{W}" height="{H}" rx="10" fill="#0E2A3B"/>'
+               f'<line x1="{SL}" y1="70" x2="{SL}" y2="{H - 16}" stroke="#F5C542" stroke-width="1.5" stroke-dasharray="3 4"/>'
+               f'<text x="{SL}" y="{H - 5}" text-anchor="middle" font-size="9" fill="#F5C542">スタートライン</text>'
+               + "".join(g) + "".join(lab) +
+               f'<circle cx="{MX}" cy="{MY}" r="9" fill="#FF7A2F" stroke="#fff" stroke-width="2"/>'
+               f'<text x="{MX + 16}" y="{MY + 4}" font-size="10" fill="var(--ink)">1マーク</text></svg>')
+        return f"""<section class="panel"><h2>1周1マークの展開イメージ <small>展示のスタートと、各選手がそのコースでよく決める形から</small></h2>{svg}
+<p class="sub">実線がAIの1着予想（{bt(top["frame"])} {e(top.get("name", ""))}）、点線がほかの艇の動きの目安です。「差し」は内をすくう、「まくり」は外から一気に抜く、「まくり差し」は外から内に切り込む動き。展示でスタートが遅かった艇は「展開待ち」にしています。あくまでイメージで、実際のレースとは異なります。</p></section>"""
+
+    def ana_block(self, race, p):
+        a = p.get("ana_pick")
+        if not a:
+            return ""
+        o = (race.get("odds_pre") or {}).get("v")
+        def od(c):
+            if not o:
+                return ""
+            j = next((i for i, x in enumerate(COMBO_LIST) if x == c), None)
+            return f'<b class="odds">{o[j]}倍</b>' if j is not None and o[j] else ""
+        res = race["result"] if race.get("result", {}).get("finished") else None
+        hit = ""
+        if res:
+            h = res["trifecta"] in a["bets"]
+            hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
+        cells = "".join(f'<span class="bet">{combo(c)}{od(c)}</span>' for c in a["bets"])
+        return f"""<section class="panel ana"><h2><span class="chip an">高回収狙い</span> {bt(a["frame"])} {e(a["name"])}の頭 <small>検証中</small></h2>
+<p>5コースの{e(a["name"])}は展示タイムが4コースより<b>{a["gap"]:.2f}秒</b>速く、外から一気に行ける足があります。頭固定・相手はAIの3着内上位3艇で{len(a["bets"])}点。</p>
+<div class="bets">{cells}</div>{hit}
+<p class="sub">過去1年、5コースが4コースより0.15秒以上速かった{a["n"]}レースでは、5の1着が{pct(a["win"])}（オッズの見込み{pct(a["mkt"])}）。前半・後半に分けてもどちらも頭の回収率が100%を超えていましたが、件数が少なく偶然の可能性もあるため「検証中」です。成績は実績ページで別に集計します。</p></section>"""
+
     def tenkai_block(self, p):
         tk = p.get("tenkai") or []
         if not tk:
             return ""
         li = []
         for t in tk:
+            if t.get("type") == "resist":
+                ws = "・".join(f"{c}コース{pct(v)}" for c, v in t["wins"].items())
+                if t["style"] == "飛び付き":
+                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>飛び付き型</b>（インで負けた{t["beaten"]}回のうち{t["out"]}回が4着以下）。'
+                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}はスタートが早く、攻められると抵抗して共倒れになりやすい形。')
+                else:
+                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>残す型</b>（インで負けても{t["beaten"] - t["out"]}/{t["beaten"]}回は2〜3着）。'
+                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}に攻められても無理に抵抗せず、着に残しにくる形。')
+                li.append(f'<li>{body}<span class="sub">過去2年、{t["att_course"]}コースがスタートの早い選手でこのタイプのイン（{t["n"]:,}レース）：インの1着{pct(t["in_win"])}・4着以下{pct(t["in_out"])}、1着は{ws}、配当の中央値{t["pay"]:,}円。</span></li>')
+                continue
+            if t.get("type") == "exgap":
+                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}（{t["course"]}コース）は展示タイムが内の{bt(t["inner"])} {e(t["inner_name"])}より<b>{t["gap"]:.2f}秒</b>速い。足で内を叩ける形で、<b>まくり</b>が決まりやすくなります。'
+                          f'<span class="sub">過去1年、{t["course"]}コースが内より0.10秒以上速いとき（{t["n"]}回）の1着は{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span></li>')
+                continue
             if t.get("type") == "tilt":
                 over = "オッズではそれ以上に売れやすく、頭で買うなら妙味は薄め" if t["mkt"] > t["win"] else "オッズの評価とほぼ同じ"
                 li.append(f'<li>{bt(t["frame"])} {e(t["name"])}（{t["course"]}コース）はチルト<b>{t["tilt"]:+.1f}</b>の伸び型。スタート後の伸びで一気に攻める形があります。'
@@ -394,7 +582,10 @@ class Site:
                     out.append(f'<span class="bet">{combo(x["combo"])}{oh}<small>AI {pct(x["p"], 1)}</small></span>')
                 return "".join(out)
 
-            ai_rows = f"""<section class="slip"><div class="slip-h"><b>参考：AIの着順予想</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想</span></div>
+            hitp = ""
+            if res:
+                hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
+            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b"><div class="bet-group"><span>本線</span><div class="bets">{cells(p['bets']['main'])}</div></div>
 <div class="bet-group"><span>押さえ</span><div class="bets">{cells(p['bets']['sub'])}</div></div></div></section>"""
         inp = (p.get("course_stats") or {}).get("in")
@@ -408,8 +599,11 @@ class Site:
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
+{self.slit_block(race)}
 {self.worry_block(p)}
+{ai_rows}
 {self.reco_block(race, res)}
+{self.ana_block(race, p)}
 {self.tenkai_block(p)}
 {self.fstart_block(p)}
 <section id="live" class="panel" hidden></section>
@@ -420,7 +614,7 @@ class Site:
 {self.oriten_block(race)}
 {loss}
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
-{ai_rows}
+
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
 <div class="wx"><div><small>風</small><b>{e(wind.get('type', '-'))}</b></div><div><small>風速</small><b>{w.get('wind_speed', '-')}m</b></div><div><small>波高</small><b>{w.get('wave_cm', '-')}cm</b></div>
@@ -447,6 +641,8 @@ class Site:
                 # 狙い目は「推奨買い目に入っている艇」だけ出す（買い目と言うことをそろえる）。ガチガチ（買い目なし）では出さない
                 tg = [f for f in tg if f in (rc.get("boats") or [])] if "boats" in rc else ([] if gachi else tg)
             chips = [f'<span class="chip tg">狙い目 {bt(f)}</span>' for f in tg]
+            if r.get("ana"):
+                chips.insert(0, '<span class="chip an">高回収狙い</span>')
             if r.get("in_worry") and gachi:
                 # 人気はインに集中しているのに、イン不安の材料がある → 1つのラベルにまとめる
                 chips.insert(0, '<span class="chip gc">イン人気過剰</span>')
@@ -456,7 +652,7 @@ class Site:
                 chips.append('<span class="chip gc">ガチガチ</span>')
             if rc and rc["verdict"] == "自信あり":
                 chips.insert(0, '<span class="chip cf">自信あり</span>')
-            if rc and rc.get("hit") and r.get("result") and self.finished(r):
+            if r.get("hit") and r.get("result") and self.finished(r):
                 chips.insert(0, '<span class="chip hitc">的中</span>')
             tag = "".join(chips)
             resh = f'{combo(r["result"])}<br><span class="num sub">{yen(r.get("payout"))}</span>' if r.get("result") and self.finished(r) else ""
@@ -466,7 +662,7 @@ class Site:
     @staticmethod
     def reco_summary(rc):
         """一覧用の要約：点数と合成オッズだけ（中身はレースページで）"""
-        return f'<span class="rs"><span class="sub">推奨買い目</span><span class="rs-n">{rc["n"]}点</span></span><span class="num">合成 {rc["comp"]}倍</span>'
+        return f'<span class="rs"><span class="sub">絞り込み</span><span class="rs-n">{rc["n"]}点</span></span><span class="num">合成 {rc["comp"]}倍</span>'
 
     def finished(self, r):
         return bool(r.get("result")) and r["deadline"] <= self.now.strftime("%H:%M")
@@ -513,8 +709,10 @@ class Site:
             rc = r.get("reco")
             if rc and rc["verdict"] == "購入非推奨":
                 line = '<span class="sub">購入非推奨（ガチガチ）</span>'
-            elif rc and rc.get("top"):
+            elif rc and rc["verdict"] == "自信あり":
                 line = self.reco_summary(rc)
+            elif r.get("pts"):
+                line = f'<span class="rs"><span class="sub">本線</span><span class="rs-n">{r["pts"][0]}点</span><span class="sub">押さえ</span><span class="rs-n">{r["pts"][1]}点</span></span>'
             else:
                 line = '<span class="sub">締切35分前に買い目を出します</span>'
             cfh = '<span class="chip cf">自信あり</span> ' if rc and rc["verdict"] == "自信あり" else ""
@@ -534,9 +732,9 @@ class Site:
         targets = self.today_targets(page)
         body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
-<h1>今日のボートレース予想｜全場の推奨買い目と合成オッズ</h1>
-<p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズとAIの着順予想を突き合わせ、合成オッズ5倍以上で組んだ推奨買い目を全レースに出しています。本命が売れすぎているレースは「購入非推奨」です。</p></section>
-{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示タイムまで見たうえで、合成オッズ5倍以上・AIの見込みが高いレース</small></h2><div class="soon">{cards}</div></section>' if cards else ''}
+<h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
+<p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
+{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2><div class="soon">{cards}</div></section>' if cards else ''}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}

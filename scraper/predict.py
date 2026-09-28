@@ -42,6 +42,22 @@ def wind_info(wind_dir: Optional[int], speed: Optional[float]) -> dict:
 IN_WORRY = {"in_rc_max": -0.15, "mu_min": 0.82, "mu_strong": 1.21, "hist": {1: 0.289, 2: 0.283}, "races": {1: 893, 2: 325}, "all": 0.551}
 
 
+# 3・4コースがスタートの早い選手のとき、インのタイプ別（過去2年）
+RESIST_STATS = {
+    (3, "飛び付き"): {"n": 1509, "in_win": 0.37, "in_out": 0.34, "pay": 3230, "wins": {2: 0.19, 3: 0.25, 4: 0.11, 5: 0.06}},
+    (3, "残す"): {"n": 7150, "in_win": 0.62, "in_out": 0.13, "pay": 2280, "wins": {2: 0.10, 3: 0.15, 4: 0.08, 5: 0.04}},
+    (4, "飛び付き"): {"n": 1428, "in_win": 0.37, "in_out": 0.35, "pay": 3310, "wins": {2: 0.18, 3: 0.16, 4: 0.20, 5: 0.07}},
+    (4, "残す"): {"n": 7305, "in_win": 0.59, "in_out": 0.14, "pay": 2450, "wins": {2: 0.10, 3: 0.10, 4: 0.14, 5: 0.05}},
+}
+
+# 展示タイムが内の艇より0.10秒以上速いとき（過去1年・約9千レース）
+EXGAP_STATS = {3: {"n": 597, "win": 0.209, "base_win": 0.128, "makuri": 0.095, "base_makuri": 0.050},
+               4: {"n": 699, "win": 0.210, "base_win": 0.103, "makuri": 0.122, "base_makuri": 0.046},
+               5: {"n": 675, "win": 0.108, "base_win": 0.061, "makuri": 0.044, "base_makuri": 0.012}}
+# 高回収狙い（検証中）：5コースの展示タイムが4コースより0.15秒以上速い → 5の頭
+# 過去1年 177レースで5の1着18.1%（オッズの見込み12.8%）。偶数日・奇数日とも頭の回収率100%以上だったが件数が少ない
+ANA_RULE = {"gap": 0.15, "n": 177, "win": 0.181, "mkt": 0.128}
+
 # チルト1.0以上（伸び型）の過去1年の実績（2025/9〜2026/9・展示の進入・確定オッズのある約9千レース）
 TILT_STATS = {4: {"n": 92, "win": 0.239, "base_win": 0.101, "mkt": 0.183, "top3": 0.598, "base_top3": 0.469},
               5: {"n": 130, "win": 0.146, "base_win": 0.060, "mkt": 0.143, "top3": 0.469, "base_top3": 0.364},
@@ -213,6 +229,34 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         c = course_of[b["frame"]]
         if t is not None and t >= 1.0 and c >= 4:
             tenkai.append({"type": "tilt", "frame": b["frame"], "name": b["name"], "course": c, "tilt": t, **TILT_STATS[c]})
+    # インの「攻められ方」：負けたとき4着以下が多い＝飛び付き型、2〜3着に残す＝残す型
+    inb = byc.get(1)
+    ir = fstart.load_inres().get(inb.get("toban", "")) if inb else None
+    if ir:
+        out = ir[1] / ir[0]
+        ityp = "飛び付き" if out >= 0.55 else None     # 残す型は多数派なのでメモには出さない
+        att = [byc[c] for c in (3, 4) if byc.get(c) and rec.get(byc[c].get("toban", "")) and rec[byc[c]["toban"]][1] <= 2.8]
+        if ityp and att:
+            a = att[0]
+            ac = course_of[a["frame"]]
+            tenkai.append({"type": "resist", "in": inb["frame"], "in_name": inb["name"], "style": ityp, "beaten": ir[0], "out": ir[1],
+                           "att": a["frame"], "att_name": a["name"], "att_course": ac, **RESIST_STATS[(ac, ityp)]})
+
+    # 展示タイムが内の艇より0.1秒以上速い → まくりが決まりやすい
+    ana = None
+    if has_ex:
+        for c in (3, 4, 5):
+            a, w = byc.get(c), byc.get(c - 1)
+            if not a or not w:
+                continue
+            gap = round(ex[w["frame"]] - ex[a["frame"]], 2)
+            if gap >= 0.10:
+                tenkai.append({"type": "exgap", "frame": a["frame"], "name": a["name"], "course": c, "gap": gap,
+                               "inner": w["frame"], "inner_name": w["name"], **EXGAP_STATS[c]})
+            if c == 5 and gap >= ANA_RULE["gap"]:
+                others = sorted((r for r in rows if r["frame"] != a["frame"]), key=lambda r: -r["p_top3"])[:3]
+                combos_ = [f"{a['frame']}-{x['frame']}-{y['frame']}" for x in others for y in others if x is not y]
+                ana = {**ANA_RULE, "frame": a["frame"], "name": a["name"], "course": c, "gap": gap, "bets": combos_}
     iw = in_worry(X, course_of, frames, cs_comments)
     for j in fs:
         if j["course"] == 1 and j["slow"] and j["n"] >= 3:
@@ -236,6 +280,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "in_worry": iw,
         "fstart": fs,
         "tenkai": tenkai,
+        "ana_pick": ana,
         "comments": comments,
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},

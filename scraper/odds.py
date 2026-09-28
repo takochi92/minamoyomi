@@ -171,7 +171,7 @@ def parse_odds2t(html: str) -> dict | None:
 # ---------------------------------------------------------------- 推奨買い目（合成オッズの下限つき）
 # max_over_market: AIの確率がオッズから見た確率の2倍を超える目は入れない。
 #   合成オッズを保つために、勝率・戦績の低い艇の人気薄を「穴埋め」で拾わないため（過去9千レースで回収率は変わらず、市場0.5%未満の超穴は0に）
-RECO_RULE = {"min_comp": 5.0, "max_points": 10, "min_p": 0.01, "gachi_top_odds": 5.0, "confident_ai": 0.25, "max_over_market": 2.0}
+RECO_RULE = {"min_comp": 5.0, "max_points": 10, "min_p": 0.01, "gachi_top_odds": 5.0, "confident_ai": 0.20, "max_over_market": 2.0}
 
 
 def _head_ok(model_p3, picked, min_head=0.5):
@@ -183,7 +183,7 @@ def _head_ok(model_p3, picked, min_head=0.5):
     return sum(p for p, c in zip(model_p3, COMBOS) if c.startswith(h + "-")) >= min_head
 
 
-def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None) -> dict:
+def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None, cand: list[str] | None = None) -> dict:
     """AIの確率が高い順に3連単を足し、合成オッズ（1/Σ(1/オッズ)）が下限を割らない範囲で最大10点選ぶ。
 
     判定：AIの本命の目が min_comp 倍未満 → 「購入非推奨（ガチガチ）」
@@ -195,6 +195,10 @@ def recommend(model_p3: list[float], odds: list[float], rule: dict | None = None
     ok = [o == o and o and o > 0 for o in odds]
     order = sorted(range(120), key=lambda j: -model_p3[j])
     top = order[0]
+    if cand:
+        # 表示している本線・押さえの中からだけ選ぶ（それ以外の目で合成オッズを作らない）
+        cs = set(cand)
+        order = [j for j in order if COMBOS[j] in cs]
     picked, inv = [], 0.0
     for j in order:
         if len(picked) >= r["max_points"] or model_p3[j] < r["min_p"]:

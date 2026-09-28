@@ -84,6 +84,7 @@ def summarize(race: dict) -> dict:
     s = {"rno": race["rno"], "deadline": race["deadline"], "stage": pred.get("stage", "")}
     if pred:
         s["confidence"] = pred["confidence"]["label"]
+        s["pts"] = [len(pred["bets"]["main"]), len(pred["bets"]["sub"])]
         s["level"] = pred["confidence"]["level"]
         s["honmei"] = [m["combo"] for m in pred["bets"]["main"][:3]]
     if race.get("result", {}).get("finished"):
@@ -98,6 +99,10 @@ def summarize(race: dict) -> dict:
                      "boats": sorted({int(x) for b in rc["bets"] for x in b["combo"].split("-")})}
         if "r_hit" in race:
             s["reco"]["hit"] = race["r_hit"]
+    if pred and pred.get("ana_pick"):
+        s["ana"] = pred["ana_pick"]["frame"]
+        if "a_hit" in race:
+            s["ana_hit"] = race["a_hit"]
     if pred and pred.get("in_worry"):
         s["in_worry"] = pred["in_worry"]["level"]
     spec = pred.get("specialists") if pred else None
@@ -127,8 +132,13 @@ def judge(race: dict):
     race["hit_main"] = res["trifecta"] in main
     race["invest_main"] = 100 * len(main)
     race["return_main"] = (res["trifecta_payout"] or 0) if race["hit_main"] else 0
+    ap = pred.get("ana_pick")
+    if ap:
+        race["a_hit"] = res["trifecta"] in ap["bets"]
+        race["a_invest"] = 100 * len(ap["bets"])
+        race["a_return"] = (res["trifecta_payout"] or 0) if race["a_hit"] else 0
     reco = race.get("reco")
-    if reco and reco["bets"] and reco["verdict"] in ("推奨", "自信あり") and reco.get("final", True):
+    if reco and reco["bets"] and reco["verdict"] == "自信あり" and reco.get("final", True):
         # 表示している「合成オッズ配分（1,000円）」どおりに買った場合で集計
         alloc = reco.get("alloc") or {b["combo"]: 100 for b in reco["bets"]}
         race["r_hit"] = res["trifecta"] in alloc
@@ -195,7 +205,8 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             val["at"] = at
             val["final"] = now >= dl - timedelta(minutes=7)
             race["value"] = val
-            reco = O.recommend(race["prediction"]["p3"], ov)
+            pb = race["prediction"]["bets"]
+            reco = O.recommend(race["prediction"]["p3"], ov, cand=[b["combo"] for b in pb["main"] + pb["sub"]])
             reco["at"], reco["final"] = at, val["final"]
             reco["stage"] = race["prediction"].get("stage", "")
             if reco["verdict"] == "自信あり" and reco["stage"] != "直前":
@@ -229,7 +240,8 @@ def build_stats():
         agg = {"races": 0, "hits": 0, "invest": 0, "return": 0, "hits_main": 0, "invest_main": 0, "return_main": 0, "best": [],
                "v_checked": 0, "v_races": 0, "v_hits": 0, "v_invest": 0, "v_return": 0, "v_best": [],
                "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
-               "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0}
+               "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
+               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0}
         for p in sorted((DATA / "races" / d).glob("*.json")):
             r = _load(p, {})
             if r.get("hit") is None:
@@ -238,6 +250,8 @@ def build_stats():
                 agg["v_checked"] += 1
             if r.get("reco", {}).get("verdict") == "購入非推奨":
                 agg["gachi"] += 1
+            if "a_hit" in r:
+                agg["a_races"] += 1; agg["a_hits"] += int(r["a_hit"]); agg["a_invest"] += r["a_invest"]; agg["a_return"] += r["a_return"]
             if "r_hit" in r:
                 agg["r_races"] += 1; agg["r_hits"] += int(r["r_hit"]); agg["r_invest"] += r["r_invest"]; agg["r_return"] += r["r_return"]
                 if r.get("r_conf"):
@@ -274,7 +288,8 @@ def build_stats():
         t = {"races": 0, "hits": 0, "invest": 0, "return": 0, "hits_main": 0, "invest_main": 0, "return_main": 0,
              "v_checked": 0, "v_races": 0, "v_hits": 0, "v_invest": 0, "v_return": 0,
              "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
-             "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0}
+             "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
+               "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0}
         for k in keys:
             for f in t:
                 t[f] += hist[k].get(f, 0)
