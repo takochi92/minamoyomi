@@ -51,6 +51,8 @@ def test_result():
     assert r["trifecta"] == "1-5-4" and r["trifecta_payout"] == 5060
     assert r["exacta"] == "1-5" and r["exacta_payout"] == 1230 and r["kimarite"] == "逃げ"
     assert r["win"] == 1 and r["win_payout"] == 150
+    assert r["trifecta_ninki"] == 16
+    assert [o["frame"] for o in r["order"]] == [1, 5, 4] and r["order"][0]["place"] == "1" and r["order"][1]["name"] == "鈴木一郎"
 
 
 def test_wind():

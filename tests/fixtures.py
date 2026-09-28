@@ -80,6 +80,10 @@ RESULT = """<main><div class="table1"><table class="is-w495"><thead><tr><th>勝�
 <tbody> <tr class="is-p3-0"> <td rowspan="2">2連単</td> <td> <div class="numberSet1 is-small"> <div class="numberSet1_row">
 <span class="numberSet1_number is-type1">1</span><span class="numberSet1_text">-</span><span class="numberSet1_number is-type5">5</span>
 </div> </div> </td> <td><span class="is-payout1">¥1,230</span></td> <td>5</td> </tr> </tbody></table></div>
+<div class="table1"><table class="is-w495"><thead><tr><th>着</th><th>枠</th><th>ボートレーサー</th><th>レースタイム</th></tr></thead>
+<tbody><tr><td class="is-fs14">１</td><td class="is-fs14 is-fBold is-boatColor1">1</td><td><span class="is-fs12">4444</span> <span class="is-fs18 is-fBold">山田　太郎</span></td><td>1'49"8</td></tr></tbody>
+<tbody><tr><td class="is-fs14">２</td><td class="is-fs14 is-fBold is-boatColor5">5</td><td><span class="is-fs12">4555</span> <span class="is-fs18 is-fBold">鈴木　一郎</span></td><td>1'51"2</td></tr></tbody>
+<tbody><tr><td class="is-fs14">３</td><td class="is-fs14 is-fBold is-boatColor4">4</td><td><span class="is-fs12">4666</span> <span class="is-fs18 is-fBold">佐藤　花子</span></td><td>1'52"0</td></tr></tbody></table></div>
 <div class="table1"><table class="is-w243 is-h108__3rdadd"><thead><tr><th>決まり手</th></tr></thead><tbody><tr><td>逃げ</td></tr></tbody></table></div></main>"""
 
 INDEX = """<main><div class="table1"><table><thead><tr><th>ボートレース場</th></tr></thead>
