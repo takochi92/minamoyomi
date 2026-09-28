@@ -391,3 +391,6 @@ details.cr th,details.cr td{padding:7px 5px}
 .rtbl tr.pend td{color:var(--ink2)}
 .rnav{display:flex;gap:16px;font-size:13px}
 .rnav a:last-child{margin-left:auto}
+.chip.tk{background:#7B3FE4;color:#fff;border-color:#7B3FE4}
+.panel.tsuke{border-color:#7B3FE4}
+.cfc.tkc{border-color:#7B3FE4}

@@ -390,6 +390,12 @@
           <div class="tile"><small>的中</small><b>${t.hits || 0}${t.races ? `<small style="display:inline"> (${pct(t.hits / t.races)})</small>` : ""}</b></div>
           <div class="tile"><small>回収率</small><b class="${t.invest && t.return >= t.invest ? "up" : "down"}">${t.invest ? pct(t.return / t.invest, 1) : "-"}</b></div>
         </div>
+        <h2>穴狙い（ツケマイ型・検証中）<small>イン抜きの買い目を各100円で購入した場合</small></h2>
+        <div class="tiles">
+          <div class="tile"><small>レース</small><b>${(t.t_races || 0).toLocaleString()}</b></div>
+          <div class="tile"><small>的中</small><b>${t.t_hits || 0}</b></div>
+          <div class="tile"><small>回収率</small><b class="${t.t_invest && t.t_return >= t.t_invest ? "up" : "down"}">${t.t_invest ? pct(t.t_return / t.t_invest, 1) : "-"}</b></div>
+        </div>
         <h2>高回収狙い（検証中）<small>頭固定の買い目を各100円で購入した場合</small></h2>
         <div class="tiles">
           <div class="tile"><small>レース</small><b>${(t.a_races || 0).toLocaleString()}</b></div>
