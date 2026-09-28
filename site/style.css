@@ -364,3 +364,30 @@ details.cr th,details.cr td{padding:7px 5px}
 @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.tk-t{animation:none}}
 .strip .rs .sub{white-space:nowrap}
+/* レース結果・払戻金一覧 */
+.result h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.rres{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:720px){.rres{grid-template-columns:1fr}}
+.rorder td,.rorder th{padding:5px 8px}
+.rpays{display:grid;gap:6px}
+.rpay{display:grid;grid-template-columns:52px auto 1fr auto;align-items:center;gap:8px;background:var(--surface2);border-radius:8px;padding:8px 10px}
+.rpay>span:first-child{font-size:12px;color:var(--ink2)}
+.rpay b{text-align:right;font-size:17px}
+.rpay .sub{font-size:11px;white-space:nowrap}
+.rmarks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.man{color:var(--bad)!important;font-weight:800}
+.h2link{font-size:12px;font-weight:700;margin-left:auto;white-space:nowrap}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.rcard{padding:10px 12px}
+.rcard h3{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:6px}
+.rcard .g{font-style:normal;font-size:10px;padding:0 6px;border-radius:4px;border:1px solid currentColor}
+.rtbl{width:100%;border-collapse:collapse}
+.rtbl th{font-size:11px;color:var(--ink2);font-weight:400;text-align:left;padding:2px 4px;border-bottom:1px solid var(--line)}
+.rtbl td{padding:5px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.rtbl tr:last-child td{border-bottom:0}
+.rtbl a{text-decoration:none}
+.rtbl .combo .bt{width:20px;height:20px;font-size:12px}
+.rtbl .chip{font-size:10px;padding:1px 6px;margin:0}
+.rtbl tr.pend td{color:var(--ink2)}
+.rnav{display:flex;gap:16px;font-size:13px}
+.rnav a:last-child{margin-left:auto}
