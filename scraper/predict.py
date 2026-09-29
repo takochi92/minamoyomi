@@ -59,6 +59,13 @@ EXGAP_STATS = {3: {"n": 597, "win": 0.209, "base_win": 0.128, "makuri": 0.095, "
 # 穴狙い（ツケマイ型）：3・4コースのまくり屋で、まくって勝つとインが4着以下に沈む選手。
 # 過去約9,000レースの検証（イン抜き12点）：ツケマイ7割以上＋スタート3番手以内 回収72%、
 # ツケマイ5割以上＋スタート3番手以内＋展示タイム2位以内＋インの逃げ率55%未満 回収80%（確定オッズ・楽観寄り）
+# 攻めた艇がまくりで勝ったときの2・3着（コース）で多い並び。インを除いた上位6つ（過去3年）
+# 例：4まくり → 5がマークして2着（5-6、5-2…）、3まくり → 4が連れて2着（4-5、4-2…）、5まくり → 叩かれた4は残りにくく6・2
+# 検証（穴狙いの条件に当たった1,102レース、並びは反対側の日で学習）：イン抜き12点 回収69% → この6点 82%
+# 4コース頭は「4が3を叩く」筋の4-56-1256に変更（同じ481レースで回収107%。ただし偶数日54%・奇数日164%と波が大きい）
+FOLLOW = {3: [(4, 5), (4, 2), (2, 4), (5, 4), (4, 6), (5, 2)],
+          4: [(5, 6), (5, 1), (5, 2), (6, 5), (6, 1), (6, 2)],   # 4が3を叩く筋：4-56-1256（3は潰れる想定）
+          5: [(6, 2), (2, 6), (2, 3), (2, 4), (6, 3), (6, 4)]}
 TSUKE = {"n": 3, "rate": 0.5, "rate_hi": 0.7, "st": 3.0, "ex_rank": 2, "in_esc": 0.55}
 ANA_RULE = {"gap": 0.15, "n": 177, "win": 0.181, "mkt": 0.128}
 
@@ -311,8 +318,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                  and in_esc is not None and in_esc < TSUKE["in_esc"])
         if not (ok_hi or ok_lo):
             continue
-        others = [f for f in frames if f not in (a["frame"], inb_["frame"])]
-        bets_ = [f"{a['frame']}-{x}-{y}" for x in others for y in others if x != y]
+        bets_ = [f"{a['frame']}-{byc[x]['frame']}-{byc[y]['frame']}" for x, y in FOLLOW[c] if x in byc and y in byc]
         why = [f"まくりで勝った{tk[0]}回のうち{tk[1]}回はインが4着以下（ツケマイ型）", f"最近のスタートは平均{stv[1]:.1f}番手"]
         if exr is not None and exr <= TSUKE["ex_rank"]:
             why.append(f"展示タイム{exr}位")
@@ -324,12 +330,11 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             tsuke_pick = cand
     # 5コースの展示の足（旧・高回収狙い）も穴狙いに統合：ツケマイ型がいなければこちらを採用
     if not tsuke_pick and ana and inb_:
-        others = [f for f in frames if f not in (ana["frame"], inb_["frame"])]
         tsuke_pick = {"kind": "exgap", "frame": ana["frame"], "name": ana["name"], "course": ana["course"], "rate": 0,
                       "in": inb_["frame"], "in_name": inb_["name"],
                       "why": [f"展示タイムが4コースより{ana['gap']:.2f}秒速い（外から一気に行ける足）",
                               f"過去1年この形の5コース1着は{ana['win'] * 100:.0f}%（オッズの見込み{ana['mkt'] * 100:.0f}%）"],
-                      "bets": [f"{ana['frame']}-{x}-{y}" for x in others for y in others if x != y]}
+                      "bets": [f"{ana['frame']}-{byc[x]['frame']}-{byc[y]['frame']}" for x, y in FOLLOW[5] if x in byc and y in byc]}
     elif tsuke_pick:
         tsuke_pick["kind"] = "tsuke"
     ana = None

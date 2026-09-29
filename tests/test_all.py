@@ -52,6 +52,7 @@ def test_result():
     assert r["exacta"] == "1-5" and r["exacta_payout"] == 1230 and r["kimarite"] == "逃げ"
     assert r["win"] == 1 and r["win_payout"] == 150
     assert r["trifecta_ninki"] == 16
+    assert [x["st"] for x in r["start"]] == [0.10, 0.15, 0.12, 0.02, 0.02, -0.01] and r["start"][3]["note"] == "まくり" and r["start"][5]["flag"] == "F"
     assert [o["frame"] for o in r["order"]] == [1, 5, 4] and r["order"][0]["place"] == "1" and r["order"][1]["name"] == "鈴木一郎"
 
 

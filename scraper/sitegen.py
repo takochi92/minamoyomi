@@ -40,6 +40,10 @@ SLUG = {"01": "kiryu", "02": "toda", "03": "edogawa", "04": "heiwajima", "05": "
         "15": "marugame", "16": "kojima", "17": "miyajima", "18": "tokuyama", "19": "shimonoseki", "20": "wakamatsu",
         "21": "ashiya", "22": "fukuoka", "23": "karatsu", "24": "omura"}
 RACE_KEEP_DAYS = 30
+# 攻めた艇が1着のときの2着のコース（過去3年）と、まくりで勝ったときの2着
+SECOND_ALL = {3: {1: .40, 2: .20, 4: .20, 5: .14, 6: .06}, 4: {1: .31, 5: .23, 2: .19, 3: .16, 6: .10}}
+SECOND_MK = {3: {4: .28, 1: .23, 2: .20, 5: .20, 6: .09}, 4: {5: .34, 1: .23, 2: .18, 6: .15, 3: .10}}
+FOLLOW_NOTE = {3: "3がまくると4が連れて2着に来やすい", 4: "4が3を叩いてまくると3は潰れ、5・6がついて来る筋。3着はインや2の残りも", 5: "5がまくると叩かれた4は残りにくく、6と2が来やすい"}
 MIN_STARTS = 20
 OP_MIN = 15          # 実力補正スコアを出す最低出走数（そのコースで）
 OP_MARK = 1.6        # 狙い目とみなすスコア
@@ -370,12 +374,13 @@ class Site:
                 f'<path d="M-90 2 h10" stroke="#8A949E" stroke-width="2"/>'
                 '</g>')
 
-    def slit_block(self, race, link=""):
+    def slit_block(self, race, link="", se=None, result=False):
         bi = race.get("before") or {}
-        se = bi.get("start_exhibition") or []
+        se = se if se is not None else (bi.get("start_exhibition") or [])
         if len(se) != 6:
             return ""
-        ex = {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
+        ex = {} if result else {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
+        exst = {x["frame"]: x.get("st") for x in (bi.get("start_exhibition") or [])} if result else {}
         W, H, ROW, TOP = 360, 0, 44, 26
         SLIT, K = 252, 400          # スリット線の位置と、ST 0.01秒あたり5.2px
         rows = []
@@ -398,6 +403,8 @@ class Site:
                 + self.boat_svg(nose, y + 33, hull, ink, f)
                 + f'<text x="{W - 12}" y="{y + 25}" text-anchor="end" font-size="17" font-weight="800" fill="{col}" class="num">{lab}</text>'
                 + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示 {et}</text>' if et else "")
+                + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示ST {exst[f]:.2f}</text>'.replace("0.", ".") if result and exst.get(f) is not None and exst[f] >= 0 else "")
+                + (f'<text x="{W - 64}" y="{y + 25}" text-anchor="end" font-size="12" font-weight="700" fill="#F5C542">{e(x.get("note", ""))}</text>' if x.get("note") else "")
                 + '</g>')
         H = TOP + 6 * ROW + 8
         svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="スタート展示のスリット" style="display:block;max-width:560px">'
@@ -407,6 +414,8 @@ class Site:
                f'<text x="{W - 12}" y="17" text-anchor="end" font-size="10" fill="var(--ink2)">ST</text>'
                + "".join(rows) +
                f'<line x1="{SLIT}" y1="{TOP - 2}" x2="{SLIT}" y2="{H - 6}" stroke="#F5C542" stroke-width="2.5"/></svg>')
+        if result:
+            return f"""<div class="slit" style="margin-top:10px"><h3 style="margin:0 0 6px;font-size:14px">本番のスタート <small class="sub">右ほど早い・黄色は決まり手</small></h3>{svg}</div>"""
         return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
 <p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p>
 <p style="margin:0"><a href="{link}">この6人の「展示ST → 本番ST」のくせを見る →</a></p></section>"""
@@ -526,9 +535,19 @@ class Site:
         pre = "" if p.get("stage") == "直前" else '<p class="sub">※展示前の判定です。展示後に条件が崩れると消えます（成績は展示後に残ったレースだけで集計）。</p>'
         return f"""<section class="panel tsuke"><h2><span class="chip tk">穴狙い</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）{"のツケマイ" if tp.get("kind", "tsuke") == "tsuke" else "の展示の足"} <small>検証中</small></h2>
 <ul class="comments">{"".join(f"<li>{e(w)}</li>" for w in tp["why"])}</ul>
-<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定・インを2・3着から外した{len(tp["bets"])}点</b>。{comp}</p>
+<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定・まくったときに多い並びの{len(tp["bets"])}点</b>（{e(FOLLOW_NOTE.get(tp["course"], ""))}）。{comp}</p>
 <div class="bets">{cells}</div>{hit}{pre}
-<p class="sub">的中はめったにありません。過去約9,000レースの検証では、これらの条件の回収率は70〜80%台（本線・押さえと同程度）で、100%は超えていません。当たれば大きい代わりに外れが続く買い方なので、買うならこの枠だけで長く見る前提で。成績は実績ページで別に集計します。</p></section>"""
+<p class="sub">的中はめったにありません。過去約9,000レースの検証では、この条件のレースでイン抜きを全部買う12点は回収69%、この「展開どおりの6点」に絞ると82%でした（4コース頭の4-56-1256は107%。ただし日によって54〜164%と波が大きい）。100%は超えていません。当たれば大きい代わりに外れが続く買い方なので、買うならこの枠だけで長く見る前提で。成績は実績ページで別に集計します。</p></section>"""
+
+    @staticmethod
+    def second_line(c):
+        if c != 4:
+            return ""
+        return ('<span class="sub">スリットの形で出目が変わります（過去3年・実際のスタート）。'
+                '<b>4が3を叩いた</b>（4が3より0.05以上早く、内より早い・2.4万レース）：4の1着33%、4が勝つと2着は5が33%・1が28%で3は10%。'
+                '4-156-156が15.1%、1-4-256が7.8%、裏目の5-146-146が6.0%。'
+                '<b>3が先に出た</b>（1.1万レース）：4の1着は8%しかなく、4が勝っても2着は3が36%（3が内を叩いて、4がまくり差しで続く4-3の形）。'
+                '事前に「どちらの形になるか」は、平均スタート順と展示STを使っても当たるのは3回に1回ほどです。</span>')
 
     def tenkai_block(self, p):
         tk = p.get("tenkai") or []
@@ -564,7 +583,7 @@ class Site:
             att = f'{bt(t["att"])} {e(t["att_name"])}（{t["att_course"]}コース）は平均{t["att_rank"]:.1f}番手と早い'
             li.append(f'<li>{wall}。{att}。<b>{t["att_course"]}コースのまくり展開</b>があります。'
                       f'<span class="sub">過去2年この形（{t["n"]:,}レース）では{t["att_course"]}コースの1着が{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span>'
-                      + self.follow_line(t) + '</li>')
+                      + self.follow_line(t) + self.second_line(t["att_course"]) + '</li>')
         return f"""<section class="panel"><h2>展開メモ <small>スタートの早さ・チルトから見た展開</small></h2>
 <ul class="comments">{"".join(li)}</ul>
 <p class="sub">この形はオッズにもある程度織り込まれていて、買い目の決め手にはしていません（推奨買い目はAIの確率とオッズで組んでいます）。展開を読む材料としてどうぞ。</p></section>"""
@@ -615,7 +634,7 @@ class Site:
         mkh = '<div class="rmarks">' + "".join(marks) + "</div>" if marks else ""
         return (f'<section class="panel result"><h2>レース結果 <small><a href="{page.u(f"results/{d}.html")}">{jdate(d)}の払戻金一覧 →</a></small></h2>'
                 f'<div class="rres"><div class="tbl-wrap"><table class="rorder"><thead><tr><th>着</th><th>枠</th><th>選手</th><th class="r">タイム</th></tr></thead><tbody>{orows}</tbody></table></div>'
-                f'<div class="rpays">{pays}{exh}{mkh}</div></div></section>')
+                f'<div class="rpays">{pays}{exh}{mkh}</div></div>{self.slit_block(race, se=res.get("start") or [], result=True)}</section>')
 
     def race_page(self, d, jcd, race):
         rno = race["rno"]
