@@ -248,9 +248,9 @@
  "ev": {
   "period": [
    "20251001",
-   "20260928"
+   "20260929"
   ],
-  "races": 9160,
+  "races": 9315,
   "rule": {
    "ev_min": 1.0,
    "max_odds": 200.0
@@ -266,7 +266,7 @@
    }
   ],
   "result": {
-   "races_checked": 9160,
+   "races_checked": 9315,
    "bet_races": 0,
    "bets": 0,
    "hits": 0,
@@ -277,7 +277,7 @@
   },
   "variants": {
    "オッズ50倍まで": {
-    "races_checked": 9160,
+    "races_checked": 9315,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -287,7 +287,7 @@
     "ci95": null
    },
    "オッズ200倍まで": {
-    "races_checked": 9160,
+    "races_checked": 9315,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -297,7 +297,7 @@
     "ci95": null
    },
    "オッズ上限なし倍まで": {
-    "races_checked": 9160,
+    "races_checked": 9315,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -307,29 +307,29 @@
     "ci95": null
    },
    "AI単独（オッズを混ぜない）": {
-    "races_checked": 9160,
-    "bet_races": 9159,
-    "bets": 124982,
-    "hits": 1492,
-    "invest": 12498200,
-    "return": 9051820,
+    "races_checked": 9315,
+    "bet_races": 9314,
+    "bets": 126992,
+    "hits": 1522,
+    "invest": 12699200,
+    "return": 9195780,
     "roi": 0.724,
     "ci95": [
-     0.683,
-     0.77
+     0.681,
+     0.769
     ]
    },
    "参考：AIの上位8点を全レース": {
-    "races_checked": 9160,
-    "bet_races": 9160,
-    "bets": 73280,
-    "hits": 4085,
-    "invest": 7328000,
-    "return": 5728950,
-    "roi": 0.782,
+    "races_checked": 9315,
+    "bet_races": 9315,
+    "bets": 74520,
+    "hits": 4151,
+    "invest": 7452000,
+    "return": 5841520,
+    "roi": 0.784,
     "ci95": [
-     0.757,
-     0.807
+     0.76,
+     0.81
     ]
    }
   },
@@ -340,35 +340,35 @@
    "max_odds": 200.0,
    "status": "検証中"
   },
-  "market_ll": 3.6823,
-  "model_ll": 3.8338,
+  "market_ll": 3.6828,
+  "model_ll": 3.8341,
   "note": "はじめは「実際の進入コース」で検証して回収率205%に見えましたが、実際の進入は締切後にしか分からない情報のため不採用にしました。展示の並び・直前の気象だけで検証し直すと、期待値が1を超える買い目はほぼ出なくなります。オッズを土台に、AI・展示ST・チルトで補正するモデルも試しましたが、1着予想の精度が市場をわずかに上回るだけで、控除率25%を越える買い目は出ませんでした。確定オッズと直前情報は毎晩集め続け、条件を満たした時点で自動的に「有効」に切り替わります。"
  },
  "specialist": {
   "2": {
-   "boats": 97,
-   "win": 0.124,
+   "boats": 99,
+   "win": 0.121,
    "market": 0.159
   },
   "3": {
-   "boats": 85,
-   "win": 0.2,
-   "market": 0.141
+   "boats": 89,
+   "win": 0.191,
+   "market": 0.143
   },
   "4": {
-   "boats": 159,
-   "win": 0.164,
+   "boats": 161,
+   "win": 0.161,
    "market": 0.123
   },
   "5": {
-   "boats": 240,
-   "win": 0.079,
-   "market": 0.073
+   "boats": 248,
+   "win": 0.077,
+   "market": 0.072
   },
   "6": {
-   "boats": 516,
+   "boats": 526,
    "win": 0.021,
-   "market": 0.035
+   "market": 0.036
   }
  },
  "specialist_tansho": {
