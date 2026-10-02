@@ -38,6 +38,9 @@ def build(races: list) -> dict:
     kim4 = defaultdict(list)        # toban -> 4コースで勝ったときの決まり手（新しい順に最大40）
     inpl = defaultdict(list)        # toban -> 1コースでの着順（最大60走）
     tsuke = defaultdict(list)       # toban -> 3・4コースからまくりで勝ったときのインの着順
+    exr = defaultdict(list)         # toban -> 展示タイムのレース内順位（1〜6）
+    noko = defaultdict(lambda: [0, 0])  # f"{toban}-{c}" -> 4〜6コースで、イン逃げのレースの数・そのとき2・3着
+    wall = defaultdict(lambda: [0, 0, 0])  # f"{toban}-{k}" -> kコース（2・3）にいたとき [走数, すぐ外が1着, すぐ外がまくりで1着]
     lastF = {}
     for r in races:
         E = r[11]
@@ -46,6 +49,19 @@ def build(races: list) -> dict:
         w = next((e for e in E if e[5] == 1), None)
         if w and w[2] == 4 and r[3]:
             kim4[w[1]].append(r[3])
+        if w and w[2] == 1:
+            for e in E:
+                if e[2] in (2, 3, 4, 5, 6) and isinstance(e[5], int):
+                    v = noko[f"{e[1]}-{e[2]}"]
+                    v[0] += 1
+                    v[1] += int(e[5] in (2, 3))
+        if w:
+            for e in E:
+                if e[2] in (2, 3):
+                    v = wall[f"{e[1]}-{e[2]}"]
+                    v[0] += 1
+                    v[1] += int(w[2] == e[2] + 1)
+                    v[2] += int(w[2] == e[2] + 1 and r[3] == "まくり")
         if w and w[2] in (3, 4) and r[3] == "まくり":
             ib = next((e for e in E if e[2] == 1), None)
             if ib and isinstance(ib[5], int):
@@ -53,6 +69,10 @@ def build(races: list) -> dict:
         for e in E:
             if e[2] == 1 and isinstance(e[5], int):
                 inpl[e[1]].append(e[5])
+        xs = sorted((e[6], e[1]) for e in E if len(e) > 6 and e[6])
+        if len(xs) == 6:
+            for k, (_, t) in enumerate(xs):
+                exr[t].append(k + 1)
         for i, e in enumerate(E):
             if e[4] == "F":
                 lastF[e[1]] = r[0]
@@ -94,7 +114,12 @@ def build(races: list) -> dict:
             inres[t] = [len(beaten), sum(1 for p in beaten if p >= 4)]
     # ツケマイ型：3・4コースからまくりで勝ったとき、インを4着以下に沈めた回数
     tk = {t: [len(ps), sum(1 for p in ps if p >= 4)] for t, ps in tsuke.items() if len(ps) >= 3}
-    return {"asof": asof, "racers": out, "recent": recent, "inres": inres, "tsuke": tk}
+    # 展示タイムの「いつもの順位」（直近30走の平均と、1位になった割合）
+    exrank = {t: [len(v[-30:]), round(sum(v[-30:]) / len(v[-30:]), 2), round(sum(1 for x in v[-30:] if x == 1) / len(v[-30:]), 2)]
+              for t, v in exr.items() if len(v) >= 10}
+    walls = {k: v for k, v in wall.items() if v[0] >= 15}
+    nokos = {k: v for k, v in noko.items() if v[0] >= 15}
+    return {"asof": asof, "racers": out, "recent": recent, "inres": inres, "tsuke": tk, "exrank": exrank, "wall": walls, "noko": nokos}
 
 
 def load() -> dict:
@@ -109,6 +134,27 @@ def load_recent() -> dict:
         return {}
     with gzip.open(OUT, "rt", encoding="utf-8") as f:
         return json.load(f).get("recent", {})
+
+
+def load_noko() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("noko", {})
+
+
+def load_wall() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("wall", {})
+
+
+def load_exrank() -> dict:
+    if not OUT.exists():
+        return {}
+    with gzip.open(OUT, "rt", encoding="utf-8") as f:
+        return json.load(f).get("exrank", {})
 
 
 def load_tsuke() -> dict:

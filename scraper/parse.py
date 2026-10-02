@@ -299,14 +299,17 @@ def parse_result(html: str) -> dict:
     res["order"] = _result_order(soup)
     # 本番のスタート情報（上から1コース）。タイムの後ろに決まり手が付くことがある（例 ".02　まくり"）
     st = []
-    for i, div in enumerate(soup.select(".table1_boatImage1"), 1):
-        num = _num(_t(div.select_one(".table1_boatImage1Number")))
-        tm = div.select_one(".table1_boatImage1Time") or div.select_one(".table1_boatImage1TimeInner")
-        raw = unicodedata.normalize("NFKC", _t(tm)).split()
-        if num is None:
-            continue
-        v, flag = _st_value(raw[0] if raw else "")
-        st.append({"course": i, "frame": int(num), "st": v, "flag": flag, "note": " ".join(raw[1:])})
+    try:
+        for i, div in enumerate(soup.select(".table1_boatImage1"), 1):
+            num = _num(_t(div.select_one(".table1_boatImage1Number")))
+            tm = div.select_one(".table1_boatImage1Time") or div.select_one(".table1_boatImage1TimeInner")
+            raw = unicodedata.normalize("NFKC", _t(tm) if tm else "").split()
+            if num is None:
+                continue
+            v, flag = _st_value(raw[0] if raw else "")
+            st.append({"course": i, "frame": int(num), "st": v, "flag": flag, "note": " ".join(raw[1:])})
+    except Exception:
+        st = []
     res["start"] = st
     res["finished"] = res["trifecta"] is not None
     return res

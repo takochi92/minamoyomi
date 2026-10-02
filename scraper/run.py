@@ -104,7 +104,12 @@ def summarize(race: dict) -> dict:
         s["ana"] = pred["ana_pick"]["frame"]
         if "a_hit" in race:
             s["ana_hit"] = race["a_hit"]
-    if pred and pred.get("tsuke_pick") and pred.get("stage") == "直前":
+    if pred and pred.get("honmei_pick") and pred.get("stage") == "直前" and pred["bets"].get("mode") == "honmei":
+        hp = pred["honmei_pick"]
+        s["hon"] = {"in": hp["in"], "axis": hp["axis"], "n": len(hp["bets"]), "comp": (race.get("honmei") or {}).get("comp")}
+        if "h_hit" in race:
+            s["hon"]["hit"] = race["h_hit"]
+    if pred and pred.get("tsuke_pick") and pred.get("stage") == "直前" and (race.get("tsuke") or {}).get("active"):
         s["tsuke"] = {"frame": pred["tsuke_pick"]["frame"], "course": pred["tsuke_pick"]["course"], "n": len(pred["tsuke_pick"]["bets"]),
                       "comp": (race.get("tsuke") or {}).get("comp")}
         if "t_hit" in race:
@@ -143,8 +148,13 @@ def judge(race: dict):
         race["a_hit"] = res["trifecta"] in ap["bets"]
         race["a_invest"] = 100 * len(ap["bets"])
         race["a_return"] = (res["trifecta_payout"] or 0) if race["a_hit"] else 0
+    hp = pred.get("honmei_pick")
+    if hp and pred.get("stage") == "直前" and pred["bets"].get("mode") == "honmei":
+        race["h_hit"] = res["trifecta"] in hp["bets"]
+        race["h_invest"] = 100 * len(hp["bets"])
+        race["h_return"] = (res["trifecta_payout"] or 0) if race["h_hit"] else 0
     tp = pred.get("tsuke_pick")
-    if tp and pred.get("stage") == "直前":
+    if tp and pred.get("stage") == "直前" and (race.get("tsuke") or {}).get("active"):
         race["t_hit"] = res["trifecta"] in tp["bets"]
         race["t_invest"] = 100 * len(tp["bets"])
         race["t_return"] = (res["trifecta_payout"] or 0) if race["t_hit"] else 0
@@ -224,12 +234,35 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 # 展示を見るまでは「自信あり」を出さない（出走表だけの自信は当てにしない）
                 reco["verdict"] = "推奨"
             race["reco"] = reco
+            hp = race["prediction"].get("honmei_pick")
+            if hp:
+                odh = dict(zip(O.COMBOS, ov))
+                hv = [odh.get(c) for c in hp["bets"]]
+                hi = sum(1 / x for x in hv if x and x == x and x > 0)
+                race["honmei"] = {"at": at, "comp": round(1 / hi, 2) if hi else None, "odds": {c: (x if x and x == x else None) for c, x in zip(hp["bets"], hv)}}
+                pbets = race["prediction"]["bets"]
+                hcomp = race["honmei"]["comp"]
+                if pbets.get("mode") == "honmei" and (hcomp is None or hcomp < 2.5) and pbets.get("normal"):
+                    # 固いけれど3点の合成オッズが2.5倍未満（全部5倍前後など）→ いつもの6点に戻す
+                    pbets["main"], pbets["sub"] = pbets["normal"]["main"], pbets["normal"]["sub"]
+                    pbets["mode"] = "honmei_cheap"
+                elif pbets.get("mode") == "honmei_cheap" and hcomp and hcomp >= 2.5:
+                    pbets["main"] = pbets.get("hon") or [{"combo": c, "p": 0} for c in hp["bets"]]
+                    pbets["sub"] = []
+                    pbets["mode"] = "honmei"
             tp = race["prediction"].get("tsuke_pick")
             if tp:
                 od = dict(zip(O.COMBOS, ov))
                 vs = [od.get(c) for c in tp["bets"]]
                 inv = sum(1 / x for x in vs if x and x == x and x > 0)
-                race["tsuke"] = {"at": at, "final": val["final"], "comp": round(1 / inv, 2) if inv else None,
+                # オッズが見ているインの1着の見込み。45%未満のときだけ「穴狙い」として出す
+                # （検証：穴狙い1,102レースのうちインの見込み45%未満 519レース 回収100%・偶数日92%/奇数日108%、60%以上は53%）
+                inf = str(race["prediction"]["entry"][0])
+                iv = sum(1 / x for c, x in od.items() if x and x == x and x > 0 and c.startswith(inf + "-"))
+                tv = sum(1 / x for x in od.values() if x and x == x and x > 0)
+                in_mkt = round(iv / tv, 3) if tv else None
+                race["tsuke"] = {"at": at, "final": val["final"], "comp": round(1 / inv, 2) if inv else None, "in_mkt": in_mkt,
+                                 "active": in_mkt is not None and in_mkt < 0.45,
                                  "odds": {c: (x if x and x == x else None) for c, x in zip(tp["bets"], vs)}}
             changed = True
         if race["prediction"].get("specialists"):
@@ -253,6 +286,21 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         judge(race)
         changed = True
 
+    # 結果はあるのに本番のスタート（スリット）・着順が無いレース（取り込み方を足す前に確定したもの等）は、取り直す
+    r0 = race.get("result") or {}
+    if r0.get("finished") and (not r0.get("start") or not r0.get("order")) and race.get("start_tries", 0) < 3:
+        race["start_tries"] = race.get("start_tries", 0) + 1
+        try:
+            res = parse.parse_result(f.result(jcd, rno, date))
+            if res.get("finished"):
+                for k in ("start", "order", "trifecta_ninki", "kimarite", "refunded"):
+                    if res.get(k):
+                        r0[k] = res[k]
+                race["result"] = r0
+        except Exception:
+            pass
+        changed = True
+
     if changed:
         race["updated_at"] = now.strftime("%Y-%m-%dT%H:%M")
         _save(path, race)
@@ -268,7 +316,8 @@ def build_stats():
                "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
                "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
                "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0,
-               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0}
+               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0,
+               "h_races": 0, "h_hits": 0, "h_invest": 0, "h_return": 0}
         for p in sorted((DATA / "races" / d).glob("*.json")):
             r = _load(p, {})
             if r.get("hit") is None:
@@ -279,6 +328,8 @@ def build_stats():
                 agg["gachi"] += 1
             if "a_hit" in r:
                 agg["a_races"] += 1; agg["a_hits"] += int(r["a_hit"]); agg["a_invest"] += r["a_invest"]; agg["a_return"] += r["a_return"]
+            if "h_hit" in r:
+                agg["h_races"] += 1; agg["h_hits"] += int(r["h_hit"]); agg["h_invest"] += r["h_invest"]; agg["h_return"] += r["h_return"]
             if "t_hit" in r:
                 agg["t_races"] += 1; agg["t_hits"] += int(r["t_hit"]); agg["t_invest"] += r["t_invest"]; agg["t_return"] += r["t_return"]
             if "r_hit" in r:
@@ -319,7 +370,8 @@ def build_stats():
              "s_boats": 0, "s_hits": 0, "s_invest": 0, "s_return": 0,
              "r_races": 0, "r_hits": 0, "r_invest": 0, "r_return": 0, "rc_races": 0, "rc_hits": 0, "rc_invest": 0, "rc_return": 0, "gachi": 0,
                "a_races": 0, "a_hits": 0, "a_invest": 0, "a_return": 0,
-               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0}
+               "t_races": 0, "t_hits": 0, "t_invest": 0, "t_return": 0,
+               "h_races": 0, "h_hits": 0, "h_invest": 0, "h_return": 0}
         for k in keys:
             for f in t:
                 t[f] += hist[k].get(f, 0)
