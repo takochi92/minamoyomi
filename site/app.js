@@ -390,7 +390,13 @@
           <div class="tile"><small>的中</small><b>${t.hits || 0}${t.races ? `<small style="display:inline"> (${pct(t.hits / t.races)})</small>` : ""}</b></div>
           <div class="tile"><small>回収率</small><b class="${t.invest && t.return >= t.invest ? "up" : "down"}">${t.invest ? pct(t.return / t.invest, 1) : "-"}</b></div>
         </div>
-        <h2>穴狙い（検証中）<small>頭固定・イン抜きの買い目を各100円で購入した場合</small></h2>
+        <h2>厳選本命（検証中）<small>1-軸-3着上位の3点を各100円で購入した場合</small></h2>
+        <div class="tiles">
+          <div class="tile"><small>レース</small><b>${(t.h_races || 0).toLocaleString()}</b></div>
+          <div class="tile"><small>的中</small><b>${t.h_hits || 0}${t.h_races ? `<small style="display:inline"> (${pct(t.h_hits / t.h_races)})</small>` : ""}</b></div>
+          <div class="tile"><small>回収率</small><b class="${t.h_invest && t.h_return >= t.h_invest ? "up" : "down"}">${t.h_invest ? pct(t.h_return / t.h_invest, 1) : "-"}</b></div>
+        </div>
+        <h2>厳選穴（検証中）<small>頭固定・イン抜きの買い目を各100円で購入した場合</small></h2>
         <div class="tiles">
           <div class="tile"><small>レース</small><b>${(t.t_races || 0).toLocaleString()}</b></div>
           <div class="tile"><small>的中</small><b>${t.t_hits || 0}</b></div>
