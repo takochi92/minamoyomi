@@ -581,7 +581,7 @@ class Site:
         pre = "" if p.get("stage") == "直前" else '<p class="sub">※展示前の判定です。展示後に条件が崩れると消えます（成績は展示後に残ったレースだけで集計）。</p>'
         return f"""<section class="panel tsuke"><h2><span class="chip tk">厳選穴</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）のまくり <small>条件がすべてそろったレース</small></h2>
 <ul class="checks">{"".join(f"<li>✅ {e(w)}</li>" for w in tp["why"])}<li>✅ オッズがインを信じすぎていない（締切前に判定）</li></ul>
-<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定の{len(tp["bets"])}点</b>。2・3着は「AIの確率（各選手の勝率・コース別の2・3着率・展示タイム・モーター）」×「まくりで決まったときに来やすい並び」で選んでいます（筋目の決め打ちではありません）。。{comp}</p>
+<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定の{len(tp["bets"])}点</b>。2・3着は「AIの確率（各選手の勝率・コース別の2・3着率・展示タイム・モーター）」×「まくりで決まったときに来やすい並び」で選んでいます（筋目の決め打ちではありません）。<br>{comp}</p>
 <div class="bets">{cells}</div>{hit}{pre}
 <p class="sub">5つの条件がすべてそろったレースだけを出しています（1日2レース前後）。過去約9,000レースの検証では、条件を重ねるほど回収率が上がり（2つ65%→3つ84%→4つ92%→5つ97%）、的中率は約20%でした。100%を約束するものではありません。成績は実績ページで集計します。</p></section>"""
 
@@ -634,8 +634,21 @@ class Site:
                       f'<span class="sub">過去2年この形（{t["n"]:,}レース）では{t["att_course"]}コースの1着が{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span>'
                       + self.follow_line(t) + self.second_line(t["att_course"]) + '</li>')
         return f"""<section class="panel"><h2>展開メモ <small>スタートの早さ・チルトから見た展開</small></h2>
-<ul class="comments">{"".join(li)}</ul>
-<p class="sub">この形はオッズにもある程度織り込まれていて、買い目の決め手にはしていません（推奨買い目はAIの確率とオッズで組んでいます）。展開を読む材料としてどうぞ。</p></section>"""
+<ul class="comments">{"".join(self.shorten(x) for x in li)}</ul></section>"""
+
+    @staticmethod
+    def shorten(li):
+        """小さい字の根拠データは「データを見る」に畳む（本文は太字の結論だけ）"""
+        import re as _re
+        subs = _re.findall(r'<span class="sub">.*?</span>', li, flags=_re.S)
+        if not subs:
+            return li
+        body = li
+        for x in subs:
+            body = body.replace(x, "")
+        body = body.replace("</li>", "")
+        det = "".join("<p>" + x[len('<span class="sub">'):-len("</span>")] + "</p>" for x in subs)
+        return f'{body}<details class="more"><summary>データを見る</summary>{det}</details></li>'
 
     def result_block(self, d, race, p, res, page):
         """レース結果（出走表のすぐ下）。締切後で結果待ちなら、その旨だけ出す。"""

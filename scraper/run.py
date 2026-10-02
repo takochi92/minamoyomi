@@ -210,9 +210,12 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             race["before_final"] = True
         changed = True
 
-    if "racelist" in race and now < dl and changed:
+    from .predict import PRED_VERSION
+    stale = (race.get("prediction") or {}).get("version") != PRED_VERSION
+    if "racelist" in race and now < dl and (changed or stale):
         race["prediction"] = predict(jcd, race["racelist"], race.get("before"))
         race["prediction"]["made_at"] = now.strftime("%H:%M")
+        changed = True
 
     # 2b) 締切35分前〜締切：オッズを毎回取り直して表示。3連単オッズ × AI で期待値判定（締切後は固定）
     if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl:

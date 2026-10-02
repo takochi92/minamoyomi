@@ -81,6 +81,8 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  → 749レース（1日約12R）的中27% 回収82%（偶数日83%・奇数日82%）。人気や級別ではなくAIの確率で決めるので、人気薄の軸でも入る
 #  合成オッズの条件は締切前に run.py で判定し、安すぎれば（全部5倍前後など）いつもの6点に戻す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
+# 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
+PRED_VERSION = 16
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3, "min_comp": 2.5}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -508,6 +510,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 iw = {"level": 1, "attacker": None, "reasons": [why], "hist_in_win": None, "hist_races": None,
                       "hist_all": IN_WORRY["all"], "by": "fstart"}
     return {
+        "version": PRED_VERSION,
         "stage": "直前" if has_ex else "事前",
         "entry": [f for f, _ in sorted(course_of.items(), key=lambda x: x[1])],
         "entry_changed": entry_changed,
