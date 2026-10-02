@@ -401,3 +401,4 @@ details.cr th,details.cr td{padding:7px 5px}
 .rtabs button{font:inherit;font-weight:700;font-size:14px;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);cursor:pointer}
 .rtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rtabs small{font-weight:400;font-size:11px}
+details.more{margin-top:4px}details.more summary{font-size:12px;color:var(--ink2);cursor:pointer}details.more p{font-size:12px;color:var(--ink2);margin:4px 0 0;line-height:1.6}
