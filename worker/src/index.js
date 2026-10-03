@@ -1,5 +1,5 @@
 /**
- * 艇ログ ライブオッズ（Cloudflare Worker）
+ * 艇ろぐ ライブオッズ（Cloudflare Worker）
  *
  * 1分ごと（cron）：
  *   サイトの data/index.json から「締切30分前〜締切」のレースを選び、公式の3連単・単勝オッズを取得して KV に保存。
