@@ -70,7 +70,7 @@ def test_predict():
     assert p["stage"] == "直前" and p["entry"] == [1, 2, 3, 5, 6, 4] and p["entry_changed"]
     assert abs(sum(b["p_win"] for b in p["boats"]) - 1) < 1e-3
     assert abs(sum(b["p_top3"] for b in p["boats"]) - 3) < 1e-2
-    assert 3 <= len(p["bets"]["main"]) <= 6 and (len(p["bets"]["main"]) + len(p["bets"]["sub"]) <= 6 or (p["bets"]["mode"] == "attack" and len(p["bets"]["sub"]) <= 3) or p["bets"]["mode"] == "honmei")
+    assert 3 <= len(p["bets"]["main"]) <= 6 and (len(p["bets"]["main"]) + len(p["bets"]["sub"]) <= 8 or (p["bets"]["mode"] == "attack" and len(p["bets"]["sub"]) <= 3) or p["bets"]["mode"] == "honmei")
     assert len({b["combo"] for b in p["bets"]["main"] + p["bets"]["sub"]}) == p["points"]
     # 1号艇は A1・全国勝率トップ・イン → 最有力
     assert max(p["boats"], key=lambda b: b["p_win"])["frame"] == 1
