@@ -402,3 +402,36 @@ details.cr th,details.cr td{padding:7px 5px}
 .rtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rtabs small{font-weight:400;font-size:11px}
 details.more{margin-top:4px}details.more summary{font-size:12px;color:var(--ink2);cursor:pointer}details.more p{font-size:12px;color:var(--ink2);margin:4px 0 0;line-height:1.6}
+.rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.rcard2{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.rcard2 header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.rcard2 header a{text-decoration:none;font-size:17px}.rcard2 header .st{margin-left:auto;font-size:13px}
+.rcard2 .marks{display:flex;gap:4px;flex-wrap:wrap}.rcard2 .marks .chip{font-size:11px;margin:0}
+.rcard2 .names{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.rcard2 .names li{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0}.rcard2 .names li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcard2 .names li small{color:var(--ink2);font-size:11px}.rcard2 .names .bt{width:20px;height:20px;font-size:12px;flex:none}
+.rcard2 .go{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rcard2 .go a{text-align:center;text-decoration:none;font-size:13px;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px;color:var(--ink)}
+.rcard2 .go a:first-child{background:var(--accent);border-color:var(--accent);color:#fff}
+.rcard2 .go.fin a:first-child{background:none;border-color:var(--line);color:var(--ink)}.rcard2 .go.fin a:last-child{background:var(--accent);border-color:var(--accent);color:#fff}
+/* ===== すっきり版：ベタ塗りをやめて、線と薄い色だけにする ===== */
+:root{--tint:color-mix(in srgb,var(--accent) 12%,transparent)}
+.slip-h{background:transparent;color:var(--ink);border-bottom:1px solid var(--line);border-left:3px solid var(--accent)}
+.slip-h b{color:var(--ink)}
+.slip-h span{color:var(--ink2);font-size:12px}
+.rtabs{background:var(--bg);border-bottom:1px solid var(--line);gap:0;padding:0}
+.rtabs button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--ink2);padding:12px 6px}
+.rtabs button.on{background:none;color:var(--ink);border-bottom-color:var(--accent)}
+.pill.hit{background:var(--tint);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.chip.hitc{background:var(--tint);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.chip.cf{background:var(--tint);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.chip.hm{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent)}
+.chip.tk,.chip.an{background:color-mix(in srgb,#9B6BFF 14%,transparent);color:#B394FF;border:1px solid color-mix(in srgb,#9B6BFF 40%,transparent)}
+.chip.iw2{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.cfc{box-shadow:none;border:1px solid var(--line)!important;border-left:3px solid var(--accent)!important}
+.cfc.tkc{border-left-color:#9B6BFF!important}.cfc.hmc{border-left-color:var(--good)!important}
+.panel.tsuke,.panel.honmei{border-color:var(--line);border-left:3px solid #9B6BFF}
+.rcard2 .go a,.rcard2 .go.fin a{background:none!important;border:1px solid var(--line)!important;color:var(--ink2)!important;font-weight:600}
+.rcard2 .go a:first-child,.rcard2 .go.fin a:last-child{color:var(--accent)!important;border-color:color-mix(in srgb,var(--accent) 50%,transparent)!important}
+.rcard2 .go.fin a:first-child{color:var(--ink2)!important;border-color:var(--line)!important}
+.rcard2 .st .pill{font-size:11px}
+.bet{background:none;border-style:solid;border-color:var(--line)}
+.dgood{color:var(--good);font-weight:700}.dbad{color:var(--ink2)}
