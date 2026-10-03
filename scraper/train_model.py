@@ -26,11 +26,17 @@ WARMUP = 365
 ABILITY = ["nat", "loc", "A1", "A2", "B2", "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent"]
 WEATHER = ["wave_in", "wave_out", "wind_in", "wind_out"]
 TENKAI_F = ["st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual"]
+VENUE_F = ["vw_in", "vw_out", "rv_top3", "rv_in"]
 STAGE_COLS = {
+    "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + VENUE_F,
+    "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2", "rv_top3"],
+    "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2", "rv_top3"],
+}
+PREV2_COLS = {k: list(v) for k, v in {
     "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2"],
     "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2"],
-}
+}.items()}
 PREV_COLS = {
     "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko"],
@@ -88,7 +94,7 @@ def build_dataset(races, pre=None):
                     b = e[7]
                     boats.append({"frame": e[0], "toban": e[1], "course": ov["course"][e[0]] if ov else e[2], "ex": e[6], "cls": b[0], "nat": b[1],
                                   "loc": b[3], "motor": b[5], "boat": b[6], "f_recent": len(q)})
-                Xs.append(features(S, r[1], ov["wave"] if ov else r[6], ov["wind"] if ov else r[5], boats))
+                Xs.append(features(S, r[1], ov["wave"] if ov else r[6], ov["wind"] if ov else r[5], boats, wind_dir=r[4]))
                 Ps.append([e[5] if isinstance(e[5], int) else 9 for e in E])
                 D.append(int(d)); T.append(r[8] or ""); PAY.append(r[9] or 0); KEY.append(key)
                 MK.append(_matchup_row(S, E, r))

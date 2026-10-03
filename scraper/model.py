@@ -21,7 +21,7 @@ M = 20        # 選手成績を全国平均に寄せる強さ（出走数換算�
 MV = 50       # 場成績を全国平均に寄せる強さ
 FEATS = ["base_w", "base_2", "base_3", "rc_win", "rc_place", "mu", "nat", "loc", "A1", "A2", "B2",
          "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out", "rc_in",
-         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2"]
+         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2", "vw_in", "vw_out", "rv_top3", "rv_in"]
 FEATURE_LABEL = {
     "base_w": "場のコース別1着率", "rc_win": "選手のコース別成績", "rc_place": "選手のコース別連対", "mu": "インの負け方×攻め手",
     "nat": "全国勝率", "loc": "当地勝率", "A1": "級別", "A2": "級別", "B2": "級別", "motor": "モーター", "boat": "ボート",
@@ -29,6 +29,7 @@ FEATURE_LABEL = {
     "wave_in": "波・風", "wave_out": "波・風", "wind_in": "波・風", "wind_out": "波・風", "rc_in": "インでの成績",
     "st_wall": "壁よりスタートが早い", "wall_f": "壁がF持ち", "wall_beat": "壁の叩かれやすさ", "ex_wall": "展示で壁より速い",
     "ex_usual": "展示のいつもとの差", "noko": "逃げ残し", "in2": "インが勝つときの2着のくせ",
+    "vw_in": "場×風向き", "vw_out": "場×風向き", "rv_top3": "選手のこの場の得意・苦手", "rv_in": "選手のこの場でのイン",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"
@@ -53,8 +54,14 @@ class Stats:
         self.rw = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[出走, すぐ外が1着]
         self.rex = defaultdict(lambda: np.zeros(2))                         # 登番→[展示順位の合計, 件数]
         self.rn = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[イン逃げのレース, そのとき2・3着]
+        self.vw = defaultdict(lambda: np.zeros(2))                          # "場|風向" → [風4m以上のレース, インの1着]
+        self.rv = defaultdict(lambda: defaultdict(lambda: np.zeros(4)))  # 登番→場→[出走, 3着内, イン出走, イン1着]
         self.r2 = defaultdict(Counter)                                      # 登番→インで勝ったときの2着のコース
         self.n2 = Counter()
+        self.rf = defaultdict(lambda: np.zeros(3))                          # 登番→[出走, 枠より内へ(前付け), 枠より外へ]
+        self.rsr = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[ST順の合計, 件数]
+        self.vst = defaultdict(lambda: defaultdict(lambda: np.zeros(3)))  # 場→コース→[ST合計(秒), 件数, F]
+        self.vm = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))   # 場→月→[レース, インの1着]
 
     def apply(self, r, sign=1):
         jcd, kim, E = r[1], r[3], r[11]
@@ -80,10 +87,25 @@ class Stats:
             self.vc[jcd][course] += v
             if st is not None and not flag:
                 self.rst[toban] += sign * np.array([st / 100, 1])
+        for e in ents:
+            self.rf[e[1]] += sign * np.array([1, int(e[2] < e[0]), int(e[2] > e[0])])
+            self.vst[jcd][e[2]] += sign * np.array([(e[3] or 0) / 100 if e[3] is not None and not e[4] else 0,
+                                                    int(e[3] is not None and not e[4]), int(e[4] == "F")])
+        sts = sorted((e[3], e[1], e[2]) for e in ents if e[3] is not None and not e[4])
+        if len(sts) >= 5:
+            for rk, (_, t, c) in enumerate(sts):
+                self.rsr[t][c] += sign * np.array([rk + 1, 1])
+        if win and inb:
+            self.vm[jcd][int(r[0][4:6])] += sign * np.array([1, int(win is inb)])
         if win:
             for e in ents:
                 if e[2] <= 5:
                     self.rw[e[1]][e[2]] += sign * np.array([1, int(win[2] == e[2] + 1)])
+        if win and r[5] is not None and r[5] >= 4 and r[4] and r[4] != "無風":
+            self.vw[f"{jcd}|{r[4]}"] += sign * np.array([1, int(win is inb)])
+        for e in ents:
+            if isinstance(e[5], int):
+                self.rv[e[1]][jcd] += sign * np.array([1, int(e[5] <= 3), int(e[2] == 1), int(e[2] == 1 and e[5] == 1)])
         if win and win is inb:
             sec = next((e for e in ents if e[5] == 2), None)
             if sec:
@@ -109,14 +131,20 @@ class Stats:
         def arr(a):
             return [round(float(x), 3) for x in a]
         return {
-            "nn": self.nn, "nl": dict(self.nl), "n2": {str(k): v for k, v in self.n2.items()}, "nc": {str(c): arr(v) for c, v in self.nc.items()},
+            "nn": self.nn, "nl": dict(self.nl), "n2": {str(k): v for k, v in self.n2.items()},
+            "vw": {k: arr(v) for k, v in self.vw.items() if v[0] > 0},
+            "vst": {j: {str(c): arr(v) for c, v in d.items() if v[1] > 0 or v[2] > 0} for j, d in self.vst.items()},
+            "vm": {j: {str(m): arr(v) for m, v in d.items() if v[0] > 0} for j, d in self.vm.items()}, "nc": {str(c): arr(v) for c, v in self.nc.items()},
             "vn": dict(self.vn), "vl": {j: dict(v) for j, v in self.vl.items()},
             "vc": {j: {str(c): arr(v) for c, v in d.items()} for j, d in self.vc.items()},
             "r": {t: {"c": {str(c): arr(v) for c, v in d.items() if v[0] > 0}, "l": dict(self.rl[t]), "s": arr(self.rst[t]),
                       "w": {str(c): arr(v) for c, v in self.rw[t].items() if v[0] > 0},
                       "x": arr(self.rex[t]),
                       "n": {str(c): arr(v) for c, v in self.rn[t].items() if v[0] > 0},
-                      "2": {str(k): v for k, v in self.r2[t].items() if v}}
+                      "2": {str(k): v for k, v in self.r2[t].items() if v},
+                      "v": {j: arr(v) for j, v in self.rv[t].items() if v[0] > 0},
+                      "f": arr(self.rf[t]),
+                      "sr": {str(c): arr(v) for c, v in self.rsr[t].items() if v[1] > 0}}
                   for t, d in self.rc.items() if any(v[0] > 0 for v in d.values())},
         }
 
@@ -126,6 +154,14 @@ class Stats:
         S.nn = j["nn"]
         S.nl = Counter(j["nl"])
         S.n2 = Counter({int(k): v for k, v in j.get("n2", {}).items()})
+        for k, v in j.get("vw", {}).items():
+            S.vw[k] = np.array(v)
+        for jj, d in j.get("vst", {}).items():
+            for c, v in d.items():
+                S.vst[jj][int(c)] = np.array(v)
+        for jj, d in j.get("vm", {}).items():
+            for m, v in d.items():
+                S.vm[jj][int(m)] = np.array(v)
         for c, v in j["nc"].items():
             S.nc[int(c)] = np.array(v)
         S.vn = Counter(j["vn"])
@@ -147,6 +183,12 @@ class Stats:
                 S.rn[t][int(c)] = np.array(v)
             if "2" in d:
                 S.r2[t] = Counter({int(k): v for k, v in d["2"].items()})
+            for jj, v in d.get("v", {}).items():
+                S.rv[t][jj] = np.array(v)
+            if "f" in d:
+                S.rf[t] = np.array(d["f"])
+            for c, v in d.get("sr", {}).items():
+                S.rsr[t][int(c)] = np.array(v)
         return S
 
 
@@ -182,7 +224,7 @@ def national_rates(S, c):
     return [max(n[i] / n[0], 0.005) for i in (1, 2, 3)]
 
 
-def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict]) -> np.ndarray:
+def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict], wind_dir=None) -> np.ndarray:
     """boats: 枠順に6艇 {frame, toban, course, ex(1/100秒 or None), cls, nat, loc, motor, boat, f_recent}"""
     X = np.zeros((6, len(FEATS)))
     fi = {n: i for i, n in enumerate(FEATS)}
@@ -200,6 +242,13 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict]) -> np.ndar
     an = S.rc[inb["toban"]][1][0] if inb else 0
     wave = wave or 0
     ws = wind_speed or 0
+    vw_eff = 0.0
+    if ws >= 4 and wind_dir and wind_dir != "無風":
+        g = S.vw.get(f"{jcd}|{wind_dir}")
+        v1 = S.vc[jcd][1]
+        b = v1[1] / v1[0] if v1[0] else 0.5
+        if g is not None and b > 0:
+            vw_eff = math.log(((g[1] + 30 * b) / (g[0] + 30)) / b)
     for i, b in enumerate(boats):
         c, toban = b["course"], b["toban"]
         vc = S.vc[jcd][c]
@@ -245,6 +294,19 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict]) -> np.ndar
         X[i, fi["wave_out"]] = wave / 10 if c >= 4 else 0
         X[i, fi["wind_in"]] = ws / 5 if c == 1 else 0
         X[i, fi["wind_out"]] = ws / 5 if c >= 4 else 0
+        X[i, fi["vw_in"]] = vw_eff if c == 1 else 0
+        X[i, fi["vw_out"]] = vw_eff if c >= 4 else 0
+        rv = S.rv[toban][jcd]
+        tot = sum((S.rc[toban][cc] for cc in range(1, 7)), np.zeros(10))
+        if tot[0] >= 10:
+            o3 = (tot[1] + tot[2] + tot[3]) / tot[0]
+            if o3 > 0:
+                X[i, fi["rv_top3"]] = math.log(((rv[1] + 20 * o3) / (rv[0] + 20)) / o3)
+        if c == 1:
+            r1 = S.rc[toban][1]
+            pi = (r1[1] + M * p[1][0]) / (r1[0] + M)
+            if pi > 0:
+                X[i, fi["rv_in"]] = math.log(((rv[3] + 15 * pi) / (rv[2] + 15)) / pi)
         # ---- 展開の材料（すぐ内の艇＝壁との比較）
         w = next((x for x in boats if x["course"] == c - 1), None) if c >= 2 else None
         if w:

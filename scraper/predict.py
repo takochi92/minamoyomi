@@ -82,7 +82,7 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  合成2.5倍未満（安い目ばかり）の596レースも3点で的中40%・回収85%だったので、オッズに関係なく3点で出す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 24
+PRED_VERSION = 27
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -109,7 +109,7 @@ TENKAI = {"wall_slow": 4.0, "att_fast": 3.0,
 KEEP_BASE = 0.459   # 3・4コースのまくり勝ちで、インが2・3着に残った割合（過去3年・16,420回）
 
 
-def _ana_bets(head, c, course_of, combos, k=6, tk=None):
+def _ana_bets(head, c, course_of, combos, k=6, tk=None, drop=None):
     """頭固定で、2・3着をAIの確率×まくり展開での並びの出やすさで並べた上位k点。
     tk=(まくり勝ち数, そのうちインが4着以下) があれば、その選手の「インを残すか沈めるか」のくせで補正
     （握って回ってインを残す型なら 3-1-x、ツケマイ型なら 3-45-x を上げる。検証：攻め頭6点の回収 81%→85%）"""
@@ -120,6 +120,8 @@ def _ana_bets(head, c, course_of, combos, k=6, tk=None):
         h, a, b = cb.split("-")
         if int(h) != head:
             continue
+        if drop and drop in (int(a), int(b)):
+            continue   # スタートの遅い壁は叩かれて残らない想定（2・3着から外す）
         key = f"{course_of[int(a)]}{course_of[int(b)]}"
         lift = ((mk.get(key, 0) + 2) / (nm + 40)) / ((al.get(key, 0) + 2) / (na + 40))
         if tk and tk[0] >= 3:
@@ -173,7 +175,12 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
            "ex": round(ex[b["frame"]] * 100) if has_ex else None, "cls": b.get("class", ""),
            "nat": b.get("nat_win"), "loc": b.get("loc_win"), "motor": b.get("motor_2"), "boat": b.get("boat_2"),
            "f_recent": b.get("f", 0)} for b in boats]
-    X = features(S, jcd, wave, weather.get("wind_speed"), fb)
+    try:
+        from .windmap import to_compass
+        wdir = to_compass(jcd, weather.get("wind_dir"))
+    except Exception:
+        wdir = None
+    X = features(S, jcd, wave, weather.get("wind_speed"), fb, wind_dir=wdir)
     sc = stage_scores(X, model)
 
     def soft(v):
@@ -247,7 +254,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
 
     cs_view, cs_comments = coursestats.view(S, jcd, [{"frame": b["frame"], "course": course_of[b["frame"]],
                                                        "toban": b.get("toban", ""), "name": b["name"]} for b in boats])
-    comments = cs_comments + _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats)
+    comments = cs_comments + _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats) + _local_notes(S, jcd, boats, venue, entry_changed)
 
     # F持ち選手の「F後のスタート」（同じコースでの平均STとスタート順）
     fs_all = fstart.load()
@@ -451,7 +458,8 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             have = {b["combo"] for b in main + sub}
             ah = byc[att_c]["frame"]
             have5 = {b["combo"] for b in sorted(main + sub, key=lambda b: -b["p"])[:5]}
-            add = [c for c in _ana_bets(ah, att_c, course_of, combos, k=8, tk=tkd.get(byc[att_c].get("toban", ""))) if c not in have5][:3]
+            wall_slow = next((t["wall"] for t in tenkai if not t.get("type") and t.get("att_course") == att_c), None)
+            add = [c for c in _ana_bets(ah, att_c, course_of, combos, k=8, tk=tkd.get(byc[att_c].get("toban", "")), drop=wall_slow) if c not in have5][:3]
             if add:
                 # 本線はAIの上位5点に絞り、押さえは攻め頭3点だけ（13点→8点。回収率は80%のまま、検証は偶数日81%・奇数日79%）
                 top5 = sorted(main + sub, key=lambda b: -b["p"])[:5]
@@ -558,9 +566,10 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
     if byc.get(4) and byc.get(5):
         r4 = rec.get(byc[4].get("toban", ""))
         if r4 and r4[1] <= 3.0 and len(r4) >= 4 and r4[2] >= 2:
-            for cc in (4, 5):
-                fh = byc[cc]["frame"]
-                seme += [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{fh}-")), key=lambda x: -x[1])][:3]
+            w3 = next((t["wall"] for t in tenkai if not t.get("type") and t.get("att_course") == 4), None)
+            seme += _ana_bets(byc[4]["frame"], 4, course_of, combos, k=3, tk=tkd.get(byc[4].get("toban", "")), drop=w3)
+            f5 = byc[5]["frame"]
+            seme += [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{f5}-")), key=lambda x: -x[1])][:3]
     iw = in_worry(X, course_of, frames, cs_comments)
     # インの展示タイムが、その選手のいつもの順位よりかなり悪い → 行き足・伸びが来ていない可能性
     try:
@@ -609,6 +618,31 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},
     }
+
+
+def _local_notes(S, jcd, boats, venue, entry_changed) -> list[str]:
+    """当地の得意・苦手（3連対率の差）と、前付けしやすい選手（展示前のみ）"""
+    out, good, bad = [], [], []
+    for b in boats:
+        t = b.get("toban", "")
+        rv = S.rv.get(t, {}).get(jcd) if t in S.rv else None
+        tot = sum(S.rv[t].values()) if t in S.rv and S.rv[t] else None
+        if rv is not None and tot is not None and rv[0] >= 15 and tot[0] >= 40:
+            d = rv[1] / rv[0] - tot[1] / tot[0]
+            if d >= 0.12:
+                good.append(f"{b['frame']}号艇 {b['name']}（3連対率 {rv[1] / rv[0] * 100:.0f}%、いつもは{tot[1] / tot[0] * 100:.0f}%）")
+            elif d <= -0.12:
+                bad.append(f"{b['frame']}号艇 {b['name']}（{rv[1] / rv[0] * 100:.0f}%、いつもは{tot[1] / tot[0] * 100:.0f}%）")
+    if good:
+        out.append(f"{venue['name']}が得意：" + "、".join(good) + "。")
+    if bad:
+        out.append(f"{venue['name']}が苦手：" + "、".join(bad) + "。")
+    if not entry_changed:
+        for b in boats:
+            f = S.rf.get(b.get("toban", "")) if b.get("toban", "") in S.rf else None
+            if b["frame"] >= 2 and f is not None and f[0] >= 30 and f[1] / f[0] >= 0.15:
+                out.append(f"進入注意：{b['frame']}号艇 {b['name']}は前付けが多い選手（枠より内に入った率 {f[1] / f[0] * 100:.0f}%）。")
+    return out
 
 
 def _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats) -> list[str]:

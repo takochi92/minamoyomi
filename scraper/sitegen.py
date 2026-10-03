@@ -21,6 +21,8 @@ import html
 import json
 import math
 from collections import Counter, defaultdict
+
+import numpy as np
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -1042,7 +1044,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     venues[v["jcd"]] = {"name": v["name"], "day": v.get("day", ""), "grade": v.get("grade", ""), "cancelled": v.get("cancelled"),
                                         "races": [{"rno": r["rno"], "deadline": r.get("deadline", ""), "result": r.get("result") if self.finished(r) else None,
                                                    "payout": r.get("payout"), "ninki": r.get("ninki"), "hit": r.get("hit")} for r in v.get("races", [])]}
-            for race in (self.day_races.get(d) or []):
+            for race in (getattr(self, "day_races", {}).get(d) or []):
                 jcd = race["jcd"]
                 res = race["result"] if race.get("result", {}).get("finished") else None
                 row = {"rno": race["rno"], "deadline": race.get("deadline", ""), "result": res["trifecta"] if res else None,
@@ -1367,6 +1369,44 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return ('<section style="display:grid;gap:8px"><h2>コースごとの最近のレース <small>直近1年・各コース最新10走</small></h2>' + "".join(out) +
                 '<script>(function(){var h=location.hash;var d=h&&document.querySelector("details"+h);if(d){d.open=true;d.scrollIntoView();}})()</script></section>')
 
+    def racer_entry_sec(self, t):
+        f = self.S.rf.get(t)
+        if f is None or f[0] < 20:
+            return ""
+        inn, out = f[1] / f[0], f[2] / f[0]
+        word = "前付けが多い" if inn >= 0.15 else ("枠を譲りがち" if out >= 0.25 else "ほぼ枠なり")
+        return (f'<section class="panel"><h2>進入のくせ <small>{int(f[0])}走・{word}</small></h2><div class="tbl-wrap"><table><tbody>'
+                f'<tr><td>枠なり</td><td class="r num">{pct(1 - inn - out, 1)}</td></tr><tr><td>枠より内へ（前付け）</td><td class="r num">{pct(inn, 1)}</td></tr>'
+                f'<tr><td>枠より外へ</td><td class="r num">{pct(out, 1)}</td></tr></tbody></table></div></section>')
+
+    def racer_venue_sec(self, t):
+        rv = self.S.rv.get(t) or {}
+        tot = np.zeros(4)
+        for v in rv.values():
+            tot += v
+        if tot[0] < 30:
+            return ""
+        o3 = tot[1] / tot[0]
+        oi = tot[3] / tot[2] if tot[2] else None
+        rows = []
+        for jcd, v in sorted(rv.items(), key=lambda x: -x[1][0]):
+            if v[0] < 6:
+                continue
+            r3 = v[1] / v[0]
+            tag = ""
+            if v[0] >= 15 and r3 - o3 >= 0.12:
+                tag = '<span class="pill lv4">得意</span>'
+            elif v[0] >= 15 and o3 - r3 >= 0.12:
+                tag = '<span class="pill">苦手</span>'
+            ri = f"{pct(v[3] / v[2], 0)}（{int(v[2])}走）" if v[2] >= 3 else "-"
+            rows.append(f'<tr><td>{e(VENUES.get(jcd, {}).get("name", jcd))} {tag}</td><td class="r num">{int(v[0])}</td>'
+                        f'<td class="r num {"best" if tag and "得意" in tag else ""}">{pct(r3, 1)}</td><td class="r num">{ri}</td></tr>')
+        if not rows:
+            return ""
+        return (f'<section class="panel"><h2>場別成績 <small>直近1年・全体の3連対率 {pct(o3, 1)}・イン1着率 {pct(oi, 0) if oi is not None else "-"}</small></h2>'
+                f'<div class="tbl-wrap"><table><thead><tr><th>場</th><th class="r">出走</th><th class="r">3連対率</th><th class="r">イン1着</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<p class="sub">15走以上で、全体より12ポイント以上高い場を「得意」、低い場を「苦手」にしています。予想AIにも入っています。</p></section>')
+
     def racer_pages(self):
         self._pairs = fstart.load_pairs()
         rec = self.recent_index()
@@ -1383,7 +1423,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 me = d.get(c)
                 nt = self.S.nc[c]
                 if me is None or me[0] == 0:
-                    rows.append(f'<tr><td>{c}コース</td><td class="r num">0</td><td colspan="5" class="sub">出走なし</td></tr>')
+                    rows.append(f'<tr><td>{c}コース</td><td class="r num">0</td><td colspan="6" class="sub">出走なし</td></tr>')
                     continue
                 n = me[0]
                 kim = "・".join(f"{k}{int(me[4 + i])}" for i, k in enumerate(KIM) if me[4 + i]) or "-"
@@ -1392,7 +1432,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 if c >= 2 and op and op[0] >= OP_MIN and op[3] >= OP_MARK:
                     tags.append(f"{c}コース巧者（実力比{op[3]:.1f}）")
                 rows.append(f'<tr><td>{c}コース</td><td class="r num">{int(n)}</td><td class="r num {"best" if ratio >= 1.3 and n >= MIN_STARTS else ""}">{pct(me[1] / n, 1)}</td>'
-                            f'<td class="r num sub">{pct(nt[1] / nt[0] if nt[0] else None, 1)}</td><td class="r num">{pct((me[1] + me[2]) / n, 1)}</td><td class="r num">{pct((me[1] + me[2] + me[3]) / n, 1)}</td><td>{e(kim)}</td></tr>')
+                            f'<td class="r num sub">{pct(nt[1] / nt[0] if nt[0] else None, 1)}</td><td class="r num">{pct((me[1] + me[2]) / n, 1)}</td><td class="r num">{pct((me[1] + me[2] + me[3]) / n, 1)}</td><td class="r num">{f"{sr[0] / sr[1]:.1f}" if (sr := self.S.rsr[t].get(c)) is not None and sr[1] >= 3 else "-"}</td><td>{e(kim)}</td></tr>')
             c1 = d.get(1)
             loss = ""
             if c1 is not None and c1[0] >= 10:
@@ -1423,7 +1463,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p>{e(info.get('branch', ''))}支部・{e(info.get('birthplace', ''))}出身・{info.get('age') or '-'}歳・{e(info.get('class', ''))}級・勝率 {info.get('win') or '-'}　{tagh}</p>
 {f'<div class="panel"><b>今日の出走</b><ul class="comments">{tod}</ul></div>' if tod else ''}</section>
 <section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
-<div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
+<div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">ST順</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<p class="sub">ST順＝そのレースで何番目に早いスタートだったかの平均（1が最速）。</p></section>
+{self.racer_entry_sec(t)}
+{self.racer_venue_sec(t)}
 {loss}
 {bycourse}
 {stsec}
@@ -1515,9 +1558,38 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}</p>
 <section class="panel"><h2>コース別1着率 <small>公式・{e((load_json(Path(__file__).parent / 'venues.json', {}) or {}).get('period', ''))}</small></h2><div class="courses">{bars}</div></section>
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
-{f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>"""
+{f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
+{self.venue_extra(jcd)}"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場の特徴・コース別成績・決まり手｜{SITE_NAME}",
                                             f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])]))
+
+    def venue_extra(self, jcd):
+        out = []
+        vs = self.S.vst.get(jcd) or {}
+        if vs:
+            rows = "".join(f'<tr><td>{bt(c)} {c}コース</td><td class="r num">{(vs[c][0] / vs[c][1]):.2f}</td><td class="r num">{int(vs[c][2])}</td></tr>'
+                           for c in range(1, 7) if c in vs and vs[c][1] > 0)
+            out.append(f'<section class="panel"><h2>コース別の平均STとフライング <small>直近1年</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">平均ST</th><th class="r">F数</th></tr></thead><tbody>{rows}</tbody></table></div></section>')
+        vm = self.S.vm.get(jcd) or {}
+        if sum(v[0] for v in vm.values()) >= 300:
+            mx = max((v[1] / v[0] for v in vm.values() if v[0] >= 30), default=1)
+            cells = "".join(f'<div><small>{v[1] / v[0] * 100:.0f}%</small><i style="height:{v[1] / v[0] / mx * 76:.0f}px"></i><span class="sub">{m}</span></div>'
+                            for m, v in sorted(vm.items()) if v[0] >= 30)
+            out.append(f'<section class="panel"><h2>月別のイン1着率 <small>直近1年・季節の傾向</small></h2><div class="courses months">{cells}</div></section>')
+        rows = []
+        n_in = self.S.vc[jcd][1]
+        base = n_in[1] / n_in[0] if n_in[0] else None
+        for k, v in sorted(self.S.vw.items(), key=lambda x: -x[1][0]):
+            j, d = k.split("|", 1)
+            if j != jcd or v[0] < 25 or base is None:
+                continue
+            r = v[1] / v[0]
+            mark = "best" if r - base >= 0.05 else ("second" if base - r >= 0.05 else "")
+            rows.append(f'<tr><td>{e(d)}</td><td class="r num">{int(v[0])}</td><td class="r num {mark}">{pct(r, 1)}</td><td class="r num sub">{"+" if r >= base else ""}{(r - base) * 100:.1f}</td></tr>')
+        if rows:
+            out.append(f'<section class="panel"><h2>風向き別のイン1着率 <small>風4m以上・この場の平均 {pct(base, 1)}</small></h2><div class="tbl-wrap"><table><thead><tr><th>風向き</th><th class="r">レース</th><th class="r">イン1着率</th><th class="r">差</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                       '<p class="sub">風向きは競走成績の方角（北東など）です。予想AIにも入っています。</p></section>')
+        return "\n".join(out)
 
     # ------------------------------------------------------------ ツール・解説・JSページ
     def static_pages(self):
