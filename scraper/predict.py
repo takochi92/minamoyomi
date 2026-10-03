@@ -79,11 +79,11 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 # 厳選本命：イン逃げが堅く、逃げたときの2着の軸もはっきりしているレースだけ、1-軸-3着上位3点
 # 検証（約9,000レース・61日）：AIのイン1着60%以上・逃げたときの2着がその艇40%以上・3点の合成オッズ2.5倍以上
 #  → 749レース（1日約12R）的中27% 回収82%（偶数日83%・奇数日82%）。人気や級別ではなくAIの確率で決めるので、人気薄の軸でも入る
-#  合成オッズの条件は締切前に run.py で判定し、安すぎれば（全部5倍前後など）いつもの6点に戻す
+#  合成2.5倍未満（安い目ばかり）の596レースも3点で的中40%・回収85%だったので、オッズに関係なく3点で出す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 18
-HONMEI = {"in": 0.60, "axis": 0.40, "k": 3, "min_comp": 2.5}
+PRED_VERSION = 24
+HONMEI = {"in": 0.60, "axis": 0.40, "k": 3}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
 NOKO_BASE = {2: 0.571, 3: 0.536, 4: 0.426, 5: 0.310, 6: 0.183}
@@ -106,8 +106,13 @@ TENKAI = {"wall_slow": 4.0, "att_fast": 3.0,
                     4: {"n": 4442, "win": 0.199, "base_win": 0.105, "makuri": 0.120, "base_makuri": 0.049}}}
 
 
-def _ana_bets(head, c, course_of, combos, k=6):
-    """頭固定で、2・3着をAIの確率×まくり展開での並びの出やすさで並べた上位k点"""
+KEEP_BASE = 0.459   # 3・4コースのまくり勝ちで、インが2・3着に残った割合（過去3年・16,420回）
+
+
+def _ana_bets(head, c, course_of, combos, k=6, tk=None):
+    """頭固定で、2・3着をAIの確率×まくり展開での並びの出やすさで並べた上位k点。
+    tk=(まくり勝ち数, そのうちインが4着以下) があれば、その選手の「インを残すか沈めるか」のくせで補正
+    （握って回ってインを残す型なら 3-1-x、ツケマイ型なら 3-45-x を上げる。検証：攻め頭6点の回収 81%→85%）"""
     mk, al = MK_PAIRS["mk"].get(str(c), {}), MK_PAIRS["all"].get(str(c), {})
     nm, na = sum(mk.values()) or 1, sum(al.values()) or 1
     sc = []
@@ -117,6 +122,9 @@ def _ana_bets(head, c, course_of, combos, k=6):
             continue
         key = f"{course_of[int(a)]}{course_of[int(b)]}"
         lift = ((mk.get(key, 0) + 2) / (nm + 40)) / ((al.get(key, 0) + 2) / (na + 40))
+        if tk and tk[0] >= 3:
+            keep = (tk[0] - tk[1] + 5 * KEEP_BASE) / (tk[0] + 5)
+            lift *= (keep / KEEP_BASE) if "1" in key else ((1 - keep) / (1 - KEEP_BASE))
         sc.append((p * lift, cb))
     sc.sort(reverse=True)
     return [cb for _, cb in sc[:k]]
@@ -399,7 +407,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                    f"{w['name']}のスタートは平均{wst[1]:.1f}番手" if wst and wst[1] >= 4.0 else "",
                    f"{c - 1}コースのとき{c}コースに勝たれる率{wrate * 100:.0f}%（{wv[0]}走）" if wrate is not None and wrate >= (0.14 if c == 4 else 0.17) else "") if x)]
         tsuke_pick = {"kind": "tsuke", "frame": a["frame"], "name": a["name"], "course": c, "rate": round(rate, 2),
-                      "in": inb_["frame"], "in_name": inb_["name"], "why": why, "bets": _ana_bets(a["frame"], c, course_of, combos)}
+                      "in": inb_["frame"], "in_name": inb_["name"], "why": why, "bets": _ana_bets(a["frame"], c, course_of, combos, tk=tk)}
         break
     ana = None
     # 穴目：展開メモで「外から一撃」の材料がある艇がいれば、その艇の頭を2点だけ押さえる
@@ -443,14 +451,21 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             have = {b["combo"] for b in main + sub}
             ah = byc[att_c]["frame"]
             have5 = {b["combo"] for b in sorted(main + sub, key=lambda b: -b["p"])[:5]}
-            add = [c for c in _ana_bets(ah, att_c, course_of, combos, k=8) if c not in have5][:3]
+            add = [c for c in _ana_bets(ah, att_c, course_of, combos, k=8, tk=tkd.get(byc[att_c].get("toban", ""))) if c not in have5][:3]
             if add:
                 # 本線はAIの上位5点に絞り、押さえは攻め頭3点だけ（13点→8点。回収率は80%のまま、検証は偶数日81%・奇数日79%）
                 top5 = sorted(main + sub, key=lambda b: -b["p"])[:5]
                 main = top5
                 sub = [{"combo": c, "p": round(pmap_.get(c, 0), 4)} for c in add]
                 bet_mode = "attack"
-                attack_note = f"イン逃げの見込みが{pin_m * 100:.0f}%と低めで、{att_c}コースの攻めの材料があるため、{ah}号艇の頭を押さえに{len(add)}点"
+                tkv = tkd.get(byc[att_c].get("toban", ""))
+                style = ""
+                if tkv and tkv[0] >= 3:
+                    keep = (tkv[0] - tkv[1]) / tkv[0]
+                    style = (f"（まくって勝った{tkv[0]}回のうちインが2・3着に残ったのは{tkv[0] - tkv[1]}回。" +
+                             ("握って回ってインを残す型なので、2・3着にインを入れています）" if keep >= 0.55 else
+                              "ツケマイでインごと沈める型なので、2・3着は外寄りにしています）" if keep <= 0.35 else "）"))
+                attack_note = f"イン逃げの見込みが{pin_m * 100:.0f}%と低めで、{att_c}コースの攻めの材料があるため、{ah}号艇の頭を押さえに{len(add)}点{style}"
     if not bet_mode:
         # いつものレースも6点まで（検証7,631レース：10点 回収78% / 6点 78%・偶数日76%・奇数日79%。点数を減らしても回収率は同じ）
         allb = sorted(main + sub, key=lambda b: -b["p"])[:6]
@@ -469,11 +484,23 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             if heads:
                 oh = max(heads, key=heads.get)
                 have = {b["combo"] for b in main + sub}
-                add = [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{oh}-")), key=lambda x: -x[1]) if cb not in have][:2]
+                ranked = [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{oh}-")), key=lambda x: -x[1]) if cb not in have]
+                add = ranked[:2]
+                extra = ""
+                # 4コース頭のときは、5コースの選手が「5コースで3着内46%以上（20走以上）」なら、2点のうち1点を5絡みにする
+                # 検証（外の頭が4コースで、該当523レース）：AIの上位2点 回収62% → 1点を5絡みに 82%（偶数日75%・奇数日93%）
+                if course_of[oh] == 4 and byc.get(5):
+                    f5 = byc[5]["frame"]
+                    c5 = ((cs_view or {}).get("boats") or {}).get(str(f5)) or ((cs_view or {}).get("boats") or {}).get(f5) or {}
+                    if c5.get("starts", 0) >= 20 and (c5.get("top3") or 0) >= 0.46 and not any(str(f5) in cb.split("-")[1:] for cb in add):
+                        five = next((cb for cb in ranked if str(f5) in cb.split("-")[1:]), None)
+                        if five:
+                            add = add[:1] + [five]
+                            extra = f"。5コースの{byc[5]['name']}は5コースで3着内{c5['top3'] * 100:.0f}%（{c5['starts']}走）なので、1点は5絡みに"
                 if add:
                     sub = sub + [{"combo": c, "p": round(pmap_.get(c, 0), 4)} for c in add]
                     ob = next((b for b in boats if b["frame"] == oh), {})
-                    attack_note = f"外の押さえ：{oh}号艇{ob.get('name', '')}（{course_of[oh]}コース）の頭も2点。外の艇でAIが一番1着を見ている艇です"
+                    attack_note = f"外の押さえ：{oh}号艇{ob.get('name', '')}（{course_of[oh]}コース）の頭も2点。外の艇でAIが一番1着を見ている艇です{extra}"
     # 逃げ残し巧者（4〜6コースで、イン逃げのとき2・3着に残る率がそのコースの平均より15ポイント以上高い・25走以上）
     try:
         nkd = fstart.load_noko()
@@ -502,6 +529,38 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
             noko_note = (f"{b['frame']}号艇{b['name']}（{b.get('class')}）は{cc}コースでイン逃げのとき2・3着に{v[1] / v[0] * 100:.0f}%残す選手"
                          f"（平均{NOKO_BASE[cc] * 100:.0f}%・{v[0]}走）。B級の残し巧者はオッズに軽く見られがちなので、1-{b['frame']}絡みを押さえに")
             break
+    # 裏目：4コースがまくり型でスタートも早い → 4が絞って行くと、5コースがまくり差しで突き抜ける形がある
+    # 検証（1,806レース）：5頭のAI上位3点 的中44回・回収114%（偶数日101%・奇数日130%）。ただし月ごとの波が大きい（0〜291%）
+    ura_note = ""
+    if bet_mode != "honmei" and byc.get(4) and byc.get(5):
+        r4 = rec.get(byc[4].get("toban", ""))
+        if r4 and r4[1] <= 3.0 and len(r4) >= 4 and r4[2] >= 2:
+            f5 = byc[5]["frame"]
+            have = {b["combo"] for b in main + sub}
+            ura = [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{f5}-")), key=lambda x: -x[1])][:3]
+            add = [cb for cb in ura if cb not in have]
+            if add:
+                sub = sub + [{"combo": c, "p": round(pmap_.get(c, 0), 4)} for c in add]
+                try:
+                    ir = fstart.load_inres().get(byc[1].get("toban", "")) if byc.get(1) else None
+                except Exception:
+                    ir = None
+                itype = ""
+                if ir and ir[0] >= 8:
+                    out_r = ir[1] / ir[0]
+                    itype = ("インは張って抵抗する型（負けると4着以下が" + f"{out_r * 100:.0f}%）で、もつれやすい。" if out_r >= 0.55 else
+                             "インは無理に抵抗しない型（負けても2・3着に残すことが多い）なので、5-1の形も。" if out_r <= 0.35 else "")
+                ura_note = (f"裏目：4コースの{byc[4]['name']}はまくり型（4コースのまくり勝ち{r4[2]}回）でスタートも早い。"
+                            f"4が絞って行くと5コースの{byc[5]['name']}がまくり差しで突き抜ける形があるので、5の頭を{len(add)}点。{itype}")
+    # 攻め勝負（インを切る）：4がまくり型でスタートも早いレースは、4頭3点＋5頭3点の6点を別に出す
+    # 検証（1,806レース）：インも含めた12点 回収80%・合成の中央値2.0倍 → インを切った6点 回収87%（偶数日78%・奇数日96%）・合成の中央値13.9倍・的中7%
+    seme = []
+    if byc.get(4) and byc.get(5):
+        r4 = rec.get(byc[4].get("toban", ""))
+        if r4 and r4[1] <= 3.0 and len(r4) >= 4 and r4[2] >= 2:
+            for cc in (4, 5):
+                fh = byc[cc]["frame"]
+                seme += [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{fh}-")), key=lambda x: -x[1])][:3]
     iw = in_worry(X, course_of, frames, cs_comments)
     # インの展示タイムが、その選手のいつもの順位よりかなり悪い → 行き足・伸びが来ていない可能性
     try:
@@ -535,7 +594,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "wind": wind, "wave_cm": wave,
         "boats": rows, "marks": marks,
         "confidence": {"label": conf[0], "level": conf[1], "top_win": round(pmax, 3)},
-        "bets": {"main": main, "sub": sub, "ana": ana_bets, "exacta": exacta, "ana_reason": ana_reason, "mode": bet_mode, "attack": attack_note, "normal": normal6 if bet_mode == "honmei" else None, "hon": main if bet_mode == "honmei" else None, "noko": noko_note},
+        "bets": {"main": main, "sub": sub, "ana": ana_bets, "exacta": exacta, "ana_reason": ana_reason, "mode": bet_mode, "attack": attack_note, "normal": normal6 if bet_mode == "honmei" else None, "hon": main if bet_mode == "honmei" else None, "noko": noko_note, "ura": ura_note, "seme": seme},
         "points": len(main) + len(sub),
         "p3": p3,
         "specialists": spec,

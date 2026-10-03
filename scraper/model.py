@@ -21,14 +21,14 @@ M = 20        # 選手成績を全国平均に寄せる強さ（出走数換算�
 MV = 50       # 場成績を全国平均に寄せる強さ
 FEATS = ["base_w", "base_2", "base_3", "rc_win", "rc_place", "mu", "nat", "loc", "A1", "A2", "B2",
          "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out", "rc_in",
-         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko"]
+         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2"]
 FEATURE_LABEL = {
     "base_w": "場のコース別1着率", "rc_win": "選手のコース別成績", "rc_place": "選手のコース別連対", "mu": "インの負け方×攻め手",
     "nat": "全国勝率", "loc": "当地勝率", "A1": "級別", "A2": "級別", "B2": "級別", "motor": "モーター", "boat": "ボート",
     "ex_dev": "展示タイム", "ex_top": "展示タイム", "avg_st": "平均ST", "f_recent": "F持ち",
     "wave_in": "波・風", "wave_out": "波・風", "wind_in": "波・風", "wind_out": "波・風", "rc_in": "インでの成績",
     "st_wall": "壁よりスタートが早い", "wall_f": "壁がF持ち", "wall_beat": "壁の叩かれやすさ", "ex_wall": "展示で壁より速い",
-    "ex_usual": "展示のいつもとの差", "noko": "逃げ残し",
+    "ex_usual": "展示のいつもとの差", "noko": "逃げ残し", "in2": "インが勝つときの2着のくせ",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"
@@ -53,6 +53,8 @@ class Stats:
         self.rw = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[出走, すぐ外が1着]
         self.rex = defaultdict(lambda: np.zeros(2))                         # 登番→[展示順位の合計, 件数]
         self.rn = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[イン逃げのレース, そのとき2・3着]
+        self.r2 = defaultdict(Counter)                                      # 登番→インで勝ったときの2着のコース
+        self.n2 = Counter()
 
     def apply(self, r, sign=1):
         jcd, kim, E = r[1], r[3], r[11]
@@ -83,6 +85,12 @@ class Stats:
                 if e[2] <= 5:
                     self.rw[e[1]][e[2]] += sign * np.array([1, int(win[2] == e[2] + 1)])
         if win and win is inb:
+            sec = next((e for e in ents if e[5] == 2), None)
+            if sec:
+                self.r2[inb[1]][sec[2]] += sign
+                self.r2[inb[1]][0] += sign
+                self.n2[sec[2]] += sign
+                self.n2[0] += sign
             for e in ents:
                 if e[2] >= 2 and isinstance(e[5], int):
                     self.rn[e[1]][e[2]] += sign * np.array([1, int(e[5] in (2, 3))])
@@ -101,13 +109,14 @@ class Stats:
         def arr(a):
             return [round(float(x), 3) for x in a]
         return {
-            "nn": self.nn, "nl": dict(self.nl), "nc": {str(c): arr(v) for c, v in self.nc.items()},
+            "nn": self.nn, "nl": dict(self.nl), "n2": {str(k): v for k, v in self.n2.items()}, "nc": {str(c): arr(v) for c, v in self.nc.items()},
             "vn": dict(self.vn), "vl": {j: dict(v) for j, v in self.vl.items()},
             "vc": {j: {str(c): arr(v) for c, v in d.items()} for j, d in self.vc.items()},
             "r": {t: {"c": {str(c): arr(v) for c, v in d.items() if v[0] > 0}, "l": dict(self.rl[t]), "s": arr(self.rst[t]),
                       "w": {str(c): arr(v) for c, v in self.rw[t].items() if v[0] > 0},
                       "x": arr(self.rex[t]),
-                      "n": {str(c): arr(v) for c, v in self.rn[t].items() if v[0] > 0}}
+                      "n": {str(c): arr(v) for c, v in self.rn[t].items() if v[0] > 0},
+                      "2": {str(k): v for k, v in self.r2[t].items() if v}}
                   for t, d in self.rc.items() if any(v[0] > 0 for v in d.values())},
         }
 
@@ -116,6 +125,7 @@ class Stats:
         S = cls()
         S.nn = j["nn"]
         S.nl = Counter(j["nl"])
+        S.n2 = Counter({int(k): v for k, v in j.get("n2", {}).items()})
         for c, v in j["nc"].items():
             S.nc[int(c)] = np.array(v)
         S.vn = Counter(j["vn"])
@@ -135,6 +145,8 @@ class Stats:
                 S.rex[t] = np.array(d["x"])
             for c, v in d.get("n", {}).items():
                 S.rn[t][int(c)] = np.array(v)
+            if "2" in d:
+                S.r2[t] = Counter({int(k): v for k, v in d["2"].items()})
         return S
 
 
@@ -252,6 +264,11 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict]) -> np.ndar
             if rx[1] >= 10:
                 today = sorted(exs).index(b["ex"]) + 1
                 X[i, fi["ex_usual"]] = np.clip((rx[0] / rx[1] - today) / 2, -2, 2)
+        if c >= 2 and inb and S.n2[0]:
+            r2 = S.r2[inb["toban"]]
+            b2 = S.n2[c] / S.n2[0]
+            if b2 > 0:
+                X[i, fi["in2"]] = math.log(((r2[c] + 10 * b2) / (r2[0] + 10)) / b2)
         if c >= 2:
             rn = S.rn[toban][c]
             nn_ = S.nc[c]

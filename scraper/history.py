@@ -1,7 +1,7 @@
 """公式の競走成績（Kファイル）と番組表（Bファイル）を蓄積し、コース戦績を集計する。
 
   python -m scraper.history --days 3      # 直近3日分を取得（毎朝の定期実行）
-  python -m scraper.history --days 1100   # 過去3年分をまとめて取得（初回のみ・30分程度）
+  python -m scraper.history --days 1850   # 過去5年分をまとめて取得（取得済みの日は飛ばす・不足分だけで30分程度）
   python -m scraper.history --stats-only  # 取得せず集計だけやり直す
 
 保存先
@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 HIST = ROOT / "history"
 URL = "https://www1.mbrace.or.jp/od2/{kind}/{ym}/{k}{ymd}.lzh"
 WINDOW_DAYS = 365
-KEEP_DAYS = 1150
+KEEP_DAYS = 1850   # 約5年分を残す（学習に使う）
 
 
 def to_record(race: dict, b: dict) -> list:

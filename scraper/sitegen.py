@@ -302,7 +302,7 @@ class Site:
             cells = []
             for it in items:
                 v, r = cols[it].get(f), rank[it].get(f)
-                cls = "best" if r == 1 else ("sub" if r and r >= 5 else "")
+                cls = "best" if r == 1 else ("second" if r == 2 else ("sub" if r and r >= 5 else ""))
                 dm = dmeans.get(it)
                 dd = ""
                 if v and dm:
@@ -562,12 +562,19 @@ class Site:
         if b.get("mode") == "honmei" and p.get("honmei_pick"):
             hp = p["honmei_pick"]
             return (f'<div class="bet-group"><span>本命</span><div class="bets">{cells(b["main"])}</div></div>'
-                    f'<p class="sub" style="margin:4px 0 0">固いレース：イン{bt(hp["in"])}の1着{pct(hp["p_in"])}、逃げたときの2着は{bt(hp["axis"])}が{pct(hp["p_axis"])}。3着も上位3艇に絞って3点（{"".join(bt(x) for x in hp.get("cut", []))}は切り）。人気ではなくAIの確率で選んでいて、3点の合成オッズが2.5倍以上あるときだけ出します。</p>')
+                    f'<p class="sub" style="margin:4px 0 0">固いレース：イン{bt(hp["in"])}の1着{pct(hp["p_in"])}、逃げたときの2着は{bt(hp["axis"])}が{pct(hp["p_axis"])}。3着も上位3艇に絞って3点（{"".join(bt(x) for x in hp.get("cut", []))}は切り）。人気ではなくAIの確率で選んでいます。安い目でも、データ上ほぼこの形というレースは3点に絞っています。</p>')
         out = f'<div class="bet-group"><span>本線</span><div class="bets">{cells(b["main"])}</div></div>'
         if b.get("sub"):
             out += f'<div class="bet-group"><span>押さえ</span><div class="bets">{cells(b["sub"])}</div></div>'
         if b.get("mode") == "honmei_cheap":
             out += '<p class="sub" style="margin:4px 0 0">固い形ですが、3点に絞ると合成オッズが2.5倍未満で妙味がないため、いつもの6点にしています。</p>'
+        if b.get("seme"):
+            out += f'<div class="bet-group seme"><span>攻め勝負</span><div class="bets">{cells([{"combo": c, "p": 0} for c in b["seme"]]).replace("<small>AI 0.0%</small>", "")}</div></div>'
+            out += '<p class="sub" style="margin:4px 0 0">攻め勝負：4がまくり型でスタートも早いレースは、インを切って4頭3点＋5頭3点だけ買う手も（過去1,806レースで回収87%・合成の中央値14倍・的中は7%と低め）。本線・押さえとは別の買い方です。</p>'
+        if b.get("cut"):
+            out += f'<p class="sub" style="margin:4px 0 0">外した目：{"・".join(e(x) for x in b["cut"])}（10倍未満で妙味が薄いため）。</p>'
+        if b.get("ura"):
+            out += f'<p class="sub" style="margin:4px 0 0">{e(b["ura"])}。</p>'
         if b.get("noko"):
             out += f'<p class="sub" style="margin:4px 0 0">残し：{e(b["noko"])}。</p>'
         if b.get("mode") == "attack" and b.get("attack"):

@@ -28,6 +28,11 @@ WEATHER = ["wave_in", "wave_out", "wind_in", "wind_out"]
 TENKAI_F = ["st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual"]
 STAGE_COLS = {
     "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
+    "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2"],
+    "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2"],
+}
+PREV_COLS = {
+    "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko"],
     "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko"],
 }
