@@ -254,6 +254,29 @@ class Site:
 {result}
 <p class="sub">本線・押さえの中から、AIの確率が高い順に合成オッズが{r['rule']['min_comp']:g}倍を下回らない範囲で選び、AIの的中見込みが{r['rule']['confident_ai'] * 100:.0f}%以上、かつオッズから見た見込みの{r['rule'].get('confident_edge', 1):g}倍以上ある（市場よりAIが強く見ている）レースだけ「自信あり」として出しています（本線・押さえ以外の目は使いません）。合成オッズ ＝ 1 ÷（1/オッズ① ＋ 1/オッズ② ＋ …）。</p></section>"""
 
+    def day_means(self, d, jcd):
+        """その日・その場で、ここまでに出た展示タイム／オリジナル展示の平均（項目ごと）"""
+        key = (d, jcd)
+        cache = getattr(self, "_dm", None)
+        if cache is None:
+            cache = self._dm = {}
+        if key in cache:
+            return cache[key]
+        acc = {}
+        for p in (DATA / "races" / d).glob(f"{jcd}*.json"):
+            r = load_json(p, {}) or {}
+            for b in (r.get("before") or {}).get("boats", []):
+                if b.get("exhibit_time"):
+                    acc.setdefault("展示タイム", []).append(b["exhibit_time"])
+            ot = r.get("oriten")
+            if ot:
+                for i, it in enumerate(ot.get("items", [])):
+                    for v in ot.get("rows", {}).values():
+                        if i < len(v) and v[i]:
+                            acc.setdefault(it, []).append(v[i])
+        cache[key] = {k: (sum(v) / len(v), len(v)) for k, v in acc.items() if len(v) >= 12}
+        return cache[key]
+
     def oriten_block(self, race):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
         ot = race.get("oriten")
@@ -272,6 +295,7 @@ class Site:
             vals = sorted(v for v in col.values() if v)
             rank[it] = {f: (vals.index(v) + 1 if v else None) for f, v in col.items()}
         names = {str(b["frame"]): b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
+        dmeans = self.day_means(race.get("date", ""), race.get("jcd", "")) if race.get("date") and race.get("jcd") else {}
         head = "".join(f'<th class="r">{e(it)}</th>' for it in items)
         rows = []
         for f in map(str, range(1, 7)):
@@ -279,7 +303,12 @@ class Site:
             for it in items:
                 v, r = cols[it].get(f), rank[it].get(f)
                 cls = "best" if r == 1 else ("sub" if r and r >= 5 else "")
-                cells.append(f'<td class="r num {cls}">{f"{v:.2f}" if v else "-"}<small class="sub">{f" {r}位" if r else ""}</small></td>')
+                dm = dmeans.get(it)
+                dd = ""
+                if v and dm:
+                    diff = v - dm[0]
+                    dd = f'<br><small class="{"dgood" if diff <= -0.05 else ("dbad" if diff >= 0.05 else "sub")}">{diff:+.2f}</small>'
+                cells.append(f'<td class="r num {cls}">{f"{v:.2f}" if v else "-"}<small class="sub">{f" {r}位" if r else ""}</small>{dd}</td>')
             rows.append(f'<tr><td>{bt(int(f))} {e(names.get(f, ""))}</td>{"".join(cells)}</tr>')
         tops = []
         for it in items:
@@ -287,6 +316,9 @@ class Site:
             if best:
                 tops.append(f"{it}1位 {'・'.join(best)}号艇")
         note = "展示タイムは公式、一周・まわり足・直線などは各レース場が独自に計測したオリジナル展示データ（BOATCAST掲載）。数字が小さいほど速い。" if ot else "展示タイムは公式。数字が小さいほど速い。"
+        if dmeans:
+            note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
+                     "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
         return (f'<section class="panel"><h2>展示の数字 <small>{e("・".join(tops))}</small></h2>'
                 f'<div class="tbl-wrap"><table><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                 f'<p class="sub">{note}</p></section>')
@@ -540,6 +572,8 @@ class Site:
             out += f'<p class="sub" style="margin:4px 0 0">残し：{e(b["noko"])}。</p>'
         if b.get("mode") == "attack" and b.get("attack"):
             out += f'<p class="sub" style="margin:4px 0 0">攻め：{e(b["attack"])}を入れています。</p>'
+        elif not b.get("mode") and b.get("attack"):
+            out += f'<p class="sub" style="margin:4px 0 0">{e(b["attack"])}。</p>'
         return out
 
     def honmei_block(self, race, p, res):
@@ -813,6 +847,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
         if not res:
             script += "<script>setTimeout(function(){location.reload()},300000)</script>"
+        # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む
+        import re as _re
+        body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)
         self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script))
 
     # ------------------------------------------------------------ トップ
@@ -1407,6 +1444,35 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return out
 
     # ------------------------------------------------------------ 会場
+    def race_cards(self, page, d, jcd, today):
+        """場ページの「本日のレース」：1Rずつ、締切・状態・6人・印・タブへのボタン"""
+        out = []
+        if today.get("cancelled"):
+            return '<p class="sub">本日は中止です。</p>'
+        for r in today.get("races", []):
+            race = load_json(DATA / "races" / d / f"{jcd}{r['rno']:02d}.json", {}) or {}
+            boats = (race.get("racelist") or {}).get("boats", [])
+            href = self.race_link(page, d, jcd, r["rno"])
+            fin = self.finished(r)
+            if fin:
+                st = f'<span class="pill hit">結果 {combo(r["result"])} {yen(r.get("payout"))}</span>' if r.get("result") else '<span class="pill">確定</span>'
+            else:
+                st = f'<span class="num" data-dl="{d} {r["deadline"]}">{r["deadline"]}締切</span>'
+            marks = []
+            if r.get("hon"):
+                marks.append('<span class="chip hm">固い</span>')
+            if r.get("tsuke"):
+                marks.append('<span class="chip tk">厳選穴</span>')
+            if (race.get("prediction") or {}).get("bets", {}).get("mode") == "attack":
+                marks.append('<span class="chip iw1">攻めあり</span>')
+            if fin and r.get("hit"):
+                marks.append('<span class="chip hitc">的中</span>')
+            names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or '<li class="sub">出走表は締切2時間前ごろに表示</li>'
+            out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a> <small>{e(race.get("race_name", ""))}</small><span class="st">{st}</span></header>'
+                       f'{"<div class=marks>" + "".join(marks) + "</div>" if marks else ""}<ul class="names">{names}</ul>'
+                       f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
+        return "".join(out)
+
     def venue_pages(self):
         for jcd, v in VENUES.items():
             page = Page(f"venue/{SLUG[jcd]}.html")
@@ -1433,12 +1499,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             today = next((x for x in self.idx.get("venues", []) if x["jcd"] == jcd), None)
             todayh = ""
             if today:
-                todayh = (f'<section class="panel venue-block"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
-                          f'<div class="tbl-wrap"><table class="rtab"><tbody>{self.race_rows(page, self.idx["date"], jcd, today["races"])}</tbody></table></div></section>')
-            body = f"""<h1>{e(v['name'])}ボートレース場の特徴とコース別成績</h1>
+                todayh = (f'<section style="display:grid;gap:10px"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
+                          f'<div class="rcards">{self.race_cards(page, self.idx["date"], jcd, today)}</div></section>')
+            body = f"""<h1>{e(v['name'])}ボートレース</h1>
+{todayh}
+<h2 style="margin-top:8px">{e(v['name'])}の水面の特徴とコース別成績</h2>
 <p>{e(lead)}{e(v.get('note', ''))}</p>
 <p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}</p>
-{todayh}
 <section class="panel"><h2>コース別1着率 <small>公式・{e((load_json(Path(__file__).parent / 'venues.json', {}) or {}).get('period', ''))}</small></h2><div class="courses">{bars}</div></section>
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>"""

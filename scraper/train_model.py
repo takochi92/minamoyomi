@@ -25,7 +25,13 @@ WINDOW = 365
 WARMUP = 365
 ABILITY = ["nat", "loc", "A1", "A2", "B2", "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent"]
 WEATHER = ["wave_in", "wave_out", "wind_in", "wind_out"]
+TENKAI_F = ["st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual"]
 STAGE_COLS = {
+    "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
+    "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko"],
+    "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko"],
+}
+OLD_COLS = {
     "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
     "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"],
@@ -36,7 +42,8 @@ VARIANTS = {
     "＋選手のコース別成績": ["base_w"] + ABILITY + ["rc_win"],
     "＋インの負け方×攻め手": ["base_w"] + ABILITY + ["rc_win", "mu"],
     "＋波・風": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER,
-    "＋インでの成績（最終モデル）": STAGE_COLS["1"],
+    "＋インでの成績": OLD_COLS["1"],
+    "＋展開の材料（壁とのST差・壁のF・壁の叩かれやすさ・展示で壁より速い・展示のいつもとの差）": STAGE_COLS["1"],
 }
 
 

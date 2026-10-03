@@ -82,7 +82,7 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  合成オッズの条件は締切前に run.py で判定し、安すぎれば（全部5倍前後など）いつもの6点に戻す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 16
+PRED_VERSION = 18
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3, "min_comp": 2.5}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -456,6 +456,24 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         allb = sorted(main + sub, key=lambda b: -b["p"])[:6]
         main = allb[:min(len(main), 4)]
         sub = allb[len(main):]
+        # 外の頭も2点押さえる：AIが外（2〜6コース）で一番1着を見ている艇の頭、上位2点
+        # 検証（9,083レース）：全体の回収率は77%で変わらず、足した2点だけでも73%。外の頭での的中が約3%のレースで拾える
+        #（「展示上位＋コース1着率が高い」で選ぶと64%に下がった。オッズがそこを見ているため、AIの確率で選ぶ）
+        inb_o = byc.get(1)
+        if inb_o:
+            heads = {}
+            for cb, p in combos:
+                h = int(cb.split("-")[0])
+                if h != inb_o["frame"]:
+                    heads[h] = heads.get(h, 0) + p
+            if heads:
+                oh = max(heads, key=heads.get)
+                have = {b["combo"] for b in main + sub}
+                add = [cb for cb, _ in sorted(((cb, p) for cb, p in combos if cb.startswith(f"{oh}-")), key=lambda x: -x[1]) if cb not in have][:2]
+                if add:
+                    sub = sub + [{"combo": c, "p": round(pmap_.get(c, 0), 4)} for c in add]
+                    ob = next((b for b in boats if b["frame"] == oh), {})
+                    attack_note = f"外の押さえ：{oh}号艇{ob.get('name', '')}（{course_of[oh]}コース）の頭も2点。外の艇でAIが一番1着を見ている艇です"
     # 逃げ残し巧者（4〜6コースで、イン逃げのとき2・3着に残る率がそのコースの平均より15ポイント以上高い・25走以上）
     try:
         nkd = fstart.load_noko()
