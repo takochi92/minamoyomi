@@ -106,7 +106,7 @@ class Page:
         return "../" * self.depth + target
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False):
-        nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手", "選手", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+        nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
                ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
                ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
         navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
@@ -1043,9 +1043,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
+<section class="panel fav-today" id="fav-today" hidden></section>
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a></h2><div class="vtiles">{tiles}</div></section>
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
@@ -1486,8 +1487,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             tod = "".join(f'<li><a href="{page.u(f"race/{dd}/{SLUG[j]}-{rn}.html")}">{e(VENUES[j]["name"])} {rn}R</a>（{f}号艇）</li>' for dd, j, rn, f in today.get(t, []))
             tagh = " ".join(f'<span class="pill lv4">{e(x)}</span>' for x in tags)
             body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">登録番号 {t}</span>
-<h1>{e(name)}のコース別成績</h1>
-<p>{e(info.get('branch', ''))}支部・{e(info.get('birthplace', ''))}出身・{info.get('age') or '-'}歳・{e(info.get('class', ''))}級・勝率 {info.get('win') or '-'}　{tagh}</p>
+<h1 class="fav-h">{e(name)}のコース別成績 <button type="button" class="fav-btn" data-toban="{t}" data-name="{e(name)}" aria-pressed="false" aria-label="お気に入り" hidden>☆</button></h1>
+<p>{e(info.get('branch', ''))}支部・{f"{info['ki']}期・" if info.get('ki') else ''}{e(info.get('birthplace', ''))}出身・{info.get('age') or '-'}歳・{e(info.get('class', ''))}級{'・女子' if info.get('lady') else ''}・勝率 {info.get('win') or '-'}　{tagh}</p>
 {f'<div class="panel"><b>今日の出走</b><ul class="comments">{tod}</ul></div>' if tod else ''}</section>
 <section class="panel nb" id="racer-memo" data-toban="{t}" data-name="{e(name)}" hidden></section>
 <section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
@@ -1501,15 +1502,107 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section class="panel"><h2>最近のレース <small>全コース</small></h2><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">枠</th><th class="r">コース</th><th class="r">着</th><th>決まり手</th></tr></thead><tbody>{recent or '<tr><td colspan="6" class="empty">直近のデータなし</td></tr>'}</tbody></table></div></section>
 <p class="sub">データ：BOAT RACE公式の競走成績（直近1年）・期別成績。</p>"""
             desc = f"ボートレーサー{name}（{t}・{info.get('branch', '')}支部）のコース別1着率・連対率・決まり手、インでの負け方、最近の成績。"
-            self.put(page.path, page.render(f"{name}（{t}）コース別成績・決まり手｜{SITE_NAME}", desc, body, [("racer/index.html", "選手"), ("", name)]))
-            listing.append((info.get("branch", ""), t, name, info.get("class", "")))
+            self.put(page.path, page.render(f"{name}（{t}）コース別成績・決まり手｜{SITE_NAME}", desc, body, [("racer/index.html", "選手・モーター"), ("", name)]))
+            listing.append(t)
+        self.fav_today(today)
+        self.racer_index(listing, today)
+
+    def fav_today(self, today):
+        """お気に入り選手の「今日の出走」用。登番 → [[場, R, ページ, 締切, 枠]]（ブラウザ側で読む）"""
+        dl = {(v["jcd"], r["rno"]): r.get("deadline", "") for v in self.idx.get("venues", []) for r in v.get("races", [])}
+        out = {}
+        for t, xs in today.items():
+            if not t:
+                continue
+            out[t] = [[VENUES[j]["name"], rn, f"race/{d}/{SLUG[j]}-{rn}.html", dl.get((j, rn), ""), f] for d, j, rn, f in sorted(xs, key=lambda x: dl.get((x[1], x[2]), ""))]
+        self.put("fav-today.json", json.dumps({"date": self.idx.get("date", ""), "racers": out}, ensure_ascii=False, separators=(",", ":")))
+
+    def motor_rows(self, today):
+        """モーター検索用の一覧：[場コード, 号機, 出走, 2連, 3連, 展示順位, 前節の使用者, 今日の使用者]"""
+        from . import motor as _motor
+        data = _motor.load()
+        use = {}
+        d = self.idx.get("date")
+        for v in self.idx.get("venues", []):
+            for r in v["races"]:
+                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
+                for b in (race.get("racelist") or {}).get("boats", []):
+                    if b.get("motor_no") is not None:
+                        use.setdefault((v["jcd"], str(b["motor_no"])), self.racer_name(b.get("toban", ""), b.get("name", "")))
+        rows = []
+        for jcd in sorted(data):
+            for no, m in (data.get(jcd) or {}).items():
+                n = m.get("n", 0)
+                if not n:
+                    continue
+                mt = m.get("meets") or []
+                prev = self.racer_name(mt[0].get("toban", ""), "") if mt else ""
+                rows.append([jcd, int(no), n, round(m.get("top2", 0) / n, 3), round(m.get("top3", 0) / n, 3),
+                             m.get("rank") or 0, prev, use.get((jcd, str(no)), "")])
+        return rows
+
+    BRANCH_ORDER = ["群馬", "埼玉", "東京", "静岡", "愛知", "三重", "福井", "滋賀", "大阪", "兵庫", "徳島", "香川", "岡山", "広島", "山口", "福岡", "佐賀", "長崎"]
+
+    def racer_index(self, listing, today):
         page = Page("racer/index.html")
+        bo = {b: i for i, b in enumerate(self.BRANCH_ORDER)}
+        rs = [(t, self.racers[t]) for t in listing]
+        rs.sort(key=lambda x: (bo.get(x[1].get("branch", ""), 99), x[0]))
+        rj = []
+        for t, info in rs:
+            tod = [[j, rn, f] for d, j, rn, f in today.get(t, [])]
+            rj.append([t, info["name"], info.get("kana", ""), info.get("branch", ""), info.get("ki") or 0, info.get("class", ""),
+                       info.get("win") if info.get("win") is not None else -1, 1 if info.get("lady") else 0, tod])
         by = defaultdict(list)
-        for b, t, n, c in sorted(listing):
-            by[b].append(f'<a href="{t}.html">{e(n)}<span class="sub">{c}</span></a>')
-        body = ('<h1>ボートレーサー一覧（支部別）</h1><p class="sub">各選手のコース別成績ページへ。</p>'
-                + "".join(f'<section class="panel"><h2>{e(b or "不明")}</h2><div class="racer-list">{"".join(v)}</div></section>' for b, v in by.items()))
-        self.put(page.path, page.render(f"ボートレーサー一覧｜コース別成績｜{SITE_NAME}", "ボートレーサー約1,600人のコース別成績ページ一覧（支部別）。", body, [("", "選手")]))
+        for t, info in rs:
+            by[info.get("branch", "")].append(f'<a href="{t}.html">{e(info["name"])}</a>')
+        seo = "".join(f'<h3>{e(b or "不明")}</h3><div class="racer-list">{"".join(v)}</div>' for b, v in by.items())
+        branches = [b for b in self.BRANCH_ORDER if any(i.get("branch") == b for _, i in rs)] + sorted({i.get("branch", "") for _, i in rs} - set(self.BRANCH_ORDER) - {""})
+        kis = sorted({i["ki"] for _, i in rs if i.get("ki")}, reverse=True)
+        has_ki = bool(kis)
+        mrows = self.motor_rows(today)
+        vnames = {j: VENUES[j]["name"] for j in VENUES}
+        held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
+        opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
+        body = f"""<h1>選手・モーター検索</h1>
+<p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（この端末だけに保存）。</p>
+<div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
+<section class="tabp sx" id="sx-r" data-tab="r">
+<div class="sx-form panel">
+<input type="search" id="q" placeholder="名前・よみ・登録番号" autocomplete="off" aria-label="選手をさがす">
+<div class="sx-sel">
+<select id="fb" aria-label="支部"><option value="">支部：すべて</option>{opt((b, b) for b in branches)}</select>
+{f'<select id="fk" aria-label="期"><option value="">期：すべて</option>{opt((str(k), f"{k}期") for k in kis)}</select>' if has_ki else ''}
+<select id="fc" aria-label="級別"><option value="">級：すべて</option>{opt((c, c) for c in ("A1", "A2", "B1", "B2"))}</select>
+<select id="fx" aria-label="しぼりこみ"><option value="">全員</option><option value="l">女子だけ</option><option value="t">今日出走する人</option><option value="f">☆お気に入りだけ</option></select>
+<select id="fs" aria-label="並び順"><option value="b">支部順</option><option value="w">勝率が高い順</option>{'<option value="k">期が新しい順</option>' if has_ki else ''}<option value="t">登録番号順</option></select>
+</div>
+<p class="sub sx-n" aria-live="polite"></p>
+</div>
+<div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th></th><th>名前</th><th>級</th><th>支部</th>{'<th class="r">期</th>' if has_ki else ''}<th class="r">勝率</th><th>今日</th></tr></thead><tbody id="sx-rows"></tbody></table></div>
+<p class="sx-more" hidden><button type="button" class="btn" id="sx-more">もっと見る</button></p>
+<details class="panel"><summary class="sub">支部別の全選手一覧</summary>{seo}</details>
+</section>
+<section class="tabp sx" id="sx-m" data-tab="m" hidden>
+<div class="sx-form panel">
+<div class="sx-sel">
+<select id="mv" aria-label="場"><option value="">全24場</option>{f'<option value="held">今日開催の場</option>' if held else ''}{opt((j, VENUES[j]["name"]) for j in sorted(VENUES))}</select>
+<select id="ms" aria-label="並び順"><option value="2">2連対率が高い順</option><option value="3">3連対率が高い順</option><option value="e">展示タイムが速い順</option><option value="n">号機順</option></select>
+<select id="mn" aria-label="出走数"><option value="20">20走以上</option><option value="10">10走以上</option><option value="0">すべて</option></select>
+</div>
+<input type="search" id="mq" placeholder="号機・選手名（前節・今日の使用者）" autocomplete="off" aria-label="モーターをさがす">
+<p class="sub sx-n" aria-live="polite"></p>
+</div>
+<div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th>場</th><th class="r">号機</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">出走</th><th class="r">展示</th><th>前節の使用者</th><th>今日の使用者</th></tr></thead><tbody id="mx-rows"></tbody></table></div>
+<p class="sub">数字はモーターが入れ替わってからの成績だけです。展示は、その場の中で展示タイムが速い順の順位。号機をタップすると前節・前々節の着順とメモ欄が開きます。</p>
+</section>
+<section class="tabp sx" id="sx-f" data-tab="f" hidden><div id="fav-list" class="panel"><p class="sub">☆を押した選手がここに並びます。</p></div></section>
+<script id="sx-data" type="application/json">{json.dumps({"racers": rj, "motors": mrows, "venues": vnames, "slug": SLUG, "held": held, "date": self.idx.get("date", ""), "hasKi": has_ki}, ensure_ascii=False, separators=(",", ":"))}</script>
+<script src="{page.u('search.js')}" defer></script>
+<p class="sub">データ：BOAT RACE公式の期別成績・競走成績・番組表。</p>"""
+        self.put(page.path, page.render(f"ボートレーサー検索・モーター検索（支部・期・級別）｜{SITE_NAME}",
+                                        f"ボートレーサー約{len(rs):,}人を名前・よみ・支部{'・期' if has_ki else ''}・級別でさがせます。全24場のモーターを2連対率で検索。お気に入り選手の今日の出走も。",
+                                        body, [("", "選手・モーター")]))
 
     def today_entries(self):
         out = defaultdict(list)
