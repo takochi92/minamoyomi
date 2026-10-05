@@ -1546,8 +1546,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             if fin and r.get("hit"):
                 marks.append('<span class="chip hitc">的中</span>')
             names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or '<li class="sub">出走表は締切2時間前ごろに表示</li>'
-            out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a> <small>{e(race.get("race_name", ""))}</small><span class="st">{st}</span></header>'
-                       f'{"<div class=marks>" + "".join(marks) + "</div>" if marks else ""}<ul class="names">{names}</ul>'
+            out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a><small>{e(race.get("race_name", ""))}</small></header>'
+                       f'<div class="rc-st"><span class="st">{st}</span><span class="marks">{"".join(marks)}</span></div><ul class="names">{names}</ul>'
                        f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
         return "".join(out)
 
