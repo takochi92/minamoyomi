@@ -107,7 +107,8 @@ class Page:
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False):
         nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手", "選手", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
-               ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>')]
+               ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
+               ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
         navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
@@ -129,6 +130,7 @@ class Page:
 <script>window.SITE_ROOT = "{self.u('')}";</script>
 <script src="{self.u('config.js')}"></script>
 <script src="{self.u('clock.js')}" defer></script>
+<script src="{self.u('note.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
@@ -771,8 +773,11 @@ class Site:
             nk = next((x for x in p.get("nokoshi") or [] if x["frame"] == f), None)
             if nk:
                 fl += f' <span class="pill noko" title="{nk["course"]}コースでイン逃げのとき2・3着に残った率（{nk["n"]}走・平均{nk["base"] * 100:.0f}%）">逃げ残し{nk["rate"] * 100:.0f}%</span>'
-            rows.append(f'<tr><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
-                        f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{b.get("motor_2") or "-"}</td>'
+            mot = b.get("motor_2") or "-"
+            mcell = (f'<a href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}#m{b["motor_no"]}">{mot}<span class="sub">／{b["motor_no"]}号</span></a>'
+                     if b.get("motor_no") is not None else mot)
+            rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
+                        f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td>'
                         f'<td class="r num">{q.get("exhibit_time") or "-"}</td><td class="r num">{pct(c.get("win"))}<span class="sub">/{c.get("starts", 0)}走</span></td>'
                         f'<td class="r num">{pct(q.get("p_win"))}</td><td class="r num">{pct(q.get("p_top3"))}</td></tr>')
         w = bi.get("weather") or {}
@@ -830,6 +835,7 @@ class Site:
 {self.fstart_block(p)}
 {loss}
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
+<section class="panel nb" id="mynote" data-date="{d}" data-jcd="{jcd}" data-venue="{e(v)}" data-rno="{rno}" hidden></section>
 </div>
 <div class="tabp" data-p="odds" style="display:grid;gap:16px;min-width:0" hidden>
 {self.reco_block(race, res) or '<section class="panel"><p class="sub" style="margin:0">オッズは締切35分前から表示します。</p></section>'}
@@ -1465,6 +1471,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <h1>{e(name)}のコース別成績</h1>
 <p>{e(info.get('branch', ''))}支部・{e(info.get('birthplace', ''))}出身・{info.get('age') or '-'}歳・{e(info.get('class', ''))}級・勝率 {info.get('win') or '-'}　{tagh}</p>
 {f'<div class="panel"><b>今日の出走</b><ul class="comments">{tod}</ul></div>' if tod else ''}</section>
+<section class="panel nb" id="racer-memo" data-toban="{t}" data-name="{e(name)}" hidden></section>
 <section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
 <div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">ST順</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 <p class="sub">ST順＝そのレースで何番目に早いスタートだったかの平均（1が最速）。</p></section>
@@ -1558,13 +1565,55 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {todayh}
 <h2 style="margin-top:8px">{e(v['name'])}の水面の特徴とコース別成績</h2>
 <p>{e(lead)}{e(v.get('note', ''))}</p>
-<p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}</p>
+<p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}　<a href="{page.u('venue/' + SLUG[jcd] + '-motor.html')}">モーター一覧 →</a></p>
 <section class="panel"><h2>コース別1着率 <small>公式・{e((load_json(Path(__file__).parent / 'venues.json', {}) or {}).get('period', ''))}</small></h2><div class="courses">{bars}</div></section>
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場の特徴・コース別成績・決まり手｜{SITE_NAME}",
                                             f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])]))
+
+    def motor_pages(self):
+        from . import motor as _motor
+        data = _motor.load()
+        for jcd, v in VENUES.items():
+            page = Page(f"venue/{SLUG[jcd]}-motor.html")
+            ms = data.get(jcd) or {}
+            since = next((m.get("since") for m in ms.values() if m.get("since")), "")
+
+            def rate(m, k):
+                return m[k] / m["n"] if m.get("n") else None
+
+            def meet(x, label):
+                if not x:
+                    return ""
+                t = x.get("toban", "")
+                nm = self.racer_name(t, t)
+                link = self.racer_link(page, t)
+                who = f'<a href="{link}">{e(nm)}</a>' if link else e(nm)
+                res = " ".join(f'<b class="r{r}">{r}</b>' if isinstance(r, int) and r <= 3 else f"<span>{e(str(r))}</span>" for r in x.get("res", []))
+                return (f'<div class="mt-meet"><span class="sub">{label} {int(x["from"][4:6])}/{int(x["from"][6:])}〜{int(x["to"][4:6])}/{int(x["to"][6:])}</span>'
+                        f'<div>{who} <span class="sub">{e(self.racers.get(t, {}).get("class", ""))}</span></div><div class="mt-res">{res}</div></div>')
+
+            cards = []
+            for no, m in sorted(ms.items(), key=lambda kv: -(rate(kv[1], "top2") or 0)):
+                r2, r3 = rate(m, "top2"), rate(m, "top3")
+                exs = f'展示 {m["rank"]}位/{m["of"]}' if m.get("rank") else ""
+                mt = m.get("meets") or []
+                cards.append(f'<details class="mt" id="m{e(no)}"><summary><b class="mt-no num">{e(no)}<small>号機</small></b>'
+                             f'<span class="mt-v"><small>2連対率</small><b class="num {"best" if r2 is not None and r2 >= 0.40 else ""}">{pct(r2, 1)}</b></span>'
+                             f'<span class="mt-v"><small>3連対率</small><b class="num">{pct(r3, 1)}</b></span>'
+                             f'<span class="mt-v"><small>出走</small><b class="num">{m.get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
+                             f'<div class="mt-body">{meet(mt[0] if mt else None, "前節")}{meet(mt[1] if len(mt) > 1 else None, "前々節")}'
+                             f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
+            sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
+            body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
+<p class="sub">{f'{sh}にモーターが入れ替わってからの成績です（入れ替え前のモーターはまぜていません）。' if sh else ''}2連対率の高い順。タップで前節・前々節の使用者と着順、メモ欄が開きます。メモはこの端末だけに保存されます。</p>
+<div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
+<p class="sub">データ：BOAT RACE公式の競走成績・番組表から集計。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
+            self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
+                                            f"{v['name']}のモーターを2連対率・3連対率の順に一覧。前節・前々節の使用者と着順、展示タイムの順位。", body,
+                                            [("venue/" + SLUG[jcd] + ".html", v["name"]), ("", "モーター一覧")]))
 
     def venue_extra(self, jcd):
         out = []
@@ -1596,6 +1645,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 
     # ------------------------------------------------------------ ツール・解説・JSページ
     def static_pages(self):
+        page = Page("mynote.html")
+        vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
+        body = f"""<h1>マイノート</h1>
+<p class="sub">収支表・選手メモ・モーターメモ。登録はいりません。記録はこの端末のブラウザの中だけに保存され、サーバーには送られません。</p>
+<div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
+<p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
+        self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録不要で、記録はこの端末だけに保存。", body, [("", "マイノート")], noindex=True))
         page = Page("tools/composite.html")
         body = """<h1>合成オッズ計算ツール</h1>
 <p>複数の買い目のオッズを入れると、合成オッズと「どれが当たっても払戻がほぼ同じになる配分（100円単位）」を計算します。</p>
@@ -1690,6 +1746,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.index_page()
         self.targets_page()
         self.venue_pages()
+        self.motor_pages()
         self.racer_pages()
         self.st_pages()
         self.static_pages()

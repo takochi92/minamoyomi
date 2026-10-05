@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import gzip
 import json
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -67,7 +67,7 @@ def build(races: list, race_files: list[dict]) -> dict:
         m = sum(exs) / len(exs) if len(exs) >= 5 else None
         for e in E:
             dev = round((e[6] - m) / 100, 3) if (m is not None and e[6]) else None
-            by[(r[1], e[8])].append((r[0], dev, e[5], r[3] if e[5] == 1 else ""))
+            by[(r[1], e[8])].append((r[0], dev, e[5], r[3] if e[5] == 1 else "", e[1], r[2]))
     # オリジナル展示（直近14日）
     ori = defaultdict(list)          # (jcd, motor) -> [(date, {item: dev})]
     for race in race_files:
@@ -90,17 +90,28 @@ def build(races: list, race_files: list[dict]) -> dict:
     out = defaultdict(dict)
     for (jcd, mno), xs in by.items():
         devs = [x[1] for x in xs if x[1] is not None]
-        if len(devs) < 5:
-            continue
-        # 前節：最後の日付から遡って、2日以上空くまでを1開催とみなす
+        # 開催ごとに分ける（日付が2日より空いたら別の開催）
         dates = sorted({x[0] for x in xs})
-        last = [dates[-1]]
-        for d in reversed(dates[:-1]):
-            if (_d(last[-1]) - _d(d)).days <= 2:
-                last.append(d)
+        meets = [[dates[0]]]
+        for d in dates[1:]:
+            if (_d(d) - _d(meets[-1][-1])).days <= 2:
+                meets[-1].append(d)
             else:
-                break
+                meets.append([d])
+        last = sorted(meets[-1], reverse=True)
         ls = [x for x in xs if x[0] in set(last)]
+        hist = []
+        for m in reversed(meets[-2:]):
+            mx = sorted((x for x in xs if x[0] in set(m)), key=lambda x: (x[0], x[5]))
+            users = Counter(x[4] for x in mx)
+            hist.append({"from": m[0], "to": m[-1], "toban": users.most_common(1)[0][0] if users else "",
+                         "res": [x[2] if isinstance(x[2], int) else str(x[2]) for x in mx]})
+        base = {"since": renew.get(jcd, xs[0][0]), "n": len(xs),
+                "win": sum(1 for x in xs if x[2] == 1), "top2": sum(1 for x in xs if x[2] in (1, 2)),
+                "top3": sum(1 for x in xs if x[2] in (1, 2, 3)), "meets": hist}
+        if len(devs) < 5:
+            out[jcd][str(mno)] = {**base, "ex": None, "makuri": 0, "last": {}}
+            continue
         ld = [x[1] for x in ls if x[1] is not None]
         oo = [x for x in ori.get((jcd, mno), []) if x[0] in set(last)] or ori.get((jcd, mno), [])
         oavg = {}
@@ -108,8 +119,7 @@ def build(races: list, race_files: list[dict]) -> dict:
             for it, v in dct.items():
                 oavg.setdefault(it, []).append(v)
         out[jcd][str(mno)] = {
-            "since": renew.get(jcd, xs[0][0]), "n": len(xs), "ex": round(sum(devs) / len(devs), 3),
-            "win": sum(1 for x in xs if x[2] == 1), "top2": sum(1 for x in xs if x[2] in (1, 2)),
+            **base, "ex": round(sum(devs) / len(devs), 3),
             "makuri": sum(1 for x in xs if x[3] in ("まくり", "まくり差し")),
             "last": {"from": last[-1], "to": last[0], "n": len(ls), "ex": round(sum(ld) / len(ld), 3) if ld else None,
                      "win": sum(1 for x in ls if x[2] == 1), "makuri": sum(1 for x in ls if x[3] in ("まくり", "まくり差し")),
@@ -117,7 +127,7 @@ def build(races: list, race_files: list[dict]) -> dict:
         }
     # 場の中での順位（展示タイム差が小さい＝速い順）
     for jcd, ms in out.items():
-        order = sorted(ms, key=lambda k: ms[k]["ex"])
+        order = sorted((k for k in ms if ms[k]["ex"] is not None), key=lambda k: ms[k]["ex"])
         for i, k in enumerate(order):
             ms[k]["rank"] = i + 1
             ms[k]["of"] = len(order)

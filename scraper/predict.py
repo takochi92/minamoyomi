@@ -329,7 +329,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         mstat = {}
     for b in boats:
         ms = mstat.get(str(b.get("motor_no")))
-        if not ms or ms["n"] < 10:
+        if not ms or ms["n"] < 10 or ms.get("ex") is None or "rank" not in ms:
             continue
         L = ms.get("last") or {}
         ori = L.get("ori") or {}
