@@ -490,3 +490,17 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 .mt-res b.r1{background:#E5484D;color:#fff}.mt-res b.r2{background:rgba(229,72,77,.45)}.mt-res b.r3{background:rgba(229,72,77,.22)}
 .alt-bets{border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
 .alt-bets>summary{cursor:pointer;line-height:1.5}
+/* 場ページのレースカード：高さと並びをそろえる */
+.rcards{align-items:stretch}
+.rcard2{grid-template-rows:auto 30px 1fr auto;align-content:stretch;gap:8px}
+.rcard2 header{flex-wrap:nowrap;min-width:0;gap:8px}
+.rcard2 header small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--ink2)}
+.rc-st{display:flex;align-items:center;gap:6px;min-width:0;height:30px;overflow:hidden}
+.rc-st .st{font-size:13px;white-space:nowrap}
+.rc-st .st .pill{font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+.rc-st .marks{display:flex;gap:4px;margin-left:auto;flex:none}
+.rc-st .marks .chip{font-size:11px;margin:0;white-space:nowrap}
+.rcard2 .names{align-content:start}
+.rcard2 .go{align-self:end}
+.rcard2 .go a{height:36px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.rcard2 .names li.sub{grid-column:1/-1}
