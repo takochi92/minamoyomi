@@ -504,3 +504,29 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 .rcard2 .go{align-self:end}
 .rcard2 .go a{height:36px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:0 6px}
 .rcard2 .names li.sub{grid-column:1/-1}
+/* 選手・モーター検索・お気に入り */
+.sx{display:grid;gap:10px}
+.sx[hidden],.fav-today[hidden],.fav-btn[hidden]{display:none}
+.sx-form{display:grid;gap:8px;padding:12px}
+.sx-form input[type=search]{font-size:16px;font-family:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--ink)}
+.sx-form input[type=search]:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sx-sel{display:flex;flex-wrap:wrap;gap:6px}
+.sx-sel select{font:inherit;font-size:14px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);flex:1 1 120px;min-width:0}
+.sx-n{margin:0}
+.sx-tbl td{padding:6px 8px}
+.sx-tbl .rk{font-size:11px}
+.sx-tbl .tod{white-space:normal;min-width:90px}
+.sx-tbl tr.is-fav{background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.sx-more{text-align:center;margin:0}
+.fav-btn{font-size:20px;line-height:1;font-family:inherit;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--ink2);cursor:pointer;vertical-align:middle;padding:0}
+.fav-btn.sm{width:28px;height:28px;font-size:16px}
+.fav-btn.on{color:var(--warn);border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.fav-btn:hover{border-color:var(--warn)}
+.fav-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fav-mark{color:var(--warn);font-weight:900;margin-right:3px}
+tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
+.fav-today{border-color:var(--warn);display:grid;gap:8px}
+.fav-ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.fav-ul li{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.fav-ul a b{color:var(--warn)}
+.chip small{font-weight:500;opacity:.8}

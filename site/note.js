@@ -1,4 +1,4 @@
-// マイノート：収支表・選手メモ・モーターメモ。この端末のブラウザの中だけに保存（サーバーには送らない）。
+// マイノート：収支表・選手メモ・モーターメモ・お気に入り選手。この端末のブラウザの中だけに保存（サーバーには送らない）。
 (function () {
   var KEY = "teilog_note_v1";
   var ROOT = window.SITE_ROOT || "";
@@ -7,7 +7,7 @@
     var d = null;
     try { d = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { d = null; }
     d = d && typeof d === "object" ? d : {};
-    d.racer = d.racer || {}; d.motor = d.motor || {}; d.bets = d.bets || []; d.budget = d.budget || 0;
+    d.racer = d.racer || {}; d.motor = d.motor || {}; d.fav = d.fav || {}; d.bets = d.bets || []; d.budget = d.budget || 0;
     return d;
   }
   var D = load(), okStore = true;
@@ -42,6 +42,10 @@
   // 出走表の名前の横に「メモ」印
   function marks() {
     document.querySelectorAll("tr[data-toban]").forEach(function (tr) {
+      var fv = !!D.fav[tr.dataset.toban], c1 = tr.children[1], st = c1 && c1.querySelector(".fav-mark");
+      tr.classList.toggle("is-fav", fv);
+      if (fv && c1 && !st) c1.insertAdjacentHTML("afterbegin", '<span class="fav-mark" title="お気に入り">★</span>');
+      if (!fv && st) st.remove();
       var has = (D.racer[tr.dataset.toban] || {}).text || (D.motor[tr.dataset.motor] || {}).text;
       var cell = tr.children[1], m = cell && cell.querySelector(".nb-mark");
       if (has && cell && !m) { cell.insertAdjacentHTML("beforeend", ' <a class="pill nb-mark" href="#mynote">メモ</a>'); }
@@ -144,9 +148,10 @@
         '<div class="nb-add"><input type="date" class="nb-date" value="' + dflt + '"><input class="nb-inv num" inputmode="numeric" placeholder="購入額"><input class="nb-ret-in num" inputmode="numeric" placeholder="払戻"><input class="nb-memo-in" placeholder="メモ（任意：びわこ・大村など）"><button type="button" class="nb-go">記録</button></div>' +
         '<details><summary class="sub">全期間・月別を見る</summary>' + tiles(sa, "全期間の") + (mrows ? '<div class="tbl-wrap"><table><thead><tr><th>月</th><th class="r">件数</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th class="r">回収率</th></tr></thead><tbody>' + mrows + "</tbody></table></div>" : "") + "</details>" +
         '<p class="sub" style="margin:0">月の予算：<input class="nb-bud num" inputmode="numeric" value="' + (D.budget || "") + '" placeholder="例：10000" style="width:8em"> 円（決めておくと、超えたときに知らせます）</p></section>' +
+        '<section class="panel"><h2>お気に入り選手 <small>' + favN() + '人・<a href="' + ROOT + 'racer/index.html#fav">選手検索へ</a></small></h2>' + (favN() ? '<div class="racer-list">' + Object.keys(D.fav).map(function (t) { return '<a href="' + ROOT + "racer/" + esc(t) + '.html">★ ' + esc(D.fav[t].name) + "</a>"; }).join("") + "</div>" : '<p class="sub">選手のページや<a href="' + ROOT + 'racer/index.html">選手検索</a>で☆を押すと入ります。</p>') + "</section>" +
         '<section class="panel"><h2>選手メモ <small>' + Object.keys(D.racer).length + "人</small></h2>" + (rm ? '<ul class="comments">' + rm + "</ul>" : '<p class="sub">各選手のページ、またはレースページの「マイノート」から書けます。</p>') + "</section>" +
         '<section class="panel"><h2>モーターメモ <small>' + Object.keys(D.motor).length + '基・<a href="' + ROOT + 'motor.html">モーター一覧へ</a></small></h2>' + (mm ? '<ul class="comments">' + mm + "</ul>" : '<p class="sub"><a href="' + ROOT + 'motor.html">モーター一覧</a>で場を選んで、各モーターの欄に書けます。モーターは入れ替わると別物なので、古いメモは消してください。</p>') + "</section>" +
-        '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">記録はこの端末のブラウザの中だけにあります。機種変更やブラウザのデータ削除で消えるので、ときどきファイルに保存してください。別の端末へは、保存したファイルを読み込むと移せます。</p>' +
+        '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">収支・メモ・お気に入りはこの端末のブラウザの中だけにあります。機種変更やブラウザのデータ削除で消えるので、ときどきファイルに保存してください。別の端末へは、保存したファイルを読み込むと移せます。</p>' +
         '<div class="nb-add"><button type="button" class="nb-exp">ファイルに保存</button><label class="nb-imp-l">ファイルから読み込む<input type="file" class="nb-imp" accept="application/json,.json" hidden></label></div></section>';
 
       el.querySelector(".nb-go").addEventListener("click", function () {
@@ -172,7 +177,7 @@
           if (!x || typeof x !== "object") return;
           var ids = {}; D.bets.forEach(function (b) { ids[b.id] = 1; });
           (x.bets || []).forEach(function (b) { if (b && !ids[b.id]) D.bets.push(b); });
-          Object.assign(D.racer, x.racer || {}); Object.assign(D.motor, x.motor || {});
+          Object.assign(D.racer, x.racer || {}); Object.assign(D.motor, x.motor || {}); Object.assign(D.fav, x.fav || {});
           if (x.budget && !D.budget) D.budget = x.budget;
           save(); draw();
         }).catch(function () { });
@@ -196,8 +201,62 @@
     });
   }
 
+  // ---- お気に入り選手
+  var favCbs = [];
+  function favN() { return Object.keys(D.fav).length; }
+  function favSet(t, name, on) {
+    if (!t) return;
+    if (on) D.fav[t] = { name: name || (D.fav[t] || {}).name || t, t: today() }; else delete D.fav[t];
+    save(); favBtns(); marks(); favCbs.forEach(function (f) { try { f(); } catch (e) { } });
+    var ft = document.getElementById("fav-today"); if (ft) favToday(ft);
+  }
+  function favBtns(root) {
+    (root || document).querySelectorAll(".fav-btn").forEach(function (b) {
+      var on = !!D.fav[b.dataset.toban];
+      b.hidden = false; b.textContent = on ? "★" : "☆"; b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.title = on ? "お気に入りから外す" : "お気に入りに入れる";
+      if (!b.dataset.bound) {
+        b.dataset.bound = 1;
+        b.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); favSet(b.dataset.toban, b.dataset.name, !D.fav[b.dataset.toban]); });
+      }
+    });
+  }
+  var todayP = null;
+  function loadToday() {
+    if (!todayP) todayP = fetch(ROOT + "fav-today.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
+    return todayP;
+  }
+  function past(dl) {
+    if (!dl) return false;
+    var n = new Date(Date.now() + (new Date().getTimezoneOffset() + 540) * 60000), hm = ("0" + n.getHours()).slice(-2) + ":" + ("0" + n.getMinutes()).slice(-2);
+    return hm >= dl;
+  }
+  function raceChips(xs) {
+    return (xs || []).map(function (x) {
+      return '<a class="chip ' + (past(x[3]) ? "gc" : "tg") + '" href="' + ROOT + x[2] + '"><span class="bt b' + x[4] + '">' + x[4] + "</span>" + esc(x[0]) + " " + x[1] + "R" + (x[3] ? ' <small class="num">' + esc(x[3]) + "</small>" : "") + "</a>";
+    }).join("");
+  }
+  function favToday(el) {
+    if (!favN()) { el.hidden = true; return; }
+    loadToday().then(function (d) {
+      var R = (d && d.racers) || {}, on = [];
+      Object.keys(D.fav).forEach(function (t) { if (R[t]) on.push(t); });
+      on.sort(function (a, b) { return (R[a][0][3] || "").localeCompare(R[b][0][3] || ""); });
+      el.innerHTML = '<h2>今日出走するお気に入り <small>' + on.length + "人／☆" + favN() + '人・<a href="' + ROOT + 'racer/index.html#fav">一覧</a></small></h2>' +
+        (on.length ? '<ul class="fav-ul">' + on.map(function (t) { return '<li><a href="' + ROOT + "racer/" + esc(t) + '.html"><b>★ ' + esc(D.fav[t].name) + "</b></a> " + raceChips(R[t]) + "</li>"; }).join("") + "</ul>"
+          : '<p class="sub" style="margin:0">今日はお気に入りの選手の出走はありません。</p>');
+      el.hidden = false;
+    });
+  }
+  window.TeiFav = {
+    all: function () { return D.fav; }, has: function (t) { return !!D.fav[t]; }, set: favSet, bind: favBtns,
+    today: loadToday, chips: raceChips, onChange: function (f) { favCbs.push(f); }
+  };
+
   function init() {
-    slots(); motorMarks();
+    slots(); motorMarks(); favBtns();
+    document.querySelectorAll("#fav-today").forEach(favToday);
     document.addEventListener("input", debounce(motorMarks, 500));
     document.querySelectorAll("#mynote[data-rno]").forEach(racePanel);
     document.querySelectorAll("#racer-memo").forEach(racerPanel);
