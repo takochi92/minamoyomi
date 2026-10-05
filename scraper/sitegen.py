@@ -1577,12 +1577,19 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         from . import motor as _motor
         data = _motor.load()
         for jcd, v in VENUES.items():
+            try:
+                self._motor_page(jcd, v, data)
+            except Exception as ex:   # モーター一覧で失敗しても、ほかのページの生成は止めない
+                print("motor page skip", jcd, ex)
+
+    def _motor_page(self, jcd, v, data):
+        if True:
             page = Page(f"venue/{SLUG[jcd]}-motor.html")
             ms = data.get(jcd) or {}
             since = next((m.get("since") for m in ms.values() if m.get("since")), "")
 
             def rate(m, k):
-                return m[k] / m["n"] if m.get("n") else None
+                return m[k] / m["n"] if m.get("n") and k in m else None
 
             def meet(x, label):
                 if not x:
