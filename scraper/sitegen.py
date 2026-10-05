@@ -647,7 +647,7 @@ class Site:
             if t.get("type") == "motor":
                 extra = f"前節は{t['last_n']}走でまくり・まくり差しの1着{t['last_makuri']}回。" if t.get("last_makuri") else ""
                 li.append(f'<li>{bt(t["frame"])} {e(t["name"])}の<b>{t["motor_no"]}号機</b>：{"、".join(e(x) for x in t["reasons"])}。'
-                          f'<span class="sub">このモーターの直近{t["n"]}走で1着{t["win"]}回（うちまくり系{t["makuri"]}回）。{extra}モーターの数字は乗り手の実力も混ざるので、参考程度に。</span></li>')
+                          f'<span class="sub">このモーターの{(str(int(t["since"][4:6])) + "/" + str(int(t["since"][6:])) + "の入れ替えから") if t.get("since") else "直近"}{t["n"]}走で1着{t["win"]}回（うちまくり系{t["makuri"]}回）。{extra}モーターの数字は乗り手の実力も混ざるので、参考程度に。</span></li>')
                 continue
             if t.get("type") == "resist":
                 ws = "・".join(f"{c}コース{pct(v)}" for c, v in t["wins"].items())
@@ -913,8 +913,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if v.get("cancelled"):
             st = "中止"
         else:
-            nxt = next((r for r in v["races"] if not self.finished(r)), None)
-            st = f'<span data-dl="{self.idx.get("date")} {nxt["deadline"]}">{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span></span>' if nxt else "本日終了"
+            hm = self.now.strftime("%H:%M")
+            nxt = next((r for r in v["races"] if r["deadline"] > hm and not r.get("result")), None)
+            rest = ",".join(f'{r["rno"]}@{r["deadline"]}' for r in v["races"] if r["deadline"] > hm and not r.get("result"))
+            st = (f'<span data-dl="{self.idx.get("date")} {nxt["deadline"]}" data-next="{rest}">{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span></span>'
+                  if nxt else "本日終了")
         tz = {"ナイター": "ナイター", "モーニング": "モーニング", "ミッドナイト": "ミッドナイト", "サマータイム": "サマー"}.get(v.get("timezone", ""), "")
         g = v.get("grade", "")
         badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz">{tz}</i>' if tz else "")
@@ -934,12 +937,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     gachi += rc["verdict"] == "購入非推奨"
                     if rc["verdict"] == "自信あり":
                         conf.append((v, r))
-                if not self.finished(r) and not v.get("cancelled"):
+                if not r.get("result") and r["deadline"] > self.now.strftime("%H:%M") and not v.get("cancelled"):
                     soon.append((r["deadline"], v, r))
         soon.sort(key=lambda x: x[0])
         tiles = "".join(self.venue_tile(page, jcd, held.get(jcd)) for jcd in sorted(VENUES))
         soonh = []
-        for _, v, r in soon[:4]:
+        for k, (_, v, r) in enumerate(soon[:8]):
             rc = r.get("reco")
             if rc and rc["verdict"] == "購入非推奨":
                 line = '<span class="sub">購入非推奨（ガチガチ）</span>'
@@ -950,7 +953,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             else:
                 line = '<span class="sub">締切35分前に買い目を出します</span>'
             cfh = '<span class="chip cf">自信あり</span> ' if rc and rc["verdict"] == "自信あり" else ""
-            soonh.append(f'<a data-dl="{d} {r["deadline"]}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{cfh}{e(v["name"])} {r["rno"]}R</strong>'
+            soonh.append(f'<a data-dl="{d} {r["deadline"]}" data-soon="1"{" hidden" if k >= 4 else ""} href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{cfh}{e(v["name"])} {r["rno"]}R</strong>'
                          f'<span class="num">{r["deadline"]}締切</span></div><div class="row">{line}</div></a>')
         soonh = "".join(soonh)
         cards, done = [], []
@@ -1584,7 +1587,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             if j != jcd or v[0] < 25 or base is None:
                 continue
             r = v[1] / v[0]
-            mark = "best" if r - base >= 0.05 else ("second" if base - r >= 0.05 else "")
+            mark = "best" if r - base >= 0.05 else ""
             rows.append(f'<tr><td>{e(d)}</td><td class="r num">{int(v[0])}</td><td class="r num {mark}">{pct(r, 1)}</td><td class="r num sub">{"+" if r >= base else ""}{(r - base) * 100:.1f}</td></tr>')
         if rows:
             out.append(f'<section class="panel"><h2>風向き別のイン1着率 <small>風4m以上・この場の平均 {pct(base, 1)}</small></h2><div class="tbl-wrap"><table><thead><tr><th>風向き</th><th class="r">レース</th><th class="r">イン1着率</th><th class="r">差</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'

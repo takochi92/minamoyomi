@@ -82,7 +82,7 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  合成2.5倍未満（安い目ばかり）の596レースも3点で的中40%・回収85%だったので、オッズに関係なく3点で出す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 27
+PRED_VERSION = 29
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -123,7 +123,11 @@ def _ana_bets(head, c, course_of, combos, k=6, tk=None, drop=None):
         if drop and drop in (int(a), int(b)):
             continue   # スタートの遅い壁は叩かれて残らない想定（2・3着から外す）
         key = f"{course_of[int(a)]}{course_of[int(b)]}"
-        lift = ((mk.get(key, 0) + 2) / (nm + 40)) / ((al.get(key, 0) + 2) / (na + 40))
+        # まくりで勝ったときの2・3着の並びの出やすさ（実数）を主に、AIの確率は平方根で弱めて掛ける。
+        # AIの2・3着は「頭がまくった」ことを知らないので、内の2・3コースを残しすぎる（4-2-3 のような買い目）。
+        # 検証（2025年〜、攻め艇が壁より0.08以上早くスタートして勝ったレース）：3点の的中
+        #   4コース頭 32.9%→35.1%、3コース頭 33.7%→36.8%（AIの代わりに全国勝率で並べた簡易版での比較）
+        lift = ((mk.get(key, 0) + 2) / (nm + 40)) / (p ** 0.5 if p > 0 else 1)
         if tk and tk[0] >= 3:
             keep = (tk[0] - tk[1] + 5 * KEEP_BASE) / (tk[0] + 5)
             lift *= (keep / KEEP_BASE) if "1" in key else ((1 - keep) / (1 - KEEP_BASE))
@@ -320,6 +324,9 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         mstat = _motor.load().get(jcd, {})
     except Exception:
         mstat = {}
+    # 入れ替え直後（番組表のモーター2連率がほぼ全艇0.00）は、同じ番号でも別のモーターなので出さない
+    if sum(1 for b in boats if not b.get("motor_2")) >= 5:
+        mstat = {}
     for b in boats:
         ms = mstat.get(str(b.get("motor_no")))
         if not ms or ms["n"] < 10:
@@ -337,7 +344,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                 good.append(f"前節の{it}タイムが平均より{-v:.2f}秒速い（{lab}型）")
         if good:
             tenkai.append({"type": "motor", "frame": b["frame"], "name": b["name"], "motor_no": b.get("motor_no"),
-                           "reasons": good, "win": ms["win"], "n": ms["n"], "makuri": ms["makuri"],
+                           "reasons": good, "since": ms.get("since"), "win": ms["win"], "n": ms["n"], "makuri": ms["makuri"],
                            "last_makuri": L.get("makuri", 0), "last_n": L.get("n", 0)})
 
     # 展示タイムが内の艇より0.1秒以上速い → まくりが決まりやすい

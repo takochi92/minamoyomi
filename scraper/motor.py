@@ -2,7 +2,8 @@
 
   python -m scraper.motor      # scraper/motor.json.gz を作る（毎朝の history ジョブの中で fstart から呼ばれる）
 
-・展示タイム：そのレースの6艇平均との差（マイナス＝速い）を、そのモーターの直近150日で平均
+・展示タイム：そのレースの6艇平均との差（マイナス＝速い）を、その場のモーターが新しくなってからの全レースで平均
+  （モーターの入れ替え日は、番組表のモーター2連率がその場の全艇で0.00になった開催の初日から自動で判定）
 ・前節：直近の開催（連続した日付のまとまり）での展示タイム差・成績
 ・オリジナル展示（一周・まわり足・直線）：サイトに保存している直近14日分のレースから、6艇平均との差
 """
@@ -18,16 +19,47 @@ from .history import load_all
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(__file__).parent / "motor.json.gz"
-DAYS = 150
+DAYS = 450   # 入れ替えが見つからない場のための上限（モーターはふつう1年で入れ替え）
 
 
 def _d(s):
     return datetime.strptime(s, "%Y%m%d")
 
 
+def renewals(races: list) -> dict:
+    """場ごとの、いちばん新しいモーター入れ替え日（YYYYMMDD）。
+    新モーターの最初の開催は、番組表のモーター2連率が全艇0.00になる。その開催の初日を入れ替え日とする。"""
+    day = defaultdict(lambda: [0, 0])
+    for r in races:
+        for e in r[11]:
+            b = e[7] if len(e) > 7 else None
+            if b and len(b) > 5 and b[5] is not None:
+                d = day[(r[1], r[0])]
+                d[0] += 1
+                d[1] += int(b[5] == 0)
+    flagged = defaultdict(list)
+    for (jcd, date), (n, z) in day.items():
+        if n >= 24 and z / n >= 0.9:
+            flagged[jcd].append(date)
+    out = {}
+    for jcd, ds in flagged.items():
+        ds.sort()
+        first = ds[-1]
+        for d in reversed(ds[:-1]):
+            if (_d(first) - _d(d)).days <= 3:
+                first = d
+            else:
+                break
+        out[jcd] = first
+    return out
+
+
 def build(races: list, race_files: list[dict]) -> dict:
+    renew = renewals(races)
     by = defaultdict(list)          # (jcd, motor) -> [(date, exdev, place, kimarite_if_win)]
     for r in sorted(races, key=lambda r: (r[0], r[1], r[2])):
+        if r[0] < renew.get(r[1], ""):
+            continue
         E = r[11]
         if any(len(e) < 9 or e[8] is None for e in E):
             continue
@@ -52,7 +84,7 @@ def build(races: list, race_files: list[dict]) -> dict:
                 means[it] = sum(vals) / len(vals)
         for b in rl:
             v = rows.get(str(b["frame"]))
-            if not v or b.get("motor_no") is None:
+            if not v or b.get("motor_no") is None or race.get("date", "") < renew.get(race["jcd"], ""):
                 continue
             ori[(race["jcd"], b["motor_no"])].append((race.get("date", ""), {it: round(v[k] - means[it], 3) for k, it in enumerate(items) if it in means and len(v) > k and v[k]}))
     out = defaultdict(dict)
@@ -76,7 +108,7 @@ def build(races: list, race_files: list[dict]) -> dict:
             for it, v in dct.items():
                 oavg.setdefault(it, []).append(v)
         out[jcd][str(mno)] = {
-            "n": len(xs), "ex": round(sum(devs) / len(devs), 3),
+            "since": renew.get(jcd, xs[0][0]), "n": len(xs), "ex": round(sum(devs) / len(devs), 3),
             "win": sum(1 for x in xs if x[2] == 1), "top2": sum(1 for x in xs if x[2] in (1, 2)),
             "makuri": sum(1 for x in xs if x[3] in ("まくり", "まくり差し")),
             "last": {"from": last[-1], "to": last[0], "n": len(ls), "ex": round(sum(ld) / len(ld), 3) if ld else None,
@@ -112,6 +144,8 @@ def main():
     with gzip.open(OUT, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print(f"motor: {sum(len(v) for v in data.values())} motors")
+    for jcd, d in sorted(renewals(races).items()):
+        print("  renewal", jcd, d)
 
 
 if __name__ == "__main__":

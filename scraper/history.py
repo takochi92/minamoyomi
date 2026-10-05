@@ -95,7 +95,9 @@ def download(days: int, today: datetime | None = None):
         ym = date[:6]
         if ym not in months:
             months[ym] = load_month(ym)
-        if any(k[0] == date for k in months[ym]):
+        have = [v for k, v in months[ym].items() if k[0] == date]
+        # 取得済みの日は飛ばす。ただしモーター番号が入っていない古い記録は取り直す（モーターの機歴に使う）
+        if have and all(len(e) >= 9 and e[8] is not None for v in have for e in v[11]):
             continue
         try:
             kt = _get(s, "K", date)
