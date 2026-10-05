@@ -87,3 +87,34 @@ def test_in_worry_block():
     assert w["level"] == 2 and w["attacker"] == 3 and w["hist_in_win"] < 0.3 and w["reasons"]
     X[0, FEATS.index("rc_win")] = 0.2
     assert P.in_worry(X, {f: f for f in range(1, 7)}, [1, 2, 3, 4, 5, 6], []) is None
+
+
+def _fan_line(toban, ki, sex, win=550):
+    name = "山田　太郎".encode("cp932").ljust(16, b" ")
+    kana = "ﾔﾏﾀﾞ ﾀﾛｳ".encode("cp932").ljust(15, b" ")
+    rec = (str(toban).encode() + name + kana + "広島".encode("cp932") + b"A1" + b"S" + b"600101" + str(sex).encode() + b"30"
+           + b"170" + b"52" + b"A " + str(win).zfill(4).encode())
+    rec = rec.ljust(fan.KI_AT, b"0") + str(ki).zfill(3).encode()
+    return rec.ljust(400, b"0") + "広島".encode("cp932").ljust(6, b" ")
+
+
+def test_fan_ki_and_lady():
+    lines = [_fan_line(3000 + i * 10, 40 + i // 3, 2 if i % 7 == 0 else 1) for i in range(200)]
+    out = fan.parse_fan(b"\r\n".join(lines))
+    assert out["3000"]["ki"] == 40 and out["3990"]["ki"] == 40 + 99 // 3
+    assert out["3000"].get("lady") and not out["3010"].get("lady")
+    assert out["3000"]["name"].startswith("山田") and out["3000"]["win"] == 5.5
+    # 期がばらばら（登番と合わない）なら入れない
+    bad = [_fan_line(3000 + i * 10, (i * 37) % 120 + 1, 1) for i in range(200)]
+    assert "ki" not in fan.parse_fan(b"\r\n".join(bad))["3000"]
+
+
+def test_racer_search_and_fav(tmp_path):
+    _, files = _site(tmp_path)
+    page = files["racer/index.html"]
+    assert 'id="sx-data"' in page and "search.js" in page and "支部別の全選手一覧" in page
+    data = json.loads(re.search(r'<script id="sx-data" type="application/json">(.*?)</script>', page, re.S).group(1))
+    assert len(data["racers"]) > 1000 and data["date"] == "20260925"
+    fav = json.loads(files["fav-today.json"])
+    assert fav["racers"] and all(x[2].startswith("race/20260925/") for v in fav["racers"].values() for x in v)
+    assert 'class="fav-btn"' in files["racer/4872.html"] and 'id="fav-today"' in files["index.html"]
