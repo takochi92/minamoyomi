@@ -52,7 +52,7 @@
   function betRow(b, withRace) {
     var pl = (b.ret || 0) - (b.inv || 0);
     return '<tr data-id="' + b.id + '"><td class="num">' + jd(b.date) + "</td>" + (withRace ? "<td>" + esc(b.venue || "") + (b.rno ? " " + b.rno + "R" : "") + "</td>" : "") +
-      "<td>" + esc(b.memo || "") + '</td><td class="r num">' + yen(b.inv || 0) + '</td><td class="r"><input class="nb-ret num" inputmode="numeric" value="' + (b.ret || "") + '" placeholder="0" aria-label="払戻"></td>' +
+      "<td>" + esc([b.venue ? b.venue + (b.rno ? " " + b.rno + "R" : "") : "", b.memo || ""].filter(Boolean).join(" ")) + '</td><td class="r num">' + yen(b.inv || 0) + '</td><td class="r"><input class="nb-ret num" inputmode="numeric" value="' + (b.ret || "") + '" placeholder="0" aria-label="払戻"></td>' +
       '<td class="r num ' + (pl > 0 ? "plus" : pl < 0 ? "minus" : "") + '">' + yen(pl) + '</td><td class="r"><button class="nb-del" type="button" aria-label="削除">×</button></td></tr>';
   }
   function bindBetRows(root, after) {
@@ -73,20 +73,13 @@
       var boats = Array.prototype.map.call(document.querySelectorAll("tr[data-toban]"), function (tr) { return tr.dataset; });
       var memo = boats.map(function (b) {
         var mno = (b.motor || "").split("-")[1];
-        return '<details class="nb-boat"' + (((D.racer[b.toban] || {}).text || (D.motor[b.motor] || {}).text) ? " open" : "") + '><summary><span class="bt b' + b.frame + '">' + b.frame + "</span> " + esc(b.name) + (mno ? ' <span class="sub">' + mno + "号機</span>" : "") + "</summary>" +
-          memoBox("racer", b.toban, "選手メモ（" + b.name + "）", { name: b.name }) + (mno ? memoBox("motor", b.motor, ds.venue + " " + mno + "号機のメモ", { venue: ds.venue, jcd: ds.jcd, no: +mno }) : "") + "</details>";
+        return '<details class="nb-boat"' + ((D.racer[b.toban] || {}).text ? " open" : "") + '><summary><span class="bt b' + b.frame + '">' + b.frame + "</span> " + esc(b.name) + (mno ? ' <span class="sub">' + mno + "号機</span>" : "") + "</summary>" +
+          memoBox("racer", b.toban, "選手メモ（" + b.name + "）", { name: b.name }) +
+          ((D.motor[b.motor] || {}).text ? '<p class="sub nb-mref">' + esc(mno) + "号機のメモ：" + esc(D.motor[b.motor].text) + "</p>" : "") + "</details>";
       }).join("");
-      el.innerHTML = '<h2>マイノート <small>この端末だけに保存・<a href="' + ROOT + 'mynote.html">一覧へ</a></small></h2>' + warn +
-        '<div class="nb-add"><input class="nb-memo-in" placeholder="買い目（例：1-23-234）"><input class="nb-inv num" inputmode="numeric" placeholder="購入額"><input class="nb-ret-in num" inputmode="numeric" placeholder="払戻（あとで）"><button type="button" class="nb-go">収支に記録</button></div>' +
-        (mine.length ? '<div class="tbl-wrap"><table class="nb-tbl"><thead><tr><th>日</th><th>買い目</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th></th></tr></thead><tbody>' + mine.map(function (b) { return betRow(b, false); }).join("") + "</tbody></table></div>" : "") +
-        (memo ? '<h3 class="sub" style="margin:8px 0 0">選手・モーターのメモ</h3>' + memo : "");
-      el.querySelector(".nb-go").addEventListener("click", function () {
-        var inv = num(el.querySelector(".nb-inv").value);
-        if (!inv) { el.querySelector(".nb-inv").focus(); return; }
-        addBet({ date: ds.date, jcd: ds.jcd, venue: ds.venue, rno: +ds.rno, memo: el.querySelector(".nb-memo-in").value.trim(), inv: inv, ret: num(el.querySelector(".nb-ret-in").value) });
-        draw();
-      });
-      bindBetRows(el, draw); bindMemos(el); marks();
+      el.innerHTML = '<h2>選手メモ <small>この端末だけに保存・<a href="' + ROOT + 'mynote.html">マイノートへ</a></small></h2>' + warn +
+        (memo ? memo + '<p class="sub" style="margin:0">モーターのメモは<a href="' + ROOT + 'motor.html">モーター一覧</a>で書けます。</p>' : "");
+      bindMemos(el); marks();
     }
     el.hidden = false; draw();
   }
@@ -147,19 +140,19 @@
         '<section class="panel" style="display:grid;gap:10px"><div class="cal-nav"><button type="button" class="cal-prev" aria-label="前の月">‹</button><h2>' + (+ym.slice(0, 4)) + "年" + (+ym.slice(4)) + '月の収支</h2><button type="button" class="cal-next" aria-label="次の月">›</button></div>' +
         tiles(sm, "") + bud + calendar(ym, bets) +
         '<h3 class="sub" style="margin:4px 0 0">' + listTitle + (sel ? ' <button type="button" class="cal-all">月の全部を見る</button>' : "") + "</h3>" +
-        (list.length ? '<div class="tbl-wrap"><table class="nb-tbl"><thead><tr><th>日</th><th>レース</th><th>買い目</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th></th></tr></thead><tbody>' + list.map(function (b) { return betRow(b, true); }).join("") + "</tbody></table></div>" : '<p class="sub" style="margin:0">記録はありません。下の欄か、各レースページの「マイノート」から記録できます。</p>') +
-        '<div class="nb-add"><input type="date" class="nb-date" value="' + dflt + '"><select class="nb-v"><option value="">場</option>' + vopt + '</select><input class="nb-r num" inputmode="numeric" placeholder="R"><input class="nb-memo-in" placeholder="買い目・メモ"><input class="nb-inv num" inputmode="numeric" placeholder="購入額"><input class="nb-ret-in num" inputmode="numeric" placeholder="払戻"><button type="button" class="nb-go">記録</button></div>' +
+        (list.length ? '<div class="tbl-wrap"><table class="nb-tbl"><thead><tr><th>日</th><th>メモ</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th></th></tr></thead><tbody>' + list.map(function (b) { return betRow(b, false); }).join("") + "</tbody></table></div>" : '<p class="sub" style="margin:0">記録はありません。下の欄に、その日の購入と払戻の合計を入れてください（1日1行で十分です）。</p>') +
+        '<div class="nb-add"><input type="date" class="nb-date" value="' + dflt + '"><input class="nb-inv num" inputmode="numeric" placeholder="購入額"><input class="nb-ret-in num" inputmode="numeric" placeholder="払戻"><input class="nb-memo-in" placeholder="メモ（任意：びわこ・大村など）"><button type="button" class="nb-go">記録</button></div>' +
         '<details><summary class="sub">全期間・月別を見る</summary>' + tiles(sa, "全期間の") + (mrows ? '<div class="tbl-wrap"><table><thead><tr><th>月</th><th class="r">件数</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th class="r">回収率</th></tr></thead><tbody>' + mrows + "</tbody></table></div>" : "") + "</details>" +
         '<p class="sub" style="margin:0">月の予算：<input class="nb-bud num" inputmode="numeric" value="' + (D.budget || "") + '" placeholder="例：10000" style="width:8em"> 円（決めておくと、超えたときに知らせます）</p></section>' +
         '<section class="panel"><h2>選手メモ <small>' + Object.keys(D.racer).length + "人</small></h2>" + (rm ? '<ul class="comments">' + rm + "</ul>" : '<p class="sub">各選手のページ、またはレースページの「マイノート」から書けます。</p>') + "</section>" +
-        '<section class="panel"><h2>モーターメモ <small>' + Object.keys(D.motor).length + "基</small></h2>" + (mm ? '<ul class="comments">' + mm + "</ul>" : '<p class="sub">レースページの「マイノート」で、各艇の○号機メモに書けます。モーターは入れ替わると別物なので、古いメモは消してください。</p>') + "</section>" +
+        '<section class="panel"><h2>モーターメモ <small>' + Object.keys(D.motor).length + '基・<a href="' + ROOT + 'motor.html">モーター一覧へ</a></small></h2>' + (mm ? '<ul class="comments">' + mm + "</ul>" : '<p class="sub"><a href="' + ROOT + 'motor.html">モーター一覧</a>で場を選んで、各モーターの欄に書けます。モーターは入れ替わると別物なので、古いメモは消してください。</p>') + "</section>" +
         '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">記録はこの端末のブラウザの中だけにあります。機種変更やブラウザのデータ削除で消えるので、ときどきファイルに保存してください。別の端末へは、保存したファイルを読み込むと移せます。</p>' +
         '<div class="nb-add"><button type="button" class="nb-exp">ファイルに保存</button><label class="nb-imp-l">ファイルから読み込む<input type="file" class="nb-imp" accept="application/json,.json" hidden></label></div></section>';
 
       el.querySelector(".nb-go").addEventListener("click", function () {
-        var inv = num(el.querySelector(".nb-inv").value), v = el.querySelector(".nb-v").value;
+        var inv = num(el.querySelector(".nb-inv").value);
         if (!inv) { el.querySelector(".nb-inv").focus(); return; }
-        addBet({ date: (el.querySelector(".nb-date").value || "").replace(/-/g, "") || today(), jcd: v, venue: venues[v] || "", rno: num(el.querySelector(".nb-r").value) || null, memo: el.querySelector(".nb-memo-in").value.trim(), inv: inv, ret: num(el.querySelector(".nb-ret-in").value) });
+        addBet({ date: (el.querySelector(".nb-date").value || "").replace(/-/g, "") || today(), memo: el.querySelector(".nb-memo-in").value.trim(), inv: inv, ret: num(el.querySelector(".nb-ret-in").value) });
         draw();
       });
       el.querySelector(".cal-prev").addEventListener("click", function () { curYm = shiftYm(curYm, -1); sel = ""; draw(); });
