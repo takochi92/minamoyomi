@@ -539,6 +539,17 @@ class Site:
         return f"""<section class="panel"><h2>1周1マークの展開イメージ <small>展示のスタートと、各選手がそのコースでよく決める形から</small></h2>{svg}
 <p class="sub">実線がAIの1着予想（{bt(top["frame"])} {e(top.get("name", ""))}）、点線がほかの艇の動きの目安です。「差し」は内をすくう、「まくり」は外から一気に抜く、「まくり差し」は外から内に切り込む動き。展示でスタートが遅かった艇は「展開待ち」にしています。あくまでイメージで、実際のレースとは異なります。</p></section>"""
 
+    @staticmethod
+    def alt_block(alt_list, *panels):
+        """本線・押さえ以外の買い方は1か所にまとめて、たたんで出す（全部足すと点数が多くなりすぎるため）"""
+        panels = [x for x in panels if x]
+        if not alt_list and not panels:
+            return ""
+        n = len(alt_list) + len(panels)
+        inner = (f'<div class="panel" style="display:grid;gap:6px">{"".join(alt_list)}</div>' if alt_list else "") + "".join(panels)
+        return (f'<details class="alt-bets"><summary><b>ほかの買い方</b> <span class="sub">{n}つ・参考。全部足すと点数が多くなるので、買うなら本線・押さえか、この中のどれか1つに</span></summary>'
+                f'<div style="display:grid;gap:12px;margin-top:10px">{inner}</div></details>')
+
     def ana_block(self, race, p):
         a = p.get("ana_pick")
         if not a:
@@ -561,6 +572,19 @@ class Site:
 <p class="sub">過去1年、5コースが4コースより0.15秒以上速かった{a["n"]}レースでは、5の1着が{pct(a["win"])}（オッズの見込み{pct(a["mkt"])}）。前半・後半に分けてもどちらも頭の回収率が100%を超えていましたが、件数が少なく偶然の可能性もあるため「検証中」です。成績は実績ページで別に集計します。</p></section>"""
 
     @staticmethod
+    def alt_bets(p, cells):
+        """本線・押さえとは別の買い方（攻め勝負・裏目・穴）。たたんで出す"""
+        b, out = p.get("bets") or {}, []
+        if b.get("seme"):
+            out.append(f'<div class="bet-group seme"><span>攻め勝負</span><div class="bets">{cells([{"combo": c, "p": 0} for c in b["seme"]]).replace("<small>AI 0.0%</small>", "")}</div></div>'
+                       '<p class="sub" style="margin:4px 0 0">4がまくり型でスタートも早いレースは、インを切って4頭3点＋5頭3点だけ買う手も（過去1,806レースで回収87%・的中は7%と低め）。</p>')
+        if b.get("ura"):
+            out.append(f'<p class="sub" style="margin:4px 0 0">裏目：{e(b["ura"])}。</p>')
+        if b.get("ana_reason") and b.get("ana"):
+            out.append(f'<div class="bet-group"><span>穴</span><div class="bets">{cells(b["ana"])}</div></div><p class="sub" style="margin:4px 0 0">{e(b["ana_reason"])}の艇の頭を2点だけ（的中の見込みは低め）。</p>')
+        return out
+
+    @staticmethod
     def slip_body(p, cells):
         b = p["bets"]
         if b.get("mode") == "honmei" and p.get("honmei_pick"):
@@ -572,13 +596,8 @@ class Site:
             out += f'<div class="bet-group"><span>押さえ</span><div class="bets">{cells(b["sub"])}</div></div>'
         if b.get("mode") == "honmei_cheap":
             out += '<p class="sub" style="margin:4px 0 0">固い形ですが、3点に絞ると合成オッズが2.5倍未満で妙味がないため、いつもの6点にしています。</p>'
-        if b.get("seme"):
-            out += f'<div class="bet-group seme"><span>攻め勝負</span><div class="bets">{cells([{"combo": c, "p": 0} for c in b["seme"]]).replace("<small>AI 0.0%</small>", "")}</div></div>'
-            out += '<p class="sub" style="margin:4px 0 0">攻め勝負：4がまくり型でスタートも早いレースは、インを切って4頭3点＋5頭3点だけ買う手も（過去1,806レースで回収87%・合成の中央値14倍・的中は7%と低め）。本線・押さえとは別の買い方です。</p>'
         if b.get("cut"):
             out += f'<p class="sub" style="margin:4px 0 0">外した目：{"・".join(e(x) for x in b["cut"])}（10倍未満で妙味が薄いため）。</p>'
-        if b.get("ura"):
-            out += f'<p class="sub" style="margin:4px 0 0">{e(b["ura"])}。</p>'
         if b.get("noko"):
             out += f'<p class="sub" style="margin:4px 0 0">残し：{e(b["noko"])}。</p>'
         if b.get("mode") == "attack" and b.get("attack"):
@@ -783,7 +802,7 @@ class Site:
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
         comments = "".join(f"<li>{e(c)}</li>" for c in p.get("comments", []))
-        ai_rows = ""
+        ai_rows, alt_list = "", []
         if p.get("bets"):
             o = race.get("odds_pre") or {}
 
@@ -807,8 +826,8 @@ class Site:
             if res:
                 hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
             ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
-<div class="slip-b">{self.slip_body(p, cells)}
-{f'<div class="bet-group"><span>穴</span><div class="bets">{cells(p["bets"]["ana"])}</div></div><p class="sub" style="margin:4px 0 0">穴：{e(p["bets"]["ana_reason"])}の艇の頭を2点だけ（的中の見込みは低めですが、決まれば高配当）。</p>' if p['bets'].get('ana_reason') and p['bets'].get('ana') else ''}</div></section>"""
+<div class="slip-b">{self.slip_body(p, cells)}</div></section>"""
+            alt_list = self.alt_bets(p, cells)
         inp = (p.get("course_stats") or {}).get("in")
         loss = ""
         if inp and inp.get("starts"):
@@ -828,8 +847,7 @@ class Site:
 {self.slit_block(race, page.u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))}
 {self.oriten_block(race)}
 {ai_rows}
-{self.tsuke_block(race, p, res)}
-{self.ana_block(race, p)}
+{self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p))}
 {self.worry_block(p)}
 {self.tenkai_block(p)}
 {self.fstart_block(p)}
@@ -1027,7 +1045,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a></h2><div class="vtiles">{tiles}</div></section>
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
@@ -1581,6 +1599,28 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 self._motor_page(jcd, v, data)
             except Exception as ex:   # モーター一覧で失敗しても、ほかのページの生成は止めない
                 print("motor page skip", jcd, ex)
+        try:
+            self._motor_index(data)
+        except Exception as ex:
+            print("motor index skip", ex)
+
+    def _motor_index(self, data):
+        page = Page("motor.html")
+        held = {x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")}
+        cards = []
+        for jcd in sorted(VENUES):
+            ms = data.get(jcd) or {}
+            since = next((m.get("since") for m in ms.values() if m.get("since")), "")
+            best = max(((no, m["top2"] / m["n"]) for no, m in ms.items() if m.get("n", 0) >= 20 and "top2" in m), key=lambda x: x[1], default=None)
+            sub = (f"{int(since[4:6])}/{int(since[6:])}入れ替え" if since else "集計中")
+            top = f'<span class="sub">最高 {e(best[0])}号機 {best[1] * 100:.0f}%</span>' if best else '<span class="sub">&nbsp;</span>'
+            cards.append(f'<a class="vt on{"" if jcd in held else " off"}" href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}"><b>{e(VENUES[jcd]["name"])}</b>'
+                         f'<span>{"本日開催" if jcd in held else "&nbsp;"}</span><span class="st" style="font-size:12px">{sub}</span>{top}</a>')
+        body = f"""<h1>モーター一覧</h1>
+<p class="sub">場を選ぶと、その場の全モーターの2連対率・3連対率、前節・前々節の使用者と着順が見られます。数字はモーターが入れ替わってからの成績だけで数えています。各モーターの欄に、自分用のメモも書けます（この端末だけに保存）。</p>
+<div class="vtiles">{''.join(cards)}</div>"""
+        self.put(page.path, page.render(f"ボートレース全24場のモーター一覧（2連対率・前節の使用者）｜{SITE_NAME}",
+                                        "全24場のモーターを場ごとに一覧。モーター入れ替え後の2連対率・3連対率、前節・前々節の使用者と着順。", body, [("", "モーター一覧")]))
 
     def _motor_page(self, jcd, v, data):
         if True:
@@ -1620,7 +1660,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から集計。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
                                             f"{v['name']}のモーターを2連対率・3連対率の順に一覧。前節・前々節の使用者と着順、展示タイムの順位。", body,
-                                            [("venue/" + SLUG[jcd] + ".html", v["name"]), ("", "モーター一覧")]))
+                                            [("motor.html", "モーター一覧"), ("", v["name"])]))
 
     def venue_extra(self, jcd):
         out = []
