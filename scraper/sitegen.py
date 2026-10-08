@@ -42,6 +42,27 @@ SLUG = {"01": "kiryu", "02": "toda", "03": "edogawa", "04": "heiwajima", "05": "
         "15": "marugame", "16": "kojima", "17": "miyajima", "18": "tokuyama", "19": "shimonoseki", "20": "wakamatsu",
         "21": "ashiya", "22": "fukuoka", "23": "karatsu", "24": "omura"}
 RACE_KEEP_DAYS = 30
+# AIの「バフ」：予想の各要素（prediction.boats[].parts、1着の強さへの寄与）を5つにまとめる。
+# しきい値は直前予想1万艇（2026/9〜10）の上位15%（▲）と上位4%（▲▲）。4つ以上そろうのは約0.8%の艇（20レースに1回ほど）
+BUFF = {"展示": (["展示タイム", "展示のいつもとの差", "展示で壁より速い"], 0.246, 0.391),
+        "モーター": (["モーター", "ボート"], 0.114, 0.171),
+        "得意コース": (["選手のコース別成績", "インでの成績", "インの負け方×攻め手"], 0.185, 0.317),
+        "得意場": (["当地勝率", "選手のこの場の得意・苦手", "選手のこの場でのイン"], 0.082, 0.123),
+        "スタート": (["平均ST", "壁よりスタートが早い", "F持ち", "壁がF持ち", "壁の叩かれやすさ"], 0.165, 0.263)}
+BUFF_ALL = 4
+
+
+def buffs(parts: dict) -> list[tuple[str, int]]:
+    """[(名前, +2/+1/-1)]。強い順"""
+    out = []
+    for k, (names, t1, t2) in BUFF.items():
+        v = sum((parts or {}).get(n, 0) for n in names)
+        if v >= t1:
+            out.append((k, 2 if v >= t2 else 1, v))
+        elif v <= -t1:
+            out.append((k, -1, v))
+    out.sort(key=lambda x: -x[2])
+    return [(k, lv) for k, lv, _ in out]
 # 攻めた艇が1着のときの2着のコース（過去3年）と、まくりで勝ったときの2着
 SECOND_ALL = {3: {1: .40, 2: .20, 4: .20, 5: .14, 6: .06}, 4: {1: .31, 5: .23, 2: .19, 3: .16, 6: .10}}
 SECOND_MK = {3: {4: .28, 1: .23, 2: .20, 5: .20, 6: .09}, 4: {5: .34, 1: .23, 2: .18, 6: .15, 3: .10}}
@@ -319,6 +340,36 @@ class Site:
         """過去2年で展示タイムが6艇中1位だった割合（30走以上の選手だけ）"""
         v = self.exs.get(toban)
         return (v[1] / v[0], v[0]) if v and v[0] >= 30 else None
+
+    @staticmethod
+    def buff_chips(bf):
+        return "".join(f'<span class="buff {"up" if lv > 0 else "dn"}">{"▲▲" if lv == 2 else ("▲" if lv == 1 else "▼")}{e(k)}</span>' for k, lv in bf)
+
+    def ai_block(self, p, names):
+        """AIの見立て：1着・2着以内・3着以内の確率を棒で。各艇を押し上げている要素（バフ）を下に"""
+        boats = sorted(p.get("boats") or [], key=lambda b: b["frame"])
+        if not boats or boats[0].get("p_win") is None:
+            return ""
+        rows, full = [], []
+        for b in boats:
+            w1, w2, w3 = (round((b.get(k) or 0) * 100) for k in ("p_win", "p_top2", "p_top3"))
+            bf = buffs(b.get("parts"))
+            if sum(1 for _, lv in bf if lv > 0) >= BUFF_ALL:
+                full.append((b, bf))
+            rows.append(f'<div class="ai-r"><div class="ai-n">{bt(b["frame"])}<span>{e(names.get(b["frame"], "").split(" ")[0])}</span></div>'
+                        f'<div class="ai-t" title="1着{w1}%・2着以内{w2}%・3着以内{w3}%"><i class="ai3" style="width:{w3}%"></i><i class="ai2" style="width:{w2}%"></i><i class="ai1" style="width:{w1}%"></i></div>'
+                        f'<div class="ai-v num"><b>{w1}%</b></div>'
+                        + (f'<div class="ai-b">{self.buff_chips(bf)}</div>' if bf else "") + "</div>")
+        top = ""
+        for b, bf in full:
+            top += (f'<div class="buffall"><p style="margin:0"><b>バフ全部のせ</b>　{bt(b["frame"])} {e(names.get(b["frame"], ""))}（{b["course"]}コース）</p>'
+                    f'<div>{self.buff_chips([x for x in bf if x[1] > 0])}</div><small>AIの見込み：1着 {b["p_win"] * 100:.0f}%・3着以内 {(b.get("p_top3") or 0) * 100:.0f}%</small></div>')
+        return (f'<section class="panel" style="display:grid;gap:10px"><h2>AIの見立て <small>{e(p.get("stage", ""))}予想</small></h2>{top}'
+                f'<div class="ai-lg"><span><i class="ai1"></i>1着</span><span><i class="ai2"></i>2着以内</span><span><i class="ai3"></i>3着以内</span></div>'
+                f'<div class="ai-rows">{"".join(rows)}</div>'
+                '<p class="sub">棒の濃い部分が1着、だんだんうすくなって2着以内・3着以内の確率（右の数字は1着。棒をタップすると全部の数字）。▲は、AIがその艇を強く見ている理由（展示・モーター・得意コース・得意場・スタート）。'
+                '▲▲はとくに強く、▼は弱み。4つ以上そろうと「バフ全部のせ」（20レースに1回ほど）。過去1か月では、▲が3つ以上の艇の1着は42%（AIの見込み37%）、4つ以上は41%（45%）で、'
+                'バフはもうAIの確率に入っています。確率がさらに上がるわけではありません。</p></section>')
 
     def cond_block(self, jcd, p, boats):
         """各艇の「今日のコース」での直近2年の成績を、全体・この場・今日の風・今日の波に分けて出す"""
@@ -887,8 +938,7 @@ class Site:
             mcell = (f'<a href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}#m{b["motor_no"]}">{mot}<span class="sub">／{b["motor_no"]}号</span></a>'
                      if b.get("motor_no") is not None else mot)
             rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
-                        f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td>'
-                        f'<td class="r num">{pct(q.get("p_win"))}</td><td class="r num">{pct(q.get("p_top3"))}</td></tr>')
+                        f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td></tr>')
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
         comments = "".join(f"<li>{e(c)}</li>" for c in p.get("comments", []))
@@ -933,8 +983,9 @@ class Site:
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
+{self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
 {ai_rows}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p))}
@@ -1157,6 +1208,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
+{self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
@@ -1903,6 +1955,33 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return sorted((v for v in self.idx.get("venues", []) if v.get("grade") in self.GRADE_ORDER and not v.get("cancelled")),
                       key=lambda v: self.GRADE_ORDER.index(v["grade"]))
 
+    def buff_all_today(self):
+        """今日の「バフ全部のせ」：[(締切, 場, レース, 艇, バフ)]。締切順"""
+        if getattr(self, "_ball", None) is not None:
+            return self._ball
+        out, d = [], self.idx.get("date")
+        for v in self.idx.get("venues", []):
+            for r in v.get("races", []):
+                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {}) or {}
+                for b in (race.get("prediction") or {}).get("boats", []):
+                    bf = [x for x in buffs(b.get("parts")) if x[1] > 0]
+                    if len(bf) >= BUFF_ALL:
+                        out.append((r.get("deadline", ""), v, r, {**b, "name": b.get("name", "")}, bf))
+        out.sort(key=lambda x: x[0])
+        self._ball = out
+        return out
+
+    def buff_all_block(self, page):
+        d = self.idx.get("date")
+        items = [x for x in self.buff_all_today() if not x[2].get("result")]
+        if not items:
+            return ""
+        li = "".join(f'<a class="cfc bfc" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{dl}締切</span></div>'
+                     f'<div class="row"><span>{bt(b["frame"])} {e(b["name"].split(" ")[0])}</span><span class="num">1着 {b["p_win"] * 100:.0f}%</span></div><div style="display:flex;flex-wrap:wrap;gap:4px">{self.buff_chips(bf)}</div></a>'
+                     for dl, v, r, b, bf in items)
+        return (f'<section style="display:grid;gap:10px"><h2>バフ全部のせ <small>展示・モーター・得意コース・得意場・スタートのうち4つ以上がそろった艇</small></h2>'
+                f'<div class="strip">{li}</div></section>')
+
     def grade_banner(self, page):
         vs = self.graded()
         if not vs:
@@ -1962,6 +2041,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             cards.append(self.share_card(f"自信あり {v['name']}{r['rno']}R（締切{r['deadline']}）",
                                          share.confident(v["name"], r["rno"], r["deadline"], rc["n"], float(rc["comp"]), f"{SITE_URL}/race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html"),
                                          "レースのリンクを貼ると、本線と1着の本命が入った画像が出ます。"))
+        ba = [x for x in self.buff_all_today() if not x[2].get("result")]
+        if ba:
+            cards.append(self.share_card("バフ全部のせ", share.buff_all([(v["name"], r["rno"], dl, b["frame"], b["course"], [k for k, _ in bf]) for dl, v, r, b, bf in ba], SITE_URL + "/"),
+                                         "4つ以上の強みがそろった艇。締切前のものだけ。"))
         hist = load_json(DATA / "history.json", {}) or {}
         if hist.get(d, {}).get("races"):
             cards.append(self.share_card("今日の結果（夜に）", share.day_result(d, hist[d], f"{SITE_URL}/stats.html"), "ここまでに終わったレースの集計です。"))

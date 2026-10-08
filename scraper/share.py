@@ -70,6 +70,12 @@ def confident(venue: str, rno: int, deadline: str, n: int, comp: float, url: str
                f"{url}\n#ボートレース{venue} #競艇予想\n{NOTE}")
 
 
+def buff_all(items: list[tuple], url: str) -> str:
+    """バフ全部のせ：items = [(場, R, 締切, 艇番, コース, [バフ名])]"""
+    rows = [f"・{v}{rno}R（{dl}）{f}号艇 {c}コース：{'・'.join(bf)}" for v, rno, dl, f, c, bf in items[:4]]
+    return fit("【バフ全部のせ】\n展示・モーター・得意コース・得意場・スタートの強みが4つ以上そろった艇", rows, f"{url}\n{TAGS}")
+
+
 def day_result(d: str, h: dict, url: str) -> str:
     """その日の結果（外れも含めて）"""
     items = [f"本線・押さえ {h.get('races', 0)}R中{h.get('hits', 0)}的中・回収率{pct(h.get('return', 0), h.get('invest', 0))}"]
