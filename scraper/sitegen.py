@@ -26,7 +26,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import coursest, fstart, overperf
+from . import coursest, fstart, ogimg, overperf, share
 from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
@@ -105,7 +105,7 @@ class Page:
     def u(self, target: str) -> str:
         return "../" * self.depth + target
 
-    def render(self, title, desc, body, crumbs=(), script="", noindex=False):
+    def render(self, title, desc, body, crumbs=(), script="", noindex=False, og=None):
         nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
                ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
                ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
@@ -122,7 +122,7 @@ class Page:
 <link rel="canonical" href="{SITE_URL}/{self.path if self.path != 'index.html' else ''}">
 {'<meta name="robots" content="noindex">' if noindex else ''}
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
-<meta property="og:image" content="{SITE_URL}/img/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
+<meta property="og:image" content="{SITE_URL}/{og or 'img/og.jpg'}"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
 <meta name="theme-color" content="#0B1116">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
@@ -145,7 +145,7 @@ class Page:
 <footer><div class="wrap">
   <p>掲載している買い目・データは過去の公式データと直前情報にもとづく参考情報で、的中や利益を保証するものではありません。舟券の購入はご自身の判断と責任でお願いします。</p>
   <p>20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>
-  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a></p>
+  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a></p>
 </div></footer>
 {script}
 </body></html>"""
@@ -171,6 +171,7 @@ class Site:
     def __init__(self, now: datetime | None = None):
         self.now = now or datetime.now(JST)
         self.files: dict[str, str] = {}
+        self.bins: dict[str, bytes] = {}   # 画像（OGP）
         self.S = load_stats()
         self.racers = (load_json(Path(__file__).parent / "racers.json", {}) or {}).get("racers", {})
         self.idx = load_json(DATA / "index.json", {"date": self.now.strftime("%Y%m%d"), "venues": []})
@@ -926,7 +927,8 @@ class Site:
         desc = f"{jdate(d)}のボートレース{v} {rno}R（締切{race.get('deadline', '')}）の推奨買い目、合成オッズ、展示タイム、選手のコース別成績、結果。"
         vp = Page(page.path)
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
-<h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
+<h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div>
+<a class="btn xshare" href="{e(self.share_link(d, jcd, rno, p))}" target="_blank" rel="noopener">Xでシェア</a></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
 <nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
@@ -975,7 +977,33 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む
         import re as _re
         body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)
-        self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script))
+        self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script,
+                                        og=self.race_og(d, jcd, race, p)))
+
+    def share_link(self, d, jcd, rno, p):
+        v = VENUES[jcd]["name"]
+        main = [x["combo"] for x in (p.get("bets") or {}).get("main", [])][:2]
+        text = f"{v}{rno}R（{jdate(d)}）のAI予想" + (f" 本線 {'・'.join(main)}" if main else "")
+        url = f"{SITE_URL}/race/{d}/{SLUG[jcd]}-{rno}.html"
+        return share.intent(f"{text}\n{url}\n#ボートレース{v} #競艇予想")
+
+    def race_og(self, d, jcd, race, p):
+        """今日のレースだけ、シェア用の画像を作る（過去のレースはサイト共通の画像）"""
+        if d != self.idx.get("date") or not (p.get("bets") or {}).get("main"):
+            return None
+        path = f"og/{d}/{SLUG[jcd]}-{race['rno']}.png"
+        boats = p.get("boats") or []
+        top = max(boats, key=lambda b: b.get("p_win") or 0) if boats else None
+        wd = "月火水木金土日"[datetime.strptime(d, "%Y%m%d").weekday()]
+        try:
+            self.bins[path] = ogimg.race_image(VENUES[jcd]["name"], race["rno"], f"{jdate(d)}({wd})", race.get("deadline", ""),
+                                               (race.get("race_name") or "")[:12], [x["combo"] for x in p["bets"]["main"]],
+                                               (top["frame"], top["p_win"]) if top and top.get("p_win") else None,
+                                               (p.get("confidence") or {}).get("label", ""))
+        except Exception as ex:   # 画像が作れなくてもページは出す
+            print("og skip", path, ex)
+            return None
+        return path
 
     # ------------------------------------------------------------ トップ
     def race_rows(self, page, d, jcd, races):
@@ -1876,6 +1904,69 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return "\n".join(out)
 
     # ------------------------------------------------------------ ツール・解説・JSページ
+    def share_card(self, title, text, note=""):
+        return (f'<section class="panel share" style="display:grid;gap:8px"><h2>{e(title)} <small>{share.weight(text)}/280</small></h2>'
+                + (f'<p class="sub" style="margin:0">{e(note)}</p>' if note else "")
+                + f'<textarea readonly rows="{text.count(chr(10)) + 2}">{e(text)}</textarea>'
+                f'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" data-copy>コピー</button>'
+                f'<a class="btn" href="{e(share.intent(text))}" target="_blank" rel="noopener">Xで投稿</a></div></section>')
+
+    def share_page(self):
+        """X に貼る文（コピー用・検索には出さない）。5分ごとに作り直すので、いつ開いても今の内容"""
+        page = Page("share.html")
+        d = self.idx.get("date", self.now.strftime("%Y%m%d"))
+        venues = self.idx.get("venues", [])
+        cards = [self.share_card("今日の注目（朝に）", share.morning(d, venues, SITE_URL + "/"),
+                                 "AIの見込みが高い順に、まだ締切前のレース。")]
+        tg = [(v["name"], r["rno"], r["deadline"], c, b.get("name", ""), b.get("class", ""))
+              for _, v, r, b, c, _ in self.target_items() if not r.get("result")]
+        if tg:
+            cards.append(self.share_card("狙い目レーサー", share.targets(d, tg, f"{SITE_URL}/targets.html")))
+        conf = sorted(((r["deadline"], v, r) for v in venues for r in v.get("races", [])
+                       if (r.get("reco") or {}).get("verdict") == "自信あり" and not r.get("result")), key=lambda x: x[0])
+        for _, v, r in conf[:3]:
+            rc = r["reco"]
+            cards.append(self.share_card(f"自信あり {v['name']}{r['rno']}R（締切{r['deadline']}）",
+                                         share.confident(v["name"], r["rno"], r["deadline"], rc["n"], float(rc["comp"]), f"{SITE_URL}/race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html"),
+                                         "レースのリンクを貼ると、本線と1着の本命が入った画像が出ます。"))
+        hist = load_json(DATA / "history.json", {}) or {}
+        if hist.get(d, {}).get("races"):
+            cards.append(self.share_card("今日の結果（夜に）", share.day_result(d, hist[d], f"{SITE_URL}/stats.html"), "ここまでに終わったレースの集計です。"))
+        wk = share.weeks(hist, d, 1)
+        if wk:
+            cards.append(self.share_card("先週の成績（月曜に）", share.week_text(*wk[0], f"{SITE_URL}/weekly.html")))
+        body = (f'<h1>Xに貼る文</h1><p class="sub">いまの予想から作った投稿文です（5分ごとに更新）。「コピー」か「Xで投稿」を押してください。'
+                f'このページは検索には出しません。</p>{"".join(cards)}'
+                '<script>document.querySelectorAll("[data-copy]").forEach(function(b){b.onclick=function(){var t=b.closest("section").querySelector("textarea");'
+                't.select();try{navigator.clipboard.writeText(t.value)}catch(x){document.execCommand("copy")}b.textContent="コピーしました";setTimeout(function(){b.textContent="コピー"},1500)}})</script>')
+        self.put(page.path, page.render(f"Xに貼る文｜{SITE_NAME}", "投稿用の文。", body, [("", "Xに貼る文")], noindex=True))
+
+    def weekly_page(self):
+        """週ごとの成績（外れも含めて）。月〜日で区切る"""
+        page = Page("weekly.html")
+        hist = load_json(DATA / "history.json", {}) or {}
+        d = self.idx.get("date", self.now.strftime("%Y%m%d"))
+        ws = share.weeks(hist, d, 4)
+
+        def roi(a, b):
+            return f'<b class="{"up" if b and a >= b else "down"}">{share.pct(a, b, 1)}</b>' if b else "-"
+        secs = []
+        for s_, e_, w in ws:
+            head = f"{int(s_[4:6])}/{int(s_[6:])}〜{int(e_[4:6])}/{int(e_[6:])}"
+            rows = "".join(f'<tr><td>{lab}</td><td class="r num">{w[k + "races"]:,}</td><td class="r num">{w[k + "hits"]:,}<br><small class="sub">{share.pct(w[k + "hits"], w[k + "races"])}</small></td><td class="r num">{roi(w[k + "return"], w[k + "invest"])}</td></tr>'
+                           for lab, k in (("本線・押さえ", ""), ("自信あり", "rc_"), ("厳選本命", "h_")) if w[k + "races"])
+            best = "".join(f'<li><a href="{page.u(f"race/{b["date"]}/{SLUG[b["jcd"]]}-{b["rno"]}.html")}">{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R</a> {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>'
+                           if b.get("jcd") in SLUG and b["date"] >= (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d") else
+                           f'<li>{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>' for b in w["best"][:3])
+            secs.append(f'<section class="panel" style="display:grid;gap:8px"><h2>{head} <small>{w["days"]}日分</small></h2>'
+                        f'<div class="tbl-wrap"><table><thead><tr><th></th><th class="r">レース</th><th class="r">的中</th><th class="r">回収率</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                        + (f'<h3 style="margin:4px 0 0">的中した高配当</h3><ul class="comments">{best}</ul>' if best else "") + "</section>")
+        body = (f'<h1>週ごとの成績</h1><p>艇ろぐの予想を、締切前に出した買い目どおり各100円で買った場合の成績です。<b>外れた週もそのまま載せています。</b>'
+                f'回収率が100%を下回る週も多く、的中や利益を約束するものではありません。</p>'
+                + ("".join(secs) or '<section class="panel"><p class="sub" style="margin:0">まだ1週間分のデータがありません。</p></section>')
+                + f'<p class="sub">日ごとの成績は<a href="{page.u("stats.html")}">的中実績</a>、結果は<a href="{page.u("results.html")}">払戻金一覧</a>。20歳未満の方は舟券を購入できません。</p>')
+        self.put(page.path, page.render(f"週ごとの成績（的中率・回収率）｜{SITE_NAME}", "艇ろぐのボートレースAI予想の週ごとの的中率・回収率。外れた週も含めて、締切前に出した買い目どおりに集計。", body, [("", "週ごとの成績")]))
+
     def static_pages(self):
         page = Page("mynote.html")
         vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
@@ -1982,6 +2073,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.racer_pages()
         self.st_pages()
         self.static_pages()
+        self.share_page()
+        self.weekly_page()
         self.not_found()
         self.sitemap()
         return self.files
@@ -1991,7 +2084,11 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             f = OUT / p
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(text, encoding="utf-8")
-        print("pages", len(self.files))
+        for p, b in self.bins.items():
+            f = OUT / p
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(b)
+        print("pages", len(self.files), "images", len(self.bins))
 
 
 def main():

@@ -531,3 +531,6 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 .fav-ul a b{color:var(--warn)}
 .chip small{font-weight:500;opacity:.8}
 .cond th,.cond td{padding-left:4px;padding-right:4px}.cond small{line-height:1.25}
+.share textarea{width:100%;box-sizing:border-box;resize:vertical;background:var(--bg);color:inherit;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:14px;line-height:1.6}
+.xshare{text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}

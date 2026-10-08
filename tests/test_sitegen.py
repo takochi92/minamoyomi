@@ -156,3 +156,24 @@ def test_coursest():
     assert j["r"]["4010"]["1"]["w追い風"] == [1, 1, 1, 11, 1] and j["r"]["4010"]["1"]["h1"][0] == 1
     assert j["r"]["4060"]["6"]["a"] == [1, 0, 0, 0, 0]          # F は ST に入れない
     assert j["all"]["1"]["v01"][0] == 1
+
+
+def test_race_og_image(tmp_path):
+    s, files = _site(tmp_path)
+    assert "og/20260925/kiryu-12.png" in s.bins and s.bins["og/20260925/kiryu-12.png"][:4] == b"\x89PNG"
+    assert 'og/20260925/kiryu-12.png"' in files["race/20260925/kiryu-12.html"]
+
+
+def test_share_texts(tmp_path):
+    from scraper import share
+    assert share.weight("あa https://example.com/very/long/path") == 2 + 1 + 1 + 23
+    vs = [{"name": "桐生", "jcd": "01", "races": [{"rno": i, "deadline": f"1{i % 10}:00", "level": i % 4, "confidence": "本命",
+                                                  "honmei": ["1-2-3"]} for i in range(1, 13)]}]
+    t = share.morning("20261008", vs, "https://teilog.pages.dev/")
+    assert share.weight(t) <= 280 and "【10/8(木) AI予想】" in t and "必ず" not in t
+    h = {"20260929": {"races": 10, "hits": 4, "invest": 1000, "return": 800, "best": [{"venue": "桐生", "rno": 1, "combo": "1-2-3", "payout": 5000, "jcd": "01"}]},
+         "20261005": {"races": 5, "hits": 1, "invest": 500, "return": 100}}
+    ws = share.weeks(h, "20261008", 2)
+    assert ws[0][0] == "20260928" and ws[0][2]["races"] == 10 and len(ws) == 1 and share.weight(share.week_text(*ws[0], "u")) <= 280
+    s, files = _site(tmp_path)
+    assert "share.html" in files and "weekly.html" in files and "twitter.com/intent/tweet" in files["race/20260925/kiryu-12.html"]
