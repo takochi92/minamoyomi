@@ -550,3 +550,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 @keyframes tglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc) 0%,transparent)}to{box-shadow:0 0 18px 2px color-mix(in srgb,var(--tc) 55%,transparent)}}
 @media (prefers-reduced-motion:reduce){.tier-gold,.tier-silver{animation:none}}
 .ai-r.tier-gold,.ai-r.tier-silver{padding:6px 8px;border-radius:10px;margin:0 -8px}.ai-b .tier-tag{margin-right:2px}
+.gbars{display:grid;gap:8px}.gb{display:grid;grid-template-columns:84px 1fr 54px;align-items:center;gap:4px 8px;font-size:13px}.gb small{grid-column:2/4;margin-top:-4px}
+.gt{height:14px;border-radius:4px;background:var(--surface2);overflow:hidden}.gt i{display:block;height:100%;border-radius:4px;background:var(--accent)}.gb b{text-align:right}
+.guide-list{display:grid;gap:10px}.guide-card{display:grid;gap:4px;text-decoration:none;color:var(--ink)}.guide-card b{color:var(--accent)}
+@media (max-width:720px){.hero img{width:min(300px,70vw)}}

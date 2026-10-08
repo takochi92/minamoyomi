@@ -1144,7 +1144,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 if not r.get("result") and r["deadline"] > self.now.strftime("%H:%M") and not v.get("cancelled"):
                     soon.append((r["deadline"], v, r))
         soon.sort(key=lambda x: x[0])
-        tiles = "".join(self.venue_tile(page, jcd, held.get(jcd)) for jcd in sorted(VENUES))
+        tiles = "".join(self.venue_tile(page, jcd, held[jcd]) for jcd in sorted(VENUES) if jcd in held)
+        off = [jcd for jcd in sorted(VENUES) if jcd not in held]
+        offh = (f'<details class="more"><summary>開催のない場（{len(off)}場）</summary><div class="vtiles" style="margin-top:8px">'
+                + "".join(self.venue_tile(page, jcd, None) for jcd in off) + "</div></details>") if off else ""
         soonh = []
         for k, (_, v, r) in enumerate(soon[:8]):
             rc = r.get("reco")
@@ -1222,22 +1225,21 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
-<p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
+<p class="sub" style="margin:0">最終更新 {e((self.idx.get('updated_at') or '')[11:])}</p>
+<details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
+{f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 <section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
-{f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div>{offh}</section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}
-<section class="panel" style="display:grid;gap:8px"><h2>はじめての方へ</h2>
-<ul class="comments"><li><a href="{page.u('guide/sanrentan.html')}">3連単の買い方と、長く続けると負けやすい理由（控除率）</a></li>
-<li><a href="{page.u('tools/composite.html')}">合成オッズの計算ツール（どれが当たっても同じ払戻になる配分）</a></li>
-<li><a href="{page.u('guide/course.html')}">コースと決まり手の基本（逃げ・差し・捲り・捲り差し）</a></li>
-<li><a href="{page.u('targets.html')}">狙い目レーサーまとめ（コース巧者・捲られやすいイン）</a></li></ul></section>"""
+<section class="panel" style="display:grid;gap:8px"><h2>はじめての方へ <a class="h2link" href="{page.u('guide/index.html')}">読みもの一覧 →</a></h2>
+<ul class="comments"><li><a href="{page.u('guide/kaikata.html')}">舟券の種類と買い方</a></li><li><a href="{page.u('guide/tenji.html')}">展示タイムの見方（展示1位は本当に勝つ？）</a></li>
+<li><a href="{page.u('guide/wind.html')}">風と波でどう変わる？</a></li><li><a href="{page.u('tools/composite.html')}">合成オッズの計算ツール</a></li></ul></section>"""
         self.put("index.html", page.render(f"今日のボートレース予想｜全場の推奨買い目・合成オッズ｜{SITE_NAME}",
                                            "ボートレース全場の今日の予想。公式データと展示・オッズから、合成オッズ5倍以上の推奨買い目、購入非推奨レース、選手のコース別成績を毎日自動更新。", body))
 
@@ -1393,10 +1395,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             f'<td>{bt(b["frame"])} <a href="{page.u("racer/" + b["toban"] + ".html")}">{e(b["name"])}</a> <span class="sub">{e(b.get("class", ""))} 勝率{b.get("nat_win") or "-"}</span></td>'
             f'<td class="r num">{c}コース</td><td class="r num">{pct(op[1] / op[0])}<span class="sub">/{op[0]}走</span></td><td class="r num sub">{pct(op[2] / op[0])}</td>'
             f'<td class="r num best">{sc:.2f}</td><td>{"<span class=sub>買われすぎ注意</span>" if self.caution(b, c) else ""}</td></tr>'
-            for sc, v, r, b, c, op in items[:15])
+            for sc, v, r, b, c, op in items[:5])
         return (f'<section style="display:grid;gap:8px"><h2>今日の狙い目レーサー <small>今日のコースで、実力のわりに勝てている選手（スコア{OP_MARK}以上）</small></h2>'
                 f'<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>レース</th><th>選手</th><th class="r">コース</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th></th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<p class="sub">展示前は枠番のコースで判定。「買われすぎ注意」は、過去の検証でそのコース・級別の巧者がオッズの見立てより勝てていなかった組み合わせです。<a href="{page.u("targets.html")}">狙い目レーサーまとめ →</a></p></section>')
+                f'<p style="margin:0"><a href="{page.u("targets.html")}">ほかの狙い目レーサーも見る（{len(items)}人）→</a></p>'
+                f'<details class="more"><summary>くわしく</summary><p>展示前は枠番のコースで判定。「買われすぎ注意」は、過去の検証でそのコース・級別の巧者がオッズの見立てより勝てていなかった組み合わせです。</p></details></section>')
 
     def targets_page(self):
         page = Page("targets.html")
@@ -2102,6 +2105,97 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 + f'<p class="sub">日ごとの成績は<a href="{page.u("stats.html")}">的中実績</a>、結果は<a href="{page.u("results.html")}">払戻金一覧</a>。20歳未満の方は舟券を購入できません。</p>')
         self.put(page.path, page.render(f"週ごとの成績（的中率・回収率）｜{SITE_NAME}", "艇ろぐのボートレースAI予想の週ごとの的中率・回収率。外れた週も含めて、締切前に出した買い目どおりに集計。", body, [("", "週ごとの成績")]))
 
+    GUIDES = [("guide/kaikata.html", "舟券の種類と買い方", "単勝から3連単まで7種類の違いと、当たりやすさ・組み合わせの数"),
+              ("guide/sanrentan.html", "3連単の買い方と控除率", "3連単のしくみと、長く続けると負けやすい理由"),
+              ("guide/course.html", "コースと決まり手の基本", "1コースが強いわけと、逃げ・差し・まくりのちがい"),
+              ("guide/tenji.html", "展示タイムの見方", "展示で速かった艇は本当に勝つのか（過去2年のデータ）"),
+              ("guide/wind.html", "風と波でどう変わる？", "追い風・向かい風・波の高さで、コースの有利不利とSTがどう変わるか"),
+              ("guide/motor.html", "モーターの見方", "モーター2連率の落とし穴と、乗り手の腕を差し引いた見方")]
+
+    @staticmethod
+    def hbars(rows, maxv=None, fmt="{:.1f}%"):
+        """横棒グラフ（HTMLだけ）。rows = [(ラベル, 値, 注記)]"""
+        maxv = maxv or max((v for _, v, _ in rows), default=1) or 1
+        return '<div class="gbars">' + "".join(
+            f'<div class="gb"><span class="gl">{lab}</span><span class="gt"><i style="width:{max(v / maxv * 100, 1):.1f}%"></i></span><b class="num">{fmt.format(v)}</b>'
+            + (f'<small class="sub">{e(note)}</small>' if note else "") + "</div>" for lab, v, note in rows) + "</div>"
+
+    def guide_foot(self, page, here):
+        li = "".join(f'<li><a href="{page.u(p)}">{e(t)}</a></li>' for p, t, _ in self.GUIDES if p != here)
+        return (f'<section class="panel"><h2>ほかの読みもの</h2><ul class="comments">{li}</ul>'
+                f'<p style="margin:0"><a href="{page.u("index.html")}">今日のAI予想を見る →</a></p></section>'
+                '<p class="sub">舟券は20歳になってから。予算を決めて、のめり込まないように楽しみましょう。</p>')
+
+    def guide_pages(self):
+        # 一覧
+        page = Page("guide/index.html")
+        cards = "".join(f'<a class="panel guide-card" href="{page.u(p)}"><b>{e(t)}</b><span class="sub">{e(d)}</span></a>' for p, t, d in self.GUIDES)
+        self.put(page.path, page.render(f"ボートレース初心者ガイド｜舟券の買い方・展示・モーターの見方｜{SITE_NAME}",
+                                        "ボートレース（競艇）初心者向けの読みもの。舟券の種類と買い方、コースと決まり手、展示タイム・風・モーターの見方を、過去のデータでやさしく解説。",
+                                        f'<h1>はじめてのボートレース</h1><p class="sub">知っておくと予想が楽しくなること。数字はすべて公式のレース結果から集計しています。</p><div class="guide-list">{cards}</div>',
+                                        [("", "初心者ガイド")]))
+        # 舟券の種類
+        page = Page("guide/kaikata.html")
+        kinds = [("単勝", "1着の艇を当てる", 6), ("複勝", "2着までに入る艇を1つ当てる", 6), ("2連単", "1着・2着を順番どおり", 30), ("2連複", "1着・2着の2艇（順番は問わない）", 15),
+                 ("拡連複", "3着までに入る2艇（順番は問わない）", 15), ("3連単", "1着・2着・3着を順番どおり", 120), ("3連複", "3着までの3艇（順番は問わない）", 20)]
+        rows = "".join(f'<tr><td><b>{k}</b></td><td>{e(d)}</td><td class="r num">{n}通り</td></tr>' for k, d, n in kinds)
+        body = (f'<h1>舟券の種類と買い方</h1>'
+                f'<section class="panel"><h2>7種類の舟券</h2><div class="tbl-wrap"><table><thead><tr><th>種類</th><th>当てるもの</th><th class="r">組み合わせ</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                '<p class="sub">組み合わせが少ないほど当たりやすく、配当は低め。いちばん人気は3連単ですが、120通りから当てるので難しい舟券です。</p></section>'
+                '<section class="panel"><h2>買い方</h2><ul class="comments"><li><b>ネット投票</b>：BOAT RACE 公式のネット投票（テレボートなど）に登録すると、スマホから買えます。</li>'
+                '<li><b>レース場・場外発売場</b>：マークカードに場・レース・舟券の種類・艇番・金額を書いて買います。</li>'
+                '<li><b>1点100円から</b>。いくつかの組み合わせをまとめて買う「流し」「ボックス」もあります。</li></ul>'
+                '<p class="sub">20歳未満の方は舟券を購入できません。</p></section>'
+                '<section class="panel"><h2>はじめは「2連単」「3連複」もおすすめ</h2><p>3連単より組み合わせが少なく、当たる楽しさを感じやすい舟券です。艇ろぐの各レースのページでは、AIが見た1着・2着以内・3着以内の確率を棒グラフで出しているので、2連単や3連複の目安にもなります。</p></section>'
+                + self.guide_foot(page, page.path))
+        self.put(page.path, page.render(f"舟券の種類と買い方｜単勝・2連単・3連単のちがい｜{SITE_NAME}", "ボートレースの舟券7種類（単勝・複勝・2連単・2連複・拡連複・3連単・3連複）の違いと組み合わせの数、ネット投票などの買い方を初心者向けに解説。", body, [("guide/index.html", "初心者ガイド"), ("", "舟券の種類と買い方")]))
+        # 展示タイム
+        page = Page("guide/tenji.html")
+        rk = (load_exstats(True) or {}).get("rank") or {}
+        secs = ""
+        for c, note in (("1", "インは、展示が遅くても半分くらいは勝つ"), ("4", "カド（4コース）は、展示1位だと6位の約3倍"), ("6", "6コースは、展示1位でも4%ほど")):
+            d = rk.get(c) or {}
+            rows = [(f"展示{k}位", d[k][1] / d[k][0] * 100, "") for k in sorted(d) if d[k][0]]
+            if rows:
+                n = min(d[k][0] for k in d)
+                secs += f'<section class="panel"><h2>{c}コース <small>展示タイムの順位と1着率（どれも{n // 1000 * 1000:,}走以上）</small></h2>{self.hbars(rows)}<p class="sub" style="margin:0">{e(note)}</p></section>'
+        body = (f'<h1>展示タイムの見方</h1><p>本番の前に、6艇がそろって走る「展示航走」があります。そのときの直線のタイムが<b>展示タイム</b>。数字が小さいほど速く、モーターの調子の目安になります。</p>'
+                f'{secs}'
+                '<section class="panel"><h2>見るときのコツ</h2><ul class="comments"><li>同じレースの<b>6艇の中で何番目か</b>を見る（場や天気で全体のタイムが変わるため）。</li>'
+                '<li>その選手の<b>いつもの順位</b>と比べる。艇ろぐの「展示」タブに「今節の平均」「いつもの1位率」があります。</li>'
+                '<li>ただし、展示が速い艇はみんな気づくので、オッズも下がります。展示だけで買うと、もうけは出にくいです。</li></ul></section>'
+                + self.guide_foot(page, page.path))
+        self.put(page.path, page.render(f"展示タイムの見方｜展示1位の艇は本当に勝つ？（過去2年のデータ）｜{SITE_NAME}", "ボートレースの展示タイムの見方。コースごとに、展示タイムの順位と1着率の関係を過去2年の公式データで集計。展示1位の艇はどれくらい勝つのかを解説。", body, [("guide/index.html", "初心者ガイド"), ("", "展示タイムの見方")]))
+        # 風と波
+        page = Page("guide/wind.html")
+        A = (self.cst or {}).get("all") or {}
+        secs = ""
+        for c in ("1", "4", "6"):
+            d = A.get(c) or {}
+            rows = [(lab, d[k][1] / d[k][0] * 100, f"ST {d[k][3] / d[k][4] / 100:.2f}".replace("0.", ".")) for k, lab in
+                    (("w弱い", "風2m以下"), ("w追い風", "追い風"), ("w向かい風", "向かい風"), ("w横風", "横風"), ("h0", "波0〜2cm"), ("h1", "波3〜5cm"), ("h2", "波6cm以上")) if d.get(k) and d[k][0] and d[k][4]]
+            if rows:
+                secs += f'<section class="panel"><h2>{c}コースの1着率 <small>右は平均ST</small></h2>{self.hbars(rows)}</section>'
+        body = (f'<h1>風と波でどう変わる？</h1><p>水の上のレースなので、風と波で有利なコースが変わります。過去2年の全レースを、風の向き・強さと波の高さで分けて集計しました。</p>'
+                f'{secs}'
+                '<section class="panel"><h2>ポイント</h2><ul class="comments"><li><b>波が高いほどインが弱く</b>、外の艇が来やすい。</li>'
+                '<li><b>向かい風</b>はスタートが遅くなりやすく、ダッシュの効く外の艇に向く。</li><li><b>追い風</b>はスタートがそろいやすく、インが残りやすい場も多い。</li>'
+                '<li>場によって風の影響はちがいます。各場のページに「風向き別のイン1着率」があります。</li></ul></section>'
+                + self.guide_foot(page, page.path))
+        self.put(page.path, page.render(f"風と波でボートレースはどう変わる？｜追い風・向かい風・波の高さとコース｜{SITE_NAME}", "ボートレースで風（追い風・向かい風・横風）と波の高さによって、1コース・4コース・6コースの1着率と平均STがどう変わるかを過去2年の公式データで解説。", body, [("guide/index.html", "初心者ガイド"), ("", "風と波")]))
+        # モーター
+        page = Page("guide/motor.html")
+        body = ('<h1>モーターの見方</h1><p>ボートレースのモーターは、場ごとに約1年使われ、節（開催）ごとに抽選で選手にわたります。よく出るモーターを引けるかどうかも勝負のうちです。</p>'
+                '<section class="panel"><h2>モーター2連率の落とし穴</h2><p>出走表の「モーター2連率」は、そのモーターで2着までに入った割合です。でも、<b>強い選手が乗ったモーターほど数字が上がる</b>ので、モーターだけの力ではありません。</p></section>'
+                '<section class="panel"><h2>艇ろぐの見方：乗り手の腕を差し引く</h2><p>1走ごとに「その選手の実力とコースなら、ふつうはこれくらい」という見込みを出し、それより上か下かをモーターごとに足していきます。'
+                'こうすると、乗り手のちがいをならした「モーターそのものの力」に近づきます。</p>'
+                '<p>過去半年・約2.8万レースで確かめたところ、モーター2連率のかわりにこの評価を使うと、AIの予想がはっきり良くなりました。いまの艇ろぐのAIはこの評価を使っています。</p></section>'
+                '<section class="panel"><h2>あわせて見たいもの</h2><ul class="comments"><li><b>展示タイム</b>：その日の調子。<a href="tenji.html">展示タイムの見方</a></li>'
+                '<li><b>前節の成績</b>：各場の「モーター一覧」に、前節・前々節の使用者と着順があります。</li>'
+                '<li>モーターが入れ替わった直後は、2連率がみんな0%からのスタートになります。</li></ul></section>'
+                + self.guide_foot(page, page.path))
+        self.put(page.path, page.render(f"モーターの見方｜モーター2連率の落とし穴と乗り手を差し引いた評価｜{SITE_NAME}", "ボートレースのモーターの見方。モーター2連率が選手の腕に左右される理由と、乗り手の実力を差し引いてモーターそのものの力を見る方法を解説。", body, [("guide/index.html", "初心者ガイド"), ("", "モーターの見方")]))
+
     def static_pages(self):
         page = Page("mynote.html")
         vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
@@ -2135,17 +2229,18 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
 <section class="panel"><h2>3連単とは</h2><p>1着・2着・3着の艇を、着順どおりに当てる買い方です。組み合わせは6×5×4＝120通り。当てるのは難しい分、配当は高くなります。</p></section>
 <section class="panel"><h2>控除率（払戻率）</h2><p>ボートレースは、売上の一部を差し引いた残りを的中者で分け合う仕組みです。3連単の払戻率は約75%で、でたらめに買い続けると、平均して賭けた金額の75%しか戻らない計算になります。</p>
 <p>当サイトが過去9千レースで検証したところ、オッズの高い目（300倍以上）を全部買うと回収率は約55%、オッズの低い目（1〜20倍）は約80%でした。人気薄ほど買われすぎていて、穴狙いは数字の上ではいちばん不利です。</p></section>
-<section class="panel"><h2>点数と合成オッズ</h2><p>本命から10点以上広げて買うと、合成オッズが1〜2倍台になり、当たっても利益はほとんど出ません。当サイトの推奨買い目は、合成オッズが5倍を下回らない範囲で組んでいます。</p></section>"""
+<section class="panel"><h2>点数と合成オッズ</h2><p>本命から10点以上広げて買うと、合成オッズが1〜2倍台になり、当たっても利益はほとんど出ません。当サイトの推奨買い目は、合成オッズが5倍を下回らない範囲で組んでいます。</p></section>""" + self.guide_foot(page, page.path)
         self.put(page.path, page.render(f"3連単の買い方と控除率｜ボートレース初心者ガイド｜{SITE_NAME}",
-                                        "ボートレース3連単の基本、払戻率（控除率）の仕組み、オッズ帯ごとの回収率の違い、点数と合成オッズの考え方を解説。", body, [("", "3連単の買い方")]))
+                                        "ボートレース3連単の基本、払戻率（控除率）の仕組み、オッズ帯ごとの回収率の違い、点数と合成オッズの考え方を解説。", body, [("guide/index.html", "初心者ガイド"), ("", "3連単の買い方")]))
         page = Page("guide/course.html")
         n = self.S.nc
         cr = " ".join(f"{c}コース{n[c][1] / n[c][0] * 100:.1f}%" for c in range(1, 7) if n[c][0])
         body = f"""<h1>コースと決まり手の基本</h1>
 <section class="panel"><h2>コースの有利不利</h2><p>ボートレースはスタート後の最初のターン（1マーク）を内側で回れる艇が有利です。直近1年の全国の1着率は {e(cr)} です。</p></section>
 <section class="panel"><h2>決まり手</h2><ul class="comments"><li><b>逃げ</b>：1コースの艇がそのまま先頭で1マークを回って勝つ。</li><li><b>差し</b>：先に回った艇の内側を突いて抜け出す。2コースに多い。</li><li><b>捲り</b>：外から内側の艇を一気に回り込む。3・4コースに多い。</li><li><b>捲り差し</b>：外の艇が内の艇を捲りつつ、その内側を差す。</li><li><b>抜き・恵まれ</b>：1マーク後に逆転する、他艇の失格などで繰り上がる。</li></ul></section>
-<section class="panel"><h2>選手のコース別成績を見る</h2><p>同じ選手でもコースによって成績は大きく変わります。<a href="../targets.html">狙い目レーサーまとめ</a>や各選手のページで、コース別の1着率や決まり手を確認できます。</p></section>"""
-        self.put(page.path, page.render(f"ボートレースのコースと決まり手の基本｜{SITE_NAME}", "ボートレースのコースごとの有利不利（全国の1着率）と、逃げ・差し・捲り・捲り差しなど決まり手の基本を解説。", body, [("", "コースと決まり手")]))
+<section class="panel"><h2>選手のコース別成績を見る</h2><p>同じ選手でもコースによって成績は大きく変わります。<a href="../targets.html">狙い目レーサーまとめ</a>や各選手のページで、コース別の1着率や決まり手を確認できます。</p></section>""" + self.guide_foot(page, page.path)
+        self.put(page.path, page.render(f"ボートレースのコースと決まり手の基本｜{SITE_NAME}", "ボートレースのコースごとの有利不利（全国の1着率）と、逃げ・差し・捲り・捲り差しなど決まり手の基本を解説。", body, [("guide/index.html", "初心者ガイド"), ("", "コースと決まり手")]))
+        self.guide_pages()
         for path, title, route, desc in (("stats.html", "的中実績", "stats", "艇ログの推奨買い目の的中率・回収率を、締切前に掲載した買い目だけで毎日自動集計。"),
                                          ("logic.html", "予想の根拠", "logic", "艇ログの予想モデルの仕組みと、過去データでの検証結果（的中率・回収率・コース巧者の分析）を公開。")):
             page = Page(path)
