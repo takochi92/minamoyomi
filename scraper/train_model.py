@@ -24,7 +24,7 @@ from .motoradj import MotorAdj, base_table
 
 WINDOW = 365
 WARMUP = 365
-ABILITY = ["nat", "loc", "A1", "A2", "B2", "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent"]
+ABILITY = ["nat", "loc", "A1", "A2", "B2", "motor_adj", "boat", "ex_dev", "ex_top", "avg_st", "f_recent"]
 WEATHER = ["wave_in", "wave_out", "wind_in", "wind_out"]
 TENKAI_F = ["st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual"]
 VENUE_F = ["vw_in", "vw_out", "rv_top3", "rv_in"]

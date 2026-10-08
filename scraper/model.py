@@ -30,7 +30,7 @@ FEATURE_LABEL = {
     "st_wall": "壁よりスタートが早い", "wall_f": "壁がF持ち", "wall_beat": "壁の叩かれやすさ", "ex_wall": "展示で壁より速い",
     "ex_usual": "展示のいつもとの差", "noko": "逃げ残し", "in2": "インが勝つときの2着のくせ",
     "vw_in": "場×風向き", "vw_out": "場×風向き", "rv_top3": "選手のこの場の得意・苦手", "rv_in": "選手のこの場でのイン",
-    "motor_adj": "モーター（乗り手を差し引いた評価）",
+    "motor_adj": "モーター",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"

@@ -175,10 +175,15 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
 
     ex = {f: bb.get(f, {}).get("exhibit_time") for f in frames}
     has_ex = all(ex.values())
+    try:
+        from . import motor as _motor
+        madj = {} if sum(1 for b in boats if not b.get("motor_2")) >= 5 else _motor.load().get(jcd, {})   # 入れ替え直後は使わない
+    except Exception:
+        madj = {}
     fb = [{"frame": b["frame"], "toban": b.get("toban", ""), "course": course_of[b["frame"]],
            "ex": round(ex[b["frame"]] * 100) if has_ex else None, "cls": b.get("class", ""),
            "nat": b.get("nat_win"), "loc": b.get("loc_win"), "motor": b.get("motor_2"), "boat": b.get("boat_2"),
-           "f_recent": b.get("f", 0)} for b in boats]
+           "f_recent": b.get("f", 0), "motor_adj": (madj.get(str(b.get("motor_no"))) or {}).get("adj")} for b in boats]
     try:
         from .windmap import to_compass
         wdir = to_compass(jcd, weather.get("wind_dir"))

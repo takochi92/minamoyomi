@@ -168,3 +168,17 @@ def test_midnight_switch(tmp_path, monkeypatch):
     race = json.loads((tmp_path / "races/20260926/0101.json").read_text())
     assert race["racelist"] and race["prediction"] and "before" not in race
     assert (tmp_path / "races/20260925/0101.json").exists()
+
+
+def test_motor_adj_current():
+    from scraper import motoradj
+    def race(d, rno, places, mno_off=0, m2=30.0):
+        E = [[f, f"40{f}0", f, 15, "", places[f - 1], 670, ["B1", 5.0, 30.0, 5.0, 30.0, m2, 30.0, 30, 52], f + mno_off] for f in range(1, 7)]
+        return [d, "01", rno, "逃げ", "", 0, 0, 1, "", 0, 0, E]
+    old = [race("20250101", 1, [1, 2, 3, 4, 5, 6], m2=None)]
+    for e in old[0][11]:
+        e[8] = None
+    renew = [race("20260101", r, [1, 2, 3, 4, 5, 6], m2=0.0) for r in range(1, 5)]       # 入れ替え（全艇0.00）
+    later = [race("20260105", r, [6, 5, 4, 3, 2, 1], m2=40.0) for r in range(1, 13)]     # 6号機がずっと1着
+    cur = motoradj.current(old + renew + later)
+    assert cur["01"]["6"] > 0 > cur["01"]["1"]

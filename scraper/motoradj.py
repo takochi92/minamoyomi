@@ -84,3 +84,22 @@ class MotorAdj:
             v = self.m[(r[1], mno)]
             v[0] += 1
             v[1] += int(e[5] <= 2) - self.base[(e[2], _bucket(b[2]))]
+
+
+def current(races: list) -> dict:
+    """いまの評価：{場: {号機(str): 値}}（入れ替え後のモーターだけ）。日付順に流して最後の状態を返す"""
+    from datetime import date as _D
+    old = [r for r in races if not any(len(e) > 8 and e[8] is not None for e in r[11])]
+    ma = MotorAdj(base_table(old or races))
+    by = defaultdict(list)
+    for r in races:
+        by[r[0]].append(r)
+    for d in sorted(by):
+        ma.start_day(by[d], _D(int(d[:4]), int(d[4:6]), int(d[6:])).toordinal())
+        for r in by[d]:
+            ma.apply(r)
+    out = defaultdict(dict)
+    for (j, mno), (n, _) in ma.m.items():
+        if ma.fresh[j] and n:
+            out[j][str(mno)] = round(ma.value(j, mno), 4)
+    return dict(out)
