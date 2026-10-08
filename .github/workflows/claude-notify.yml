@@ -1,0 +1,46 @@
+# Claude が作業を push したら、スマホの ntfy アプリに通知する
+#  - コミットのうち「Co-Authored-By: Claude」が入っているものだけを通知（自動データ更新などは通知しない）
+#  - 通知先はリポジトリの Secrets の NTFY_TOPIC（未設定なら何もしない）
+name: Claude notify
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      PROJECT: 艇ログ
+    steps:
+      - name: ntfy に通知
+        if: env.NTFY_TOPIC != ''
+        run: |
+          node - <<'JS'
+          const fs = require("fs");
+          const ev = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
+          const commits = (ev.commits || []).filter((c) => /Co-Authored-By:\s*Claude/i.test(c.message));
+          if (!commits.length) { console.log("Claude のコミットなし"); process.exit(0); }
+          const branch = ev.ref.replace("refs/heads/", "");
+          const added = [...new Set(commits.flatMap((c) => c.added || []))];
+          const lines = commits.map((c) => "・" + c.message.split("\n")[0]);
+          if (added.length) lines.push("", "📄 新しいファイル " + added.length + "個: " + added.slice(0, 6).join(", ") + (added.length > 6 ? " ほか" : ""));
+          const url = commits.length > 1 && ev.compare ? ev.compare : commits[commits.length - 1].url;
+          fetch("https://ntfy.sh/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topic: process.env.NTFY_TOPIC,
+              title: "🛠 " + process.env.PROJECT + "：Claude が " + commits.length + "件 作業しました",
+              message: lines.join("\n").slice(0, 3500) + "\n（" + branch + "）",
+              tags: ["robot"],
+              click: url,
+              actions: [{ action: "view", label: "変更を見る", url }]
+            })
+          }).then((r) => { console.log("ntfy", r.status); if (!r.ok) process.exit(1); });
+          JS
