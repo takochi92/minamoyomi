@@ -397,7 +397,7 @@ details.cr th,details.cr td{padding:7px 5px}
 .checks{list-style:none;padding:0;margin:6px 0;display:grid;gap:4px}.checks li{font-size:14px}
 .chip.hm{background:#1F8A5B;color:#fff;border-color:#1F8A5B}.panel.honmei{border-color:#1F8A5B}.cfc.hmc{border-color:#1F8A5B}
 .pill.noko{color:#9BE38A;border-color:#9BE38A}
-.rtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
+.rtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}
 .rtabs button{font:inherit;font-weight:700;font-size:14px;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);cursor:pointer}
 .rtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rtabs small{font-weight:400;font-size:11px}
@@ -530,3 +530,4 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 .fav-ul li{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .fav-ul a b{color:var(--warn)}
 .chip small{font-weight:500;opacity:.8}
+.cond th,.cond td{padding-left:4px;padding-right:4px}

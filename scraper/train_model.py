@@ -20,6 +20,7 @@ from scipy.optimize import minimize
 
 from .history import load_all
 from .model import FEATS, KIM, MODEL_PATH, ROOT, Stats, features
+from .motoradj import MotorAdj, base_table
 
 WINDOW = 365
 WARMUP = 365
@@ -71,12 +72,15 @@ def build_dataset(races, pre=None):
     days = sorted(by_day)
     start = _ord(days[0]) + WARMUP
     S, window, fh = Stats(), deque(), defaultdict(deque)
+    # 乗り手を差し引くための「コース×全国2連率」の基準は、モーター番号のない古い記録（＝評価期間より前）で作る
+    MA = MotorAdj(base_table([r for r in races if not any(len(e) > 8 and e[8] is not None for e in r[11])] or races))
     Xs, Ps, D, T, PAY, MK, KEY = [], [], [], [], [], [], []
     for d in days:
         t = _ord(d)
         while window and window[0][0] < t - WINDOW:
             for r in window.popleft()[1]:
                 S.apply(r, -1)
+        MA.start_day(by_day[d], t)
         if t >= start:
             for r in by_day[d]:
                 E = sorted(r[11], key=lambda e: e[0])
@@ -93,13 +97,15 @@ def build_dataset(races, pre=None):
                         q.popleft()
                     b = e[7]
                     boats.append({"frame": e[0], "toban": e[1], "course": ov["course"][e[0]] if ov else e[2], "ex": e[6], "cls": b[0], "nat": b[1],
-                                  "loc": b[3], "motor": b[5], "boat": b[6], "f_recent": len(q)})
+                                  "loc": b[3], "motor": b[5], "boat": b[6], "f_recent": len(q),
+                                  "motor_adj": MA.value(r[1], e[8] if len(e) > 8 else None)})
                 Xs.append(features(S, r[1], ov["wave"] if ov else r[6], ov["wind"] if ov else r[5], boats, wind_dir=r[4]))
                 Ps.append([e[5] if isinstance(e[5], int) else 9 for e in E])
                 D.append(int(d)); T.append(r[8] or ""); PAY.append(r[9] or 0); KEY.append(key)
                 MK.append(_matchup_row(S, E, r))
         for r in by_day[d]:
             S.apply(r, 1)
+            MA.apply(r)
             for e in r[11]:
                 if e[4] == "F" or e[5] == "F":
                     fh[e[1]].append(t)

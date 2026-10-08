@@ -7,6 +7,7 @@
 保存先
   history/YYYYMM.jsonl.gz       1レース1行（直近約3年を保持。モデル学習に使う）
   scraper/course_stats.json.gz  直近365日の集計（本番の予想で使う）
+  scraper/exstats.json.gz       直近2年の選手ごとの展示タイム1位回数（出走表の「いつもの展示」）
 """
 from __future__ import annotations
 
@@ -30,6 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 HIST = ROOT / "history"
 URL = "https://www1.mbrace.or.jp/od2/{kind}/{ym}/{k}{ymd}.lzh"
 WINDOW_DAYS = 365
+EX_DAYS = 730      # 展示1位率は2年分
+EXSTATS_PATH = Path(__file__).parent / "exstats.json.gz"
 KEEP_DAYS = 1850   # 約5年分を残す（学習に使う）
 
 
@@ -137,6 +140,38 @@ def build_stats(today: datetime | None = None):
     print("stats:", j["window"], len(races), "races")
 
 
+def ex_counts(races: list) -> dict:
+    """登番 → [展示タイムがそろった出走, 6艇中いちばん速かった回数]（同タイムの1位は全員1位）"""
+    out = {}
+    for r in races:
+        xs = [(e[6], e[1]) for e in r[11] if len(e) > 6 and e[6]]
+        if len(xs) != 6:
+            continue
+        best = min(x for x, _ in xs)
+        for x, t in xs:
+            c = out.setdefault(t, [0, 0])
+            c[0] += 1
+            c[1] += int(x == best)
+    return out
+
+
+def build_exstats(today: datetime | None = None):
+    today = today or datetime.now(JST)
+    races = load_all((today - timedelta(days=EX_DAYS)).strftime("%Y%m%d"))
+    dates = sorted({r[0] for r in races})
+    j = {"window": f"{dates[0]}-{dates[-1]}" if dates else "", "r": ex_counts(races)}
+    with gzip.open(EXSTATS_PATH, "wt", encoding="utf-8") as f:
+        json.dump(j, f, ensure_ascii=False, separators=(",", ":"))
+    print("exstats:", j["window"], len(j["r"]), "racers")
+
+
+def load_exstats() -> dict:
+    if not EXSTATS_PATH.exists():
+        return {}
+    with gzip.open(EXSTATS_PATH, "rt", encoding="utf-8") as f:
+        return json.load(f).get("r", {})
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=3)
@@ -145,6 +180,7 @@ def main(argv=None):
     if not a.stats_only:
         download(a.days)
     build_stats()
+    build_exstats()
 
 
 if __name__ == "__main__":

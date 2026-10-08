@@ -26,8 +26,8 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import fstart, overperf
-from .history import load_all
+from . import coursest, fstart, overperf
+from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
 
@@ -176,6 +176,8 @@ class Site:
         self.idx = load_json(DATA / "index.json", {"date": self.now.strftime("%Y%m%d"), "venues": []})
         self.report = load_json(Path(__file__).parent / "model_report.json", {})
         self.op = (overperf.load() or {}).get("oe", {})
+        self.exs = load_exstats()
+        self.cst = coursest.load()
 
     def put(self, path, text):
         self.files[path] = text
@@ -280,6 +282,104 @@ class Site:
                             acc.setdefault(it, []).append(v[i])
         cache[key] = {k: (sum(v) / len(v), len(v)) for k, v in acc.items() if len(v) >= 12}
         return cache[key]
+
+    def meet_ex(self, d, jcd, toban, rno):
+        """今節（その場で日をあけずに続いている開催）のこれまでの展示タイム平均と走数。このレースより前の分だけ"""
+        if not d or not toban:
+            return None
+        if getattr(self, "_mx", None) is None:
+            self._mx = defaultdict(list)
+            since = (self.now - timedelta(days=RACE_KEEP_DAYS + 8)).strftime("%Y%m%d")
+            for r in load_all(since):
+                for x in r[11]:
+                    if len(x) > 6 and x[6]:
+                        self._mx[(x[1], r[1])].append((r[0], x[6] / 100))
+        tk = ("today", d, jcd)
+        if tk not in self._mx:
+            for p in (DATA / "races" / d).glob(f"{jcd}*.json"):
+                r = load_json(p, {}) or {}
+                tb = {b["frame"]: b.get("toban") for b in (r.get("racelist") or {}).get("boats", [])}
+                for b in (r.get("before") or {}).get("boats", []):
+                    if b.get("exhibit_time") and tb.get(b.get("frame")):
+                        self._mx[tk].append((tb[b["frame"]], r.get("rno", 99), b["exhibit_time"]))
+        xs = [x for t, n, x in self._mx[tk] if t == toban and n < rno]
+        cur = datetime.strptime(d, "%Y%m%d")
+        for day, x in sorted(self._mx.get((toban, jcd), []), reverse=True):
+            if day >= d:
+                continue
+            dt = datetime.strptime(day, "%Y%m%d")
+            if (cur - dt).days > 2:
+                break
+            cur = dt
+            xs.append(x)
+        return (sum(xs) / len(xs), len(xs)) if xs else None
+
+    def ex_top(self, toban):
+        """過去2年で展示タイムが6艇中1位だった割合（30走以上の選手だけ）"""
+        v = self.exs.get(toban)
+        return (v[1] / v[0], v[0]) if v and v[0] >= 30 else None
+
+    def cond_block(self, jcd, p, boats):
+        """各艇の「今日のコース」での直近2年の成績を、全体・この場・今日の風・今日の波に分けて出す"""
+        R, A = self.cst.get("r") or {}, self.cst.get("all") or {}
+        if not R or not boats:
+            return ""
+        wd = p.get("wind") or {}
+        wt = coursest.wind_type(wd.get("tail") or 0, wd.get("speed")) if wd.get("type") else None
+        hk = coursest.wave_key(p.get("wave_cm"))
+        cols = [("a", "全体"), ("v" + jcd, "この場"), (("w" + wt) if wt else None, wt if wt else "風（展示後）"),
+                (hk, f"波{coursest.WAVE[int(hk[1])]}" if hk else "波（展示後）")]
+
+        def cell(t, c, k):
+            v = (R.get(t, {}).get(str(c)) or {}).get(k) if k else None
+            if not v or v[0] < 5:
+                return '<td class="r num sub">-</td>'
+            av = (A.get(str(c)) or {}).get(k) or (A.get(str(c)) or {}).get("a")
+            w, base = v[1] / v[0], (av[1] / av[0] if av and av[0] else 0)
+            wc = "dgood" if v[0] >= 10 and base and w >= base * 1.3 + 0.01 else ("dbad" if v[0] >= 10 and base and w <= base * 0.7 - 0.01 else "")
+            st = ""
+            if v[4] >= 3:
+                sv = v[3] / v[4] / 100
+                sb = av[3] / av[4] / 100 if av and av[4] else None
+                sc = "dgood" if sb and sv <= sb - 0.02 else ("dbad" if sb and sv >= sb + 0.02 else "sub")
+                st = f'<small class="{sc}">ST{sv:.2f}</small>'.replace("ST0.", "ST.")
+            return f'<td class="r num"><b class="{wc}">{w * 100:.0f}%</b><small class="sub">/{v[0]}</small><br>{st}</td>'
+        rows = []
+        for b in sorted(boats, key=lambda b: b["course"]):
+            rows.append(f'<tr><td>{bt(b["frame"])} {e(b["name"])}<br><small class="sub">{b["course"]}コース</small></td>'
+                        + "".join(cell(b["toban"], b["course"], k) for k, _ in cols) + "</tr>")
+        head = "".join(f'<th class="r">{e(lab)}</th>' for _, lab in cols).replace("波", "波<br>").replace("風（", "風<br>（")
+        return (f'<section class="panel"><h2>このコースの成績 <small>直近2年・1着率/走数と平均ST</small></h2>'
+                f'<div class="tbl-wrap"><table class="cond"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<p class="sub">今日のコース（展示後は進入）での成績を、全体・この場・今日の風・今日の波高に分けたもの。緑は同じコース・同じ条件の全選手の平均よりはっきり良い（1着率が1.3倍以上・STが0.02秒以上早い）、赤は悪い。風は2m以下を「弱い」にまとめています。5走未満は「-」。</p></section>')
+
+    def ex_tab(self, d, jcd, rno, race, p):
+        """展示タブ：展示タイム（今節・いつもの1位率）・チルト・スタート展示・展示の数字"""
+        rl = (race.get("racelist") or {}).get("boats") or []
+        bi = race.get("before") or {}
+        bx = {b["frame"]: b for b in bi.get("boats", [])}
+        pb = {b["frame"]: b for b in p.get("boats", [])}
+        rows = []
+        for b in rl:
+            f, x = b["frame"], bx.get(b["frame"], {})
+            m = self.meet_ex(d, jcd, b.get("toban", ""), rno)
+            t = self.ex_top(b.get("toban", ""))
+            tl = x.get("tilt")
+            ex = x.get("exhibit_time") or pb.get(f, {}).get("exhibit_time")
+            mc = f'{m[0]:.2f}<small class="sub">/{m[1]}走</small>' if m else "-"
+            tc = f'<span class="{"dgood" if t[0] >= 0.25 else ""}">{t[0] * 100:.0f}%</span>' if t else "-"
+            lc = (f"{tl:+.1f}" + (' <span class="pill tilt">伸び型</span>' if tl >= 1.0 else "")) if tl is not None else "-"
+            rows.append(f'<tr><td>{bt(f)} {e(b.get("name", ""))}</td><td class="r num">{f"{ex:.2f}" if ex else "-"}</td>'
+                        f'<td class="r num">{mc}</td><td class="r num">{tc}</td><td class="r num">{lc}</td></tr>')
+        tbl = ""
+        if rows:
+            tbl = (f'<section class="panel"><h2>展示タイム <small>{"展示前" if not bx else "今節・いつもと比べて"}</small></h2>'
+                   f'<div class="tbl-wrap"><table><thead><tr><th>艇</th><th class="r">展示T</th><th class="r">今節の平均</th><th class="r">いつもの1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                   '<p class="sub">「今節の平均」は今節これまでの展示タイムの平均。「いつもの1位率」は過去2年で展示タイムが6艇の中でいちばん速かった割合（平均は約17%。25%以上は緑）。チルト+1.0以上は伸び型。</p></section>')
+        rest = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html')) + self.oriten_block(race)
+        if not bx:
+            rest += '<section class="panel"><p class="sub" style="margin:0">展示は締切の30分前ごろに表示します。</p></section>'
+        return tbl + rest
 
     def oriten_block(self, race):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -774,8 +874,6 @@ class Site:
         res = race["result"] if race.get("result", {}).get("finished") else None
         bmap = {b["frame"]: b for b in rl["boats"]}
         pb = {b["frame"]: b for b in p.get("boats", [])}
-        cs = (p.get("course_stats") or {}).get("boats", {})
-        tilts = {bb["frame"]: bb.get("tilt") for bb in bi.get("boats", [])}
         rows = []
         for f in range(1, 7):
             b, q = bmap.get(f, {}), pb.get(f, {})
@@ -784,11 +882,7 @@ class Site:
             if link:
                 link += f"#c{q.get('course', f)}"
             nm = f'<a href="{link}">{e(name)}</a>' if link else e(name)
-            c = cs.get(str(f)) or cs.get(f) or {}
             fl = f' <span class="pill lv1">F{b["f"]}</span>' if b.get("f") else ""
-            tl = tilts.get(f)
-            if tl is not None and tl >= 1.0:
-                fl += f' <span class="pill tilt">伸び型 チルト{tl:+.1f}</span>'
             nk = next((x for x in p.get("nokoshi") or [] if x["frame"] == f), None)
             if nk:
                 fl += f' <span class="pill noko" title="{nk["course"]}コースでイン逃げのとき2・3着に残った率（{nk["n"]}走・平均{nk["base"] * 100:.0f}%）">逃げ残し{nk["rate"] * 100:.0f}%</span>'
@@ -797,7 +891,6 @@ class Site:
                      if b.get("motor_no") is not None else mot)
             rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
                         f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td>'
-                        f'<td class="r num">{q.get("exhibit_time") or "-"}</td><td class="r num">{pct(c.get("win"))}<span class="sub">/{c.get("starts", 0)}走</span></td>'
                         f'<td class="r num">{pct(q.get("p_win"))}</td><td class="r num">{pct(q.get("p_top3"))}</td></tr>')
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
@@ -839,13 +932,13 @@ class Site:
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-<nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表・予想</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
+<nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
-{self.slit_block(race, page.u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))}
-{self.oriten_block(race)}
+<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+</section>
+{self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
 {ai_rows}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p))}
 {self.worry_block(p)}
@@ -854,6 +947,9 @@ class Site:
 {loss}
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
 <section class="panel nb" id="mynote" data-date="{d}" data-jcd="{jcd}" data-venue="{e(v)}" data-rno="{rno}" hidden></section>
+</div>
+<div class="tabp" data-p="tenji" style="display:grid;gap:16px;min-width:0" hidden>
+{self.ex_tab(d, jcd, rno, race, p)}
 </div>
 <div class="tabp" data-p="odds" style="display:grid;gap:16px;min-width:0" hidden>
 {self.reco_block(race, res) or '<section class="panel"><p class="sub" style="margin:0">オッズは締切35分前から表示します。</p></section>'}
@@ -865,7 +961,7 @@ class Site:
 </div>
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(['yoso','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}')}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(['yoso','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}')}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
