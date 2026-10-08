@@ -20,6 +20,7 @@ from __future__ import annotations
 import html
 import json
 import math
+import re
 from collections import Counter, defaultdict
 
 import numpy as np
@@ -2189,9 +2190,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
 
     def sitemap(self):
-        urls = [p for p in self.files if p.endswith(".html") and p not in ("404.html", "share.html") and not p.endswith("-st.html")]
+        # 検索に出さないページ（noindex）はサイトマップに入れない（Search Console の警告になる）
+        urls = [p for p in self.files if p.endswith(".html") and p != "404.html" and 'content="noindex"' not in self.files[p]]
         today = self.now.strftime("%Y-%m-%d")
-        body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{today}</lastmod></url>" for p in sorted(urls))
+
+        def lastmod(p):
+            # 過去のレースのページは、そのレースの日（結果が入ったあとは変わらない）
+            m = re.match(r"race/(\d{4})(\d{2})(\d{2})/", p)
+            return min(f"{m[1]}-{m[2]}-{m[3]}", today) if m else today
+        body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{lastmod(p)}</lastmod></url>" for p in sorted(urls))
         self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
         self.put("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
 
