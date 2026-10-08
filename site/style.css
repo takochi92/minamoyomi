@@ -541,3 +541,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .buff{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}.buff.up{color:#3BD17A}.buff.dn{color:var(--ink2)}
 .buffall{border:2px solid var(--accent);border-radius:12px;padding:10px 12px;display:grid;gap:6px;background:color-mix(in srgb,var(--accent) 10%,transparent)}.buffall b{color:var(--accent)}.buffall div{display:flex;flex-wrap:wrap;gap:4px}
 .cfc.bfc{height:auto;min-height:0;display:grid;gap:6px}
+/* バフの金・銀（光る枠）。動きを減らす設定の人には光らせない */
+.tier-gold{--tc:#F5C542;border:2px solid var(--tc)!important;background:linear-gradient(110deg,color-mix(in srgb,var(--tc) 8%,transparent) 35%,color-mix(in srgb,var(--tc) 28%,transparent) 50%,color-mix(in srgb,var(--tc) 8%,transparent) 65%) 0 0/250% 100%;animation:tshine 2.6s linear infinite,tglow 1.6s ease-in-out infinite alternate}
+.tier-silver{--tc:#C9D3DE;border:2px solid var(--tc)!important;background:linear-gradient(110deg,color-mix(in srgb,var(--tc) 5%,transparent) 35%,color-mix(in srgb,var(--tc) 18%,transparent) 50%,color-mix(in srgb,var(--tc) 5%,transparent) 65%) 0 0/250% 100%;animation:tshine 3.4s linear infinite}
+.tier-gold .tl,.tier-silver .tl{color:var(--tc);font-weight:900;letter-spacing:.04em}
+.tier-tag{display:inline-block;font-size:11px;font-weight:900;padding:1px 8px;border-radius:999px;color:#111;background:var(--tc)}
+@keyframes tshine{from{background-position:100% 0}to{background-position:-150% 0}}
+@keyframes tglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc) 0%,transparent)}to{box-shadow:0 0 18px 2px color-mix(in srgb,var(--tc) 55%,transparent)}}
+@media (prefers-reduced-motion:reduce){.tier-gold,.tier-silver{animation:none}}
