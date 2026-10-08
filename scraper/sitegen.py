@@ -327,7 +327,8 @@ class Site:
         wd = p.get("wind") or {}
         wt = coursest.wind_type(wd.get("tail") or 0, wd.get("speed")) if wd.get("type") else None
         hk = coursest.wave_key(p.get("wave_cm"))
-        cols = [("a", "全体"), ("v" + jcd, "この場"), (("w" + wt) if wt else None, wt if wt else "風（展示後）"),
+        wl = {"弱い": "風2m以下"}.get(wt, wt) if wt else "風（展示後）"
+        cols = [("a", "全体"), ("v" + jcd, "この場"), (("w" + wt) if wt else None, wl),
                 (hk, f"波{coursest.WAVE[int(hk[1])]}" if hk else "波（展示後）")]
 
         def cell(t, c, k):
@@ -337,21 +338,16 @@ class Site:
             av = (A.get(str(c)) or {}).get(k) or (A.get(str(c)) or {}).get("a")
             w, base = v[1] / v[0], (av[1] / av[0] if av and av[0] else 0)
             wc = "dgood" if v[0] >= 10 and base and w >= base * 1.3 + 0.01 else ("dbad" if v[0] >= 10 and base and w <= base * 0.7 - 0.01 else "")
-            st = ""
-            if v[4] >= 3:
-                sv = v[3] / v[4] / 100
-                sb = av[3] / av[4] / 100 if av and av[4] else None
-                sc = "dgood" if sb and sv <= sb - 0.02 else ("dbad" if sb and sv >= sb + 0.02 else "sub")
-                st = f'<small class="{sc}">ST{sv:.2f}</small>'.replace("ST0.", "ST.")
-            return f'<td class="r num"><b class="{wc}">{w * 100:.0f}%</b><small class="sub">/{v[0]}</small><br>{st}</td>'
+            st = f"ST{v[3] / v[4] / 100:.2f}".replace("ST0.", "ST.") if v[4] >= 3 else ""
+            return f'<td class="r num"><b class="{wc}">{w * 100:.0f}%</b><br><small class="sub">{st}<br>{v[0]}走</small></td>'
         rows = []
         for b in sorted(boats, key=lambda b: b["course"]):
             rows.append(f'<tr><td>{bt(b["frame"])} {e(b["name"])}<br><small class="sub">{b["course"]}コース</small></td>'
                         + "".join(cell(b["toban"], b["course"], k) for k, _ in cols) + "</tr>")
-        head = "".join(f'<th class="r">{e(lab)}</th>' for _, lab in cols).replace("波", "波<br>").replace("風（", "風<br>（")
-        return (f'<section class="panel"><h2>このコースの成績 <small>直近2年・1着率/走数と平均ST</small></h2>'
+        head = "".join(f'<th class="r">{e(lab)}</th>' for _, lab in cols)
+        return (f'<section class="panel"><h2>このコースの成績 <small>直近2年・上から1着率・平均ST・走数</small></h2>'
                 f'<div class="tbl-wrap"><table class="cond"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                f'<p class="sub">今日のコース（展示後は進入）での成績を、全体・この場・今日の風・今日の波高に分けたもの。緑は同じコース・同じ条件の全選手の平均よりはっきり良い（1着率が1.3倍以上・STが0.02秒以上早い）、赤は悪い。風は2m以下を「弱い」にまとめています。5走未満は「-」。</p></section>')
+                f'<p class="sub">今日のコース（展示後は進入）での成績を、全体・この場・今日の風・今日の波高に分けたもの。1着率の緑は同じコース・同じ条件の全選手の平均よりはっきり良い（1.3倍以上）、赤は悪い（0.7倍以下）。風は2m以下を「風2m以下」にまとめ、それより強いときは追い風・向かい風・横風に分けています。5走未満は「-」。</p></section>')
 
     def ex_tab(self, d, jcd, rno, race, p):
         """展示タブ：展示タイム（今節・いつもの1位率）・チルト・スタート展示・展示の数字"""
@@ -1737,7 +1733,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or '<li class="sub">出走表は締切2時間前ごろに表示</li>'
             out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a><small>{e(race.get("race_name", ""))}</small></header>'
                        f'<div class="rc-st"><span class="st">{st}</span><span class="marks">{"".join(marks)}</span></div><ul class="names">{names}</ul>'
-                       f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
+                       f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#tenji">展示</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
         return "".join(out)
 
     def venue_pages(self):

@@ -409,7 +409,7 @@ details.more{margin-top:4px}details.more summary{font-size:12px;color:var(--ink2
 .rcard2 .names{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
 .rcard2 .names li{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0}.rcard2 .names li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rcard2 .names li small{color:var(--ink2);font-size:11px}.rcard2 .names .bt{width:20px;height:20px;font-size:12px;flex:none}
-.rcard2 .go{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rcard2 .go a{text-align:center;text-decoration:none;font-size:13px;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px;color:var(--ink)}
+.rcard2 .go{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.rcard2 .go a{text-align:center;text-decoration:none;font-size:13px;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px;color:var(--ink)}
 .rcard2 .go a:first-child{background:var(--accent);border-color:var(--accent);color:#fff}
 .rcard2 .go.fin a:first-child{background:none;border-color:var(--line);color:var(--ink)}.rcard2 .go.fin a:last-child{background:var(--accent);border-color:var(--accent);color:#fff}
 /* ===== すっきり版：ベタ塗りをやめて、線と薄い色だけにする ===== */
@@ -530,4 +530,4 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 .fav-ul li{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .fav-ul a b{color:var(--warn)}
 .chip small{font-weight:500;opacity:.8}
-.cond th,.cond td{padding-left:4px;padding-right:4px}
+.cond th,.cond td{padding-left:4px;padding-right:4px}.cond small{line-height:1.25}
