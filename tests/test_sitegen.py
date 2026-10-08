@@ -186,3 +186,19 @@ def test_grade_page(tmp_path):
     s.grade_page()
     assert "今日のG1 予想" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
     assert "今日の重賞" in s.grade_banner(sitegen.Page("index.html"))
+
+
+def test_buffs_and_ai_block(tmp_path):
+    parts = {"展示タイム": 0.4, "モーター": 0.12, "選手のコース別成績": 0.2, "当地勝率": 0.09, "平均ST": -0.2}
+    bf = sitegen.buffs(parts)
+    assert bf[0] == ("展示", 2) and ("モーター", 1) in bf and ("スタート", -1) in bf
+    s, files = _site(tmp_path)
+    page = files["race/20260925/kiryu-12.html"]
+    assert "AIの見立て" in page and 'class="ai1"' in page
+    p = {"stage": "直前", "boats": [{"frame": 1, "course": 1, "p_win": 0.5, "p_top2": 0.7, "p_top3": 0.8, "parts": parts}]}
+    html = s.ai_block(p, {1: "山田 太郎"})
+    assert "金バフ・全部のせ" in html and "tier-gold" in html
+    assert sitegen.buff_tier([("モーター", 1), ("展示", 2)]) == "silver" and sitegen.buff_tier([("展示", 2)]) is None
+    from scraper import share
+    t = share.buff_all([("桐生", 1, "10:00", 1, 1, ["展示", "モーター", "得意コース", "得意場"])], "u")
+    assert share.weight(t) <= 280 and "1号艇" in t

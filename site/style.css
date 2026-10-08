@@ -533,3 +533,20 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 .cond th,.cond td{padding-left:4px;padding-right:4px}.cond small{line-height:1.25}
 .share textarea{width:100%;box-sizing:border-box;resize:vertical;background:var(--bg);color:inherit;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:14px;line-height:1.6}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.ai-rows{display:grid;gap:8px}.ai-r{display:grid;grid-template-columns:76px 1fr 44px;gap:4px 8px;align-items:center}
+.ai-n{display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;overflow:hidden}.ai-t{position:relative;height:18px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.ai-t i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}.ai1{background:var(--accent)}.ai2{background:color-mix(in srgb,var(--accent) 55%,transparent)}.ai3{background:color-mix(in srgb,var(--accent) 25%,transparent)}
+.ai-v{text-align:right;line-height:1.1}.ai-v small{display:block;font-size:10px;color:var(--ink2)}.ai-b{grid-column:2/4;display:flex;flex-wrap:wrap;gap:4px}
+.ai-lg{display:flex;gap:12px;font-size:12px;color:var(--ink2)}.ai-lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+.buff{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}.buff.up{color:#3BD17A}.buff.dn{color:var(--ink2)}
+.buffall{border:2px solid var(--accent);border-radius:12px;padding:10px 12px;display:grid;gap:6px;background:color-mix(in srgb,var(--accent) 10%,transparent)}.buffall b{color:var(--accent)}.buffall div{display:flex;flex-wrap:wrap;gap:4px}
+.cfc.bfc{height:auto;min-height:0;display:grid;gap:6px}
+/* バフの金・銀（光る枠）。動きを減らす設定の人には光らせない */
+.tier-gold{--tc:#F5C542;border:2px solid var(--tc)!important;background:linear-gradient(110deg,color-mix(in srgb,var(--tc) 8%,transparent) 35%,color-mix(in srgb,var(--tc) 28%,transparent) 50%,color-mix(in srgb,var(--tc) 8%,transparent) 65%) 0 0/250% 100%;animation:tshine 2.6s linear infinite,tglow 1.6s ease-in-out infinite alternate}
+.tier-silver{--tc:#C9D3DE;border:2px solid var(--tc)!important;background:linear-gradient(110deg,color-mix(in srgb,var(--tc) 5%,transparent) 35%,color-mix(in srgb,var(--tc) 18%,transparent) 50%,color-mix(in srgb,var(--tc) 5%,transparent) 65%) 0 0/250% 100%;animation:tshine 3.4s linear infinite}
+.tier-gold .tl,.tier-silver .tl{color:var(--tc);font-weight:900;letter-spacing:.04em}
+.tier-tag{display:inline-block;font-size:11px;font-weight:900;padding:1px 8px;border-radius:999px;color:#111;background:var(--tc)}
+@keyframes tshine{from{background-position:100% 0}to{background-position:-150% 0}}
+@keyframes tglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc) 0%,transparent)}to{box-shadow:0 0 18px 2px color-mix(in srgb,var(--tc) 55%,transparent)}}
+@media (prefers-reduced-motion:reduce){.tier-gold,.tier-silver{animation:none}}
+.ai-r.tier-gold,.ai-r.tier-silver{padding:6px 8px;border-radius:10px;margin:0 -8px}.ai-b .tier-tag{margin-right:2px}
