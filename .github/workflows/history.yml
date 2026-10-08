@@ -32,10 +32,14 @@ jobs:
         run: python -m scraper.overperf
       - name: F持ち選手のF後スタート集計
         run: python -m scraper.fstart
+      - name: 風向アイコンと方角の対応表（場ごと）
+        run: python -m scraper.windmap
+      - name: 選手のコース別・条件別成績（直近2年。出走表の「このコースの成績」）
+        run: python -m scraper.coursest
       - name: 前日までの確定オッズと直前情報を保存
         run: python -m scraper.odds_backfill --days 3 --max 3000
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add history scraper/course_stats.json.gz scraper/exstats.json.gz scraper/overperf.json.gz scraper/fstart.json.gz scraper/motor.json.gz
+          git add history scraper/course_stats.json.gz scraper/exstats.json.gz scraper/overperf.json.gz scraper/fstart.json.gz scraper/motor.json.gz scraper/windmap.json scraper/coursest.json.gz
           git diff --cached --quiet || (git commit -q -m "course stats $(TZ=Asia/Tokyo date +%m/%d)" && (for i in 1 2 3 4; do git pull -q --rebase -X theirs && git push -q && exit 0; git rebase --abort 2>/dev/null; sleep 15; done; exit 1))

@@ -137,5 +137,22 @@ def test_ex_counts_and_meet(tmp_path, monkeypatch):
     assert m and m[1] == 2 and abs(m[0] - 6.85) < 1e-9
     assert s.meet_ex("20260925", "01", t, 1)[1] == 2   # 当日の展示は、そのレースより前の分だけ
     s.exs = {t: [100, 31]}
-    assert "1位31%" in s.ex_sub("20260925", "01", t, 12) and "今節6.85" in s.ex_sub("20260925", "01", t, 12)
-    assert "「1位」は過去2年" in files["race/20260925/kiryu-12.html"]
+    race = json.loads((sitegen.DATA / "races" / "20260925" / "0112.json").read_text(encoding="utf-8"))
+    tab = s.ex_tab("20260925", "01", 12, race, race["prediction"])
+    assert "31%" in tab and "6.85" in tab and "スタート展示" in tab
+    page = files["race/20260925/kiryu-12.html"]
+    assert 'data-t="tenji"' in page and "このコースの成績" in page
+
+
+def test_coursest():
+    from scraper import coursest
+    wm = {"01": {"offset": 0}}
+    # 対応表のずれ0：東（アイコン5＝右向き）は追い風、西は向かい風、2m以下は弱い
+    assert coursest.hist_wind("01", "東", 5, wm) == "追い風" and coursest.hist_wind("01", "西", 5, wm) == "向かい風"
+    assert coursest.hist_wind("01", "北", 5, wm) == "横風" and coursest.hist_wind("02", "東", 1, wm) == "弱い"
+    assert coursest.hist_wind("02", "東", 5, wm) is None
+    E = [[f, f"40{f}0", f, 10 + f, "F" if f == 6 else "", f, 670, None] for f in range(1, 7)]
+    j = coursest.build([["20260920", "01", 1, "逃げ", "東", 5, 4, 1, "", 0, 0, E]], wm)
+    assert j["r"]["4010"]["1"]["w追い風"] == [1, 1, 1, 11, 1] and j["r"]["4010"]["1"]["h1"][0] == 1
+    assert j["r"]["4060"]["6"]["a"] == [1, 0, 0, 0, 0]          # F は ST に入れない
+    assert j["all"]["1"]["v01"][0] == 1
