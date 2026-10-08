@@ -84,6 +84,15 @@ def main():
         rep["by_buff"][name] = s
     s = summarize([r for r in rows if r[0] >= 3 and r[1] >= 1])
     rep["3plus_with_strong"] = s
+    # 金・銀の候補（金＝▲4つ以上、銀＝金でなくて条件を満たす艇）
+    cand = {"gold": lambda r: r[0] >= 4,
+            "silver:モーター+展示": lambda r: r[0] < 4 and {"モーター", "展示"} <= set(r[2]),
+            "silver:モーター+得意コース": lambda r: r[0] < 4 and {"モーター", "得意コース"} <= set(r[2]),
+            "silver:モーター+(展示か得意コース)": lambda r: r[0] < 4 and "モーター" in r[2] and ({"展示", "得意コース"} & set(r[2])),
+            "silver:▲3つ": lambda r: r[0] == 3}
+    half = len(rows) // 2      # 前半・後半に分けても同じ向きか
+    rep["tiers"] = {k: {"all": summarize([r for r in rows if f(r)]), "first": summarize([r for r in rows[:half] if f(r)]),
+                        "second": summarize([r for r in rows[half:] if f(r)])} for k, f in cand.items()}
     combos = defaultdict(list)
     for r in rows:
         if r[0] >= 2:
