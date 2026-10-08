@@ -923,7 +923,7 @@ class Site:
         if inp and inp.get("starts"):
             loss = "".join(f'<tr><td>{k}</td><td class="r num">{pct(inp["loss"].get(k, 0))}</td><td class="r num sub">{pct(inp["nat_loss"].get(k, 0))}</td></tr>' for k in ("差され", "捲られ", "捲り差され", "その他"))
             loss = f'<section class="panel"><h2>1コースの負け方 <small>直近1年・{inp["starts"]}走・逃げ率 {pct(inp["escape"])}（全国 {pct(inp["nat_escape"])}）</small></h2><div class="tbl-wrap"><table><thead><tr><th></th><th class="r">この選手</th><th class="r">全国</th></tr></thead><tbody>{loss}</tbody></table></div></section>'
-        title = f"{v}{rno}R 予想・オッズ・展示｜{jdate(d)}｜{SITE_NAME}"
+        title = f"{v}{rno}R 予想（{jdate(d)}）競艇AI予想・オッズ・展示｜{SITE_NAME}"
         desc = f"{jdate(d)}のボートレース{v} {rno}R（締切{race.get('deadline', '')}）の推奨買い目、合成オッズ、展示タイム、選手のコース別成績、結果。"
         vp = Page(page.path)
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
@@ -1164,6 +1164,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section class="panel fav-today" id="fav-today" hidden></section>
+{self.grade_banner(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
@@ -1622,7 +1623,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section class="panel"><h2>最近のレース <small>全コース</small></h2><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">枠</th><th class="r">コース</th><th class="r">着</th><th>決まり手</th></tr></thead><tbody>{recent or '<tr><td colspan="6" class="empty">直近のデータなし</td></tr>'}</tbody></table></div></section>
 <p class="sub">データ：BOAT RACE公式の競走成績（直近1年）・期別成績。</p>"""
             desc = f"ボートレーサー{name}（{t}・{info.get('branch', '')}支部）のコース別1着率・連対率・決まり手、インでの負け方、最近の成績。"
-            self.put(page.path, page.render(f"{name}（{t}）コース別成績・決まり手｜{SITE_NAME}", desc, body, [("racer/index.html", "選手・モーター"), ("", name)]))
+            self.put(page.path, page.render(f"{name}（{t}）ボートレーサーのコース別成績・決まり手・当地成績｜{SITE_NAME}", desc, body, [("racer/index.html", "選手・モーター"), ("", name)]))
             listing.append(t)
         self.fav_today(today)
         self.racer_index(listing, today)
@@ -1801,7 +1802,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
-            self.put(page.path, page.render(f"{v['name']}ボートレース場の特徴・コース別成績・決まり手｜{SITE_NAME}",
+            self.put(page.path, page.render(f"{v['name']}競艇場（ボートレース{v['name']}）の特徴・コース別1着率・決まり手｜{SITE_NAME}",
                                             f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])]))
 
     def motor_pages(self):
@@ -1904,6 +1905,46 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return "\n".join(out)
 
     # ------------------------------------------------------------ ツール・解説・JSページ
+    GRADE_ORDER = ("SG", "PG1", "G1", "G2", "G3")
+
+    def graded(self):
+        return sorted((v for v in self.idx.get("venues", []) if v.get("grade") in self.GRADE_ORDER and not v.get("cancelled")),
+                      key=lambda v: self.GRADE_ORDER.index(v["grade"]))
+
+    def grade_banner(self, page):
+        vs = self.graded()
+        if not vs:
+            return ""
+        items = "".join(f'<li><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <span class="sub">{e(v.get("title", "")[:28])}・{e(v.get("day", ""))}</span></li>' for v in vs)
+        return (f'<a class="panel" href="{page.u("grade.html")}" style="display:grid;gap:6px;text-decoration:none;color:inherit">'
+                f'<h2 style="margin:0">今日の重賞 <small>重賞レースだけの予想まとめ →</small></h2><ul class="comments" style="margin:0">{items}</ul></a>')
+
+    def grade_page(self):
+        """今日の重賞（SG・PG1・G1・G2・G3）だけの予想まとめ。重賞がない日も「次の重賞はなし」と出す"""
+        page = Page("grade.html")
+        d = self.idx.get("date", self.now.strftime("%Y%m%d"))
+        vs = self.graded()
+        secs = []
+        for v in vs:
+            rows = []
+            for r in v["races"]:
+                href = self.race_link(page, d, v["jcd"], r["rno"])
+                res = (f'{combo(r["result"])} <span class="num">{yen(r.get("payout"))}</span>' + (' <span class="pill hit">的中</span>' if r.get("hit") else "")) if r.get("result") else ""
+                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(r.get("confidence", ""))}</td>'
+                            f'<td>{combo(r["honmei"][0]) if r.get("honmei") else "-"}</td><td>{res}</td></tr>')
+            secs.append(f'<section class="panel" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
+                        f'<div class="tbl-wrap"><table><thead><tr><th>R</th><th>AIの見込み</th><th>本線</th><th>結果</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                        f'<p style="margin:0"><a href="{page.u("venue/" + SLUG[v["jcd"]] + ".html")}">{e(v["name"])}の水面の特徴とコース別成績 →</a></p></section>')
+        names = "・".join(dict.fromkeys(v["grade"] for v in vs))
+        head = f"今日の{names} 予想" if vs else "今日の重賞（SG・G1）予想"
+        body = (f'<h1>{e(head)} <small class="sub" style="font-size:14px">{jdate(d)}</small></h1>'
+                f'<p>SG・G1 などの重賞レースだけを集めた、艇ろぐのAI予想です。本線はAIの確率がいちばん高い3連単。レース名を押すと、出走表・展示・オッズを見られます。</p>'
+                + ("".join(secs) or '<section class="panel"><p style="margin:0">今日は重賞の開催がありません。<a href="index.html">全場の予想はこちら →</a></p></section>')
+                + '<p class="sub">予想は的中を保証するものではありません。20歳未満の方は舟券を購入できません。</p>')
+        title = (f"{head}（{jdate(d)}）{vs[0]['name']} {vs[0].get('title', '')[:20]}｜{SITE_NAME}" if vs else f"今日の重賞（SG・G1）競艇予想｜{SITE_NAME}")
+        desc = (f"{jdate(d)}のボートレース重賞（{names}）のAI予想。" + "・".join(f"{v['name']}「{v.get('title', '')[:24]}」" for v in vs[:3]) + "の全レースの本線と結果。") if vs else "ボートレースのSG・G1など重賞レースのAI予想まとめ。"
+        self.put(page.path, page.render(title, desc, body, [("", "重賞の予想")]))
+
     def share_card(self, title, text, note=""):
         return (f'<section class="panel share" style="display:grid;gap:8px"><h2>{e(title)} <small>{share.weight(text)}/280</small></h2>'
                 + (f'<p class="sub" style="margin:0">{e(note)}</p>' if note else "")
@@ -2055,7 +2096,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
 
     def sitemap(self):
-        urls = [p for p in self.files if p.endswith(".html") and p != "404.html" and not p.endswith("-st.html")]
+        urls = [p for p in self.files if p.endswith(".html") and p not in ("404.html", "share.html") and not p.endswith("-st.html")]
         today = self.now.strftime("%Y-%m-%d")
         body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{today}</lastmod></url>" for p in sorted(urls))
         self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
@@ -2074,6 +2115,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.st_pages()
         self.static_pages()
         self.share_page()
+        self.grade_page()
         self.weekly_page()
         self.not_found()
         self.sitemap()

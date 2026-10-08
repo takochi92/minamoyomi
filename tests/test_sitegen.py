@@ -50,7 +50,7 @@ def test_seo_basics(tmp_path):
     assert "20歳未満" in page and "保証するものではありません" in page
     assert "山下 流心" in page
     sm = files["sitemap.xml"]
-    assert sm.count("<url>") == len([p for p in files if p.endswith(".html") and p != "404.html" and not p.endswith("-st.html")])
+    assert sm.count("<url>") == len([p for p in files if p.endswith(".html") and p not in ("404.html", "share.html") and not p.endswith("-st.html")])
     assert "Sitemap:" in files["robots.txt"]
 
 
@@ -177,3 +177,12 @@ def test_share_texts(tmp_path):
     assert ws[0][0] == "20260928" and ws[0][2]["races"] == 10 and len(ws) == 1 and share.weight(share.week_text(*ws[0], "u")) <= 280
     s, files = _site(tmp_path)
     assert "share.html" in files and "weekly.html" in files and "twitter.com/intent/tweet" in files["race/20260925/kiryu-12.html"]
+
+
+def test_grade_page(tmp_path):
+    s, files = _site(tmp_path)
+    assert "grade.html" in files and "今日は重賞の開催がありません" in files["grade.html"]
+    s.idx["venues"][0]["grade"] = "G1"
+    s.grade_page()
+    assert "今日のG1 予想" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
+    assert "今日の重賞" in s.grade_banner(sitegen.Page("index.html"))
