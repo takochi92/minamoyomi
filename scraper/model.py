@@ -21,7 +21,7 @@ M = 20        # 選手成績を全国平均に寄せる強さ（出走数換算�
 MV = 50       # 場成績を全国平均に寄せる強さ
 FEATS = ["base_w", "base_2", "base_3", "rc_win", "rc_place", "mu", "nat", "loc", "A1", "A2", "B2",
          "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out", "rc_in",
-         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2", "vw_in", "vw_out", "rv_top3", "rv_in"]
+         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2", "vw_in", "vw_out", "rv_top3", "rv_in", "motor_adj"]
 FEATURE_LABEL = {
     "base_w": "場のコース別1着率", "rc_win": "選手のコース別成績", "rc_place": "選手のコース別連対", "mu": "インの負け方×攻め手",
     "nat": "全国勝率", "loc": "当地勝率", "A1": "級別", "A2": "級別", "B2": "級別", "motor": "モーター", "boat": "ボート",
@@ -30,6 +30,7 @@ FEATURE_LABEL = {
     "st_wall": "壁よりスタートが早い", "wall_f": "壁がF持ち", "wall_beat": "壁の叩かれやすさ", "ex_wall": "展示で壁より速い",
     "ex_usual": "展示のいつもとの差", "noko": "逃げ残し", "in2": "インが勝つときの2着のくせ",
     "vw_in": "場×風向き", "vw_out": "場×風向き", "rv_top3": "選手のこの場の得意・苦手", "rv_in": "選手のこの場でのイン",
+    "motor_adj": "モーター（乗り手を差し引いた評価）",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"
@@ -225,7 +226,7 @@ def national_rates(S, c):
 
 
 def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict], wind_dir=None) -> np.ndarray:
-    """boats: 枠順に6艇 {frame, toban, course, ex(1/100秒 or None), cls, nat, loc, motor, boat, f_recent}"""
+    """boats: 枠順に6艇 {frame, toban, course, ex(1/100秒 or None), cls, nat, loc, motor, boat, f_recent, motor_adj}"""
     X = np.zeros((6, len(FEATS)))
     fi = {n: i for i, n in enumerate(FEATS)}
     p = {c: national_rates(S, c) for c in range(1, 7)}
@@ -283,6 +284,7 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict], wind_dir=N
         X[i, fi["B2"]] = b["cls"] == "B2"
         X[i, fi["motor"]] = mot[i]
         X[i, fi["boat"]] = bt[i]
+        X[i, fi["motor_adj"]] = np.clip((b.get("motor_adj") or 0) * 10, -2, 2)
         if has_ex:
             X[i, fi["ex_dev"]] = np.clip((exm - b["ex"]) / 5, -3, 3)
             X[i, fi["ex_top"]] = b["ex"] == exmin
