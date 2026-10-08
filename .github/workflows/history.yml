@@ -38,6 +38,8 @@ jobs:
         run: python -m scraper.coursest
       - name: 前日までの確定オッズと直前情報を保存
         run: python -m scraper.odds_backfill --days 3 --max 3000
+      - name: 展示・機力の研究入力と結果を月別に保存
+        run: python -m scraper.research_snapshot
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

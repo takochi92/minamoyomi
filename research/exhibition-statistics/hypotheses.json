@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "player_hypotheses": [
+    {
+      "toban": "4294",
+      "name": "古賀 繁輝",
+      "status": "user_observation_unvalidated",
+      "description": "3・4コースからスリット後にまくりへ寄せて攻め、内側艇の抵抗で外側艇に差し・まくり差しの展開が向くことがあるという観察",
+      "identity_confirmed_by_user": true,
+      "not_inferred_from_results": "まくりの試行、抵抗、ツケマイの実行、意図は結果だけでは判定しない"
+    }
+  ]
+}

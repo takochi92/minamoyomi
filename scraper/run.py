@@ -288,6 +288,12 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             if wo:
                 race["win_odds"] = {"at": now.strftime("%H:%M"), "v": [None if x != x else x for x in wo]}
 
+    # 取得中に締切を越える場合があるため、実際の取得完了時刻で判定する。
+    # 研究用入力だけを固定し、締切後・結果判明後には更新しない。
+    from .research_snapshot import capture
+    if now < dl and capture(race, datetime.now(JST), dl):
+        changed = True
+
     # 3) 結果
     if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:
         res = parse.parse_result(f.result(jcd, rno, date))
