@@ -50,6 +50,19 @@ BUFF = {"展示": (["展示タイム", "展示のいつもとの差", "展示で
         "得意場": (["当地勝率", "選手のこの場の得意・苦手", "選手のこの場でのイン"], 0.082, 0.123),
         "スタート": (["平均ST", "壁よりスタートが早い", "F持ち", "壁がF持ち", "壁の叩かれやすさ"], 0.165, 0.263)}
 BUFF_ALL = 4
+# 金・銀（tools/buff_eval.py、確定オッズのある 2025/9/25〜2026/10/7 の 11,206レース）
+#   金：▲4つ以上。1着 42%（▲0は11%）、オッズの見込みの1.08倍（はっきりした差ではない）
+#   銀：▲モーターと▲展示が両方（金でないとき）。1着 24.0%、オッズの見込み 20.7% の1.16倍（z=3.3、偶然では出にくい差）
+BUFF_STATS = {"gold": (0.42, 0.389, 421), "silver": (0.240, 0.207, 1235), "none": 0.113}
+
+
+def buff_tier(bf) -> str | None:
+    up = {k for k, lv in bf if lv > 0}
+    if len(up) >= BUFF_ALL:
+        return "gold"
+    if {"モーター", "展示"} <= up:
+        return "silver"
+    return None
 
 
 def buffs(parts: dict) -> list[tuple[str, int]]:
@@ -356,20 +369,23 @@ class Site:
             bf = buffs(b.get("parts"))
             if sum(1 for _, lv in bf if lv > 0) >= BUFF_ALL:
                 full.append((b, bf))
-            rows.append(f'<div class="ai-r"><div class="ai-n">{bt(b["frame"])}<span>{e(names.get(b["frame"], "").split(" ")[0])}</span></div>'
+            tr = buff_tier(bf)
+            tag = {"gold": '<span class="tier-tag">金バフ</span>', "silver": '<span class="tier-tag">銀バフ</span>'}.get(tr, "")
+            rows.append(f'<div class="ai-r{" tier-" + tr if tr else ""}"><div class="ai-n">{bt(b["frame"])}<span>{e(names.get(b["frame"], "").split(" ")[0])}</span></div>'
                         f'<div class="ai-t" title="1着{w1}%・2着以内{w2}%・3着以内{w3}%"><i class="ai3" style="width:{w3}%"></i><i class="ai2" style="width:{w2}%"></i><i class="ai1" style="width:{w1}%"></i></div>'
                         f'<div class="ai-v num"><b>{w1}%</b></div>'
-                        + (f'<div class="ai-b">{self.buff_chips(bf)}</div>' if bf else "") + "</div>")
+                        + (f'<div class="ai-b">{tag}{self.buff_chips(bf)}</div>' if bf else "") + "</div>")
         top = ""
         for b, bf in full:
-            top += (f'<div class="buffall"><p style="margin:0"><b>バフ全部のせ</b>　{bt(b["frame"])} {e(names.get(b["frame"], ""))}（{b["course"]}コース）</p>'
+            top += (f'<div class="buffall tier-gold"><p style="margin:0"><b class="tl">金バフ・全部のせ</b><br>{bt(b["frame"])} {e(names.get(b["frame"], ""))}（{b["course"]}コース）</p>'
                     f'<div>{self.buff_chips([x for x in bf if x[1] > 0])}</div><small>AIの見込み：1着 {b["p_win"] * 100:.0f}%・3着以内 {(b.get("p_top3") or 0) * 100:.0f}%</small></div>')
         return (f'<section class="panel" style="display:grid;gap:10px"><h2>AIの見立て <small>{e(p.get("stage", ""))}予想</small></h2>{top}'
                 f'<div class="ai-lg"><span><i class="ai1"></i>1着</span><span><i class="ai2"></i>2着以内</span><span><i class="ai3"></i>3着以内</span></div>'
                 f'<div class="ai-rows">{"".join(rows)}</div>'
                 '<p class="sub">棒の濃い部分が1着、だんだんうすくなって2着以内・3着以内の確率（右の数字は1着。棒をタップすると全部の数字）。▲は、AIがその艇を強く見ている理由（展示・モーター・得意コース・得意場・スタート）。'
-                '▲▲はとくに強く、▼は弱み。4つ以上そろうと「バフ全部のせ」（20レースに1回ほど）。過去1か月では、▲が3つ以上の艇の1着は42%（AIの見込み37%）、4つ以上は41%（45%）で、'
-                'バフはもうAIの確率に入っています。確率がさらに上がるわけではありません。</p></section>')
+                '▲▲はとくに強く、▼は弱み。<b>金バフ</b>は▲が4つ以上（全部のせ）、<b>銀バフ</b>は▲モーターと▲展示がそろったとき。'
+                f'過去1年（確定オッズのある{11206:,}レース）では、▲なしの艇の1着が11%に対し、金バフは42%、銀バフは24%。オッズの見込みと比べると、金バフは1.08倍（はっきりした差ではない）、'
+                '銀バフは1.16倍で、偶然では出にくい差でした。ただし控除率があるので、これだけで儲かるわけではありません。</p></section>')
 
     def cond_block(self, jcd, p, boats):
         """各艇の「今日のコース」での直近2年の成績を、全体・この場・今日の風・今日の波に分けて出す"""
@@ -1965,8 +1981,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {}) or {}
                 for b in (race.get("prediction") or {}).get("boats", []):
                     bf = [x for x in buffs(b.get("parts")) if x[1] > 0]
-                    if len(bf) >= BUFF_ALL:
-                        out.append((r.get("deadline", ""), v, r, {**b, "name": b.get("name", "")}, bf))
+                    tr = buff_tier(bf)
+                    if tr:
+                        out.append((r.get("deadline", ""), v, r, {**b, "name": b.get("name", "")}, bf, tr))
         out.sort(key=lambda x: x[0])
         self._ball = out
         return out
@@ -1974,12 +1991,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     def buff_all_block(self, page):
         d = self.idx.get("date")
         items = [x for x in self.buff_all_today() if not x[2].get("result")]
+        items.sort(key=lambda x: (x[5] != "gold", x[0]))
         if not items:
             return ""
-        li = "".join(f'<a class="cfc bfc" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{dl}締切</span></div>'
-                     f'<div class="row"><span>{bt(b["frame"])} {e(b["name"].split(" ")[0])}</span><span class="num">1着 {b["p_win"] * 100:.0f}%</span></div><div style="display:flex;flex-wrap:wrap;gap:4px">{self.buff_chips(bf)}</div></a>'
-                     for dl, v, r, b, bf in items)
-        return (f'<section style="display:grid;gap:10px"><h2>バフ全部のせ <small>展示・モーター・得意コース・得意場・スタートのうち4つ以上がそろった艇</small></h2>'
+        li = "".join(f'<a class="cfc bfc tier-{tr}" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{dl}締切</span></div>'
+                     f'<div class="row"><span>{bt(b["frame"])} {e(b["name"].split(" ")[0])} <span class="tier-tag">{"金バフ" if tr == "gold" else "銀バフ"}</span></span><span class="num">1着 {b["p_win"] * 100:.0f}%</span></div><div style="display:flex;flex-wrap:wrap;gap:4px">{self.buff_chips(bf)}</div></a>'
+                     for dl, v, r, b, bf, tr in items)
+        return (f'<section style="display:grid;gap:10px"><h2>今日の金・銀バフ <small>金＝強みが4つ以上（全部のせ）・銀＝モーターと展示がそろった艇</small></h2>'
                 f'<div class="strip">{li}</div></section>')
 
     def grade_banner(self, page):
@@ -2041,9 +2059,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             cards.append(self.share_card(f"自信あり {v['name']}{r['rno']}R（締切{r['deadline']}）",
                                          share.confident(v["name"], r["rno"], r["deadline"], rc["n"], float(rc["comp"]), f"{SITE_URL}/race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html"),
                                          "レースのリンクを貼ると、本線と1着の本命が入った画像が出ます。"))
-        ba = [x for x in self.buff_all_today() if not x[2].get("result")]
+        ba = [x for x in self.buff_all_today() if not x[2].get("result") and x[5] == "gold"]
         if ba:
-            cards.append(self.share_card("バフ全部のせ", share.buff_all([(v["name"], r["rno"], dl, b["frame"], b["course"], [k for k, _ in bf]) for dl, v, r, b, bf in ba], SITE_URL + "/"),
+            cards.append(self.share_card("バフ全部のせ（金バフ）", share.buff_all([(v["name"], r["rno"], dl, b["frame"], b["course"], [k for k, _ in bf]) for dl, v, r, b, bf, _ in ba], SITE_URL + "/"),
                                          "4つ以上の強みがそろった艇。締切前のものだけ。"))
         hist = load_json(DATA / "history.json", {}) or {}
         if hist.get(d, {}).get("races"):
