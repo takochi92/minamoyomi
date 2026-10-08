@@ -82,7 +82,7 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  合成2.5倍未満（安い目ばかり）の596レースも3点で的中40%・回収85%だったので、オッズに関係なく3点で出す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 29
+PRED_VERSION = 30
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -175,10 +175,15 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
 
     ex = {f: bb.get(f, {}).get("exhibit_time") for f in frames}
     has_ex = all(ex.values())
+    try:
+        from . import motor as _motor
+        madj = {} if sum(1 for b in boats if not b.get("motor_2")) >= 5 else _motor.load().get(jcd, {})   # 入れ替え直後は使わない
+    except Exception:
+        madj = {}
     fb = [{"frame": b["frame"], "toban": b.get("toban", ""), "course": course_of[b["frame"]],
            "ex": round(ex[b["frame"]] * 100) if has_ex else None, "cls": b.get("class", ""),
            "nat": b.get("nat_win"), "loc": b.get("loc_win"), "motor": b.get("motor_2"), "boat": b.get("boat_2"),
-           "f_recent": b.get("f", 0)} for b in boats]
+           "f_recent": b.get("f", 0), "motor_adj": (madj.get(str(b.get("motor_no"))) or {}).get("adj")} for b in boats]
     try:
         from .windmap import to_compass
         wdir = to_compass(jcd, weather.get("wind_dir"))

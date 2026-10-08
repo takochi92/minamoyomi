@@ -151,6 +151,10 @@ def main():
         except Exception:
             pass
     data = build(races, files)
+    from .motoradj import current
+    for j, ms in current(races).items():       # 乗り手を差し引いた評価（予想で使う）
+        for mno, v in ms.items():
+            data.setdefault(j, {}).setdefault(mno, {})["adj"] = v
     with gzip.open(OUT, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print(f"motor: {sum(len(v) for v in data.values())} motors")
