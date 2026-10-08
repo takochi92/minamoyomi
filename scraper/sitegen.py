@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from . import fstart, overperf
-from .history import load_all
+from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
 
@@ -176,6 +176,7 @@ class Site:
         self.idx = load_json(DATA / "index.json", {"date": self.now.strftime("%Y%m%d"), "venues": []})
         self.report = load_json(Path(__file__).parent / "model_report.json", {})
         self.op = (overperf.load() or {}).get("oe", {})
+        self.exs = load_exstats()
 
     def put(self, path, text):
         self.files[path] = text
@@ -280,6 +281,53 @@ class Site:
                             acc.setdefault(it, []).append(v[i])
         cache[key] = {k: (sum(v) / len(v), len(v)) for k, v in acc.items() if len(v) >= 12}
         return cache[key]
+
+    def meet_ex(self, d, jcd, toban, rno):
+        """今節（その場で日をあけずに続いている開催）のこれまでの展示タイム平均と走数。このレースより前の分だけ"""
+        if not d or not toban:
+            return None
+        if getattr(self, "_mx", None) is None:
+            self._mx = defaultdict(list)
+            since = (self.now - timedelta(days=RACE_KEEP_DAYS + 8)).strftime("%Y%m%d")
+            for r in load_all(since):
+                for x in r[11]:
+                    if len(x) > 6 and x[6]:
+                        self._mx[(x[1], r[1])].append((r[0], x[6] / 100))
+        tk = ("today", d, jcd)
+        if tk not in self._mx:
+            for p in (DATA / "races" / d).glob(f"{jcd}*.json"):
+                r = load_json(p, {}) or {}
+                tb = {b["frame"]: b.get("toban") for b in (r.get("racelist") or {}).get("boats", [])}
+                for b in (r.get("before") or {}).get("boats", []):
+                    if b.get("exhibit_time") and tb.get(b.get("frame")):
+                        self._mx[tk].append((tb[b["frame"]], r.get("rno", 99), b["exhibit_time"]))
+        xs = [x for t, n, x in self._mx[tk] if t == toban and n < rno]
+        cur = datetime.strptime(d, "%Y%m%d")
+        for day, x in sorted(self._mx.get((toban, jcd), []), reverse=True):
+            if day >= d:
+                continue
+            dt = datetime.strptime(day, "%Y%m%d")
+            if (cur - dt).days > 2:
+                break
+            cur = dt
+            xs.append(x)
+        return (sum(xs) / len(xs), len(xs)) if xs else None
+
+    def ex_top(self, toban):
+        """過去2年で展示タイムが6艇中1位だった割合（30走以上の選手だけ）"""
+        v = self.exs.get(toban)
+        return (v[1] / v[0], v[0]) if v and v[0] >= 30 else None
+
+    def ex_sub(self, d, jcd, toban, rno):
+        """出走表の展示T欄の下：今節の展示平均と、いつもの展示1位率"""
+        out = ""
+        m = self.meet_ex(d, jcd, toban, rno)
+        if m:
+            out += f'<br><small class="sub" title="今節これまで{m[1]}走の展示タイム平均">今節{m[0]:.2f}</small>'
+        t = self.ex_top(toban)
+        if t:
+            out += f'<br><small class="{"dgood" if t[0] >= 0.25 else "sub"}" title="過去2年{t[1]}走で展示タイムが1位だった割合">1位{t[0] * 100:.0f}%</small>'
+        return out
 
     def oriten_block(self, race):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -797,7 +845,7 @@ class Site:
                      if b.get("motor_no") is not None else mot)
             rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
                         f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td>'
-                        f'<td class="r num">{q.get("exhibit_time") or "-"}</td><td class="r num">{pct(c.get("win"))}<span class="sub">/{c.get("starts", 0)}走</span></td>'
+                        f'<td class="r num">{q.get("exhibit_time") or "-"}{self.ex_sub(d, jcd, b.get("toban", ""), rno)}</td><td class="r num">{pct(c.get("win"))}<span class="sub">/{c.get("starts", 0)}走</span></td>'
                         f'<td class="r num">{pct(q.get("p_win"))}</td><td class="r num">{pct(q.get("p_top3"))}</td></tr>')
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
@@ -843,7 +891,8 @@ class Site:
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>
+<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th><th class="r">展示T</th><th class="r">このコースの1着率</th><th class="r">1着確率</th><th class="r">3着内</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<p class="sub" style="margin:0">展示Tの下の「今節」は今節これまでの展示タイムの平均、「1位」は過去2年で展示タイムが6艇の中でいちばん速かった割合（平均は約17%。25%以上は緑）。</p></section>
 {self.slit_block(race, page.u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))}
 {self.oriten_block(race)}
 {ai_rows}

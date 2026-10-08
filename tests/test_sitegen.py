@@ -118,3 +118,24 @@ def test_racer_search_and_fav(tmp_path):
     fav = json.loads(files["fav-today.json"])
     assert fav["racers"] and all(x[2].startswith("race/20260925/") for v in fav["racers"].values() for x in v)
     assert 'class="fav-btn"' in files["racer/4872.html"] and 'id="fav-today"' in files["index.html"]
+
+
+def test_ex_counts_and_meet(tmp_path, monkeypatch):
+    from scraper import history
+    E = [[f, f"40{f}0", f, 15, "", f, 670 + (f > 2) * f, None] for f in range(1, 7)]
+    c = history.ex_counts([["20260920", "01", 1, "逃げ", "", 0, 0, 1, "", 0, 0, E]])
+    assert c["4010"] == [1, 1] and c["4020"] == [1, 1] and c["4030"] == [1, 0]   # 同タイム1位は両方1位
+    s, files = _site(tmp_path)
+    rl = {b["frame"]: b for b in json.loads((sitegen.DATA / "races" / "20260925" / "0112.json").read_text(encoding="utf-8"))["racelist"]["boats"]}
+    t = rl[1]["toban"]
+    rec = lambda d, jcd, x: [d, jcd, 1, "", "", 0, 0, 1, "", 0, 0, [[1, t, 1, 15, "", 1, x, None]]]
+    # 9/24・9/23 は今節、9/20（3日あき）と別の場は入れない
+    s._mx = None
+    monkeypatch.setattr(sitegen, "load_all", lambda since: [rec("20260924", "01", 680), rec("20260923", "01", 690),
+                                                           rec("20260920", "01", 600), rec("20260924", "02", 600)])
+    m = s.meet_ex("20260925", "01", t, 12)
+    assert m and m[1] == 2 and abs(m[0] - 6.85) < 1e-9
+    assert s.meet_ex("20260925", "01", t, 1)[1] == 2   # 当日の展示は、そのレースより前の分だけ
+    s.exs = {t: [100, 31]}
+    assert "1位31%" in s.ex_sub("20260925", "01", t, 12) and "今節6.85" in s.ex_sub("20260925", "01", t, 12)
+    assert "「1位」は過去2年" in files["race/20260925/kiryu-12.html"]
