@@ -927,8 +927,7 @@ class Site:
         desc = f"{jdate(d)}のボートレース{v} {rno}R（締切{race.get('deadline', '')}）の推奨買い目、合成オッズ、展示タイム、選手のコース別成績、結果。"
         vp = Page(page.path)
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
-<h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div>
-<a class="btn xshare" href="{e(self.share_link(d, jcd, rno, p))}" target="_blank" rel="noopener">Xでシェア</a></section>
+<h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
 <nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
@@ -979,13 +978,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)
         self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script,
                                         og=self.race_og(d, jcd, race, p)))
-
-    def share_link(self, d, jcd, rno, p):
-        v = VENUES[jcd]["name"]
-        main = [x["combo"] for x in (p.get("bets") or {}).get("main", [])][:2]
-        text = f"{v}{rno}R（{jdate(d)}）のAI予想" + (f" 本線 {'・'.join(main)}" if main else "")
-        url = f"{SITE_URL}/race/{d}/{SLUG[jcd]}-{rno}.html"
-        return share.intent(f"{text}\n{url}\n#ボートレース{v} #競艇予想")
 
     def race_og(self, d, jcd, race, p):
         """今日のレースだけ、シェア用の画像を作る（過去のレースはサイト共通の画像）"""

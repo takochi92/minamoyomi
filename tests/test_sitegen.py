@@ -176,7 +176,7 @@ def test_share_texts(tmp_path):
     ws = share.weeks(h, "20261008", 2)
     assert ws[0][0] == "20260928" and ws[0][2]["races"] == 10 and len(ws) == 1 and share.weight(share.week_text(*ws[0], "u")) <= 280
     s, files = _site(tmp_path)
-    assert "share.html" in files and "weekly.html" in files and "twitter.com/intent/tweet" in files["race/20260925/kiryu-12.html"]
+    assert "share.html" in files and "weekly.html" in files and "twitter.com/intent/tweet" not in files["race/20260925/kiryu-12.html"]
 
 
 def test_grade_page(tmp_path):
