@@ -982,26 +982,6 @@ class Site:
                 f'{shadow_note}<div class="evidence-grid">{"".join(cards)}</div>'
                 '<p class="sub">複合展示は事実メモで、重複加点はしません。数値未保存の旧予想は後日の機歴で補いません。攻め・抵抗の実際の動きや伸び型・出足型は、この数値だけでは断定できません。</p></section>')
 
-    def evidence_watchlist(self, page):
-        """未締切の外艇に保存済み根拠があるレース。的中後の選別はしない。"""
-        d=self.idx.get('date','');items=[]
-        for r in getattr(self,'day_races',{}).get(d,[]):
-            if r.get('date')!=d or (r.get('result') or {}).get('finished') or r.get('deadline','')<=self.now.strftime('%H:%M'):
-                continue
-            p=r.get('prediction') or {}
-            from .ana_evaluation import classify
-            tags=classify(r)
-            if not tags:continue
-            bs={str(b['frame']):b for b in p.get('boats',[])}
-            labels={'motor_model_support':'補正機力','rare_solo_first':'本人比の珍しい展示1位','paired_exhibition':'複合展示','course_model_support':'コース成績'}
-            # 機力・本人比展示のある艇を先に、同条件ではコース順。確率・結果で選別しない。
-            fs=sorted(tags,key=lambda f:(not ('motor_model_support' in tags[f] or 'rare_solo_first' in tags[f]),bs[f]['course']))
-            f=fs[0];b=bs[f]
-            link=self.race_link(page,d,r['jcd'],r['rno'])+'#evidence'
-            items.append((r['deadline'],f'<a class="cfc evidence-watch" data-dl="{d} {e(r["deadline"])}" href="{link}"><div class="row"><strong>{e(VENUES[r["jcd"]]["name"])} {r["rno"]}R</strong><span class="num">{e(r["deadline"])}締切</span></div><b>{bt(int(f))} {e(b["name"])}</b><span class="sub">{" · ".join(labels[x] for x in tags[f])}</span><small>根拠を見る · 購入推奨の判定とは別</small></a>'))
-        items.sort(key=lambda x:x[0])
-        body='<div class="strip">'+''.join(x[1] for x in items[:8])+'</div>' if items else '<p class="sub">現在、締切前で根拠を確認できる外艇のレースはありません。</p>'
-        return '<section class="evidence-home"><h2>外の艇の根拠をチェック <small>補正機力・本人比展示・コース成績</small></h2>'+body+'<p class="sub">予想に記録された材料を確認する一覧です。利益や穴的中が確認できたレース一覧ではありません。</p></section>'
 
     def race_page(self, d, jcd, race):
         rno = race["rno"]
@@ -1300,7 +1280,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
-{self.evidence_watchlist(page)}
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}

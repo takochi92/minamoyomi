@@ -15,6 +15,7 @@ on:
       - 'scraper/research_snapshot.py'
       - 'tools/forward_ana_review.py'
       - 'site/style.css'
+      - 'site/app.js'
       - 'site/img/**'
   schedule:
     # GitHub の cron は UTC。
