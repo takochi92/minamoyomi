@@ -1,6 +1,15 @@
 name: update-races
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scraper/model.json'
+      - 'scraper/model.py'
+      - 'scraper/predict.py'
+      - 'scraper/prediction_context.py'
+      - 'scraper/motoradj.py'
+      - 'scraper/run.py'
   schedule:
     # GitHub の cron は UTC。
     # JST 7:00〜22:55 は 5 分おき（レース中の直前情報・オッズ・結果）

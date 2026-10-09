@@ -103,3 +103,72 @@ def current(races: list) -> dict:
         if ma.fresh[j] and n:
             out[j][str(mno)] = round(ma.value(j, mno), 4)
     return dict(out)
+
+
+class OnlineMotorAdj(MotorAdj):
+    """本番・学習共通。比較基準と乗り手展示の参照は終了済みの日だけ。"""
+    def __init__(self):
+        super().__init__({})
+        self.reference=defaultdict(lambda:[0,0])
+        self.course_reference=defaultdict(lambda:[0,0])
+        self.rider_ex=defaultdict(lambda:[0,0.])
+        self.motor_ex=defaultdict(lambda:[0,0.,0])
+
+    def start_day(self, rows, ordinal):
+        for j in renewed_venues(rows):
+            if ordinal-self.last.get(j,-99)>3:
+                for k in [k for k in self.motor_ex if k[0]==j]:del self.motor_ex[k]
+        super().start_day(rows,ordinal)
+
+    def expected(self,c,nat2):
+        a=self.reference[(c,_bucket(nat2))];p=self.course_reference[c]
+        return (a[1]+50*(p[1]/p[0] if p[0] else 1/3))/(a[0]+50)
+
+    def finish_day(self, rows):
+        from .exhibition_profile import observations
+        pending=[];ex_pending=[]
+        for r in rows:
+            if not any(e[5]==1 for e in r[11]):continue
+            obs={o['toban']:o for o in observations(r)}
+            for e in r[11]:
+                b=e[7] if len(e)>7 else None
+                if e[2] not in range(1,7) or not b:continue
+                top2=int(e[5] in (1,2));pending.append((e[2],b[2],top2))
+                mno=e[8] if len(e)>8 else None
+                if mno is not None and self.fresh[r[1]]:
+                    a=self.m[(r[1],mno)];a[0]+=1;a[1]+=top2-self.expected(e[2],b[2])
+                o=obs.get(e[1])
+                if o:
+                    rn,rd=self.rider_ex[(r[1],e[1])]
+                    ex_pending.append(((r[1],e[1]),o['dev']))
+                    if mno is not None and self.fresh[r[1]]:
+                        a=self.motor_ex[(r[1],mno)]
+                        a[0]+=1;a[1]+=o['dev']-rd/(rn+20);a[2]+=rn>=20
+        for c,nat2,top2 in pending:
+            for a in (self.reference[(c,_bucket(nat2))],self.course_reference[c]):a[0]+=1;a[1]+=top2
+        for k,dev in ex_pending:
+            a=self.rider_ex[k];a[0]+=1;a[1]+=dev
+
+    def ex_value(self,jcd,mno):
+        a=self.motor_ex.get((jcd,mno))
+        if not a or not self.fresh[jcd] or a[0]<5 or a[2]/a[0]<.5:return 0.
+        return max(-2.,min(2.,-10*a[1]/(a[0]+20)))
+
+
+def current_context(races):
+    from datetime import datetime
+    by=defaultdict(list)
+    for r in races:by[r[0]].append(r)
+    ma=OnlineMotorAdj()
+    for day,rows in sorted(by.items()):
+        ma.start_day(rows,datetime.strptime(day,'%Y%m%d').toordinal())
+        ma.finish_day(rows)
+    out=defaultdict(dict)
+    for (j,no),(n,_) in ma.m.items():
+        if not ma.fresh[j] or not n:continue
+        a=ma.motor_ex.get((j,no),[0,0,0])
+        out[j][str(no)]={'adj':round(ma.value(j,no),6),'ex_adj':round(ma.ex_value(j,no),6),
+                         'ex_reference_n':a[0],'ex_rider_ready_n':a[2],
+                         'as_of':max(by),
+                         'adj_method':'prior_days_v2','renewal_source':'zero_rate_inferred'}
+    return dict(out)
