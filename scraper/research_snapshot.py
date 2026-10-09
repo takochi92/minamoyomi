@@ -44,6 +44,7 @@ def decision(race):
     return {'strategy': 'existing_ai_main_sub_100_v1', 'simulation': True,
             'model_version': pred.get('version'), 'stage': pred.get('stage'),
             'model_revision':pred.get('model_revision'),
+            'primary_slip': deepcopy(race.get('primary_slip')),
             'ana_shadow':shadow_decision(race),
             'p3': deepcopy(pred.get('p3')), 'entry': deepcopy(pred.get('entry')),
             'tickets': [{'combo': c, 'amount': 100} for c in combos]}
