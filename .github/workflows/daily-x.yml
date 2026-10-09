@@ -1,0 +1,51 @@
+# 毎朝、その日の X 投稿文を site/data から作り、持ち主の下書き置き場 Atelier（自動作成された投稿）に入れる
+#  - 文の作り方は tools/make_daily_x.py（今日の開催・AIの自信が高いレース・昨日のAI本線の結果）
+#  - Secrets の ATELIER_SITE_URL・ATELIER_SERVICE_TOKEN・ATELIER_INGEST_TOKEN があるときだけ送る（無ければ文を作ってログに出すだけ）
+#  - 投稿はしない。Atelier の「投稿文をコピー」から X に貼って投稿する
+name: Daily X post
+
+on:
+  schedule:
+    # 23:13 UTC = 日本時間 8:13（その日の事前予想が出たあと）
+    - cron: "13 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make today's X post
+        run: python3 tools/make_daily_x.py --out out/x.json
+      - name: Send draft to Atelier
+        env:
+          ATELIER_SITE_URL: ${{ secrets.ATELIER_SITE_URL }}
+          ATELIER_SERVICE_TOKEN: ${{ secrets.ATELIER_SERVICE_TOKEN }}
+          ATELIER_INGEST_TOKEN: ${{ secrets.ATELIER_INGEST_TOKEN }}
+        if: env.ATELIER_SITE_URL != '' && env.ATELIER_INGEST_TOKEN != ''
+        run: |
+          node - <<'JS'
+          const fs = require("fs");
+          const { posts } = JSON.parse(fs.readFileSync("out/x.json", "utf8"));
+          const site = process.env.ATELIER_SITE_URL.trim().replace(/\/+$/, "");
+          (async () => {
+            for (const post of posts) {
+              const r = await fetch(site + "/api/posts", {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  "OAI-Sites-Authorization": "Bearer " + (process.env.ATELIER_SERVICE_TOKEN || "").trim(),
+                  "x-atelier-token": process.env.ATELIER_INGEST_TOKEN.trim()
+                },
+                body: JSON.stringify(post)
+              });
+              const body = await r.json().catch(() => ({}));
+              if (!r.ok || !body.ok) { console.error(`Atelier ${post.channel}: failed (${r.status}) ${body.error || ""}`); process.exitCode = 1; continue; }
+              console.log(`${body.post.project} / ${body.post.channel} / ${body.post.date}: saved`);
+            }
+          })();
+          JS
