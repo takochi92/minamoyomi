@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "purpose": "探索統計の修正と、未使用期間の仮想購入評価の準備",
-  "production_coefficients_changed": false,
+  "production_coefficients_changed": true,
   "profitability_proven": false,
   "thresholds": {
     "minimum_reference_starts": 100,
@@ -81,8 +81,15 @@
     },
     {
       "id": "live_prediction_integration",
-      "status": "deferred_pending_validation",
-      "remaining": "探索結果だけでモデル係数を変えず、比較試験で効果を確認後に反映"
+      "status": "prediction_v31_implemented",
+      "remaining": "正式更新日・映像・未使用期間の回収率検証",
+      "data": "scraper/model.json:production_integration"
     }
+  ],
+  "prediction_version": 31,
+  "production_features": [
+    "ex_personal",
+    "ex_rare_first",
+    "motor_ex"
   ]
 }

@@ -82,7 +82,7 @@ WALL_BASE = {3: 0.13, 4: 0.106}
 #  合成2.5倍未満（安い目ばかり）の596レースも3点で的中40%・回収85%だったので、オッズに関係なく3点で出す
 # （全レースの本線・押さえ10〜15点と回収率は同程度で、点数は3点）
 # 予想の作り方を変えたら上げる。締切前のレースは、版が違えば次の更新で予想を作り直す
-PRED_VERSION = 30
+PRED_VERSION = 31
 HONMEI = {"in": 0.60, "axis": 0.40, "k": 3}
 # イン逃げのとき2・3着に残る率（過去3年）：4コース42.6% / 5コース31.0% / 6コース18.3%
 # 選手ごとに差が大きい（6コースでも35〜45%の選手は、逃げのとき1-その艇が絡む率18.8%＝普通の6コースの2倍以上）。ただしオッズもほぼ同じだけ見ている
@@ -153,7 +153,7 @@ def in_worry(X, course_of, frames, cs_comments):
             "hist_races": IN_WORRY["races"][lv], "hist_all": IN_WORRY["all"]}
 
 
-def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
+def predict(jcd: str, racelist: dict, before: Optional[dict] = None, *, race_date=None, oriten=None) -> dict:
     S, model = load_stats(), load_model()
     if S is None or model is None:
         raise RuntimeError("course_stats.json.gz / model.json がありません（python -m scraper.history と scraper.train_model を実行）")
@@ -175,15 +175,22 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
 
     ex = {f: bb.get(f, {}).get("exhibit_time") for f in frames}
     has_ex = all(ex.values())
+    from .prediction_context import references,signals,datetime,JST
+    day=race_date or datetime.now(JST).strftime('%Y%m%d')
+    refs=references(day,[b.get('toban','') for b in boats])
     try:
         from . import motor as _motor
         madj = {} if sum(1 for b in boats if not b.get("motor_2")) >= 5 else _motor.load().get(jcd, {})   # 入れ替え直後は使わない
     except Exception:
         madj = {}
+    madj={no:v for no,v in madj.items() if v.get('adj_method')=='prior_days_v2' and v.get('as_of','99999999')<day}
     fb = [{"frame": b["frame"], "toban": b.get("toban", ""), "course": course_of[b["frame"]],
            "ex": round(ex[b["frame"]] * 100) if has_ex else None, "cls": b.get("class", ""),
            "nat": b.get("nat_win"), "loc": b.get("loc_win"), "motor": b.get("motor_2"), "boat": b.get("boat_2"),
-           "f_recent": b.get("f", 0), "motor_adj": (madj.get(str(b.get("motor_no"))) or {}).get("adj")} for b in boats]
+           "f_recent": b.get("f", 0),
+           "motor_adj": (madj.get(str(b.get("motor_no"))) or {}).get("adj") if (madj.get(str(b.get("motor_no"))) or {}).get('adj_method')=='prior_days_v2' else 0,
+           "motor_ex": (madj.get(str(b.get("motor_no"))) or {}).get("ex_adj",0),
+           "ex_reference": refs.get(b.get('toban',''),{})} for b in boats]
     try:
         from .windmap import to_compass
         wdir = to_compass(jcd, weather.get("wind_dir"))
@@ -264,6 +271,8 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
     cs_view, cs_comments = coursestats.view(S, jcd, [{"frame": b["frame"], "course": course_of[b["frame"]],
                                                        "toban": b.get("toban", ""), "name": b["name"]} for b in boats])
     comments = cs_comments + _comments(venue, rows, wind, wave, entry_changed, course_of, has_ex, boats) + _local_notes(S, jcd, boats, venue, entry_changed)
+    research_signals=signals(boats,before,oriten,refs,course_of)
+    comments += [f"{s['frame']}号艇："+'／'.join(s['facts'])+'。' for s in research_signals]
 
     # F持ち選手の「F後のスタート」（同じコースでの平均STとスタート順）
     fs_all = fstart.load()
@@ -334,7 +343,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         mstat = {}
     for b in boats:
         ms = mstat.get(str(b.get("motor_no")))
-        if not ms or ms["n"] < 10 or ms.get("ex") is None or "rank" not in ms:
+        if not ms or ms.get("n", 0) < 10 or ms.get("ex") is None or "rank" not in ms:
             continue
         L = ms.get("last") or {}
         ori = L.get("ori") or {}
@@ -609,6 +618,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
                       "hist_all": IN_WORRY["all"], "by": "fstart"}
     return {
         "version": PRED_VERSION,
+        "model_revision": model.get('revision'),
         "stage": "直前" if has_ex else "事前",
         "entry": [f for f, _ in sorted(course_of.items(), key=lambda x: x[1])],
         "entry_changed": entry_changed,
@@ -627,6 +637,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None) -> dict:
         "honmei_pick": honmei_pick,
         "nokoshi": nokoshi,
         "comments": comments,
+        "research_signals": research_signals,
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},
     }

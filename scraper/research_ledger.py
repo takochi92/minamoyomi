@@ -80,7 +80,7 @@ def summarize(rows):
         if s['status']!='settled':reasons['unsettled_result']+=1;continue
         for k in ('invested','refund','payout'):total[k]+=s[k]
         total['races']+=1;total['hits']+=s['hit']
-        version=row['decision'].get('model_version')
+        version=row['decision'].get('model_revision') or row['decision'].get('model_version')
         details.append({'date':row['date'],'jcd':row['jcd'],'rno':row['rno'],'model_version':version,**s})
         key=(str(version),row['date'][:6])
         a=cohorts.setdefault(key,{'races':0,'hits':0,'invested':0,'refund':0,'payout':0})

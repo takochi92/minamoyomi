@@ -20,7 +20,8 @@ from scipy.optimize import minimize
 
 from .history import load_all
 from .model import FEATS, KIM, MODEL_PATH, ROOT, Stats, features
-from .motoradj import MotorAdj, base_table
+from .motoradj import OnlineMotorAdj
+from .exhibition_profile import profiles,baseline,term_info
 
 WINDOW = 365
 WARMUP = 365
@@ -33,6 +34,9 @@ STAGE_COLS = {
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2", "rv_top3"],
     "3": ["base_3", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2", "rv_top3"],
 }
+BASE_STAGE_COLS={k:list(v) for k,v in STAGE_COLS.items()}
+INTEGRATION_FEATS=['ex_personal','ex_rare_first','motor_ex']
+for cols in STAGE_COLS.values():cols.extend(INTEGRATION_FEATS)
 PREV2_COLS = {k: list(v) for k, v in {
     "1": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F,
     "2": ["base_2", "rc_place"] + ABILITY + ["rc_win", "mu"] + WEATHER + ["rc_in"] + TENKAI_F + ["noko", "in2"],
@@ -55,7 +59,7 @@ VARIANTS = {
     "＋インの負け方×攻め手": ["base_w"] + ABILITY + ["rc_win", "mu"],
     "＋波・風": ["base_w"] + ABILITY + ["rc_win", "mu"] + WEATHER,
     "＋インでの成績": OLD_COLS["1"],
-    "＋展開の材料（壁とのST差・壁のF・壁の叩かれやすさ・展示で壁より速い・展示のいつもとの差）": STAGE_COLS["1"],
+    "＋展開・本人比展示・乗り手補正展示": STAGE_COLS["1"],
 }
 
 
@@ -73,7 +77,8 @@ def build_dataset(races, pre=None):
     start = _ord(days[0]) + WARMUP
     S, window, fh = Stats(), deque(), defaultdict(deque)
     # 乗り手を差し引くための「コース×全国2連率」の基準は、モーター番号のない古い記録（＝評価期間より前）で作る
-    MA = MotorAdj(base_table([r for r in races if not any(len(e) > 8 and e[8] is not None for e in r[11])] or races))
+    MA = OnlineMotorAdj()
+    term_data=profiles(races);ref_cache={}
     Xs, Ps, D, T, PAY, MK, KEY = [], [], [], [], [], [], []
     for d in days:
         t = _ord(d)
@@ -96,19 +101,22 @@ def build_dataset(races, pre=None):
                     while q and q[0] < t - 180:
                         q.popleft()
                     b = e[7]
+                    ref_key=(term_info(d)['key'],e[1])
+                    if ref_key not in ref_cache:ref_cache[ref_key]=baseline(term_data,d,e[1])
                     boats.append({"frame": e[0], "toban": e[1], "course": ov["course"][e[0]] if ov else e[2], "ex": e[6], "cls": b[0], "nat": b[1],
                                   "loc": b[3], "motor": b[5], "boat": b[6], "f_recent": len(q),
-                                  "motor_adj": MA.value(r[1], e[8] if len(e) > 8 else None)})
+                                  "motor_adj": MA.value(r[1], e[8] if len(e) > 8 else None),
+                                  "motor_ex": MA.ex_value(r[1],e[8] if len(e)>8 else None),'ex_reference':ref_cache[ref_key]})
                 Xs.append(features(S, r[1], ov["wave"] if ov else r[6], ov["wind"] if ov else r[5], boats, wind_dir=r[4]))
                 Ps.append([e[5] if isinstance(e[5], int) else 9 for e in E])
                 D.append(int(d)); T.append(r[8] or ""); PAY.append(r[9] or 0); KEY.append(key)
                 MK.append(_matchup_row(S, E, r))
         for r in by_day[d]:
             S.apply(r, 1)
-            MA.apply(r)
             for e in r[11]:
                 if e[4] == "F" or e[5] == "F":
                     fh[e[1]].append(t)
+        MA.finish_day(by_day[d])
         window.append((t, by_day[d]))
     build_dataset.keys = np.array(KEY)
     return (np.array(Xs), np.array(Ps, np.int8), np.array(D), np.array(T), np.array(PAY), MK)
@@ -158,8 +166,18 @@ def stage_data(X, P, cols, stage):
     return Xs, y, mask
 
 
-def fit_all(X, P):
-    return {st: dict(zip(cols, map(float, fit(*stage_data(X, P, cols, int(st)))))) for st, cols in STAGE_COLS.items()}
+def fit_all(X, P, columns=None):
+    return {st: dict(zip(cols, map(float, fit(*stage_data(X, P, cols, int(st)))))) for st, cols in (columns or STAGE_COLS).items()}
+
+
+def probability_metrics(X,P,T,PAY,coef):
+    pt,p1,names=trifecta_probs(X,coef);lookup={c:i for i,c in enumerate(names)}
+    valid=np.array([c in lookup and pay>0 for c,pay in zip(T,PAY)])
+    ii=np.where(valid)[0];y=(P==1).argmax(1)
+    actual=np.array([lookup[T[i]] for i in ii])
+    return {'races':int(len(ii)),
+            'win_logloss':float(-np.log(np.maximum(p1[np.arange(len(P)),y],1e-12)).mean()),
+            'trifecta_logloss':float(-np.log(np.maximum(pt[ii,actual],1e-12)).mean())}
 
 
 def trifecta_probs(X, coef):
@@ -218,6 +236,10 @@ def matchup_table(MK):
 
 
 def main():
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--skip-variants',action='store_true')
+    args=parser.parse_args()
     races = load_all()
     X, P, D, T, PAY, MK = build_dataset(races)
     last = D.max()
@@ -226,7 +248,7 @@ def main():
     print("train", tr.sum(), "test", te.sum())
 
     variants = {}
-    for name, cols in VARIANTS.items():
+    for name, cols in ({} if args.skip_variants else VARIANTS).items():
         b = fit(*stage_data(X[tr], P[tr], cols, 1))
         Xv, yv, mv = stage_data(X[te], P[te], cols, 1)
         z = np.where(mv, Xv[:, :, :] @ b, -1e9)
@@ -237,16 +259,35 @@ def main():
         print(name, variants[name])
 
     coef_tr = fit_all(X[tr], P[tr])
-    ev = evaluate(X[te], P[te], T[te], PAY[te], coef_tr)
-    coef = fit_all(X, P)
+    base_tr=fit_all(X[tr],P[tr],BASE_STAGE_COLS)
+    candidate_scores=probability_metrics(X[te],P[te],T[te],PAY[te],coef_tr)
+    base_scores=probability_metrics(X[te],P[te],T[te],PAY[te],base_tr)
+    accepted=(candidate_scores['win_logloss']<=base_scores['win_logloss'] and candidate_scores['trifecta_logloss']<=base_scores['trifecta_logloss'])
+    print('integration validation',json.dumps({'accepted':accepted,'baseline':base_scores,'candidate':candidate_scores}),flush=True)
+    selected_cols=STAGE_COLS if accepted else BASE_STAGE_COLS
+    selected_test=coef_tr if accepted else base_tr
+    ev = evaluate(X[te], P[te], T[te], PAY[te], selected_test)
+    coef = fit_all(X, P,selected_cols)
     period = {"train": [str(D[tr].min()), str(D[tr].max())], "test": [str(D[te].min()), str(D[te].max())]}
-    MODEL_PATH.write_text(json.dumps({"coef": coef, "trained_on": [str(D.min()), str(D.max())], "races": int(len(D))},
+    integration={'schema':1,'candidate_accepted':accepted,'candidate_features':INTEGRATION_FEATS,
+                 'active_features':INTEGRATION_FEATS if accepted else [],'baseline':base_scores,'candidate':candidate_scores,
+                 'motor_method':'prior_days_v2','reference':'completed_previous_two_terms',
+                 'validation_status':'retrospective_actual_course;not_timestamp_verified_roi',
+                 'selection_rule':'non_worse_win_and_trifecta_logloss'}
+    import hashlib
+    revision=hashlib.sha256(json.dumps(coef,sort_keys=True).encode()).hexdigest()[:16]
+    MODEL_PATH.write_text(json.dumps({"coef": coef, "revision":revision, "trained_on": [str(D.min()), str(D.max())], "races": int(len(D)), 'production_integration':integration},
                                      ensure_ascii=False, indent=1), encoding="utf-8")
     report = {"period": period, "n_train": int(tr.sum()), "n_test": int(te.sum()), "variants": variants,
               "test": ev, "matchup": matchup_table([m for m, t in zip(MK, te) if t or True]),
               "coef": {k: round(v, 3) for k, v in coef["1"].items()}}
+    report['production_integration']=integration
+    report['production_integration']['roi_method']='historical_fixed_topN_diagnostic_without_refund_adjustment;not_forward_verified'
+    report['production_integration']['baseline_topN']=evaluate(X[te],P[te],T[te],PAY[te],base_tr)
+    report['production_integration']['candidate_topN']=evaluate(X[te],P[te],T[te],PAY[te],coef_tr)
     rp = ROOT / "model_report.json"
     old = json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else {}
+    if args.skip_variants:report['variants']=old.get('variants',{})
     rp.write_text(json.dumps({**old, **report}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(ev, ensure_ascii=False))
 

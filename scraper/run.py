@@ -226,7 +226,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     from .predict import PRED_VERSION
     stale = (race.get("prediction") or {}).get("version") != PRED_VERSION
     if "racelist" in race and now < dl and (changed or stale):
-        race["prediction"] = predict(jcd, race["racelist"], race.get("before"))
+        race["prediction"] = predict(jcd, race["racelist"], race.get("before"), race_date=date, oriten=race.get('oriten'))
         race["prediction"]["made_at"] = now.strftime("%H:%M")
         from .research_snapshot import mark_fetched
         mark_fetched(race, 'prediction', datetime.now(JST))
