@@ -382,7 +382,7 @@
       const ticks = [0, 0.5, 1].map((k) => `<line x1="40" x2="600" y1="${170 - k * 150}" y2="${170 - k * 150}" stroke="var(--line)"/>
         <text x="34" y="${174 - k * 150}" text-anchor="end" font-size="10" fill="var(--ink2)">${Math.round((maxV * k) / 1000)}k</text>`).join("");
       $("#stats-body").innerHTML = `
-        <h2>本線・押さえ<small>全レースの本線・押さえを各100円で購入した場合</small></h2>
+        <h2>採用買い目<small>採用した券だけを各100円で仮想購入</small></h2>
         <div class="tiles">
           <div class="tile"><small>レース</small><b>${(t.races || 0).toLocaleString()}</b></div>
           <div class="tile"><small>的中</small><b>${t.hits || 0}${t.races ? `<small style="display:inline"> (${pct(t.hits / t.races)})</small>` : ""}</b></div>
@@ -401,7 +401,7 @@
     const best = (s.best || []).map((b) => `<tr><td class="num">${+b.date.slice(4, 6)}/${+b.date.slice(6)}</td><td>${esc(b.venue)} ${b.rno}R</td><td>${combo(b.combo)}</td><td class="r num best">${yen(b.payout)}</td></tr>`).join("");
     app.innerHTML = `
       <section style="display:grid;gap:6px"><span class="eyebrow">Track record</span><h1>掲載予想の仮想成績</h1>
-        <p class="sub">保存された掲載予想と公式結果を自動集計。各買い目100円の仮想購入で、実際の購入実績ではありません。予想版は混在し、締切前の取得時刻を確認できない旧記録も含みます。厳密な前向き評価は上の別表で確認できます。</p></section>
+        <p class="sub">保存された採用券と公式結果を自動集計。新しい一本化ルールでは厳選穴が成立すれば穴券のみ、それ以外は本線＋押さえです。各券100円の仮想購入で、実購入実績ではありません。導入前の本線＋押さえの旧成績は変更せず含めています。予想版・選択ルールが混在し、取得時刻未確認の旧記録もあります。締切前の厳密な比較検証は上の別表です。</p></section>
       <div class="seg" role="group" aria-label="集計期間"><button data-r="last7">7日</button><button data-r="last30">30日</button><button data-r="all">全期間</button></div>
       <div id="stats-body" style="display:grid;gap:16px"></div>
       <section style="display:grid;gap:8px"><h2>直近30日の的中例</h2><p class="sub">払戻額の高い順。成績全体の評価は、上の不的中も含む回収率と収支をご覧ください。</p>

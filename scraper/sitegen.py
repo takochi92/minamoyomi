@@ -250,6 +250,8 @@ class Site:
 
     # ------------------------------------------------------------ レース
     def reco_block(self, race, res):
+        if race.get('primary_slip'):
+            return '<section class="panel"><h2>採用予想のオッズ</h2><p class="primary-note">買い目は出走表タブの採用予想に一本化しています。以下でオッズの変動を確認できます。</p></section>'
         r = race.get("reco")
         if not r or r["verdict"] in ("推奨", "見送り"):
             # 基本は上の「本線・押さえ」。合成5倍に絞るのは自信ありのときだけ
@@ -923,11 +925,28 @@ class Site:
             marks.append(f'<span class="pill {"hit" if race["t_hit"] else "miss"}">穴狙い {"的中" if race["t_hit"] else "×"}</span>')
         if "a_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["a_hit"] else "miss"}">高回収狙い {"的中" if race["a_hit"] else "×"}</span>')
+        if race.get('primary_slip'):
+            label = '穴予想' if race['primary_slip']['kind'] == 'ana' else '採用予想'
+            h = t in race['primary_slip']['tickets']
+            marks = [f'<span class="pill {"hit" if h else "miss"}">{label} {"的中" if h else "不的中"}</span>']
         exh = '<p class="sub" style="margin:4px 0 0">' + "　".join(extra) + "</p>" if extra else ""
         mkh = '<div class="rmarks">' + "".join(marks) + "</div>" if marks else ""
         return (f'<section class="panel result"><h2>レース結果 <small><a href="{page.u(f"results/{d}.html")}">{jdate(d)}の払戻金一覧 →</a></small></h2>'
                 f'<div class="rres"><div class="tbl-wrap"><table class="rorder"><thead><tr><th>着</th><th>枠</th><th>選手</th><th class="r">タイム</th></tr></thead><tbody>{orows}</tbody></table></div>'
                 f'<div class="rpays">{pays}{exh}{mkh}</div></div>{self.slit_block(race, se=res.get("start") or [], result=True)}</section>')
+
+    @staticmethod
+    def probability_diagram(b, explanation):
+        value = max(0, min(1, b.get('p_win') or 0))
+        ring = (f'<div class="prob-ring" role="img" aria-label="AIの1着確率 {pct(value,1)}">'
+                f'<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ring-track" cx="50" cy="50" r="40"/>'
+                f'<circle class="ring-value" cx="50" cy="50" r="40" pathLength="100" stroke-dasharray="{value*100:.2f} 100"/></svg>'
+                f'<div><b>{pct(value,1)}</b><small>AI 1着</small></div></div>')
+        if not explanation:
+            return f'<div class="prob-summary">{ring}<p class="sub">補正内訳は未保存</p></div>'
+        changes = ''.join(f'<div class="prob-change {"up" if x["delta"]>=0 else "down"}"><span>{e(x["label"])}</span><b>{x["delta"]*100:+.1f}<small>pt</small></b></div>' for x in explanation['changes'])
+        return (f'<div class="prob-summary">{ring}<div class="prob-steps"><div class="prob-base"><span>コースの基礎</span><b>{pct(explanation["baseline"],1)}</b></div>'
+                f'<div class="prob-changes">{changes}</div><small>＋は上向き、−は下向き</small></div></div>')
 
     @staticmethod
     def evidence_block(page, race, p):
@@ -937,6 +956,8 @@ class Site:
         rl={b['frame']:b for b in (race.get('racelist') or {}).get('boats',[])}
         facts={s['frame']:s.get('facts',[]) for s in p.get('research_signals',[])}
         cards=[]
+        from .probability_view import explain
+        explanations = explain(p['boats'])
         for b in sorted(p['boats'],key=lambda x:x['course']):
             f=b['frame']; raw=rl.get(f,{})
             ev=(p.get('evidence') or {}).get(str(f),{})
@@ -957,10 +978,11 @@ class Site:
             ch=f"{cn}走 · 1着{pct(course.get('win'))}" if cn else 'コース成績の保存なし'
             mn=raw.get('motor_no')
             ml=page.u('venue/'+SLUG[race['jcd']]+'-motor.html')
-            cards.append(f'<article class="evidence-card"><div class="evidence-head">{bt(f)}<div><b>{e(b.get("name",""))}</b><small>{b["course"]}コース · {e(b.get("class",""))}</small></div><strong>{pct(b.get("p_win"),1)}<small>AI 1着</small></strong></div>'
+            cards.append(f'<article class="evidence-card"><div class="evidence-head">{bt(f)}<div><b>{e(b.get("name",""))}</b><small>{b["course"]}コース · {e(b.get("class",""))}</small></div></div>'
+                         f'{Site.probability_diagram(b, explanations.get(str(f)))}<details class="evidence-details"><summary>機力・展示の数値を見る</summary>'
                          f'<div class="evidence-metric"><span>機力 · <a href="{ml}#m{e(str(mn))}">{e(str(mn) if mn is not None else "—")}号機 →</a></span><b>{e(motor)}</b><small>{e(ev.get("motor_as_of") or "参照日未保存")} · 交換日推定</small></div>'
                          f'<div class="evidence-metric"><span>本人比展示</span><b>{e(personal)}</b><small>終了済み直前2期 · マイナスは速い方向</small></div>'
-                         f'<div class="evidence-metric"><span>選手のコース成績</span><b>{e(ch)}</b><small>保存時点の直近成績・少数例に注意</small></div><ul class="comments">{notes}</ul></article>')
+                         f'<div class="evidence-metric"><span>選手のコース成績</span><b>{e(ch)}</b><small>保存時点の直近成績・少数例に注意</small></div><ul class="comments">{notes}</ul></details></article>')
         bets=p.get('bets') or {}
         reason=bets.get('ana_reason') or bets.get('attack')
         outer=bool(bets.get('ana') or bets.get('seme') or p.get('ana_pick') or p.get('tsuke_pick'))
@@ -976,11 +998,11 @@ class Site:
                  'fetched_at':snap.get('fetched_at'),'provenance':'timestamped_pre_deadline'}
             if valid_snapshot(snap,race) and not audit(row):
                 tickets=''.join(f'<span class="bet">{combo(t["combo"])}<b class="odds">{t["odds"]:g}倍</b><small>固定時AI {pct(t["probability"],1)}</small></span>' for t in shadow['tickets'])
-                shadow_note=f'<div class="evidence-reason"><b>締切前固定の穴券 · 仮想購入の検証中</b><div class="bets">{tickets}</div><small>根拠付き外艇・20倍以上・AI確率1%以上・確率×オッズ1.10以上、最大4点を各100円で記録。採用条件の収益性は未確認です。本線＋押さえとは別の検証券で、購入推奨や利益の保証ではありません。</small></div>'
+                shadow_note='<p class="primary-note">別の穴券を研究用に締切前記録していますが、採用券に追加しません。</p>'
         return ('<section class="evidence-panel" id="evidence"><div class="evidence-title"><div><span class="eyebrow">RACE INSIGHT</span><h2>機力・本人比展示・穴の根拠</h2></div><span class="pill">予想時の保存情報</span></div>'
                 f'<div class="evidence-reason"><b>穴・攻めの材料</b><p>{e(reason)}</p><small>的中しやすさと、オッズに対して狙う価値は別に確認します。高配当だけを理由に買い目を増やしません。</small></div>'
                 f'{shadow_note}<div class="evidence-grid">{"".join(cards)}</div>'
-                '<p class="sub">複合展示は事実メモで、重複加点はしません。数値未保存の旧予想は後日の機歴で補いません。攻め・抵抗の実際の動きや伸び型・出足型は、この数値だけでは断定できません。</p></section>')
+                '<p class="sub">円はAIの1着確率。基礎は場とコースの学習スコア、補正は保存済みスコアを「選手→機力→展示→スタート→展開・水面」の順に6艇へ加えたときの確率差（pt）の概算です。順序と相手の補正に依存し、独立した効果や実測勝率ではありません。丸め誤差があります。複合展示は事実メモで重複加点せず、未保存値は後日の機歴で補いません。攻め方や意図は数値だけで断定できません。</p></section>')
 
 
     def race_page(self, d, jcd, race):
@@ -1039,6 +1061,19 @@ class Site:
             ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b">{self.slip_body(p, cells)}</div></section>"""
             alt_list = self.alt_bets(p, cells)
+            selected = race.get('primary_slip')
+            if selected:
+                ana = selected['kind'] == 'ana'
+                heading = '穴予想・この買い目に絞る' if ana else '採用予想（本線・押さえ）'
+                if ana:
+                    pmap = dict(zip(COMBO_LIST, p.get('p3') or []))
+                    content = '<div class="bets">'+cells([{'combo':c, 'p':pmap.get(c,0)} for c in selected['tickets']])+'</div>'
+                    content += '<p class="primary-note">厳選穴の条件が成立したため、通常の本線・押さえを追加せず、この券だけを採用します。的中率は低くなり得ます。回収率改善は未確認です。</p>'
+                else:
+                    content = self.slip_body(p, cells)
+                label = '確定' if selected.get('final') else '締切前は更新あり'
+                ai_rows = f'<section class="slip primary-{"ana" if ana else "standard"}"><div class="slip-h"><b>{hitp}{heading}</b><span>{len(selected["tickets"])}点・{label}</span></div><div class="slip-b">{content}</div></section>'
+                alt_list = []
         inp = (p.get("course_stats") or {}).get("in")
         loss = ""
         if inp and inp.get("starts"):
@@ -1053,14 +1088,14 @@ class Site:
 <nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
+{ai_rows}
 {self.evidence_block(page, race, p)}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
 {self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
-{ai_rows}
-{self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p))}
+{self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p)) if not race.get('primary_slip') else ''}
 {self.worry_block(p)}
 {self.tenkai_block(p)}
 {self.fstart_block(p)}
@@ -1090,7 +1125,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub"><a href="{vp.u('venue/' + SLUG[jcd] + '.html')}">{e(v)}の水面の特徴とコース別成績 →</a></p>
 <div class="ad-slot" data-slot="race_side"></div></aside></div>"""
         live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""),
-                "bets": [b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else [], "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
+                "bets": race['primary_slip']['tickets'] if race.get('primary_slip') else ([b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else []), "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
                 "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
                 "p3": (race.get("prediction") or {}).get("p3")}
         script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
@@ -1112,7 +1147,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         wd = "月火水木金土日"[datetime.strptime(d, "%Y%m%d").weekday()]
         try:
             self.bins[path] = ogimg.race_image(VENUES[jcd]["name"], race["rno"], f"{jdate(d)}({wd})", race.get("deadline", ""),
-                                               (race.get("race_name") or "")[:12], [x["combo"] for x in p["bets"]["main"]],
+                                               (race.get("race_name") or "")[:12], race['primary_slip']['tickets'] if race.get('primary_slip') else [x["combo"] for x in p["bets"]["main"]],
                                                (top["frame"], top["p_win"]) if top and top.get("p_win") else None,
                                                (p.get("confidence") or {}).get("label", ""))
         except Exception as ex:   # 画像が作れなくてもページは出す
@@ -1208,7 +1243,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             elif rc and rc["verdict"] == "自信あり":
                 line = self.reco_summary(rc)
             elif r.get("pts"):
-                line = f'<span class="rs"><span class="sub">本線</span><span class="rs-n">{r["pts"][0]}点</span><span class="sub">押さえ</span><span class="rs-n">{r["pts"][1]}点</span></span>'
+                line = (f'<span class="rs"><span class="sub">穴予想</span><span class="rs-n">{r["pts"][0]}点</span></span>' if r.get('primary_kind') == 'ana' else f'<span class="rs"><span class="sub">本線</span><span class="rs-n">{r["pts"][0]}点</span><span class="sub">押さえ</span><span class="rs-n">{r["pts"][1]}点</span></span>')
             else:
                 line = '<span class="sub">締切35分前に買い目を出します</span>'
             cfh = '<span class="chip cf">自信あり</span> ' if rc and rc["verdict"] == "自信あり" else ""
@@ -1354,11 +1389,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         nav = " ".join(x for x in (
             f'<a href="{page.u(f"results/{prev}.html")}">← {jdate(prev)}</a>' if prev else "",
             f'<a href="{page.u(f"results/{nxt}.html")}">{jdate(nxt)} →</a>' if nxt else "") if x)
-        summary = (f'{len(venues)}場・{n_done}/{n_all}R 確定・万舟 <b class="man">{n_man}</b>本・本線押さえ的中 <b>{n_hit}</b>R' if venues else "この日のデータはありません。")
+        summary = (f'{len(venues)}場・{n_done}/{n_all}R 確定・万舟 <b class="man">{n_man}</b>本・採用予想的中 <b>{n_hit}</b>R' if venues else "この日のデータはありません。")
         body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}</span>
 <h1>{jdate(d)}のボートレース 払戻金一覧</h1>
 <p class="sub">{summary}{'　最終更新 ' + e((self.idx.get('updated_at') or '')[11:]) + '（5分ごとに自動更新）' if is_today else ''}</p>
-<p class="sub">3連単の組番・払戻金・人気。1万円以上（万舟）は赤字、「的中」は艇ろぐの本線・押さえに入っていたレースです。組番をタップするとレースの予想と結果へ。</p>
+<p class="sub">3連単の組番・払戻金・人気。1万円以上（万舟）は赤字。「的中」は採用した予想券に入っていたレースです。一本化導入前は本線・押さえを対象とした旧判定を保持しています。組番をタップすると予想と結果へ。</p>
 {f'<p class="rnav">{nav}</p>' if nav else ''}</section>
 <div class="rgrid">{''.join(cards)}</div>"""
         script = "<script>setTimeout(function(){location.reload()},300000)</script>" if is_today else ""

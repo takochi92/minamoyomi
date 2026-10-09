@@ -11,6 +11,8 @@ on:
       - 'scraper/motoradj.py'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
+      - 'scraper/primary_slip.py'
+      - 'scraper/probability_view.py'
       - 'scraper/ana_evaluation.py'
       - 'scraper/research_snapshot.py'
       - 'tools/forward_ana_review.py'
