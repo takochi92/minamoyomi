@@ -558,27 +558,24 @@ class Site:
 
     @staticmethod
     def boat_svg(nx, wy, hull, ink, num):
-        """横から見た競艇ボート（舳先の先端が nx、喫水線が wy）"""
+        """上から見た競艇ボート（艇首が nx）。スリット図では進行方向を右に統一。"""
         return (f'<g transform="translate({nx:.1f},{wy})">'
-                # 引き波・しぶき
-                f'<path d="M-118 1 q8 -5 16 0 t16 0 t16 0" stroke="rgba(170,220,255,.55)" stroke-width="2" fill="none"/>'
-                f'<path d="M-92 -2 l-10 -7 M-94 1 l-14 -3 M-90 3 l-12 3" stroke="rgba(235,248,255,.8)" stroke-width="1.6" stroke-linecap="round"/>'
-                # 船体
-                f'<path d="M0 -5 L-12 -12 L-74 -13 L-80 -11 L-80 -2 L-62 1 L-12 1 Z" fill="{hull}" stroke="rgba(0,0,0,.55)" stroke-width="1"/>'
-                f'<path d="M-14 -9 L-72 -9.5" stroke="{ink}" stroke-opacity=".55" stroke-width="1.4"/>'
-                f'<path d="M-2 -3 L-60 -2" stroke="rgba(0,0,0,.35)" stroke-width="1"/>'
-                # 艇番プレート
-                f'<rect x="-66" y="-12" width="11" height="9" rx="1.5" fill="{ink}"/>'
-                f'<text x="-60.5" y="-4.6" text-anchor="middle" font-size="8" font-weight="900" fill="{hull}">{num}</text>'
-                # 選手（前かがみ）
-                f'<path d="M-50 -13 C-47 -22 -38 -25 -30 -21 L-26 -15 Z" fill="{hull}" stroke="rgba(0,0,0,.55)" stroke-width="1"/>'
-                f'<circle cx="-27" cy="-24" r="6" fill="{hull}" stroke="rgba(0,0,0,.6)" stroke-width="1"/>'
-                f'<path d="M-25 -26 a4 3 0 0 1 4 3 l-5 1 z" fill="#15191D"/>'
-                f'<path d="M-30 -18 L-18 -13" stroke="rgba(0,0,0,.6)" stroke-width="1.6" stroke-linecap="round"/>'
-                # モーター
-                f'<rect x="-92" y="-25" width="14" height="10" rx="3" fill="#2B3137" stroke="rgba(255,255,255,.2)"/>'
-                f'<rect x="-88" y="-16" width="6" height="18" fill="#3A424A"/>'
-                f'<path d="M-90 2 h10" stroke="#8A949E" stroke-width="2"/>'
+                # 船尾の引き波と、艇の影
+                f'<path d="M-111 -8 Q-98 -3 -86 0 Q-98 3 -111 8 M-98 -12 Q-87 -7 -77 -5 M-98 12 Q-87 7 -77 5" fill="none" stroke="#a8e5ee" stroke-opacity=".48" stroke-width="1.5" stroke-linecap="round"/>'
+                f'<path d="M-83 -7 L-3 -8 Q4 0 -3 8 L-83 7 Q-90 0 -83 -7Z" transform="translate(0 2)" fill="#02070b" opacity=".42"/>'
+                # 上面から見た細長い艇体、船首、デッキ、コクピット
+                f'<path d="M2 0 Q-3 -3 -10 -6 L-77 -7 Q-87 -5 -91 0 Q-87 5 -77 7 L-10 6 Q-3 3 2 0Z" fill="{hull}" stroke="#eaf7fb" stroke-opacity=".78" stroke-width="1.1"/>'
+                f'<path d="M-8 0 Q-13 -4 -22 -4 L-73 -4 Q-82 -3 -85 0 Q-82 3 -73 4 L-22 4 Q-13 4 -8 0Z" fill="#08131b" fill-opacity=".62" stroke="{ink}" stroke-opacity=".52" stroke-width=".7"/>'
+                f'<path d="M-13 -5 L-73 -5.2" stroke="#fff" stroke-opacity=".62" stroke-width="1"/>'
+                # 操縦者とヘルメット
+                f'<path d="M-43 -4 Q-40 -10 -32 -10 L-24 -7 L-22 -3 L-30 -2Z" fill="{hull}" stroke="#f4f8fa" stroke-opacity=".55" stroke-width=".7"/>'
+                f'<circle cx="-29" cy="-9" r="4" fill="#18232c" stroke="#f4f8fa" stroke-opacity=".72" stroke-width=".8"/>'
+                f'<path d="M-31 -11 Q-28 -14 -25 -10 L-27 -8Z" fill="#dcecf0"/>'
+                # 艇番プレートと船尾のモーター
+                f'<rect x="-67" y="-3.7" width="9" height="7.4" rx="1.4" fill="{ink}" stroke="#fff" stroke-opacity=".28" stroke-width=".6"/>'
+                f'<text x="-62.5" y="2.6" text-anchor="middle" font-size="6.5" font-weight="900" fill="{hull}">{num}</text>'
+                f'<rect x="-94" y="-4" width="7" height="8" rx="1.5" fill="#687985" stroke="#e3f1f4" stroke-opacity=".75" stroke-width=".7"/>'
+                f'<path d="M-96 -2 L-99 -4 M-96 2 L-99 4" stroke="#d8edf1" stroke-width=".8" stroke-linecap="round"/>'
                 '</g>')
 
     def slit_block(self, race, link="", se=None, result=False):
@@ -588,8 +585,8 @@ class Site:
             return ""
         ex = {} if result else {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
         exst = {x["frame"]: x.get("st") for x in (bi.get("start_exhibition") or [])} if result else {}
-        W, H, ROW, TOP = 360, 0, 44, 26
-        SLIT, K = 252, 400          # スリット線の位置と、ST 0.01秒あたり5.2px
+        W, H, ROW, TOP = 420, 0, 48, 34
+        SLIT, K = 282, 400          # スリット線の位置と、ST 0.01秒あたり4px
         rows = []
         for i, x in enumerate(sorted(se, key=lambda z: z["course"])):
             f, c, st, flag = x["frame"], x["course"], x.get("st"), x.get("flag") or ""
@@ -601,26 +598,31 @@ class Site:
                 nose = SLIT - st * K
                 lab = (f"F{abs(st):.2f}".replace("0.", ".") if st < 0 or flag == "F" else f"{st:.2f}".replace("0.", "."))
                 col = "#FF4D4D" if (st < 0 or flag == "F") else "var(--ink)"
-            nose = max(130, min(W - 64, nose))
+            nose = max(158, min(W - 64, nose))
             et = ex.get(f)
             rows.append(
                 f'<g><rect x="0" y="{y}" width="{W}" height="{ROW}" fill="{"rgba(255,255,255,.025)" if i % 2 else "transparent"}"/>'
-                f'<rect x="8" y="{y + 9}" width="26" height="26" rx="5" fill="{hull}" stroke="rgba(255,255,255,.25)"/>'
-                f'<text x="21" y="{y + 28}" text-anchor="middle" font-size="16" font-weight="800" fill="{ink}">{c}</text>'
-                + self.boat_svg(nose, y + 33, hull, ink, f)
+                f'<path d="M40 {y + ROW - 1} H{SLIT - 6}" stroke="#8bd1df" stroke-opacity=".13" stroke-width=".7" stroke-dasharray="3 7"/>'
+                f'<rect x="8" y="{y + 11}" width="26" height="26" rx="7" fill="{hull}" stroke="rgba(255,255,255,.32)"/>'
+                f'<text x="21" y="{y + 30}" text-anchor="middle" font-size="16" font-weight="800" fill="{ink}">{c}</text>'
+                + self.boat_svg(nose, y + 25, hull, ink, f)
                 + f'<text x="{W - 12}" y="{y + 25}" text-anchor="end" font-size="17" font-weight="800" fill="{col}" class="num">{lab}</text>'
                 + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示 {et}</text>' if et else "")
                 + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示ST {exst[f]:.2f}</text>'.replace("0.", ".") if result and exst.get(f) is not None and exst[f] >= 0 else "")
                 + (f'<text x="{W - 64}" y="{y + 25}" text-anchor="end" font-size="12" font-weight="700" fill="#F5C542">{e(x.get("note", ""))}</text>' if x.get("note") else "")
                 + '</g>')
         H = TOP + 6 * ROW + 8
-        svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="スタート展示のスリット" style="display:block;max-width:560px">'
-               f'<rect x="0" y="0" width="{W}" height="{H}" rx="10" fill="#0E2A3B"/>'
-               f'<text x="21" y="17" text-anchor="middle" font-size="10" fill="var(--ink2)">コース</text>'
-               f'<text x="{SLIT}" y="17" text-anchor="middle" font-size="10" fill="#F5C542">スリット</text>'
-               f'<text x="{W - 12}" y="17" text-anchor="end" font-size="10" fill="var(--ink2)">ST</text>'
+        svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="スタート展示のスリット" style="display:block;max-width:600px">'
+               '<defs><linearGradient id="slitWater" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b2634"/><stop offset=".55" stop-color="#12394a"/><stop offset="1" stop-color="#0b202d"/></linearGradient>'
+               '<linearGradient id="slitLine" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#ffd978" stop-opacity=".55"/><stop offset=".5" stop-color="#fff0b2"/><stop offset="1" stop-color="#e4a93e" stop-opacity=".65"/></linearGradient></defs>'
+               f'<rect x="0" y="0" width="{W}" height="{H}" rx="13" fill="url(#slitWater)"/>'
+               f'<path d="M42 24 V{H - 10} M{SLIT} 24 V{H - 10}" stroke="#a9e3ed" stroke-opacity=".16" stroke-width="1"/>'
+               f'<text x="21" y="22" text-anchor="middle" font-size="10" fill="#b5c9d0">コース</text>'
+               f'<text x="{SLIT}" y="22" text-anchor="middle" font-size="10" font-weight="700" fill="#ffe3a0">スタートライン</text>'
+               f'<text x="{W - 12}" y="22" text-anchor="end" font-size="10" fill="#b5c9d0">ST / 展示</text>'
                + "".join(rows) +
-               f'<line x1="{SLIT}" y1="{TOP - 2}" x2="{SLIT}" y2="{H - 6}" stroke="#F5C542" stroke-width="2.5"/></svg>')
+               f'<line x1="{SLIT - 3}" y1="{TOP - 5}" x2="{SLIT - 3}" y2="{H - 7}" stroke="url(#slitLine)" stroke-width="2"/>'
+               f'<line x1="{SLIT + 3}" y1="{TOP - 5}" x2="{SLIT + 3}" y2="{H - 7}" stroke="#ffd978" stroke-opacity=".38" stroke-width="1"/></svg>')
         if result:
             return f"""<div class="slit" style="margin-top:10px"><h3 style="margin:0 0 6px;font-size:14px">本番のスタート <small class="sub">右ほど早い・黄色は決まり手</small></h3>{svg}</div>"""
         return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
@@ -2341,3 +2343,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
