@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "purpose": "探索統計の修正と、未使用期間の仮想購入評価の準備",
+  "production_coefficients_changed": false,
+  "profitability_proven": false,
+  "thresholds": {
+    "minimum_reference_starts": 100,
+    "usual_top1_max": 0.1,
+    "personal_improvement_seconds": 0.03,
+    "minimum_matched_controls": 5,
+    "maximum_odds_age_seconds": 300,
+    "stake_per_ticket_yen": 100,
+    "maximum_inferred_session_span_days": 10
+  },
+  "threshold_status": "探索条件。事前登録済みの未使用期間検証ではない",
+  "items": [
+    {
+      "id": "course_specialists",
+      "status": "exploratory_ready",
+      "data": "research/player-statistics/statistics.json.gz:statistics.course",
+      "remaining": "相手実力・番組構成・未使用期間の検証"
+    },
+    {
+      "id": "escape_pairs",
+      "status": "exploratory_ready",
+      "data": "research/player-statistics/statistics.json.gz:statistics.escape",
+      "remaining": "展示進入からの展開確率と判断時オッズ"
+    },
+    {
+      "id": "inside_third_matchup",
+      "status": "exploratory_ready",
+      "data": "research/player-statistics/statistics.json.gz:statistics.matchup",
+      "remaining": "相手構成の補正。因果関係は未確認"
+    },
+    {
+      "id": "personal_exhibition",
+      "status": "additional_comparison_implemented",
+      "data": "statistics.json.gz:personal",
+      "remaining": "気象・相手・機力・進入変化の補正と未使用期間検証"
+    },
+    {
+      "id": "duplicate_signals",
+      "status": "overlap_measured",
+      "data": "statistics.json.gz:personal.improvement_overlap,exhibition.overlap",
+      "remaining": "本番モデルへ採用する場合は二重加点を避けて寄与を検証"
+    },
+    {
+      "id": "motor_reference",
+      "status": "chronological_research_fixed",
+      "data": "statistics.json.gz:motors",
+      "remaining": "正式更新日と開催日程。直線等の乗り手補正"
+    },
+    {
+      "id": "motor_foot_type",
+      "status": "unvalidated",
+      "data": "statistics.json.gz:motors.recent_changes",
+      "remaining": "直接測定・映像と直線、周回、まわり足を照合"
+    },
+    {
+      "id": "attack_attempt_resistance",
+      "status": "video_review_queue_created",
+      "data": "statistics.json.gz:exhibition.video_review_queue",
+      "remaining": "攻め成功だけでなく失敗・不試行も映像ラベル化"
+    },
+    {
+      "id": "input_timing",
+      "status": "component_timestamps_implemented",
+      "data": "scraper/research_snapshot.py",
+      "remaining": "運用開始後に実記録を蓄積。サイト側の更新時刻や同時刻性は保証しない"
+    },
+    {
+      "id": "fixed_bets_refunds",
+      "status": "forward_simulation_implemented",
+      "data": "statistics.json.gz:forward_ledger",
+      "remaining": "締切前固定の将来記録。未確認の不成立は未決済"
+    },
+    {
+      "id": "longshot_profitability",
+      "status": "unproven",
+      "remaining": "候補選定ルールを固定し、判断時オッズ・金額・返還を含めて将来検証"
+    },
+    {
+      "id": "live_prediction_integration",
+      "status": "deferred_pending_validation",
+      "remaining": "探索結果だけでモデル係数を変えず、比較試験で効果を確認後に反映"
+    }
+  ]
+}
