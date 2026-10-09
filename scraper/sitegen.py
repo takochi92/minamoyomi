@@ -169,7 +169,7 @@ class Page:
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="{self.u('index.html')}"><img src="{self.u('img/boat.webp')}" width="58" height="34" alt=""><span>{SITE_NAME}</span></a>
+  <a class="brand" href="{self.u('index.html')}"><img src="{self.u('img/boat-v2.webp')}" width="58" height="34" alt=""><span>{SITE_NAME}</span></a>
   {f'<span class="tagline">{e(TAGLINE)}</span>' if TAGLINE else ''}
   <nav class="nav">{navh}</nav>
 </div></header>
@@ -732,7 +732,7 @@ class Site:
             hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
         cells = "".join(f'<span class="bet">{combo(c)}{od(c)}</span>' for c in a["bets"])
         return f"""<section class="panel ana"><h2><span class="chip an">高回収狙い</span> {bt(a["frame"])} {e(a["name"])}の頭 <small>検証中</small></h2>
-<p>5コースの{e(a["name"])}は展示タイムが4コースより<b>{a["gap"]:.2f}秒</b>速く、外から一気に行ける足があります。頭固定・相手はAIの3着内上位3艇で{len(a["bets"])}点。</p>
+<p>5コースの{e(a["name"])}は展示タイムが4コースより<b>{a["gap"]:.2f}秒</b>速いという条件に該当します。伸びや攻め方はタイムだけでは断定できません。頭固定・相手はAIの3着内上位3艇で{len(a["bets"])}点。</p>
 <div class="bets">{cells}</div>{hit}
 <p class="sub">過去1年、5コースが4コースより0.15秒以上速かった{a["n"]}レースでは、5の1着が{pct(a["win"])}（オッズの見込み{pct(a["mkt"])}）。前半・後半に分けてもどちらも頭の回収率が100%を超えていましたが、件数が少なく偶然の可能性もあるため「検証中」です。成績は実績ページで別に集計します。</p></section>"""
 
@@ -797,7 +797,7 @@ class Site:
             return ""
         tk = race.get("tsuke") or {}
         if tk and not tk.get("active"):
-            return (f'<section class="panel"><p class="sub" style="margin:0"><span class="chip tk">厳選穴</span> 見送り：{bt(tp["frame"])} {e(tp["name"])}のツケマイの形はありますが、'
+            return (f'<section class="panel"><p class="sub" style="margin:0"><span class="chip tk">厳選穴</span> 見送り：{bt(tp["frame"])} {e(tp["name"])}は既存の穴条件に該当しますが、'
                     f'オッズがインの1着を{tk.get("in_mkt", 0) * 100:.0f}%と見ていて（45%以上）、この形で外を買っても回収できていない条件です。</p></section>')
         od = tk.get("odds") or {}
         cells = "".join(f'<span class="bet">{combo(c)}{f"<b class=odds>{od[c]}倍</b>" if od.get(c) else ""}</span>' for c in tp["bets"])
@@ -810,7 +810,7 @@ class Site:
         pre = "" if p.get("stage") == "直前" else '<p class="sub">※展示前の判定です。展示後に条件が崩れると消えます（成績は展示後に残ったレースだけで集計）。</p>'
         return f"""<section class="panel tsuke"><h2><span class="chip tk">厳選穴</span> {bt(tp["frame"])} {e(tp["name"])}（{tp["course"]}コース）のまくり <small>条件がすべてそろったレース</small></h2>
 <ul class="checks">{"".join(f"<li>✅ {e(w)}</li>" for w in tp["why"])}<li>✅ オッズがインを信じすぎていない（締切前に判定）</li></ul>
-<p>{"まくり切ったときにイン（" + bt(tp["in"]) + " " + e(tp["in_name"]) + "）ごと沈めやすい形。" if tp.get("kind", "tsuke") == "tsuke" else "外から一気に叩ける足。決まればインは残りにくい形。"}<b>頭固定の{len(tp["bets"])}点</b>。2・3着は「AIの確率（各選手の勝率・コース別の2・3着率・展示タイム・モーター）」×「まくりで決まったときに来やすい並び」で選んでいます（筋目の決め打ちではありません）。<br>{comp}</p>
+<p>過去の決まり手・スタート・成績から選んだ既存の穴条件です。実際の攻めや内艇の抵抗を映像で確認した判定ではありません。<b>頭固定の{len(tp["bets"])}点</b>。2・3着は「AIの確率（各選手の勝率・コース別の2・3着率・展示タイム・モーター）」×「まくりで決まったときに来やすい並び」で選んでいます（筋目の決め打ちではありません）。<br>{comp}</p>
 <div class="bets">{cells}</div>{hit}{pre}
 <p class="sub">5つの条件がすべてそろったレースだけを出しています（1日2レース前後）。過去約9,000レースの検証では、条件を重ねるほど回収率が上がり（2つ65%→3つ84%→4つ92%→5つ97%）、的中率は約20%でした。100%を約束するものではありません。成績は実績ページで集計します。</p></section>"""
 
@@ -838,11 +838,11 @@ class Site:
             if t.get("type") == "resist":
                 ws = "・".join(f"{c}コース{pct(v)}" for c, v in t["wins"].items())
                 if t["style"] == "飛び付き":
-                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>飛び付き型</b>（インで負けた{t["beaten"]}回のうち{t["out"]}回が4着以下）。'
-                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}はスタートが早く、攻められると抵抗して共倒れになりやすい形。')
+                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は、<b>負けたとき着外が多い</b>（インで負けた{t["beaten"]}回のうち{t["out"]}回が4着以下）。'
+                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}との組合せは参考材料です。抵抗・飛び付き・共倒れの動きは未確認です。')
                 else:
-                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>残す型</b>（インで負けても{t["beaten"] - t["out"]}/{t["beaten"]}回は2〜3着）。'
-                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}に攻められても無理に抵抗せず、着に残しにくる形。')
+                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>負けても2・3着に残った例が多い</b>（{t["beaten"] - t["out"]}/{t["beaten"]}回）。'
+                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}との組合せは参考材料です。抵抗しない意図や攻め方は断定できません。')
                 li.append(f'<li>{body}<span class="sub">過去2年、{t["att_course"]}コースがスタートの早い選手でこのタイプのイン（{t["n"]:,}レース）：インの1着{pct(t["in_win"])}・4着以下{pct(t["in_out"])}、1着は{ws}、配当の中央値{t["pay"]:,}円。</span></li>')
                 continue
             if t.get("type") == "exgap":
@@ -929,6 +929,80 @@ class Site:
                 f'<div class="rres"><div class="tbl-wrap"><table class="rorder"><thead><tr><th>着</th><th>枠</th><th>選手</th><th class="r">タイム</th></tr></thead><tbody>{orows}</tbody></table></div>'
                 f'<div class="rpays">{pays}{exh}{mkh}</div></div>{self.slit_block(race, se=res.get("start") or [], result=True)}</section>')
 
+    @staticmethod
+    def evidence_block(page, race, p):
+        """予想に保存された根拠だけ表示。締切後に参照値を再計算しない。"""
+        if not p.get('boats'):
+            return ''
+        rl={b['frame']:b for b in (race.get('racelist') or {}).get('boats',[])}
+        facts={s['frame']:s.get('facts',[]) for s in p.get('research_signals',[])}
+        cards=[]
+        for b in sorted(p['boats'],key=lambda x:x['course']):
+            f=b['frame']; raw=rl.get(f,{})
+            ev=(p.get('evidence') or {}).get(str(f),{})
+            motor='補正機力の参照値は未保存'
+            if ev:
+                motor=(f"乗り手補正 {ev['motor_ex_seconds']:+.3f}秒 · {ev.get('motor_reference_n',0)}走"
+                       if ev.get('motor_ready') and ev.get('motor_ex_seconds') is not None else '補正機力は中立（参照なし・交換直後等）')
+            personal='本人参照の数値は未保存'
+            if ev:
+                n=ev.get('reference_n',0)
+                personal=(f"普段より {ev['personal_change_seconds']:+.3f}秒 · {n}走"
+                          if ev.get('personal_ready') else f'本人比は中立 · 参照{n}走・展示待ち等')
+            # 数値未保存の旧予想は、保存済みの事実メモを残す。
+            notes=''.join(f'<li>{e(x)}</li>' for x in facts.get(f,[]))
+            notes=notes or '<li class="sub">複合展示・珍しい単独1位の該当メモなし</li>'
+            course=(p.get('course_stats') or {}).get('boats',{}).get(str(f),{})
+            cn=course.get('starts',0)
+            ch=f"{cn}走 · 1着{pct(course.get('win'))}" if cn else 'コース成績の保存なし'
+            mn=raw.get('motor_no')
+            ml=page.u('venue/'+SLUG[race['jcd']]+'-motor.html')
+            cards.append(f'<article class="evidence-card"><div class="evidence-head">{bt(f)}<div><b>{e(b.get("name",""))}</b><small>{b["course"]}コース · {e(b.get("class",""))}</small></div><strong>{pct(b.get("p_win"),1)}<small>AI 1着</small></strong></div>'
+                         f'<div class="evidence-metric"><span>機力 · <a href="{ml}#m{e(str(mn))}">{e(str(mn) if mn is not None else "—")}号機 →</a></span><b>{e(motor)}</b><small>{e(ev.get("motor_as_of") or "参照日未保存")} · 交換日推定</small></div>'
+                         f'<div class="evidence-metric"><span>本人比展示</span><b>{e(personal)}</b><small>終了済み直前2期 · マイナスは速い方向</small></div>'
+                         f'<div class="evidence-metric"><span>選手のコース成績</span><b>{e(ch)}</b><small>保存時点の直近成績・少数例に注意</small></div><ul class="comments">{notes}</ul></article>')
+        bets=p.get('bets') or {}
+        reason=bets.get('ana_reason') or bets.get('attack')
+        outer=bool(bets.get('ana') or bets.get('seme') or p.get('ana_pick') or p.get('tsuke_pick'))
+        reason=reason or ('外の艇を含む別の買い方があります。各買い目の説明を確認してください。' if outer else 'この予想には、穴の購入根拠を満たす買い目がありません。')
+        shadow_note=''
+        snap=race.get('research_snapshot') or {}
+        shadow=(snap.get('decision') or {}).get('ana_shadow') or {}
+        if shadow.get('tickets'):
+            from .research_snapshot import valid_snapshot
+            from .research_ledger import audit
+            row={**(snap.get('inputs') or {}),'decision':snap.get('decision'),
+                 'captured_at':snap.get('captured_at'),'deadline_at':snap.get('deadline_at'),
+                 'fetched_at':snap.get('fetched_at'),'provenance':'timestamped_pre_deadline'}
+            if valid_snapshot(snap,race) and not audit(row):
+                tickets=''.join(f'<span class="bet">{combo(t["combo"])}<b class="odds">{t["odds"]:g}倍</b><small>固定時AI {pct(t["probability"],1)}</small></span>' for t in shadow['tickets'])
+                shadow_note=f'<div class="evidence-reason"><b>締切前固定の穴券 · 仮想購入の検証中</b><div class="bets">{tickets}</div><small>根拠付き外艇・20倍以上・AI確率1%以上・確率×オッズ1.10以上、最大4点を各100円で記録。採用条件の収益性は未確認です。本線＋押さえとは別の検証券で、購入推奨や利益の保証ではありません。</small></div>'
+        return ('<section class="evidence-panel" id="evidence"><div class="evidence-title"><div><span class="eyebrow">RACE INSIGHT</span><h2>機力・本人比展示・穴の根拠</h2></div><span class="pill">予想時の保存情報</span></div>'
+                f'<div class="evidence-reason"><b>穴・攻めの材料</b><p>{e(reason)}</p><small>的中しやすさと、オッズに対して狙う価値は別に確認します。高配当だけを理由に買い目を増やしません。</small></div>'
+                f'{shadow_note}<div class="evidence-grid">{"".join(cards)}</div>'
+                '<p class="sub">複合展示は事実メモで、重複加点はしません。数値未保存の旧予想は後日の機歴で補いません。攻め・抵抗の実際の動きや伸び型・出足型は、この数値だけでは断定できません。</p></section>')
+
+    def evidence_watchlist(self, page):
+        """未締切の外艇に保存済み根拠があるレース。的中後の選別はしない。"""
+        d=self.idx.get('date','');items=[]
+        for r in getattr(self,'day_races',{}).get(d,[]):
+            if r.get('date')!=d or (r.get('result') or {}).get('finished') or r.get('deadline','')<=self.now.strftime('%H:%M'):
+                continue
+            p=r.get('prediction') or {}
+            from .ana_evaluation import classify
+            tags=classify(r)
+            if not tags:continue
+            bs={str(b['frame']):b for b in p.get('boats',[])}
+            labels={'motor_model_support':'補正機力','rare_solo_first':'本人比の珍しい展示1位','paired_exhibition':'複合展示','course_model_support':'コース成績'}
+            # 機力・本人比展示のある艇を先に、同条件ではコース順。確率・結果で選別しない。
+            fs=sorted(tags,key=lambda f:(not ('motor_model_support' in tags[f] or 'rare_solo_first' in tags[f]),bs[f]['course']))
+            f=fs[0];b=bs[f]
+            link=self.race_link(page,d,r['jcd'],r['rno'])+'#evidence'
+            items.append((r['deadline'],f'<a class="cfc evidence-watch" data-dl="{d} {e(r["deadline"])}" href="{link}"><div class="row"><strong>{e(VENUES[r["jcd"]]["name"])} {r["rno"]}R</strong><span class="num">{e(r["deadline"])}締切</span></div><b>{bt(int(f))} {e(b["name"])}</b><span class="sub">{" · ".join(labels[x] for x in tags[f])}</span><small>根拠を見る · 購入推奨の判定とは別</small></a>'))
+        items.sort(key=lambda x:x[0])
+        body='<div class="strip">'+''.join(x[1] for x in items[:8])+'</div>' if items else '<p class="sub">現在、締切前で根拠を確認できる外艇のレースはありません。</p>'
+        return '<section class="evidence-home"><h2>外の艇の根拠をチェック <small>補正機力・本人比展示・コース成績</small></h2>'+body+'<p class="sub">予想に記録された材料を確認する一覧です。利益や穴的中が確認できたレース一覧ではありません。</p></section>'
+
     def race_page(self, d, jcd, race):
         rno = race["rno"]
         v = VENUES[jcd]["name"]
@@ -999,6 +1073,7 @@ class Site:
 <nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
+{self.evidence_block(page, race, p)}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
@@ -1026,7 +1101,7 @@ class Site:
 </div>
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(['yoso','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}')}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
@@ -1219,12 +1294,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         anah = (f'<section style="display:grid;gap:10px"><h2>厳選穴 <small>穴目の条件がすべてそろったレース{f"・本日 {len(ana_done)}R中{sum(1 for x in ana_done if x)}的中" if ana_done else ""}</small></h2>'
                 f'<div class="strip">{"".join(c for _, _, c in ana_cards)}</div></section>') if ana_cards else ""
         targets = self.today_targets(page)
-        body = f"""<div class="hero"><img src="{page.u('img/logo.webp')}" srcset="{page.u('img/logo-sm.webp')} 560w, {page.u('img/logo.webp')} 1000w" sizes="(max-width:720px) 92vw, 560px" width="1000" height="497" alt="{SITE_NAME}" fetchpriority="high"></div>
+        body = f"""<section class="insight-hero"><div><span class="eyebrow">BOAT RACE / DATA &amp; INSIGHT</span><h1>水面の変化を、<br>穴の根拠へ。</h1><p>機力、本人比展示、選手のコース成績。<br>買い目の理由を、ひとつの画面で。</p><div class="insight-links"><a href="{page.u('motor.html')}">モーター相場を見る →</a><a href="{page.u('targets.html')}">コース巧者を探す →</a></div></div><img src="{page.u('img/boat-v2.webp')}" width="960" height="640" alt="水面を走る白と青のボート" fetchpriority="high"></section>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
-<h1>今日のボートレース予想｜全場の本線・押さえと自信ありレース</h1>
+<h2>今日のレースと予想の根拠</h2>
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
+{self.evidence_watchlist(page)}
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
@@ -2149,7 +2225,17 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         for path, title, route, desc in (("stats.html", "的中実績", "stats", "艇ログの推奨買い目の的中率・回収率を、締切前に掲載した買い目だけで毎日自動集計。"),
                                          ("logic.html", "予想の根拠", "logic", "艇ログの予想モデルの仕組みと、過去データでの検証結果（的中率・回収率・コース巧者の分析）を公開。")):
             page = Page(path)
-            body = '<div id="app"><p class="empty">読み込み中…</p></div>'
+            forward=''
+            if path=='stats.html':
+                report=load_json(DATA/'forward_ana.json',{}) or {}
+                base=report.get('baseline_on_same_races') or {}
+                shadow=report.get('shadow') or {}
+                forward=('<section class="panel evidence-reason"><h2>締切前固定の前向き仮想購入</h2>'
+                         '<p>根拠のある外艇をAI確率とオッズで絞った検証用の穴券を、本線＋押さえと同じレースで比較します。各券100円の仮想購入で、実購入成績ではありません。</p>'
+                         f'<div class="tbl-wrap"><table><thead><tr><th>戦略</th><th>決済件数</th><th>的中率</th><th>総回収率</th></tr></thead><tbody><tr><td>本線＋押さえ（比較対象レース）</td><td>{base.get("races",0)}</td><td>{pct(base.get("hits",0)/base["races"]) if base.get("races") else "未算出"}</td><td>{pct(base.get("gross_roi"),1) if base.get("gross_roi") is not None else "未算出"}</td></tr>'
+                         f'<tr><td>根拠付き穴券（検証中）</td><td>{shadow.get("races",0)}</td><td>{pct(shadow.get("hits",0)/shadow["races"]) if shadow.get("races") else "未算出"}</td><td>{pct(shadow.get("gross_roi"),1) if shadow.get("gross_roi") is not None else "未算出"}</td></tr></tbody></table></div>'
+                         '<p class="sub">完全な締切前入力・5分以内のオッズ・固定券・モデル指紋・公式返還を監査。旧形式や欠測は除外します。過去診断と分離し、少数件では改善を認定しません。予想値×オッズが高くても利益は保証しません。</p></section>')
+            body = forward+'<div id="app"><p class="empty">読み込み中…</p></div>'
             script = f'<script>window.__ROUTE__="{route}";</script><script src="app.js"></script>'
             self.put(path, page.render(f"{title}｜{SITE_NAME}", desc, body, [("", title)], script=script))
         about = (OUT / "about_body.html")

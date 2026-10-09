@@ -27,6 +27,28 @@ def ranks(values):
     return {f:1+sum(v<values[f]-1e-9 for v in values.values()) for f in values}
 
 
+def evidence(boats, before, refs, motors, day):
+    """予想作成時の参照値を保存。後日の表示で機歴や本人参照を再計算しない。"""
+    times={b['frame']:b.get('exhibit_time') for b in (before or {}).get('boats',[])}
+    complete=bool(ranks(times))
+    mean=sum(round(v*100) for v in times.values())/600 if complete else None
+    out={}
+    for b in boats:
+        f=b['frame'];ref=refs.get(b.get('toban'),{});n=ref.get('n',0)
+        ready=complete and n>=100
+        m=motors.get(str(b.get('motor_no')), {})
+        out[str(f)]={'reference_n':n,'reference_terms':ref.get('terms',[]),
+                     'reference_top1_rate':ref.get('top1',0)/n if n else None,
+                     'personal_ready':ready,
+                     'personal_change_seconds':round(round(times[f]*100)/100-mean-ref['dev_sum']/n,4) if ready else None,
+                     'motor_no':b.get('motor_no'),'motor_ready':bool(m),
+                     'motor_ex_seconds':m.get('ex_adj') if m else None,
+                     'motor_reference_n':m.get('ex_reference_n',0),
+                     'motor_as_of':m.get('as_of'),
+                     'renewal_source':m.get('renewal_source')}
+    return out
+
+
 def signals(boats,before,oriten,refs,course_of):
     times={b['frame']:b.get('exhibit_time') for b in before.get('boats',[])}
     rr={'展示':ranks(times)};ori=oriten or {}

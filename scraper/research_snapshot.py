@@ -40,9 +40,11 @@ def decision(race):
     pred = race.get('prediction') or {}
     bets = pred.get('bets') or {}
     combos = sorted({b['combo'] for b in bets.get('main', []) + bets.get('sub', [])})
+    from .ana_evaluation import shadow_decision
     return {'strategy': 'existing_ai_main_sub_100_v1', 'simulation': True,
             'model_version': pred.get('version'), 'stage': pred.get('stage'),
             'model_revision':pred.get('model_revision'),
+            'ana_shadow':shadow_decision(race),
             'p3': deepcopy(pred.get('p3')), 'entry': deepcopy(pred.get('entry')),
             'tickets': [{'combo': c, 'amount': 100} for c in combos]}
 

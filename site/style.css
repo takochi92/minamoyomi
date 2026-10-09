@@ -550,3 +550,17 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 @keyframes tglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc) 0%,transparent)}to{box-shadow:0 0 18px 2px color-mix(in srgb,var(--tc) 55%,transparent)}}
 @media (prefers-reduced-motion:reduce){.tier-gold,.tier-silver{animation:none}}
 .ai-r.tier-gold,.ai-r.tier-silver{padding:6px 8px;border-radius:10px;margin:0 -8px}.ai-b .tier-tag{margin-right:2px}
+
+/* 機力・本人比展示を読む黒背景。艇番の6色は共通のまま。 */
+:root[data-theme="dark"]{--bg:#070b10;--surface:#111923;--surface2:#182430;--ink:#f2f5f8;--ink2:#a5b2c1;--line:#283441;--accent:#59e1d0;--accent-ink:#071510;--water:#10303a;--water2:#1c4852}
+.insight-hero{display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:24px 0 32px;background:radial-gradient(ellipse at 85% 50%,#12343e,transparent 65%);gap:20px}
+.insight-hero h1{font-family:var(--body);font-size:clamp(30px,4vw,46px);line-height:1.4;letter-spacing:.04em;margin:14px 0}.insight-hero p{color:var(--ink2)}
+.insight-hero img{display:block;width:100%;height:auto}.insight-links{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--accent)}
+.evidence-panel,.evidence-home{display:grid;gap:14px;min-width:0}.evidence-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.evidence-title h2{margin:6px 0 0}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.evidence-card{border:1px solid var(--line);background:var(--surface);padding:18px;border-radius:12px;min-width:0}
+.evidence-head{display:flex;gap:10px;align-items:center}.evidence-head strong{margin-left:auto;white-space:nowrap;font:700 22px var(--mono);text-align:right}.evidence-card small,.evidence-reason small{display:block;font-size:11px;color:var(--ink2);line-height:1.65}.evidence-head small{font:11px/1.65 var(--body)}
+.evidence-metric{border-top:1px solid var(--line);padding-top:10px;margin-top:14px}.evidence-metric>span{display:block;color:var(--accent);font-size:11px;letter-spacing:.04em}.evidence-metric b{display:block;font-size:13px;margin:4px 0;overflow-wrap:anywhere}
+.evidence-reason{padding:18px;border:1px solid var(--line);border-top:3px solid #f5c86e;border-radius:10px;background:var(--surface)}.evidence-reason>b{color:#f5c86e}.evidence-reason p{margin:8px 0;font-size:14px}.evidence-watch{height:auto;min-height:150px;border-top:2px solid var(--accent)}
+.evidence-card .comments{font-size:12px;padding-left:18px}.evidence-panel>.sub,.evidence-home>.sub{margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:600px){.insight-hero{grid-template-columns:1fr;gap:0;padding-top:14px}.insight-hero img{max-height:200px;object-fit:contain}.evidence-grid{grid-template-columns:1fr}.evidence-title{align-items:flex-start;flex-direction:column}.evidence-card{padding:16px}}
