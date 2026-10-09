@@ -1,0 +1,80 @@
+{
+  "protocol": "evidence_value_outer_v1",
+  "params": {
+    "min_probability": 0.01,
+    "min_odds": 20.0,
+    "min_expected_return": 1.1,
+    "max_tickets": 4,
+    "amount": 100
+  },
+  "simulation": true,
+  "baseline_all": {
+    "strategy": "existing_ai_main_sub_100_v1",
+    "simulation": true,
+    "races": 0,
+    "hits": 0,
+    "invested": 0,
+    "refund": 0,
+    "payout": 0,
+    "gross_roi": null,
+    "net_roi": null,
+    "excluded_reason_counts": {
+      "incomplete_odds": 205,
+      "missing_exhibition_model_decision": 2123,
+      "missing_fixed_decision": 2123,
+      "missing_or_invalid_timestamps": 2124,
+      "no_tickets": 2123,
+      "unverified_inputs": 2123
+    },
+    "settled_details": [],
+    "by_model_and_month": []
+  },
+  "baseline_on_same_races": {
+    "strategy": "existing_ai_main_sub_100_v1",
+    "simulation": true,
+    "races": 0,
+    "hits": 0,
+    "invested": 0,
+    "refund": 0,
+    "payout": 0,
+    "gross_roi": null,
+    "net_roi": null,
+    "excluded_reason_counts": {},
+    "settled_details": [],
+    "by_model_and_month": []
+  },
+  "shadow": {
+    "strategy": "evidence_value_outer_v1",
+    "simulation": true,
+    "races": 0,
+    "hits": 0,
+    "invested": 0,
+    "refund": 0,
+    "payout": 0,
+    "gross_roi": null,
+    "net_roi": null,
+    "excluded_reason_counts": {},
+    "settled_details": [],
+    "by_model_and_month": []
+  },
+  "excluded_reason_counts": {
+    "incomplete_odds": 205,
+    "invalid_entry": 2123,
+    "invalid_fixed_probabilities": 2123,
+    "missing_exhibition_model_decision": 2123,
+    "missing_fixed_decision": 2123,
+    "missing_or_changed_shadow_protocol": 2124,
+    "missing_or_invalid_timestamps": 2124,
+    "missing_or_mismatched_fingerprint": 2124,
+    "no_shadow_tickets": 2124,
+    "no_tickets": 2123,
+    "unverified_inputs": 2123
+  },
+  "overlapping_evidence_groups": {},
+  "limits": [
+    "学習確率×締切前オッズはモデル上の見込みであり利益を保証しない",
+    "根拠タグの複数該当は重複集計。独立した加点ではない",
+    "決済・返還未確認は除外。旧記録の券を後から生成しない",
+    "影の仮想購入であり実購入・購入推奨ではない"
+  ]
+}
