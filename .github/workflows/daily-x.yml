@@ -31,15 +31,21 @@ jobs:
           node - <<'JS'
           const fs = require("fs");
           const { posts } = JSON.parse(fs.readFileSync("out/x.json", "utf8"));
-          const site = process.env.ATELIER_SITE_URL.trim().replace(/\/+$/, "");
+          // Secrets に引用符・"site_url":・https:// なし・/api/posts つきで入っていても読めるようにする
+          const clean = (v) => (v || "").trim().replace(/^.*?:\s*(?=["'])/, "").replace(/^["']+|["',\s]+$/g, "").trim();
+          const rawSite = clean(process.env.ATELIER_SITE_URL);
+          console.log("site check: length", rawSite.length, "scheme", /^https?:\/\//.test(rawSite), "space", /\s/.test(rawSite), "quote", /["']/.test(rawSite));
+          const found = rawSite.match(/https?:\/\/[^\s"',]+/) || rawSite.match(/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"',]*)?/i);
+          if (!found) { console.error("ATELIER_SITE_URL が URL の形になっていません"); process.exit(1); }
+          const site = (/^https?:/.test(found[0]) ? found[0] : "https://" + found[0]).replace(/\/api\/posts\/?$/, "").replace(/\/+$/, "");
           (async () => {
             for (const post of posts) {
               const r = await fetch(site + "/api/posts", {
                 method: "POST",
                 headers: {
                   "content-type": "application/json",
-                  "OAI-Sites-Authorization": "Bearer " + (process.env.ATELIER_SERVICE_TOKEN || "").trim(),
-                  "x-atelier-token": process.env.ATELIER_INGEST_TOKEN.trim()
+                  "OAI-Sites-Authorization": "Bearer " + clean(process.env.ATELIER_SERVICE_TOKEN),
+                  "x-atelier-token": clean(process.env.ATELIER_INGEST_TOKEN)
                 },
                 body: JSON.stringify(post)
               });
