@@ -133,5 +133,12 @@
   "reference": "completed_previous_two_terms",
   "validation_status": "retrospective_actual_course;not_timestamp_verified_roi",
   "selection_rule": "non_worse_win_and_trifecta_logloss"
+ },
+ "blend": {
+  "market": 1.0,
+  "model": 0.1,
+  "ev_min": 1.0,
+  "max_odds": 200.0,
+  "status": "検証中"
  }
 }
