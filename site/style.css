@@ -565,3 +565,25 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .prob-summary{display:flex;align-items:center;gap:16px;margin:18px 0}.prob-ring{position:relative;width:112px;min-width:112px;height:112px}.prob-ring svg{width:100%;height:100%;transform:rotate(-90deg)}.prob-ring circle{fill:none;stroke-width:9}.ring-track{stroke:var(--line)}.ring-value{stroke:var(--accent);stroke-linecap:round}.prob-ring>div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}.prob-ring b{font:700 23px var(--mono)}.prob-steps{flex:1;min-width:0}.prob-base{display:flex;justify-content:space-between;font-size:12px;margin-bottom:9px}.prob-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.prob-change{padding:6px 8px;background:var(--bg);border-radius:6px;font-size:11px}.prob-change b{display:block;font:700 15px var(--mono)}.prob-change b small{display:inline;font-size:10px;margin-left:2px}.prob-change.up{color:var(--accent)}.prob-change.down{color:#f68d88}.evidence-details summary{cursor:pointer;font-size:12px;color:var(--ink2);padding:8px 0}.primary-note{font-size:12px;color:var(--ink2);line-height:1.7}.primary-ana .slip-h{border-color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:600px){.insight-hero{grid-template-columns:1fr;gap:0;padding-top:14px}.insight-hero img{max-height:200px;object-fit:contain}.evidence-grid{grid-template-columns:1fr}.evidence-title{align-items:flex-start;flex-direction:column}.evidence-card{padding:16px}}
+
+/* 深い水面の色と控えめな陰影で、画面全体を落ち着かせる */
+:root,:root[data-theme="dark"]{
+  --bg:#080e14;--surface:#111a23;--surface2:#17232d;--ink:#edf4f6;--ink2:#9aadb8;--line:#293944;
+  --accent:#59d8c7;--accent-ink:#071511;--water:#102c38;--water2:#194453;
+  --good:#58d6a0;--warn:#f2c16b;--bad:#ff7770;
+}
+body{background:radial-gradient(ellipse at 50% -18%,#142633 0,transparent 54%),var(--bg)}
+.top{background:rgba(8,14,20,.94);border-bottom-color:rgba(117,157,174,.2);backdrop-filter:blur(14px)}
+.panel,.venue,.soon a,.evidence-card,.vt{background:linear-gradient(155deg,color-mix(in srgb,var(--surface) 96%,#274453),var(--surface) 58%);border-color:color-mix(in srgb,var(--line) 86%,#638392);box-shadow:0 8px 24px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.025)}
+.panel{border-radius:14px}
+.venue,.soon a,.vt{transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+.venue:hover,.soon a:hover,.vt:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 62%,var(--line));box-shadow:0 12px 28px rgba(0,0,0,.24),0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent)}
+.panel h2{letter-spacing:.015em}
+.panel h2:before{content:"";width:3px;height:1em;align-self:center;border-radius:4px;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 26%,transparent));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 28%,transparent)}
+.slit svg{border:1px solid rgba(155,207,218,.18);border-radius:13px;box-shadow:inset 0 1px rgba(255,255,255,.05),0 12px 28px rgba(0,0,0,.22)}
+.slit{overflow:hidden}
+.chip,.pill{filter:saturate(.9)}
+button,.btn{transition:filter .16s ease,transform .16s ease}
+button:hover,.btn:hover{filter:brightness(1.1)}
+@media(prefers-reduced-motion:reduce){.venue,.soon a,.vt,button,.btn{transition:none}.venue:hover,.soon a:hover,.vt:hover{transform:none}}
+
