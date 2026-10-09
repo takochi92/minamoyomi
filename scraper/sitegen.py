@@ -982,26 +982,6 @@ class Site:
                 f'{shadow_note}<div class="evidence-grid">{"".join(cards)}</div>'
                 '<p class="sub">複合展示は事実メモで、重複加点はしません。数値未保存の旧予想は後日の機歴で補いません。攻め・抵抗の実際の動きや伸び型・出足型は、この数値だけでは断定できません。</p></section>')
 
-    def evidence_watchlist(self, page):
-        """未締切の外艇に保存済み根拠があるレース。的中後の選別はしない。"""
-        d=self.idx.get('date','');items=[]
-        for r in getattr(self,'day_races',{}).get(d,[]):
-            if r.get('date')!=d or (r.get('result') or {}).get('finished') or r.get('deadline','')<=self.now.strftime('%H:%M'):
-                continue
-            p=r.get('prediction') or {}
-            from .ana_evaluation import classify
-            tags=classify(r)
-            if not tags:continue
-            bs={str(b['frame']):b for b in p.get('boats',[])}
-            labels={'motor_model_support':'補正機力','rare_solo_first':'本人比の珍しい展示1位','paired_exhibition':'複合展示','course_model_support':'コース成績'}
-            # 機力・本人比展示のある艇を先に、同条件ではコース順。確率・結果で選別しない。
-            fs=sorted(tags,key=lambda f:(not ('motor_model_support' in tags[f] or 'rare_solo_first' in tags[f]),bs[f]['course']))
-            f=fs[0];b=bs[f]
-            link=self.race_link(page,d,r['jcd'],r['rno'])+'#evidence'
-            items.append((r['deadline'],f'<a class="cfc evidence-watch" data-dl="{d} {e(r["deadline"])}" href="{link}"><div class="row"><strong>{e(VENUES[r["jcd"]]["name"])} {r["rno"]}R</strong><span class="num">{e(r["deadline"])}締切</span></div><b>{bt(int(f))} {e(b["name"])}</b><span class="sub">{" · ".join(labels[x] for x in tags[f])}</span><small>根拠を見る · 購入推奨の判定とは別</small></a>'))
-        items.sort(key=lambda x:x[0])
-        body='<div class="strip">'+''.join(x[1] for x in items[:8])+'</div>' if items else '<p class="sub">現在、締切前で根拠を確認できる外艇のレースはありません。</p>'
-        return '<section class="evidence-home"><h2>外の艇の根拠をチェック <small>補正機力・本人比展示・コース成績</small></h2>'+body+'<p class="sub">予想に記録された材料を確認する一覧です。利益や穴的中が確認できたレース一覧ではありません。</p></section>'
 
     def race_page(self, d, jcd, race):
         rno = race["rno"]
@@ -1300,7 +1280,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">最終更新 {e((self.idx.get('updated_at') or '')[11:])}　公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></section>
 <section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
-{self.evidence_watchlist(page)}
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
@@ -1799,143 +1778,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                              m.get("rank") or 0, prev, use.get((jcd, str(no)), "")])
         return rows
 
-    BRANCH_ORDER = ["群馬", "埼玉", "東京", "静岡", "愛知", "三重", "福井", "滋賀", "大阪", "兵庫", "徳島", "香川", "岡山", "広島", "山口", "福岡", "佐賀", "長崎"]
-
-    def racer_index(self, listing, today):
-        page = Page("racer/index.html")
-        bo = {b: i for i, b in enumerate(self.BRANCH_ORDER)}
-        rs = [(t, self.racers[t]) for t in listing]
-        rs.sort(key=lambda x: (bo.get(x[1].get("branch", ""), 99), x[0]))
-        rj = []
-        for t, info in rs:
-            tod = [[j, rn, f] for d, j, rn, f in today.get(t, [])]
-            rj.append([t, info["name"], info.get("kana", ""), info.get("branch", ""), info.get("ki") or 0, info.get("class", ""),
-                       info.get("win") if info.get("win") is not None else -1, 1 if info.get("lady") else 0, tod])
-        by = defaultdict(list)
-        for t, info in rs:
-            by[info.get("branch", "")].append(f'<a href="{t}.html">{e(info["name"])}</a>')
-        seo = "".join(f'<h3>{e(b or "不明")}</h3><div class="racer-list">{"".join(v)}</div>' for b, v in by.items())
+    BRANCH_ORDER = ["群馬", "埼玉", "東京", "静岡", "愛知", "三重r-list">{"".join(v)}</div>' for b, v in by.items())
         branches = [b for b in self.BRANCH_ORDER if any(i.get("branch") == b for _, i in rs)] + sorted({i.get("branch", "") for _, i in rs} - set(self.BRANCH_ORDER) - {""})
-        kis = sorted({i["ki"] for _, i in rs if i.get("ki")}, reverse=True)
-        has_ki = bool(kis)
-        mrows = self.motor_rows(today)
-        vnames = {j: VENUES[j]["name"] for j in VENUES}
-        held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
-        opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
-        body = f"""<h1>選手・モーター検索</h1>
-<p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（この端末だけに保存）。</p>
-<div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
-<section class="tabp sx" id="sx-r" data-tab="r">
-<div class="sx-form panel">
-<input type="search" id="q" placeholder="名前・よみ・登録番号" autocomplete="off" aria-label="選手をさがす">
-<div class="sx-sel">
-<select id="fb" aria-label="支部"><option value="">支部：すべて</option>{opt((b, b) for b in branches)}</select>
-{f'<select id="fk" aria-label="期"><option value="">期：すべて</option>{opt((str(k), f"{k}期") for k in kis)}</select>' if has_ki else ''}
-<select id="fc" aria-label="級別"><option value="">級：すべて</option>{opt((c, c) for c in ("A1", "A2", "B1", "B2"))}</select>
-<select id="fx" aria-label="しぼりこみ"><option value="">全員</option><option value="l">女子だけ</option><option value="t">今日出走する人</option><option value="f">☆お気に入りだけ</option></select>
-<select id="fs" aria-label="並び順"><option value="b">支部順</option><option value="w">勝率が高い順</option>{'<option value="k">期が新しい順</option>' if has_ki else ''}<option value="t">登録番号順</option></select>
-</div>
-<p class="sub sx-n" aria-live="polite"></p>
-</div>
-<div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th></th><th>名前</th><th>級</th><th>支部</th>{'<th class="r">期</th>' if has_ki else ''}<th class="r">勝率</th><th>今日</th></tr></thead><tbody id="sx-rows"></tbody></table></div>
-<p class="sx-more" hidden><button type="button" class="btn" id="sx-more">もっと見る</button></p>
-<details class="panel"><summary class="sub">支部別の全選手一覧</summary>{seo}</details>
-</section>
-<section class="tabp sx" id="sx-m" data-tab="m" hidden>
-<div class="sx-form panel">
-<div class="sx-sel">
-<select id="mv" aria-label="場"><option value="">全24場</option>{f'<option value="held">今日開催の場</option>' if held else ''}{opt((j, VENUES[j]["name"]) for j in sorted(VENUES))}</select>
-<select id="ms" aria-label="並び順"><option value="2">2連対率が高い順</option><option value="3">3連対率が高い順</option><option value="e">展示タイムが速い順</option><option value="n">号機順</option></select>
-<select id="mn" aria-label="出走数"><option value="20">20走以上</option><option value="10">10走以上</option><option value="0">すべて</option></select>
-</div>
-<input type="search" id="mq" placeholder="号機・選手名（前節・今日の使用者）" autocomplete="off" aria-label="モーターをさがす">
-<p class="sub sx-n" aria-live="polite"></p>
-</div>
-<div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th>場</th><th class="r">号機</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">出走</th><th class="r">展示</th><th>前節の使用者</th><th>今日の使用者</th></tr></thead><tbody id="mx-rows"></tbody></table></div>
-<p class="sub">数字はモーターが入れ替わってからの成績だけです。展示は、その場の中で展示タイムが速い順の順位。号機をタップすると前節・前々節の着順とメモ欄が開きます。</p>
-</section>
-<section class="tabp sx" id="sx-f" data-tab="f" hidden><div id="fav-list" class="panel"><p class="sub">☆を押した選手がここに並びます。</p></div></section>
-<script id="sx-data" type="application/json">{json.dumps({"racers": rj, "motors": mrows, "venues": vnames, "slug": SLUG, "held": held, "date": self.idx.get("date", ""), "hasKi": has_ki}, ensure_ascii=False, separators=(",", ":"))}</script>
-<script src="{page.u('search.js')}" defer></script>
-<p class="sub">データ：BOAT RACE公式の期別成績・競走成績・番組表。</p>"""
-        self.put(page.path, page.render(f"ボートレーサー検索・モーター検索（支部・期・級別）｜{SITE_NAME}",
-                                        f"ボートレーサー約{len(rs):,}人を名前・よみ・支部{'・期' if has_ki else ''}・級別でさがせます。全24場のモーターを2連対率で検索。お気に入り選手の今日の出走も。",
-                                        body, [("", "選手・モーター")]))
-
-    def today_entries(self):
-        out = defaultdict(list)
-        d = self.idx.get("date")
-        for v in self.idx.get("venues", []):
-            for r in v["races"]:
-                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
-                for b in (race.get("racelist") or {}).get("boats", []):
-                    out[b.get("toban")].append((d, v["jcd"], r["rno"], b["frame"]))
-        return out
-
-    # ------------------------------------------------------------ 会場
-    def race_cards(self, page, d, jcd, today):
-        """場ページの「本日のレース」：1Rずつ、締切・状態・6人・印・タブへのボタン"""
-        out = []
-        if today.get("cancelled"):
-            return '<p class="sub">本日は中止です。</p>'
-        for r in today.get("races", []):
-            race = load_json(DATA / "races" / d / f"{jcd}{r['rno']:02d}.json", {}) or {}
-            boats = (race.get("racelist") or {}).get("boats", [])
-            href = self.race_link(page, d, jcd, r["rno"])
-            fin = self.finished(r)
-            if fin:
-                st = f'<span class="pill hit">結果 {combo(r["result"])} {yen(r.get("payout"))}</span>' if r.get("result") else '<span class="pill">確定</span>'
-            else:
-                st = f'<span class="num" data-dl="{d} {r["deadline"]}">{r["deadline"]}締切</span>'
-            marks = []
-            if r.get("hon"):
-                marks.append('<span class="chip hm">固い</span>')
-            if r.get("tsuke"):
-                marks.append('<span class="chip tk">厳選穴</span>')
-            if (race.get("prediction") or {}).get("bets", {}).get("mode") == "attack":
-                marks.append('<span class="chip iw1">攻めあり</span>')
-            if fin and r.get("hit"):
-                marks.append('<span class="chip hitc">的中</span>')
-            names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or '<li class="sub">出走表は締切2時間前ごろに表示</li>'
-            out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a><small>{e(race.get("race_name", ""))}</small></header>'
-                       f'<div class="rc-st"><span class="st">{st}</span><span class="marks">{"".join(marks)}</span></div><ul class="names">{names}</ul>'
-                       f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#tenji">展示</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
-        return "".join(out)
-
-    def venue_pages(self):
-        for jcd, v in VENUES.items():
-            page = Page(f"venue/{SLUG[jcd]}.html")
-            vc, vn, vl = self.S.vc[jcd], self.S.vn[jcd], self.S.vl[jcd]
-            rows = []
-            for c in range(1, 7):
-                a, n = vc[c], self.S.nc[c]
-                if not a[0]:
-                    continue
-                kim = "・".join(f"{k}{a[4 + i] / a[1] * 100:.0f}%" for i, k in enumerate(KIM) if a[1] and a[4 + i] / a[1] >= 0.05)
-                rows.append(f'<tr><td>{bt(c)} {c}コース</td><td class="r num"><b>{pct(a[1] / a[0], 1)}</b></td><td class="r num sub">{pct(n[1] / n[0], 1)}</td><td class="r num">{pct((a[1] + a[2]) / a[0], 1)}</td><td class="r num">{pct((a[1] + a[2] + a[3]) / a[0], 1)}</td><td>{e(kim)}</td></tr>')
+        kis = [2]) / a[0], 1)}</td><td class="r num">{pct((a[1] + a[2] + a[3]) / a[0], 1)}</td><td>{e(kim)}</td></tr>')
             mx = max(c["win"] for c in v["courses"])
-            bars = "".join(f'<div><small>{c["win"]:.1f}%</small><i style="height:{c["win"] / mx * 76:.0f}px"></i>{bt(c["course"])}</div>' for c in v["courses"])
-            c1 = vc[1][1] / vc[1][0] if vc[1][0] else None
-            n1 = self.S.nc[1][1] / self.S.nc[1][0]
-            lead = ""
-            if c1:
-                diff = (c1 - n1) * 100
-                lead = f"{v['name']}の1コース1着率は{c1 * 100:.1f}%で、全国平均（{n1 * 100:.1f}%）より{abs(diff):.1f}ポイント{'高く、イン有利' if diff > 0 else '低く、イン受難'}の水面です。"
-            loss = ""
-            if vn:
-                items = {"差され": vl.get("2-差し", 0), "捲られ": sum(x for k, x in vl.items() if k.endswith("-まくり")), "捲り差され": sum(x for k, x in vl.items() if k.endswith("-まくり差し"))}
-                loss = "・".join(f"{k} {x / vn * 100:.1f}%" for k, x in items.items())
-            today = next((x for x in self.idx.get("venues", []) if x["jcd"] == jcd), None)
-            todayh = ""
-            if today:
-                todayh = (f'<section style="display:grid;gap:10px"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
-                          f'<div class="rcards">{self.race_cards(page, self.idx["date"], jcd, today)}</div></section>')
-            body = f"""<h1>{e(v['name'])}ボートレース</h1>
-{todayh}
-<h2 style="margin-top:8px">{e(v['name'])}の水面の特徴とコース別成績</h2>
-<p>{e(lead)}{e(v.get('note', ''))}</p>
-<p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}　<a href="{page.u('venue/' + SLUG[jcd] + '-motor.html')}">モーター一覧 →</a></p>
-<section class="panel"><h2>コース別1着率 <small>公式・{e((load_json(Path(__file__).parent / 'venues.json', {}) or {}).get('period', ''))}</small></h2><div class="courses">{bars}</div></section>
+            bars = "".join(f'<div><small>{c["win"]:.1f}%</small><i style="heightrs}</div></section>
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
@@ -1963,11 +1810,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             ms = data.get(jcd) or {}
             since = next((m.get("since") for m in ms.values() if m.get("since")), "")
             best = max(((no, m["top2"] / m["n"]) for no, m in ms.items() if m.get("n", 0) >= 20 and "top2" in m), key=lambda x: x[1], default=None)
-            sub = (f"{int(since[4:6])}/{int(since[6:])}入れ替え" if since else "集計中")
-            top = f'<span class="sub">最高 {e(best[0])}号機 {best[1] * 100:.0f}%</span>' if best else '<span class="sub">&nbsp;</span>'
-            cards.append(f'<a class="vt on{"" if jcd in held else " off"}" href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}"><b>{e(VENUES[jcd]["name"])}</b>'
-                         f'<span>{"本日開催" if jcd in held else "&nbsp;"}</span><span class="st" style="font-size:12px">{sub}</span>{top}</a>')
-        body = f"""<h1>モーター一覧</h1>
+            sub = (f"{int(since[4:6])}/{int(since[6:])}入れ替え" if sinch1>モーター一覧</h1>
 <p class="sub">場を選ぶと、その場の全モーターの2連対率・3連対率、前節・前々節の使用者と着順が見られます。数字はモーターが入れ替わってからの成績だけで数えています。各モーターの欄に、自分用のメモも書けます（この端末だけに保存）。</p>
 <div class="vtiles">{''.join(cards)}</div>"""
         self.put(page.path, page.render(f"ボートレース全24場のモーター一覧（2連対率・前節の使用者）｜{SITE_NAME}",
@@ -1995,13 +1838,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 
             cards = []
             for no, m in sorted(ms.items(), key=lambda kv: -(rate(kv[1], "top2") or 0)):
-                r2, r3 = rate(m, "top2"), rate(m, "top3")
-                exs = f'展示 {m["rank"]}位/{m["of"]}' if m.get("rank") else ""
-                mt = m.get("meets") or []
-                cards.append(f'<details class="mt" id="m{e(no)}"><summary><b class="mt-no num">{e(no)}<small>号機</small></b>'
-                             f'<span class="mt-v"><small>2連対率</small><b class="num {"best" if r2 is not None and r2 >= 0.40 else ""}">{pct(r2, 1)}</b></span>'
-                             f'<span class="mt-v"><small>3連対率</small><b class="num">{pct(r3, 1)}</b></span>'
-                             f'<span class="mt-v"><small>出走</small><b class="num">{m.get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
+                r2, r3 = rate(m, "toy="{jcd}-{e(no)}"></span></summary>'
                              f'<div class="mt-body">{meet(mt[0] if mt else None, "前節")}{meet(mt[1] if len(mt) > 1 else None, "前々節")}'
                              f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
             sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
@@ -2009,15 +1846,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">{f'{sh}にモーターが入れ替わってからの成績です（入れ替え前のモーターはまぜていません）。' if sh else ''}2連対率の高い順。タップで前節・前々節の使用者と着順、メモ欄が開きます。メモはこの端末だけに保存されます。</p>
 <div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から集計。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
-            self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
-                                            f"{v['name']}のモーターを2連対率・3連対率の順に一覧。前節・前々節の使用者と着順、展示タイムの順位。", body,
-                                            [("motor.html", "モーター一覧"), ("", v["name"])]))
-
-    def venue_extra(self, jcd):
-        out = []
-        vs = self.S.vst.get(jcd) or {}
-        if vs:
-            rows = "".join(f'<tr><td>{bt(c)} {c}コース</td><td class="r num">{(vs[c][0] / vs[c][1]):.2f}</td><td class="r num">{int(vs[c][2])}</td></tr>'
+            se[c][0] / vs[c][1]):.2f}</td><td class="r num">{int(vs[c][2])}</td></tr>'
                            for c in range(1, 7) if c in vs and vs[c][1] > 0)
             out.append(f'<section class="panel"><h2>コース別の平均STとフライング <small>直近1年</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">平均ST</th><th class="r">F数</th></tr></thead><tbody>{rows}</tbody></table></div></section>')
         vm = self.S.vm.get(jcd) or {}
