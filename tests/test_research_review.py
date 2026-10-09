@@ -112,3 +112,21 @@ def test_motor_prior_day_baseline_and_title_boundary():
     assert analyze(future,meta)['recent_changes'][0]['previous']==before
     assert all(abs(x['previous']['expected_top2_prior_days']-1/3)<1e-10 for x in out['recent_changes'])
     assert all(not x['official_renewal_verified'] for x in out['recent_changes'])
+
+
+def test_motor_serialization_is_reproducible_across_hash_seeds():
+    import os,subprocess,sys
+    code='''
+import sys,json
+sys.path.insert(0,'tests')
+from test_player_research import race
+from tools.motor_research import analyze
+rows=[]
+for day in ('20260901','20260905'):
+ for j in ('01','02','03','04'):
+  for i in range(5):
+   r=race(day,zero=day=='20260901');r[1]=j;r[2]=i+1;rows.append(r)
+print(json.dumps(analyze(rows,[]),ensure_ascii=False))
+'''
+    outputs=[subprocess.check_output([sys.executable,'-c',code],env={**os.environ,'PYTHONHASHSEED':seed}) for seed in ('1','2')]
+    assert outputs[0]==outputs[1]

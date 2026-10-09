@@ -19,12 +19,12 @@ def analyze(records, race_files):
     motors=defaultdict(list);audit=Counter();boundaries=[]
     for day,rs in sorted(day_rows.items()):
         ordinal=datetime.strptime(day,'%Y%m%d').toordinal()
-        for j in renewed_venues(rs):
+        for j in sorted(renewed_venues(rs)):
             if ordinal-last_zero.get(j,-99)>3:
                 epochs[j]=day
                 audit['inferred_renewal_events']+=1
             last_zero[j]=ordinal
-        for j in {r[1] for r in rs}:
+        for j in sorted({r[1] for r in rs}):
             names=titles.get((day,j),set());title=next(iter(names)) if len(names)==1 else None
             changed=bool(title and session_titles.get(j) and title!=session_titles[j])
             gap=ordinal-last_day.get(j,-99)>2
