@@ -558,24 +558,43 @@ class Site:
 
     @staticmethod
     def boat_svg(nx, wy, hull, ink, num):
-        """上から見た競艇ボート（艇首が nx）。スリット図では進行方向を右に統一。"""
+        """人が乗り込んだ競走艇を上から描く。艇首は nx、進行方向は右。"""
         return (f'<g transform="translate({nx:.1f},{wy})">'
-                # 船尾の引き波と、艇の影
-                f'<path d="M-111 -8 Q-98 -3 -86 0 Q-98 3 -111 8 M-98 -12 Q-87 -7 -77 -5 M-98 12 Q-87 7 -77 5" fill="none" stroke="#a8e5ee" stroke-opacity=".48" stroke-width="1.5" stroke-linecap="round"/>'
-                f'<path d="M-83 -7 L-3 -8 Q4 0 -3 8 L-83 7 Q-90 0 -83 -7Z" transform="translate(0 2)" fill="#02070b" opacity=".42"/>'
-                # 上面から見た細長い艇体、船首、デッキ、コクピット
-                f'<path d="M2 0 Q-3 -3 -10 -6 L-77 -7 Q-87 -5 -91 0 Q-87 5 -77 7 L-10 6 Q-3 3 2 0Z" fill="{hull}" stroke="#eaf7fb" stroke-opacity=".78" stroke-width="1.1"/>'
-                f'<path d="M-8 0 Q-13 -4 -22 -4 L-73 -4 Q-82 -3 -85 0 Q-82 3 -73 4 L-22 4 Q-13 4 -8 0Z" fill="#08131b" fill-opacity=".62" stroke="{ink}" stroke-opacity=".52" stroke-width=".7"/>'
-                f'<path d="M-13 -5 L-73 -5.2" stroke="#fff" stroke-opacity=".62" stroke-width="1"/>'
-                # 操縦者とヘルメット
-                f'<path d="M-43 -4 Q-40 -10 -32 -10 L-24 -7 L-22 -3 L-30 -2Z" fill="{hull}" stroke="#f4f8fa" stroke-opacity=".55" stroke-width=".7"/>'
-                f'<circle cx="-29" cy="-9" r="4" fill="#18232c" stroke="#f4f8fa" stroke-opacity=".72" stroke-width=".8"/>'
-                f'<path d="M-31 -11 Q-28 -14 -25 -10 L-27 -8Z" fill="#dcecf0"/>'
-                # 艇番プレートと船尾のモーター
-                f'<rect x="-67" y="-3.7" width="9" height="7.4" rx="1.4" fill="{ink}" stroke="#fff" stroke-opacity=".28" stroke-width=".6"/>'
-                f'<text x="-62.5" y="2.6" text-anchor="middle" font-size="6.5" font-weight="900" fill="{hull}">{num}</text>'
-                f'<rect x="-94" y="-4" width="7" height="8" rx="1.5" fill="#687985" stroke="#e3f1f4" stroke-opacity=".75" stroke-width=".7"/>'
-                f'<path d="M-96 -2 L-99 -4 M-96 2 L-99 4" stroke="#d8edf1" stroke-width=".8" stroke-linecap="round"/>'
+                # 後流は船尾から広がり、船体には接地感のある落ち影をつける
+                f'<path d="M-132 -3 Q-119 -8 -105 -5 M-136 0 Q-118 -2 -101 0 M-132 3 Q-119 8 -105 5 M-113 -10 Q-101 -7 -91 -5 M-113 10 Q-101 7 -91 5" fill="none" stroke="#b5e8f2" stroke-opacity=".42" stroke-width="1.1" stroke-linecap="round"/>'
+                f'<path d="M-116 -7 Q-84 -10 -22 -8 L2 0 -22 8 Q-84 10 -116 7 Q-122 0 -116 -7Z" transform="translate(0 2)" fill="#02070b" opacity=".58"/>'
+                # 細い船首と左右のスポンソンを持つ低い滑走艇の外殻
+                f'<path d="M3 0 Q-3 -2 -13 -6 L-92 -8 Q-108 -7 -119 -4 L-124 0 -119 4 Q-108 7 -92 8 L-13 6 Q-3 2 3 0Z" fill="{hull}" stroke="#e5edf0" stroke-opacity=".9" stroke-width="1.1"/>'
+                f'<path d="M-20 -6 L-91 -7.2 Q-108 -6 -116 -3.5 L-119 -2.5 M-20 6 L-91 7.2 Q-108 6 -116 3.5 L-119 2.5" fill="none" stroke="#111a21" stroke-opacity=".82" stroke-width="1.1"/>'
+                f'<path d="M-5 0 Q-12 -4 -22 -5 L-96 -5 Q-108 -4 -114 0 Q-108 4 -96 5 L-22 5 Q-12 4 -5 0Z" fill="#111a20" stroke="#d9e1e4" stroke-opacity=".7" stroke-width=".75"/>'
+                # デッキのリブ、カーボン床、固定金具
+                f'<path d="M-17 -5 L-17 5 M-21 -5 L-21 5 M-87 -5 L-87 5 M-92 -5 L-92 5" stroke="#cbd5d9" stroke-opacity=".45" stroke-width=".65"/>'
+                f'<path d="M-111 -3.5 L-25 -3.5 M-111 3.5 L-25 3.5" stroke="#fff" stroke-opacity=".32" stroke-width=".55"/>'
+                f'<path d="M-76 -4 L-72 -2 L-68 -4 M-76 4 L-72 2 L-68 4" fill="none" stroke="{hull}" stroke-width="1"/>'
+                f'<circle cx="-103" cy="-5.4" r=".8" fill="#d8e1e4"/><circle cx="-103" cy="5.4" r=".8" fill="#d8e1e4"/>'
+                # 低い姿勢の選手。ヘルメット、肩、胴体、脚と前へ伸ばした両腕
+                f'<path d="M-56 -3 Q-48 -6 -40 -5 L-29 -3 L-24 -1 L-25 1 L-30 2 L-41 5 Q-50 6 -57 3Z" fill="#27343c" stroke="#d6e0e4" stroke-opacity=".85" stroke-width=".7"/>'
+                f'<path d="M-53 -2.8 Q-44 -4 -37 -2 L-36 0 L-38 2 L-52 2.8Z" fill="#9eabb1" fill-opacity=".72"/>'
+                f'<path d="M-57 -2.7 Q-70 -4 -82 -3 L-88 -1.4 L-87 0 L-88 1.4 L-82 3 Q-70 4 -57 2.7Z" fill="#18232a" stroke="#b7c4ca" stroke-opacity=".72" stroke-width=".65"/>'
+                f'<path d="M-50 -2 L-33 -6 L-24 -5 M-50 2 L-33 6 L-24 5" fill="none" stroke="#283a43" stroke-width="2" stroke-linecap="round"/>'
+                f'<path d="M-24 -5 L-20 -5 M-24 5 L-20 5" stroke="#e7ecee" stroke-width="1.5" stroke-linecap="round"/>'
+                f'<path d="M-84 -2.5 L-93 -3.2 M-84 2.5 L-93 3.2" stroke="#77878f" stroke-width="1.2" stroke-linecap="round"/>'
+                f'<path d="M-85 -3 L-92 -4 M-85 3 L-92 4" stroke="{hull}" stroke-width="1.1"/>'
+                # フルフェイスヘルメットとバイザー。頭は進行方向を向く
+                f'<ellipse cx="-29" cy="0" rx="6.2" ry="4.7" fill="{hull}" stroke="#f0f4f5" stroke-width=".8"/>'
+                f'<path d="M-25 -3.4 Q-20 -2.4 -20 0 Q-20 2.4 -25 3.4 L-27 2.2 L-27 -2.2Z" fill="#101a20" stroke="#dce6e9" stroke-opacity=".75" stroke-width=".55"/>'
+                f'<path d="M-31 -3.2 Q-28 -4.8 -24 -3.2" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".65"/>'
+                # 小型のハンドル・ステアリングリンケージと計器
+                f'<path d="M-22 -5 L-15 -6 L-12 -4 M-22 5 L-15 6 L-12 4" fill="none" stroke="#bbc7cc" stroke-width=".8"/>'
+                f'<circle cx="-13" cy="-4" r="1.2" fill="#dbe5e8"/><circle cx="-13" cy="4" r="1.2" fill="#dbe5e8"/>'
+                f'<rect x="-61" y="-2.5" width="11" height="5" rx="1" fill="{ink}" stroke="#f2f4f4" stroke-opacity=".45" stroke-width=".55"/>'
+                f'<text x="-55.5" y="1.8" text-anchor="middle" font-size="4.5" font-weight="900" fill="{hull}">{num}</text>'
+                # 船尾の露出した船外機、排気、プロペラ軸、燃料ライン
+                f'<path d="M-103 0 C-110 0 -111 0 -116 0" fill="none" stroke="#e4a84d" stroke-width=".8"/>'
+                f'<rect x="-127" y="-4.8" width="8" height="9.6" rx="2" fill="#77858c" stroke="#e2e8ea" stroke-width=".7"/>'
+                f'<path d="M-126 -3 L-121 -3 L-119 -1.5 L-119 1.5 L-121 3 L-126 3Z" fill="#222d33" stroke="#b9c4c8" stroke-width=".55"/>'
+                f'<path d="M-128 -2 L-131 -4 M-128 2 L-131 4 M-131 -4 L-134 -2 M-131 4 L-134 2" fill="none" stroke="#d5dfe2" stroke-width=".8" stroke-linecap="round"/>'
+                f'<path d="M-125 -5 L-120 -5 M-125 5 L-120 5" stroke="#f4f6f7" stroke-opacity=".8" stroke-width=".55"/>'
                 '</g>')
 
     def slit_block(self, race, link="", se=None, result=False):
@@ -585,8 +604,8 @@ class Site:
             return ""
         ex = {} if result else {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
         exst = {x["frame"]: x.get("st") for x in (bi.get("start_exhibition") or [])} if result else {}
-        W, H, ROW, TOP = 420, 0, 48, 34
-        SLIT, K = 282, 400          # スリット線の位置と、ST 0.01秒あたり4px
+        W, H, ROW, TOP = 420, 0, 54, 36
+        SLIT, K = 282, 350          # スリット線の位置と、ST 0.01秒あたり3.5px
         rows = []
         for i, x in enumerate(sorted(se, key=lambda z: z["course"])):
             f, c, st, flag = x["frame"], x["course"], x.get("st"), x.get("flag") or ""
@@ -598,17 +617,17 @@ class Site:
                 nose = SLIT - st * K
                 lab = (f"F{abs(st):.2f}".replace("0.", ".") if st < 0 or flag == "F" else f"{st:.2f}".replace("0.", "."))
                 col = "#FF4D4D" if (st < 0 or flag == "F") else "var(--ink)"
-            nose = max(158, min(W - 64, nose))
+            nose = max(172, min(W - 64, nose))
             et = ex.get(f)
             rows.append(
                 f'<g><rect x="0" y="{y}" width="{W}" height="{ROW}" fill="{"rgba(255,255,255,.025)" if i % 2 else "transparent"}"/>'
                 f'<path d="M40 {y + ROW - 1} H{SLIT - 6}" stroke="#8bd1df" stroke-opacity=".13" stroke-width=".7" stroke-dasharray="3 7"/>'
-                f'<rect x="8" y="{y + 11}" width="26" height="26" rx="7" fill="{hull}" stroke="rgba(255,255,255,.32)"/>'
-                f'<text x="21" y="{y + 30}" text-anchor="middle" font-size="16" font-weight="800" fill="{ink}">{c}</text>'
-                + self.boat_svg(nose, y + 25, hull, ink, f)
-                + f'<text x="{W - 12}" y="{y + 25}" text-anchor="end" font-size="17" font-weight="800" fill="{col}" class="num">{lab}</text>'
-                + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示 {et}</text>' if et else "")
-                + (f'<text x="{W - 12}" y="{y + 39}" text-anchor="end" font-size="10" fill="var(--ink2)">展示ST {exst[f]:.2f}</text>'.replace("0.", ".") if result and exst.get(f) is not None and exst[f] >= 0 else "")
+                f'<rect x="8" y="{y + 14}" width="26" height="26" rx="7" fill="{hull}" stroke="rgba(255,255,255,.32)"/>'
+                f'<text x="21" y="{y + 33}" text-anchor="middle" font-size="16" font-weight="800" fill="{ink}">{c}</text>'
+                + self.boat_svg(nose, y + 27, hull, ink, f)
+                + f'<text x="{W - 12}" y="{y + 24}" text-anchor="end" font-size="17" font-weight="800" fill="{col}" class="num">{lab}</text>'
+                + (f'<text x="{W - 12}" y="{y + 40}" text-anchor="end" font-size="10" fill="var(--ink2)">展示 {et}</text>' if et else "")
+                + (f'<text x="{W - 12}" y="{y + 40}" text-anchor="end" font-size="10" fill="var(--ink2)">展示ST {exst[f]:.2f}</text>'.replace("0.", ".") if result and exst.get(f) is not None and exst[f] >= 0 else "")
                 + (f'<text x="{W - 64}" y="{y + 25}" text-anchor="end" font-size="12" font-weight="700" fill="#F5C542">{e(x.get("note", ""))}</text>' if x.get("note") else "")
                 + '</g>')
         H = TOP + 6 * ROW + 8
@@ -1375,14 +1394,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     n_done += 1
                     pay = r.get("payout") or 0
                     n_man += pay >= 10000
-                    n_hit += bool(r.get("hit"))
-                    hitc = '<span class="chip hitc">的中</span>' if r.get("hit") else ""
-                    rows.append(f'<tr><td><a href="{href}#kekka"><b>{r["rno"]}R</b></a></td><td><a href="{href}#kekka">{combo(r["result"])}</a></td>'
-                                f'<td class="r num{" man" if pay >= 10000 else ""}">{yen(r.get("payout"))}</td><td class="r num sub">{r.get("ninki") or ""}</td><td>{hitc}</td></tr>')
-                else:
-                    dl = r.get("deadline", "")
-                    st = f'<span data-dl="{d} {dl}">{dl}締切</span>' if is_today and dl else ("中止・結果なし" if not is_today else "")
-                    rows.append(f'<tr class="pend"><td><a href="{href}"><b>{r["rno"]}R</b></a></td><td colspan="4" class="sub num">{st}</td></tr>')
+                    n_hi"sub num">{st}</td></tr>')
             if v.get("cancelled"):
                 rows = ['<tr><td colspan="5" class="sub">中止</td></tr>']
             g = v.get("grade", "")
