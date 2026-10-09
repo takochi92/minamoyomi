@@ -1394,7 +1394,14 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     n_done += 1
                     pay = r.get("payout") or 0
                     n_man += pay >= 10000
-                    n_hi"sub num">{st}</td></tr>')
+                    n_hit += bool(r.get("hit"))
+                    hitc = '<span class="chip hitc">的中</span>' if r.get("hit") else ""
+                    rows.append(f'<tr><td><a href="{href}#kekka"><b>{r["rno"]}R</b></a></td><td><a href="{href}#kekka">{combo(r["result"])}</a></td>'
+                                f'<td class="r num{" man" if pay >= 10000 else ""}">{yen(r.get("payout"))}</td><td class="r num sub">{r.get("ninki") or ""}</td><td>{hitc}</td></tr>')
+                else:
+                    dl = r.get("deadline", "")
+                    st = f'<span data-dl="{d} {dl}">{dl}締切</span>' if is_today and dl else ("中止・結果なし" if not is_today else "")
+                    rows.append(f'<tr class="pend"><td><a href="{href}"><b>{r["rno"]}R</b></a></td><td colspan="4" class="sub num">{st}</td></tr>')
             if v.get("cancelled"):
                 rows = ['<tr><td colspan="5" class="sub">中止</td></tr>']
             g = v.get("grade", "")
@@ -2295,64 +2302,4 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                 if path not in self.files:
                     stub = {"date": d, "jcd": v["jcd"], "venue": v["name"], "rno": r["rno"], "deadline": r.get("deadline", "")}
                     if r.get("result"):
-                        stub["result"] = {"trifecta": r["result"], "trifecta_payout": r.get("payout"), "finished": True}
-                    self.race_page(d, v["jcd"], stub)
-
-    def not_found(self):
-        page = Page("404.html")
-        body = f'<h1>ページが見つかりません</h1><p>URLが変わったか、まだ作られていないページです。</p><p><a href="{page.u("index.html")}">今日のレース一覧へ</a></p>'
-        self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
-
-    def sitemap(self):
-        # 検索に出さないページ（noindex）はサイトマップに入れない（Search Console の警告になる）
-        urls = [p for p in self.files if p.endswith(".html") and p != "404.html" and 'content="noindex"' not in self.files[p]]
-        today = self.now.strftime("%Y-%m-%d")
-
-        def lastmod(p):
-            # 過去のレースのページは、そのレースの日（結果が入ったあとは変わらない）
-            m = re.match(r"race/(\d{4})(\d{2})(\d{2})/", p)
-            return min(f"{m[1]}-{m[2]}-{m[3]}", today) if m else today
-        body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{lastmod(p)}</lastmod></url>" for p in sorted(urls))
-        self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
-        self.put("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
-
-    def build(self):
-        if self.S is None:
-            raise RuntimeError("course_stats.json.gz がありません")
-        self.races()
-        self.results_pages()
-        self.index_page()
-        self.targets_page()
-        self.venue_pages()
-        self.motor_pages()
-        self.racer_pages()
-        self.st_pages()
-        self.static_pages()
-        self.share_page()
-        self.grade_page()
-        self.weekly_page()
-        self.not_found()
-        self.sitemap()
-        return self.files
-
-    def write(self):
-        for p, text in self.files.items():
-            f = OUT / p
-            f.parent.mkdir(parents=True, exist_ok=True)
-            f.write_text(text, encoding="utf-8")
-        for p, b in self.bins.items():
-            f = OUT / p
-            f.parent.mkdir(parents=True, exist_ok=True)
-            f.write_bytes(b)
-        print("pages", len(self.files), "images", len(self.bins))
-
-
-def main():
-    s = Site()
-    s.build()
-    s.write()
-
-
-if __name__ == "__main__":
-    main()
-
+                        stub["result"] = {"trifecta": r["result"], "trifecta_payout": r.
