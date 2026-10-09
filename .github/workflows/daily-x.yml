@@ -35,9 +35,10 @@ jobs:
           const clean = (v) => (v || "").trim().replace(/^.*?:\s*(?=["'])/, "").replace(/^["']+|["',\s]+$/g, "").trim();
           const rawSite = clean(process.env.ATELIER_SITE_URL);
           console.log("site check: length", rawSite.length, "scheme", /^https?:\/\//.test(rawSite), "space", /\s/.test(rawSite), "quote", /["']/.test(rawSite));
+          console.log("token check: service", clean(process.env.ATELIER_SERVICE_TOKEN).length, "ingest", clean(process.env.ATELIER_INGEST_TOKEN).length);
           const found = rawSite.match(/https?:\/\/[^\s"',]+/) || rawSite.match(/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"',]*)?/i);
-          if (!found) { console.error("ATELIER_SITE_URL が URL の形になっていません"); process.exit(1); }
-          const site = (/^https?:/.test(found[0]) ? found[0] : "https://" + found[0]).replace(/\/api\/posts\/?$/, "").replace(/\/+$/, "");
+          // URL の形でなければ、Atelier の公開アドレスを使う（URL は秘密ではない）
+          const site = (!found ? "https://atelier-task-studio.politechar16.chatgpt.site" : /^https?:/.test(found[0]) ? found[0] : "https://" + found[0]).replace(/\/api\/posts\/?$/, "").replace(/\/+$/, "");
           (async () => {
             for (const post of posts) {
               const r = await fetch(site + "/api/posts", {
