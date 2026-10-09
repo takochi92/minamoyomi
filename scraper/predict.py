@@ -175,7 +175,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None, *, race_dat
 
     ex = {f: bb.get(f, {}).get("exhibit_time") for f in frames}
     has_ex = all(ex.values())
-    from .prediction_context import references,signals,datetime,JST
+    from .prediction_context import references,signals,evidence,datetime,JST
     day=race_date or datetime.now(JST).strftime('%Y%m%d')
     refs=references(day,[b.get('toban','') for b in boats])
     try:
@@ -638,6 +638,7 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None, *, race_dat
         "nokoshi": nokoshi,
         "comments": comments,
         "research_signals": research_signals,
+        "evidence": evidence(boats,before,refs,madj,day),
         "course_stats": cs_view,
         "model": {"trained_on": model.get("trained_on"), "races": model.get("races")},
     }
