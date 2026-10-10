@@ -439,7 +439,7 @@ class Site:
         tbl = ""
         if rows:
             tbl = (f'<section class="panel"><h2>展示タイム <small>{"展示前" if not bx else "今節・いつもと比べて"}</small></h2>'
-                   f'<div class="tbl-wrap"><table><thead><tr><th>艇</th><th class="r">展示T</th><th class="r">今節の平均</th><th class="r">いつもの1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                   f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">展示T</th><th class="r">今節平均</th><th class="r">いつもの<br>1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                    '<p class="sub">「今節の平均」は今節これまでの展示タイムの平均。「いつもの1位率」は過去2年で展示タイムが6艇の中でいちばん速かった割合（平均は約17%。25%以上は緑）。チルト+1.0以上は伸び型。</p></section>')
         rest = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html')) + self.oriten_block(race)
         if not bx:
@@ -489,7 +489,7 @@ class Site:
             note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
                      "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
         return (f'<section class="panel"><h2>展示の数字 <small>{e("・".join(tops))}</small></h2>'
-                f'<div class="tbl-wrap"><table><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<div class="tbl-wrap"><table class="t-ori"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                 f'<p class="sub">{note}</p></section>')
 
     def worry_block(self, p):
@@ -1000,7 +1000,7 @@ class Site:
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
 {self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
@@ -1397,7 +1397,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             f'<td class="r num best">{sc:.2f}</td><td>{"<span class=sub>買われすぎ注意</span>" if self.caution(b, c) else ""}</td></tr>'
             for sc, v, r, b, c, op in items[:5])
         return (f'<section style="display:grid;gap:8px"><h2>今日の狙い目レーサー <small>今日のコースで、実力のわりに勝てている選手（スコア{OP_MARK}以上）</small></h2>'
-                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>レース</th><th>選手</th><th class="r">コース</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th></th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-today"><thead><tr><th>レース</th><th>選手</th><th class="r">コース</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th></th></tr></thead><tbody>{rows}</tbody></table></div>'
                 f'<p style="margin:0"><a href="{page.u("targets.html")}">ほかの狙い目レーサーも見る（{len(items)}人）→</a></p>'
                 f'<details class="more"><summary>くわしく</summary><p>展示前は枠番のコースで判定。「買われすぎ注意」は、過去の検証でそのコース・級別の巧者がオッズの見立てより勝てていなかった組み合わせです。</p></details></section>')
 
@@ -1425,7 +1425,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     parts.append(f'{lab}：実際 {pct(w_, 1)} / オッズの見立て {pct(m_, 1)} → <b class="num {tone}">{r_:.2f}倍</b>（{n_}艇）')
                 chk = f'<p class="sub">過去1年の検証（スコア{OP_MARK}以上の艇）　' + "　".join(parts) + "</p>"
             secs.append(f'<section class="panel" id="c{c}"><h2>{c}コース巧者 <small>実力のわりに{c}コースで勝てる選手・{OP_MIN}走以上</small></h2>'
-                        f'<div class="tbl-wrap"><table><thead><tr><th class="r">#</th><th>選手</th><th class="r">{c}コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th>勝ち方</th></tr></thead><tbody>{tr}</tbody></table></div>{chk}</section>')
+                        f'<div class="tbl-wrap"><table class="t-tgt"><thead><tr><th class="r">#</th><th>選手</th><th class="r">{c}コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th>勝ち方</th></tr></thead><tbody>{tr}</tbody></table></div>{chk}</section>')
         esc_rows = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(w, 1)}</td><td class="r num sub">{pct(ex, 1)}</td><td class="r num best">{sc:.2f}</td></tr>' for i, (sc, t, n, w, ex) in enumerate(esc))
         mk_rows = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(r, 1)}</td><td class="r num sub">{pct(w, 1)}</td></tr>' for i, (r, t, n, w) in enumerate(mk))
         warn = ""
@@ -1437,8 +1437,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="toc">{' '.join(f'<a href="#c{c}">{c}コース</a>' for c in range(2, 7))} <a href="#esc">逃げ</a> <a href="#mk">捲られやすいイン</a></p></section>
 {self.today_targets(page)}
 {''.join(secs)}
-<section class="panel" id="esc"><h2>実力以上にインで逃げる選手 <small>1コース{OP_MIN}走以上・全国の1コース1着率 {pct(p1, 1)}</small></h2><div class="tbl-wrap"><table><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th></tr></thead><tbody>{esc_rows}</tbody></table></div></section>
-<section class="panel" id="mk"><h2>捲られやすいイン <small>1コースで他艇の捲りに負けた割合・全国 {pct(nat_mk, 1)}</small></h2><div class="tbl-wrap"><table><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">捲られ率</th><th class="r">逃げ率</th></tr></thead><tbody>{mk_rows}</tbody></table></div>
+<section class="panel" id="esc"><h2>実力以上にインで逃げる選手 <small>1コース{OP_MIN}走以上・全国の1コース1着率 {pct(p1, 1)}</small></h2><div class="tbl-wrap"><table class="t-esc"><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th></tr></thead><tbody>{esc_rows}</tbody></table></div></section>
+<section class="panel" id="mk"><h2>捲られやすいイン <small>1コースで他艇の捲りに負けた割合・全国 {pct(nat_mk, 1)}</small></h2><div class="tbl-wrap"><table class="t-mk"><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">捲られ率</th><th class="r">逃げ率</th></tr></thead><tbody>{mk_rows}</tbody></table></div>
 <p class="sub">この選手がインのときは、3・4コースの捲りが決まりやすい傾向があります（過去2年の検証で、捲られやすいイン×捲りの多い3コースの組み合わせは捲り勝ち率が約6倍）。</p></section>
 {warn}"""
         self.put("targets.html", page.render(f"狙い目レーサーまとめ｜コース別巧者ランキング・捲られやすいイン｜{SITE_NAME}",
@@ -1677,7 +1677,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {f'<div class="panel"><b>今日の出走</b><ul class="comments">{tod}</ul></div>' if tod else ''}</section>
 <section class="panel nb" id="racer-memo" data-toban="{t}" data-name="{e(name)}" hidden></section>
 <section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
-<div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">ST順</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<div class="tbl-wrap"><table class="t-rc"><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">ST順</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 <p class="sub">ST順＝そのレースで何番目に早いスタートだったかの平均（1が最速）。</p></section>
 {self.racer_entry_sec(t)}
 {self.racer_venue_sec(t)}
@@ -1863,7 +1863,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p>{e(lead)}{e(v.get('note', ''))}</p>
 <p class="sub">水質：{e(v.get('water', ''))}・干満差：{'あり' if v.get('tide') else 'なし'}　<a href="{page.u('venue/' + SLUG[jcd] + '-motor.html')}">モーター一覧 →</a></p>
 <section class="panel"><h2>コース別1着率 <small>公式・{e((load_json(Path(__file__).parent / 'venues.json', {}) or {}).get('period', ''))}</small></h2><div class="courses">{bars}</div></section>
-<section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table class="t-vc"><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
             self.put(page.path, page.render(f"{v['name']}競艇場（ボートレース{v['name']}）の特徴・コース別1着率・決まり手｜{SITE_NAME}",
