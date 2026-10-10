@@ -126,6 +126,11 @@ def load_json(p, default=None):
         return default
 
 
+def display_confidence(label):
+    """Old saved confidence labels remain intact; soften only the UI wording."""
+    return '1着軸強め' if label == '鉄板' else label
+
+
 from itertools import permutations as _perm
 COMBO_LIST = [f"{a}-{b}-{c}" for a, b, c in _perm(range(1, 7), 3)]
 
@@ -778,12 +783,12 @@ class Site:
         if b.get("mode") == "honmei" and p.get("honmei_pick"):
             hp = p["honmei_pick"]
             return (f'<div class="bet-group"><span>本命</span><div class="bets">{cells(b["main"])}</div></div>'
-                    f'<p class="sub" style="margin:4px 0 0">固いレース：イン{bt(hp["in"])}の1着{pct(hp["p_in"])}、逃げたときの2着は{bt(hp["axis"])}が{pct(hp["p_axis"])}。3着も上位3艇に絞って3点（{"".join(bt(x) for x in hp.get("cut", []))}は切り）。人気ではなくAIの確率で選んでいます。安い目でも、データ上ほぼこの形というレースは3点に絞っています。</p>')
+                    f'<p class="sub" style="margin:4px 0 0">イン中心の予想：{bt(hp["in"])}のAI1着確率{pct(hp["p_in"])}、1着時の2着軸は{bt(hp["axis"])}が{pct(hp["p_axis"])}。この数字だけで外の勝ち筋や高配当を否定できません。3着上位3艇への3点です。</p>')
         out = f'<div class="bet-group"><span>本線</span><div class="bets">{cells(b["main"])}</div></div>'
         if b.get("sub"):
             out += f'<div class="bet-group"><span>押さえ</span><div class="bets">{cells(b["sub"])}</div></div>'
         if b.get("mode") == "honmei_cheap":
-            out += '<p class="sub" style="margin:4px 0 0">固い形ですが、3点に絞ると合成オッズが2.5倍未満で妙味がないため、いつもの6点にしています。</p>'
+            out += '<p class="sub" style="margin:4px 0 0">イン中心の形ですが、3点の合成オッズが2.5倍未満のため6点にしています。</p>'
         if b.get("cut"):
             out += f'<p class="sub" style="margin:4px 0 0">外した目：{"・".join(e(x) for x in b["cut"])}（10倍未満で妙味が薄いため）。</p>'
         if b.get("noko"):
@@ -807,12 +812,12 @@ class Site:
             h = res["trifecta"] in hp["bets"]
             hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
         cut = "".join(bt(x) for x in hp.get("cut", []))
-        return f"""<section class="panel honmei"><h2><span class="chip hm">厳選本命</span> {bt(hp["in"])}-{bt(hp["axis"])}-{"".join(bt(x) for x in hp["thirds"])} <small>{len(hp["bets"])}点</small></h2>
-<ul class="checks"><li>✅ イン逃げが堅い：{bt(hp["in"])} {e(hp["in_name"])}の1着 {pct(hp["p_in"])}（AI）</li>
+        return f"""<section class="panel honmei"><h2><span class="chip hm">イン優勢</span> {bt(hp["in"])}-{bt(hp["axis"])}-{"".join(bt(x) for x in hp["thirds"])} <small>{len(hp["bets"])}点</small></h2>
+<ul class="checks"><li>AIのイン1着予想：{bt(hp["in"])} {e(hp["in_name"])} {pct(hp["p_in"])}。外の勝ち筋や配当の安さまで保証する判定ではありません。</li>
 <li>✅ 逃げたときの2着の軸：{bt(hp["axis"])} {e(hp["axis_name"])}（{hp["axis_course"]}コース）が {pct(hp["p_axis"])}</li>
 <li>✅ 3着は上位{len(hp["thirds"])}艇に絞り、{cut}は切り</li></ul>
 <p>{comp}</p><div class="bets">{cells}</div>{hit}
-<p class="sub">過去約9,000レースの検証では、この条件（イン1着70%以上・2着の軸45%以上）は1日5レース前後・的中率38%・回収率81%（日を分けても80〜81%）。全レースの本線・押さえと回収率は同じくらいで、点数は3点です。成績は実績ページで集計します。</p></section>"""
+<p class="sub">過去診断では、強いインと3コース巧者を組み合わせた1-3-相手4点は回収率80.8%でした（2026年4月以降、展示進入一致の961レース・確定配当）。この予想3点の成績ではありません。イン優勢でも高配当の相手を別に検証します。</p></section>"""
 
     def tsuke_block(self, race, p, res):
         tp = p.get("tsuke_pick")
@@ -941,7 +946,7 @@ class Site:
         if rc.get("verdict") == "自信あり" and "r_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["r_hit"] else "miss"}">自信あり {"的中" if race["r_hit"] else "×"}</span>')
         if "h_hit" in race:
-            marks.append(f'<span class="pill {"hit" if race["h_hit"] else "miss"}">厳選本命 {"的中" if race["h_hit"] else "×"}</span>')
+            marks.append(f'<span class="pill {"hit" if race["h_hit"] else "miss"}">イン軸3点 {"的中" if race["h_hit"] else "×"}</span>')
         if "t_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["t_hit"] else "miss"}">穴狙い {"的中" if race["t_hit"] else "×"}</span>')
         if "a_hit" in race:
@@ -1025,6 +1030,36 @@ class Site:
                 f'{shadow_note}<div class="evidence-grid">{"".join(cards)}</div>'
                 '<p class="sub">円はAIの1着確率。基礎は場とコースの学習スコア、補正は保存済みスコアを「選手→機力→展示→スタート→展開・水面」の順に6艇へ加えたときの確率差（pt）の概算です。順序と相手の補正に依存し、独立した効果や実測勝率ではありません。丸め誤差があります。複合展示は事実メモで重複加点せず、未保存値は後日の機歴で補いません。攻め方や意図は数値だけで断定できません。</p></section>')
 
+    @staticmethod
+    def in_survivor_block(race):
+        """Show only the ticket fixed in a fully audited pre-deadline snapshot."""
+        from .in_survivor import PROTOCOL, qualifies
+        from .research_snapshot import valid_snapshot
+        from .research_ledger import audit
+        snap = race.get('research_snapshot') or {}
+        if not valid_snapshot(snap, race):
+            return ''
+        row = {**(snap.get('inputs') or {}), 'decision': snap.get('decision'),
+               'captured_at': snap.get('captured_at'), 'deadline_at': snap.get('deadline_at'),
+               'fetched_at': snap.get('fetched_at'), 'provenance': 'timestamped_pre_deadline'}
+        if audit(row):
+            return ''
+        shadow = (snap.get('decision') or {}).get('in_survivor_shadow') or {}
+        ev = shadow.get('evidence') or {}
+        if shadow.get('protocol') != PROTOCOL or not qualifies(ev):
+            return ''
+        tickets = shadow.get('tickets') or []
+        ticket_html = ''.join(f'<span class="bet">{combo(t["combo"])}<b class="odds">{t["odds"]:g}倍</b><small>固定時AI {pct(t["probability"],1)}</small></span>' for t in tickets)
+        ticket_html = f'<div class="bets">{ticket_html}</div>' if ticket_html else '<p class="sub">今回、オッズとAI確率を満たす研究券はありません。</p>'
+        motor_note = (f'3コース艇の乗り手補正機力展示 {ev["third_motor_ex_seconds"]:+.3f}秒（{e(ev.get("third_motor_as_of") or "参照日不明")}時点・マイナスは速い方向）。'
+                      if ev.get('third_motor_ex_seconds') is not None else '3コース艇の乗り手補正機力展示は参照なし。')
+        return (f'<details class="panel evidence-details"><summary>インが残る高配当の形を検証中</summary>'
+                f'<p>{bt(ev["in_frame"])}の過去1年の1コース1着{pct(ev["in_escape"])}（{ev["in_starts"]}走）。'
+                f'{bt(ev["third_frame"])}は3コース1着{pct(ev["third_win"])}（{ev["third_starts"]}走）。'
+                f'{motor_note}インが勝っても3コースが2・3着に入る形を、締切前のオッズで別に記録します。</p>'
+                f'{ticket_html}<p class="sub">この券は研究用の仮想購入で、上の採用予想には足しません。'
+                '確率×オッズのしきい値は収益性未確認。前向きの実績が貯まるまで有利な買い目とは判定しません。</p></details>')
+
 
     def race_page(self, d, jcd, race):
         rno = race["rno"]
@@ -1079,7 +1114,7 @@ class Site:
             hitp = ""
             if res:
                 hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
-            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
+            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(display_confidence(p.get('confidence', {}).get('label', '')))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b">{self.slip_body(p, cells)}</div></section>"""
             alt_list = self.alt_bets(p, cells)
             selected = race.get('primary_slip')
@@ -1111,6 +1146,7 @@ class Site:
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 {ai_rows}
 {self.evidence_block(page, race, p)}
+{self.in_survivor_block(race)}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
@@ -1170,7 +1206,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             self.bins[path] = ogimg.race_image(VENUES[jcd]["name"], race["rno"], f"{jdate(d)}({wd})", race.get("deadline", ""),
                                                (race.get("race_name") or "")[:12], race['primary_slip']['tickets'] if race.get('primary_slip') else [x["combo"] for x in p["bets"]["main"]],
                                                (top["frame"], top["p_win"]) if top and top.get("p_win") else None,
-                                               (p.get("confidence") or {}).get("label", ""))
+                                               display_confidence((p.get("confidence") or {}).get("label", "")))
         except Exception as ex:   # 画像が作れなくてもページは出す
             print("og skip", path, ex)
             return None
@@ -1308,7 +1344,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 cp = f'<span class="num">合成 {hm["comp"]:.1f}倍</span>' if hm.get("comp") else '<span class="sub">オッズ待ち</span>'
                 hon_cards.append((0, r["deadline"], f'<a class="cfc hmc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div><div class="row"><span class="sub">{bt(hm["in"])}-{bt(hm["axis"])} {hm["n"]}点</span>{cp}</div></a>'))
         hon_cards.sort(key=lambda x: (x[0], x[1]))
-        honh = (f'<section style="display:grid;gap:10px"><h2>厳選本命 <small>イン逃げが堅く、2着の軸もはっきりしたレースを3点で{f"・本日 {len(hon_done)}R中{sum(1 for x in hon_done if x)}的中" if hon_done else ""}</small></h2>'
+        honh = (f'<section style="display:grid;gap:10px"><h2>イン軸3点 <small>AIがイン1着と2着軸を高く見たレース{f"・本日 {len(hon_done)}R中{sum(1 for x in hon_done if x)}的中" if hon_done else ""}</small></h2>'
                 f'<div class="strip">{"".join(c for _, _, c in hon_cards)}</div></section>') if hon_cards else ""
         ana_cards, ana_done = [], []
         for v in self.idx.get("venues", []):
@@ -1924,7 +1960,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 st = f'<span class="num" data-dl="{d} {r["deadline"]}">{r["deadline"]}締切</span>'
             marks = []
             if r.get("hon"):
-                marks.append('<span class="chip hm">固い</span>')
+                marks.append('<span class="chip hm">イン優勢</span>')
             if r.get("tsuke"):
                 marks.append('<span class="chip tk">厳選穴</span>')
             if (race.get("prediction") or {}).get("bets", {}).get("mode") == "attack":
@@ -2131,7 +2167,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             for r in v["races"]:
                 href = self.race_link(page, d, v["jcd"], r["rno"])
                 res = (f'{combo(r["result"])} <span class="num">{yen(r.get("payout"))}</span>' + (' <span class="pill hit">的中</span>' if r.get("hit") else "")) if r.get("result") else ""
-                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(r.get("confidence", ""))}</td>'
+                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(display_confidence(r.get("confidence", "")))}</td>'
                             f'<td>{combo(r["honmei"][0]) if r.get("honmei") else "-"}</td><td>{res}</td></tr>')
             secs.append(f'<section class="panel" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
                         f'<div class="tbl-wrap"><table><thead><tr><th>R</th><th>AIの見込み</th><th>本線</th><th>結果</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
@@ -2200,7 +2236,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         for s_, e_, w in ws:
             head = f"{int(s_[4:6])}/{int(s_[6:])}〜{int(e_[4:6])}/{int(e_[6:])}"
             rows = "".join(f'<tr><td>{lab}</td><td class="r num">{w[k + "races"]:,}</td><td class="r num">{w[k + "hits"]:,}<br><small class="sub">{share.pct(w[k + "hits"], w[k + "races"])}</small></td><td class="r num">{roi(w[k + "return"], w[k + "invest"])}</td></tr>'
-                           for lab, k in (("本線・押さえ", ""), ("自信あり", "rc_"), ("厳選本命", "h_")) if w[k + "races"])
+                           for lab, k in (("本線・押さえ", ""), ("自信あり", "rc_"), ("イン軸3点", "h_")) if w[k + "races"])
             best = "".join(f'<li><a href="{page.u(f"race/{b["date"]}/{SLUG[b["jcd"]]}-{b["rno"]}.html")}">{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R</a> {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>'
                            if b.get("jcd") in SLUG and b["date"] >= (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d") else
                            f'<li>{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>' for b in w["best"][:3])
@@ -2270,6 +2306,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                          f'<div class="tbl-wrap"><table><thead><tr><th>戦略</th><th>決済件数</th><th>的中率</th><th>総回収率</th></tr></thead><tbody><tr><td>本線＋押さえ（比較対象レース）</td><td>{base.get("races",0)}</td><td>{pct(base.get("hits",0)/base["races"]) if base.get("races") else "未算出"}</td><td>{pct(base.get("gross_roi"),1) if base.get("gross_roi") is not None else "未算出"}</td></tr>'
                          f'<tr><td>根拠付き穴券（検証中）</td><td>{shadow.get("races",0)}</td><td>{pct(shadow.get("hits",0)/shadow["races"]) if shadow.get("races") else "未算出"}</td><td>{pct(shadow.get("gross_roi"),1) if shadow.get("gross_roi") is not None else "未算出"}</td></tr></tbody></table></div>'
                          '<p class="sub">完全な締切前入力・5分以内のオッズ・固定券・モデル指紋・公式返還を監査。旧形式や欠測は除外します。過去診断と分離し、少数件では改善を認定しません。予想値×オッズが高くても利益は保証しません。</p></section>')
+                inside_report=load_json(DATA/'in_survivor_forward.json',{}) or {}
+                inside=inside_report.get('shadow') or {}
+                paired=inside_report.get('baseline_on_same_races') or {}
+                forward+=('<section class="panel"><h2>イン残り高配当の前向き研究</h2>'
+                          '<p>1コースに実績があり、3コースにも勝ち筋があるレースを対象に、1頭で3コースが2・3着に入る高配当券を締切前に最大2点固定して比較します。</p>'
+                          f'<div class="tbl-wrap"><table><thead><tr><th>同じ対象レース</th><th>決済件数</th><th>的中率</th><th>総回収率</th></tr></thead><tbody>'
+                          f'<tr><td>採用予想</td><td>{paired.get("races",0)}</td><td>{pct(paired.get("hits",0)/paired["races"]) if paired.get("races") else "未算出"}</td><td>{pct(paired.get("gross_roi"),1) if paired.get("gross_roi") is not None else "未算出"}</td></tr>'
+                          f'<tr><td>イン残り研究券</td><td>{inside.get("races",0)}</td><td>{pct(inside.get("hits",0)/inside["races"]) if inside.get("races") else "未算出"}</td><td>{pct(inside.get("gross_roi"),1) if inside.get("gross_roi") is not None else "未算出"}</td></tr>'
+                          '</tbody></table></div><p class="sub">各券100円の仮想購入。過去診断の80.8%はこの前向き成績ではありません。未決済や取得時刻未確認の古いレースを含めません。</p></section>')
             body = forward+'<div id="app"><p class="empty">読み込み中…</p></div>'
             script = f'<script>window.__ROUTE__="{route}";</script><script src="app.js"></script>'
             self.put(path, page.render(f"{title}｜{SITE_NAME}", desc, body, [("", title)], script=script))

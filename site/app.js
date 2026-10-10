@@ -23,6 +23,7 @@
   const pct = (v, d = 0) => (v == null ? "-" : (v * 100).toFixed(d) + "%");
   const yen = (v) => (v == null ? "-" : "¥" + Number(v).toLocaleString("ja-JP"));
   const lvClass = (lv) => `lv${lv || 2}`;
+  const confLabel = (label) => label === "鉄板" ? "1着軸強め" : label;
 
   function deadlineMs(date, hhmm) {
     const [h, m] = hhmm.split(":").map(Number);
@@ -62,7 +63,7 @@
     const soon = upcoming.slice(0, 6).map(({ v, r }) => `
       <a href="#/r/${v.jcd}/${r.rno}">
         <div class="row"><strong>${esc(v.name)} ${r.rno}R</strong>${countdown(idx.date, r.deadline)}</div>
-        <div class="row"><span class="sub num">締切 ${r.deadline}</span>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(r.confidence)}</span>` : `<span class="sub">予想準備中</span>`}</div>
+        <div class="row"><span class="sub num">締切 ${r.deadline}</span>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(confLabel(r.confidence))}</span>` : `<span class="sub">予想準備中</span>`}</div>
         ${r.honmei ? `<div class="row">${combo(r.honmei[0])}<span class="sub">${r.stage === "直前" ? "展示反映済" : "展示前"}</span></div>` : ""}
       </a>`).join("");
 
@@ -131,7 +132,7 @@
     const max = info ? Math.max(...info.courses.map((c) => c.win)) : 1;
     const rows = v.races.map((r) => `<tr class="link" data-href="#/r/${jcd}/${r.rno}">
       <td><strong>${r.rno}R</strong></td><td class="num">${r.deadline}</td>
-      <td>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(r.confidence)}</span>` : `<span class="sub">-</span>`}</td>
+      <td>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(confLabel(r.confidence))}</span>` : `<span class="sub">-</span>`}</td>
       <td>${r.honmei ? combo(r.honmei[0]) : ""}</td>
       <td>${r.result ? combo(r.result) : countdown(idx.date, r.deadline)}</td>
       <td class="r num">${r.result ? yen(r.payout) : ""}</td>
@@ -235,7 +236,7 @@
           ${recoPanel(race, res)}
           ${specPanel(race, p, res)}
           <section class="slip">
-            <div class="slip-h"><b>参考：AIの着順予想</b><span><span class="pill" style="border-color:#fff;color:#fff">${esc(p.confidence.label)}</span>　${esc(p.stage)}予想 ${esc(p.made_at || "")}時点・${race.odds_pre ? `オッズ ${esc(race.odds_pre.at)}時点` : "オッズは締切35分前から表示"}</span></div>
+            <div class="slip-h"><b>参考：AIの着順予想</b><span><span class="pill" style="border-color:#fff;color:#fff">${esc(confLabel(p.confidence.label))}</span>　${esc(p.stage)}予想 ${esc(p.made_at || "")}時点・${race.odds_pre ? `オッズ ${esc(race.odds_pre.at)}時点` : "オッズは締切35分前から表示"}</span></div>
             <div class="slip-b">
               <div class="bet-group"><span>本線（3連単 ${p.bets.main.length}点${comp(p.bets.main)}）</span><div class="bets">${betRow(p.bets.main)}</div></div>
               <div class="bet-group"><span>押さえ（${p.bets.sub.length}点${comp(p.bets.sub)}）</span><div class="bets">${betRow(p.bets.sub)}</div></div>
@@ -484,7 +485,7 @@
     };
     const t = r.test;
     const topn = Object.entries(t.trifecta_topN).map(([n, v]) => `<tr><td class="r num">上位${n}点</td><td class="r num">${pct(v.hit, 1)}</td><td class="r num ${v.roi >= 1 ? "best" : ""}">${v.roi == null ? "買い目なし" : pct(v.roi, 1)}</td></tr>`).join("");
-    const conf = Object.entries(t.by_confidence).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r num">${v.races.toLocaleString()}</td><td class="r num">${pct(v.win_acc, 1)}</td><td class="r num">${pct(v.top8_hit, 1)}</td><td class="r num">${pct(v.top8_roi, 1)}</td></tr>`).join("");
+    const conf = Object.entries(t.by_confidence).map(([k, v]) => `<tr><td>${esc(confLabel(k))}</td><td class="r num">${v.races.toLocaleString()}</td><td class="r num">${pct(v.win_acc, 1)}</td><td class="r num">${pct(v.top8_hit, 1)}</td><td class="r num">${pct(v.top8_roi, 1)}</td></tr>`).join("");
     app.innerHTML = `
       <section style="display:grid;gap:6px"><span class="eyebrow">Evidence</span><h1>予想の根拠</h1>
         <p class="sub">重みはすべて公式の競走成績・番組表データから学習しています。検証は学習に使っていない${fmt(r.period.test[0])}〜${fmt(r.period.test[1])}の${t.races.toLocaleString()}レースで行いました（学習：${r.n_train.toLocaleString()}レース）。各レースの特徴量は、そのレースより前のデータだけで計算しています。</p></section>

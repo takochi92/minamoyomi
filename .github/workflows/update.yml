@@ -54,6 +54,8 @@ jobs:
         run: python -m scraper.run
       - name: 締切前固定券の前向き仮想成績を集計
         run: python -m tools.forward_ana_review --output site/data/forward_ana.json
+      - name: イン残り高配当の研究券を集計
+        run: python -m tools.in_survivor_forward --output site/data/in_survivor_forward.json
       - name: データをコミット
         run: |
           git config user.name "github-actions[bot]"
