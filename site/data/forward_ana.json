@@ -19,7 +19,7 @@
     "gross_roi": 0.9318181818181818,
     "net_roi": 0.9318181818181818,
     "excluded_reason_counts": {
-      "incomplete_odds": 196,
+      "incomplete_odds": 195,
       "missing_exhibition_model_decision": 2141,
       "missing_fixed_decision": 2141,
       "missing_or_invalid_timestamps": 2275,
@@ -196,7 +196,7 @@
     ]
   },
   "excluded_reason_counts": {
-    "incomplete_odds": 196,
+    "incomplete_odds": 195,
     "invalid_entry": 2141,
     "invalid_fixed_probabilities": 2141,
     "missing_exhibition_model_decision": 2141,
