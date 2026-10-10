@@ -126,6 +126,11 @@ def load_json(p, default=None):
         return default
 
 
+def display_confidence(label):
+    """Old saved confidence labels remain intact; soften only the UI wording."""
+    return '1着軸強め' if label == '鉄板' else label
+
+
 from itertools import permutations as _perm
 COMBO_LIST = [f"{a}-{b}-{c}" for a, b, c in _perm(range(1, 7), 3)]
 
@@ -783,7 +788,7 @@ class Site:
         if b.get("sub"):
             out += f'<div class="bet-group"><span>押さえ</span><div class="bets">{cells(b["sub"])}</div></div>'
         if b.get("mode") == "honmei_cheap":
-            out += '<p class="sub" style="margin:4px 0 0">固い形ですが、3点に絞ると合成オッズが2.5倍未満で妙味がないため、いつもの6点にしています。</p>'
+            out += '<p class="sub" style="margin:4px 0 0">イン中心の形ですが、3点の合成オッズが2.5倍未満のため6点にしています。</p>'
         if b.get("cut"):
             out += f'<p class="sub" style="margin:4px 0 0">外した目：{"・".join(e(x) for x in b["cut"])}（10倍未満で妙味が薄いため）。</p>'
         if b.get("noko"):
@@ -941,7 +946,7 @@ class Site:
         if rc.get("verdict") == "自信あり" and "r_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["r_hit"] else "miss"}">自信あり {"的中" if race["r_hit"] else "×"}</span>')
         if "h_hit" in race:
-            marks.append(f'<span class="pill {"hit" if race["h_hit"] else "miss"}">厳選本命 {"的中" if race["h_hit"] else "×"}</span>')
+            marks.append(f'<span class="pill {"hit" if race["h_hit"] else "miss"}">イン軸3点 {"的中" if race["h_hit"] else "×"}</span>')
         if "t_hit" in race:
             marks.append(f'<span class="pill {"hit" if race["t_hit"] else "miss"}">穴狙い {"的中" if race["t_hit"] else "×"}</span>')
         if "a_hit" in race:
@@ -1109,7 +1114,7 @@ class Site:
             hitp = ""
             if res:
                 hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
-            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(p.get('confidence', {}).get('label', ''))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
+            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(display_confidence(p.get('confidence', {}).get('label', '')))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b">{self.slip_body(p, cells)}</div></section>"""
             alt_list = self.alt_bets(p, cells)
             selected = race.get('primary_slip')
@@ -1201,7 +1206,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             self.bins[path] = ogimg.race_image(VENUES[jcd]["name"], race["rno"], f"{jdate(d)}({wd})", race.get("deadline", ""),
                                                (race.get("race_name") or "")[:12], race['primary_slip']['tickets'] if race.get('primary_slip') else [x["combo"] for x in p["bets"]["main"]],
                                                (top["frame"], top["p_win"]) if top and top.get("p_win") else None,
-                                               (p.get("confidence") or {}).get("label", ""))
+                                               display_confidence((p.get("confidence") or {}).get("label", "")))
         except Exception as ex:   # 画像が作れなくてもページは出す
             print("og skip", path, ex)
             return None
@@ -1339,7 +1344,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 cp = f'<span class="num">合成 {hm["comp"]:.1f}倍</span>' if hm.get("comp") else '<span class="sub">オッズ待ち</span>'
                 hon_cards.append((0, r["deadline"], f'<a class="cfc hmc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div><div class="row"><span class="sub">{bt(hm["in"])}-{bt(hm["axis"])} {hm["n"]}点</span>{cp}</div></a>'))
         hon_cards.sort(key=lambda x: (x[0], x[1]))
-        honh = (f'<section style="display:grid;gap:10px"><h2>厳選本命 <small>イン逃げが堅く、2着の軸もはっきりしたレースを3点で{f"・本日 {len(hon_done)}R中{sum(1 for x in hon_done if x)}的中" if hon_done else ""}</small></h2>'
+        honh = (f'<section style="display:grid;gap:10px"><h2>イン軸3点 <small>AIがイン1着と2着軸を高く見たレース{f"・本日 {len(hon_done)}R中{sum(1 for x in hon_done if x)}的中" if hon_done else ""}</small></h2>'
                 f'<div class="strip">{"".join(c for _, _, c in hon_cards)}</div></section>') if hon_cards else ""
         ana_cards, ana_done = [], []
         for v in self.idx.get("venues", []):
@@ -2162,7 +2167,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             for r in v["races"]:
                 href = self.race_link(page, d, v["jcd"], r["rno"])
                 res = (f'{combo(r["result"])} <span class="num">{yen(r.get("payout"))}</span>' + (' <span class="pill hit">的中</span>' if r.get("hit") else "")) if r.get("result") else ""
-                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(r.get("confidence", ""))}</td>'
+                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(display_confidence(r.get("confidence", "")))}</td>'
                             f'<td>{combo(r["honmei"][0]) if r.get("honmei") else "-"}</td><td>{res}</td></tr>')
             secs.append(f'<section class="panel" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
                         f'<div class="tbl-wrap"><table><thead><tr><th>R</th><th>AIの見込み</th><th>本線</th><th>結果</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
@@ -2231,7 +2236,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         for s_, e_, w in ws:
             head = f"{int(s_[4:6])}/{int(s_[6:])}〜{int(e_[4:6])}/{int(e_[6:])}"
             rows = "".join(f'<tr><td>{lab}</td><td class="r num">{w[k + "races"]:,}</td><td class="r num">{w[k + "hits"]:,}<br><small class="sub">{share.pct(w[k + "hits"], w[k + "races"])}</small></td><td class="r num">{roi(w[k + "return"], w[k + "invest"])}</td></tr>'
-                           for lab, k in (("本線・押さえ", ""), ("自信あり", "rc_"), ("厳選本命", "h_")) if w[k + "races"])
+                           for lab, k in (("本線・押さえ", ""), ("自信あり", "rc_"), ("イン軸3点", "h_")) if w[k + "races"])
             best = "".join(f'<li><a href="{page.u(f"race/{b["date"]}/{SLUG[b["jcd"]]}-{b["rno"]}.html")}">{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R</a> {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>'
                            if b.get("jcd") in SLUG and b["date"] >= (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d") else
                            f'<li>{jdate(b["date"])} {e(b["venue"])}{b["rno"]}R {combo(b["combo"])} <b class="num">{yen(b["payout"])}</b></li>' for b in w["best"][:3])
