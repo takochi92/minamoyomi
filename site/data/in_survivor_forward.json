@@ -1,0 +1,61 @@
+{
+  "protocol": "in_survivor_value_v1",
+  "params": {
+    "min_in_probability": 0.6,
+    "min_in_starts": 20,
+    "min_in_escape": 0.65,
+    "min_third_starts": 20,
+    "min_third_win": 0.15,
+    "min_probability": 0.005,
+    "min_odds": 100.0,
+    "min_expected_return": 1.1,
+    "max_tickets": 2
+  },
+  "simulation": true,
+  "baseline_on_same_races": {
+    "strategy": "existing_ai_main_sub_100_v1",
+    "simulation": true,
+    "races": 0,
+    "hits": 0,
+    "invested": 0,
+    "refund": 0,
+    "payout": 0,
+    "gross_roi": null,
+    "net_roi": null,
+    "excluded_reason_counts": {},
+    "settled_details": [],
+    "by_model_and_month": []
+  },
+  "shadow": {
+    "strategy": "in_survivor_value_v1",
+    "simulation": true,
+    "races": 0,
+    "hits": 0,
+    "invested": 0,
+    "refund": 0,
+    "payout": 0,
+    "gross_roi": null,
+    "net_roi": null,
+    "excluded_reason_counts": {},
+    "settled_details": [],
+    "by_model_and_month": []
+  },
+  "excluded_reason_counts": {
+    "fixed_tickets_mismatch": 2280,
+    "missing_or_changed_protocol": 2280,
+    "no_tickets": 2141,
+    "missing_exhibition_model_decision": 2141,
+    "entry_mismatch": 2280,
+    "unverified_inputs": 2141,
+    "missing_or_invalid_timestamps": 2275,
+    "fingerprint_mismatch": 2280,
+    "incomplete_odds": 194,
+    "missing_fixed_decision": 2141,
+    "no_research_tickets": 2280
+  },
+  "limits": [
+    "券は締切前のオッズ・予想・選手のコース成績から固定し、後から追加しない",
+    "確定配当を使う過去診断と締切前の仮想成績を混ぜない",
+    "少数件の回収率改善や利益は保証しない"
+  ]
+}
