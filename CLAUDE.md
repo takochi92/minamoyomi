@@ -33,6 +33,7 @@
 - 司令塔（claude-hub）はもう使わない（2026-10-10 で更新終了）。claude-hub に記録しない。
 - SNS の原稿は、たこさんの下書き置き場 Atelier の「自動作成された投稿」に入れる。艇ろぐは **X のみ**（project: teirogu）。
 - 毎朝 8:13 に `.github/workflows/daily-x.yml` が `tools/make_daily_x.py` で原稿を作り、Atelier へ送る（Secrets の ATELIER_* 3つ）。
+  毎晩 21:43 は slot `evening`（その日のAI本線の結果と、フライングした選手）。機能紹介は `tools/x_feature.txt` に本文を書き、daily-x を手動で slot `feature` で実行する。
 - 送る形：`{"project":"teirogu","channel":"X","date":"YYYY-MM-DD","slot":"morning","text":"…"}`。同じ日・媒体・slot は上書き。機能紹介のツイートは slot を `feature` などにする。
 
 ## いまの状態・保留
