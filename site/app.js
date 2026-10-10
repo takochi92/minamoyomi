@@ -23,6 +23,7 @@
   const pct = (v, d = 0) => (v == null ? "-" : (v * 100).toFixed(d) + "%");
   const yen = (v) => (v == null ? "-" : "¥" + Number(v).toLocaleString("ja-JP"));
   const lvClass = (lv) => `lv${lv || 2}`;
+  const confLabel = (label) => label === "鉄板" ? "1着軸強め" : label;
 
   function deadlineMs(date, hhmm) {
     const [h, m] = hhmm.split(":").map(Number);
@@ -62,7 +63,7 @@
     const soon = upcoming.slice(0, 6).map(({ v, r }) => `
       <a href="#/r/${v.jcd}/${r.rno}">
         <div class="row"><strong>${esc(v.name)} ${r.rno}R</strong>${countdown(idx.date, r.deadline)}</div>
-        <div class="row"><span class="sub num">締切 ${r.deadline}</span>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(r.confidence)}</span>` : `<span class="sub">予想準備中</span>`}</div>
+        <div class="row"><span class="sub num">締切 ${r.deadline}</span>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(confLabel(r.confidence))}</span>` : `<span class="sub">予想準備中</span>`}</div>
         ${r.honmei ? `<div class="row">${combo(r.honmei[0])}<span class="sub">${r.stage === "直前" ? "展示反映済" : "展示前"}</span></div>` : ""}
       </a>`).join("");
 
@@ -131,7 +132,7 @@
     const max = info ? Math.max(...info.courses.map((c) => c.win)) : 1;
     const rows = v.races.map((r) => `<tr class="link" data-href="#/r/${jcd}/${r.rno}">
       <td><strong>${r.rno}R</strong></td><td class="num">${r.deadline}</td>
-      <td>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(r.confidence)}</span>` : `<span class="sub">-</span>`}</td>
+      <td>${r.confidence ? `<span class="pill ${lvClass(r.level)}">${esc(confLabel(r.confidence))}</span>` : `<span class="sub">-</span>`}</td>
       <td>${r.honmei ? combo(r.honmei[0]) : ""}</td>
       <td>${r.result ? combo(r.result) : countdown(idx.date, r.deadline)}</td>
       <td class="r num">${r.result ? yen(r.payout) : ""}</td>
@@ -235,7 +236,7 @@
           ${recoPanel(race, res)}
           ${specPanel(race, p, res)}
           <section class="slip">
-            <div class="slip-h"><b>参考：AIの着順予想</b><span><span class="pill" style="border-color:#fff;color:#fff">${esc(p.confidence.label)}</span>　${esc(p.stage)}予想 ${esc(p.made_at || "")}時点・${race.odds_pre ? `オッズ ${esc(race.odds_pre.at)}時点` : "オッズは締切35分前から表示"}</span></div>
+            <div class="slip-h"><b>参考：AIの着順予想</b><span><span class="pill" style="border-color:#fff;color:#fff">${esc(confLabel(p.confidence.label))}</span>　${esc(p.stage)}予想 ${esc(p.made_at || "")}時点・${race.odds_pre ? `オッズ ${esc(race.odds_pre.at)}時点` : "オッズは締切35分前から表示"}</span></div>
             <div class="slip-b">
               <div class="bet-group"><span>本線（3連単 ${p.bets.main.length}点${comp(p.bets.main)}）</span><div class="bets">${betRow(p.bets.main)}</div></div>
               <div class="bet-group"><span>押さえ（${p.bets.sub.length}点${comp(p.bets.sub)}）</span><div class="bets">${betRow(p.bets.sub)}</div></div>
@@ -370,7 +371,6 @@
     const render = () => {
       const t = s[range];
       const rate = t.races ? t.hits / t.races : 0, roi = t.invest ? t.return / t.invest : 0;
-      const roiM = t.invest_main ? t.return_main / t.invest_main : 0;
       const days = s.days.slice(range === "last7" ? -7 : -30);
       const maxV = Math.max(1, ...days.map((d) => Math.max(d.invest, d.return)));
       const bw = 560 / Math.max(days.length, 1);
@@ -382,71 +382,30 @@
       }).join("");
       const ticks = [0, 0.5, 1].map((k) => `<line x1="40" x2="600" y1="${170 - k * 150}" y2="${170 - k * 150}" stroke="var(--line)"/>
         <text x="34" y="${174 - k * 150}" text-anchor="end" font-size="10" fill="var(--ink2)">${Math.round((maxV * k) / 1000)}k</text>`).join("");
-      const vroi = t.v_invest ? t.v_return / t.v_invest : 0;
       $("#stats-body").innerHTML = `
-        <h2>本線・押さえ<small>全レースの本線・押さえを各100円で購入した場合</small></h2>
+        <h2>採用買い目<small>採用した券だけを各100円で仮想購入</small></h2>
         <div class="tiles">
           <div class="tile"><small>レース</small><b>${(t.races || 0).toLocaleString()}</b></div>
           <div class="tile"><small>的中</small><b>${t.hits || 0}${t.races ? `<small style="display:inline"> (${pct(t.hits / t.races)})</small>` : ""}</b></div>
           <div class="tile"><small>回収率</small><b class="${t.invest && t.return >= t.invest ? "up" : "down"}">${t.invest ? pct(t.return / t.invest, 1) : "-"}</b></div>
         </div>
-        <h2>攻め勝負（インを切る・検証中）<small>4頭3点＋5頭3点を各100円で購入した場合</small></h2>
         <div class="tiles">
-          <div class="tile"><small>レース</small><b>${(t.k_races || 0).toLocaleString()}</b></div>
-          <div class="tile"><small>的中</small><b>${t.k_hits || 0}</b></div>
-          <div class="tile"><small>回収率</small><b class="${t.k_invest && t.k_return >= t.k_invest ? "up" : "down"}">${t.k_invest ? pct(t.k_return / t.k_invest, 1) : "-"}</b></div>
-        </div>
-        <h2>厳選本命（検証中）<small>1-軸-3着上位の3点を各100円で購入した場合</small></h2>
-        <div class="tiles">
-          <div class="tile"><small>レース</small><b>${(t.h_races || 0).toLocaleString()}</b></div>
-          <div class="tile"><small>的中</small><b>${t.h_hits || 0}${t.h_races ? `<small style="display:inline"> (${pct(t.h_hits / t.h_races)})</small>` : ""}</b></div>
-          <div class="tile"><small>回収率</small><b class="${t.h_invest && t.h_return >= t.h_invest ? "up" : "down"}">${t.h_invest ? pct(t.h_return / t.h_invest, 1) : "-"}</b></div>
-        </div>
-        <h2>厳選穴（検証中）<small>頭固定・イン抜きの買い目を各100円で購入した場合</small></h2>
-        <div class="tiles">
-          <div class="tile"><small>レース</small><b>${(t.t_races || 0).toLocaleString()}</b></div>
-          <div class="tile"><small>的中</small><b>${t.t_hits || 0}</b></div>
-          <div class="tile"><small>回収率</small><b class="${t.t_invest && t.t_return >= t.t_invest ? "up" : "down"}">${t.t_invest ? pct(t.t_return / t.t_invest, 1) : "-"}</b></div>
-        </div>
-        <h2>自信ありの絞り込み（合成オッズ5倍以上）<small>自信ありレースで、合成オッズ配分どおりに購入した場合</small></h2>
-        <div class="tiles">
-          <div class="tile"><small>推奨したレース</small><b>${(t.r_races || 0).toLocaleString()}</b></div>
-          <div class="tile"><small>的中</small><b>${t.r_hits || 0}${t.r_races ? `<small style="display:inline"> (${pct(t.r_hits / t.r_races)})</small>` : ""}</b></div>
-          <div class="tile"><small>回収率</small><b class="${t.r_invest && t.r_return >= t.r_invest ? "up" : "down"}">${t.r_invest ? pct(t.r_return / t.r_invest, 1) : "-"}</b></div>
-          <div class="tile"><small>購入非推奨にしたレース</small><b>${t.gachi || 0}</b></div>
-        </div>
-        <div class="tiles">
-          <div class="tile"><small>うち自信あり</small><b>${t.rc_races || 0}</b></div>
-          <div class="tile"><small>自信ありの的中</small><b>${t.rc_hits || 0}</b></div>
-          <div class="tile"><small>自信ありの回収率</small><b class="${t.rc_invest && t.rc_return >= t.rc_invest ? "up" : "down"}">${t.rc_invest ? pct(t.rc_return / t.rc_invest, 1) : "-"}</b></div>
-          <div class="tile"><small>期待値買い（検証中）</small><b style="font-size:18px">${t.v_races ? `${t.v_races}R・${pct(vroi)}` : "該当なし"}</b></div>
-        </div>
-        <h2>B級コース巧者の単勝（検証中）</h2>
-        <div class="tiles">
-          <div class="tile"><small>対象艇</small><b>${t.s_boats || 0}</b></div>
-          <div class="tile"><small>1着</small><b>${t.s_hits || 0}</b></div>
-          <div class="tile"><small>単勝回収率</small><b class="${t.s_invest && t.s_return / t.s_invest >= 1 ? "up" : "down"}">${t.s_invest ? pct(t.s_return / t.s_invest, 1) : "-"}</b></div>
-        </div>
-        <h2>参考：AIの着順予想を全レース買った場合</h2>
-        <div class="tiles">
-          <div class="tile"><small>対象レース</small><b>${t.races}</b></div>
-          <div class="tile"><small>的中率（本線＋押さえ）</small><b>${pct(rate, 1)}</b></div>
-          <div class="tile"><small>回収率（本線＋押さえ）</small><b class="${roi >= 1 ? "up" : "down"}">${pct(roi, 1)}</b></div>
-          <div class="tile"><small>回収率（本線のみ）</small><b class="${roiM >= 1 ? "up" : "down"}">${pct(roiM, 1)}</b></div>
+          <div class="tile"><small>仮想投資額</small><b>${yen(t.invest || 0)}</b></div>
+          <div class="tile"><small>払戻額</small><b>${yen(t.return || 0)}</b></div>
+          <div class="tile"><small>収支</small><b class="${roi >= 1 ? "up" : "down"}">${yen((t.return || 0) - (t.invest || 0))}</b></div>
         </div>
         <section class="panel chart" style="display:grid;gap:6px"><h2>日別の投資と払戻 <small>各買い目100円換算</small></h2>
           <svg viewBox="0 0 610 196" role="img" aria-label="日別の投資額と払戻額">${ticks}${bars}</svg>
           <p class="sub"><span class="bt" style="width:10px;height:10px;background:var(--water2);border:0"></span> 投資　<span class="bt" style="width:10px;height:10px;background:var(--accent);border:0"></span> 払戻</p></section>`;
       document.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.r === range));
     };
-    const best = s.best.map((b) => `<tr><td class="num">${+b.date.slice(4, 6)}/${+b.date.slice(6)}</td><td>${esc(b.venue)} ${b.rno}R</td><td>${combo(b.combo)}</td><td class="r num best">${yen(b.payout)}</td></tr>`).join("");
+    const best = (s.best || []).map((b) => `<tr><td class="num">${+b.date.slice(4, 6)}/${+b.date.slice(6)}</td><td>${esc(b.venue)} ${b.rno}R</td><td>${combo(b.combo)}</td><td class="r num best">${yen(b.payout)}</td></tr>`).join("");
     app.innerHTML = `
-      <section style="display:grid;gap:6px"><span class="eyebrow">Track record</span><h1>的中実績</h1>
-        <p class="sub">${esc(s.note || "締切前に掲載した買い目だけを自動で集計しています。後から書き換えはしていません。")}</p></section>
+      <section style="display:grid;gap:6px"><span class="eyebrow">Track record</span><h1>掲載予想の仮想成績</h1>
+        <p class="sub">保存された採用券と公式結果を自動集計。新しい一本化ルールでは厳選穴が成立すれば穴券のみ、それ以外は本線＋押さえです。各券100円の仮想購入で、実購入実績ではありません。導入前の本線＋押さえの旧成績は変更せず含めています。予想版・選択ルールが混在し、取得時刻未確認の旧記録もあります。締切前の厳密な比較検証は上の別表です。</p></section>
       <div class="seg" role="group" aria-label="集計期間"><button data-r="last7">7日</button><button data-r="last30">30日</button><button data-r="all">全期間</button></div>
       <div id="stats-body" style="display:grid;gap:16px"></div>
-      ${dayReport(s.day_report)}
-      <section style="display:grid;gap:8px"><h2>高配当の的中</h2>
+      <section style="display:grid;gap:8px"><h2>直近30日の的中例</h2><p class="sub">払戻額の高い順。成績全体の評価は、上の不的中も含む回収率と収支をご覧ください。</p>
         <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>日付</th><th>レース</th><th>3連単</th><th class="r">払戻</th></tr></thead><tbody>${best || `<tr><td colspan="4" class="empty">まだありません</td></tr>`}</tbody></table></div></section>`;
     document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => { range = b.dataset.r; render(); }));
     render();
@@ -526,7 +485,7 @@
     };
     const t = r.test;
     const topn = Object.entries(t.trifecta_topN).map(([n, v]) => `<tr><td class="r num">上位${n}点</td><td class="r num">${pct(v.hit, 1)}</td><td class="r num ${v.roi >= 1 ? "best" : ""}">${v.roi == null ? "買い目なし" : pct(v.roi, 1)}</td></tr>`).join("");
-    const conf = Object.entries(t.by_confidence).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="r num">${v.races.toLocaleString()}</td><td class="r num">${pct(v.win_acc, 1)}</td><td class="r num">${pct(v.top8_hit, 1)}</td><td class="r num">${pct(v.top8_roi, 1)}</td></tr>`).join("");
+    const conf = Object.entries(t.by_confidence).map(([k, v]) => `<tr><td>${esc(confLabel(k))}</td><td class="r num">${v.races.toLocaleString()}</td><td class="r num">${pct(v.win_acc, 1)}</td><td class="r num">${pct(v.top8_hit, 1)}</td><td class="r num">${pct(v.top8_roi, 1)}</td></tr>`).join("");
     app.innerHTML = `
       <section style="display:grid;gap:6px"><span class="eyebrow">Evidence</span><h1>予想の根拠</h1>
         <p class="sub">重みはすべて公式の競走成績・番組表データから学習しています。検証は学習に使っていない${fmt(r.period.test[0])}〜${fmt(r.period.test[1])}の${t.races.toLocaleString()}レースで行いました（学習：${r.n_train.toLocaleString()}レース）。各レースの特徴量は、そのレースより前のデータだけで計算しています。</p></section>

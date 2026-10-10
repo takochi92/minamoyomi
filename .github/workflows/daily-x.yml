@@ -1,0 +1,58 @@
+# 毎朝、その日の X 投稿文を site/data から作り、持ち主の下書き置き場 Atelier（自動作成された投稿）に入れる
+#  - 文の作り方は tools/make_daily_x.py（今日の開催・AIの自信が高いレース・昨日のAI本線の結果）
+#  - Secrets の ATELIER_SITE_URL・ATELIER_SERVICE_TOKEN・ATELIER_INGEST_TOKEN があるときだけ送る（無ければ文を作ってログに出すだけ）
+#  - 投稿はしない。Atelier の「投稿文をコピー」から X に貼って投稿する
+name: Daily X post
+
+on:
+  schedule:
+    # 23:13 UTC = 日本時間 8:13（その日の事前予想が出たあと）
+    - cron: "13 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make today's X post
+        run: python3 tools/make_daily_x.py --out out/x.json
+      - name: Send draft to Atelier
+        env:
+          ATELIER_SITE_URL: ${{ secrets.ATELIER_SITE_URL }}
+          ATELIER_SERVICE_TOKEN: ${{ secrets.ATELIER_SERVICE_TOKEN }}
+          ATELIER_INGEST_TOKEN: ${{ secrets.ATELIER_INGEST_TOKEN }}
+        if: env.ATELIER_SITE_URL != '' && env.ATELIER_INGEST_TOKEN != ''
+        run: |
+          node - <<'JS'
+          const fs = require("fs");
+          const { posts } = JSON.parse(fs.readFileSync("out/x.json", "utf8"));
+          // Secrets に引用符・"site_url":・https:// なし・/api/posts つきで入っていても読めるようにする
+          const clean = (v) => (v || "").trim().replace(/^.*?:\s*(?=["'])/, "").replace(/^["']+|["',\s]+$/g, "").trim();
+          const rawSite = clean(process.env.ATELIER_SITE_URL);
+          console.log("site check: length", rawSite.length, "scheme", /^https?:\/\//.test(rawSite), "space", /\s/.test(rawSite), "quote", /["']/.test(rawSite));
+          console.log("token check: service", clean(process.env.ATELIER_SERVICE_TOKEN).length, "ingest", clean(process.env.ATELIER_INGEST_TOKEN).length);
+          const found = rawSite.match(/https?:\/\/[^\s"',]+/) || rawSite.match(/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"',]*)?/i);
+          // URL の形でなければ、Atelier の公開アドレスを使う（URL は秘密ではない）
+          const site = (!found ? "https://atelier-task-studio.politechar16.chatgpt.site" : /^https?:/.test(found[0]) ? found[0] : "https://" + found[0]).replace(/\/api\/posts\/?$/, "").replace(/\/+$/, "");
+          (async () => {
+            for (const post of posts) {
+              const r = await fetch(site + "/api/posts", {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  "OAI-Sites-Authorization": "Bearer " + clean(process.env.ATELIER_SERVICE_TOKEN),
+                  "x-atelier-token": clean(process.env.ATELIER_INGEST_TOKEN)
+                },
+                body: JSON.stringify(post)
+              });
+              const body = await r.json().catch(() => ({}));
+              if (!r.ok || !body.ok) { console.error(`Atelier ${post.channel}: failed (${r.status}) ${body.error || ""}`); process.exitCode = 1; continue; }
+              console.log(`${body.post.project} / ${body.post.channel} / ${body.post.date}: saved`);
+            }
+          })();
+          JS

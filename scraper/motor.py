@@ -12,7 +12,7 @@ from __future__ import annotations
 import gzip
 import json
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .history import load_all
@@ -151,10 +151,12 @@ def main():
         except Exception:
             pass
     data = build(races, files)
-    from .motoradj import current
-    for j, ms in current(races).items():       # 乗り手を差し引いた評価（予想で使う）
+    from .motoradj import current_context
+    today=datetime.now(timezone(timedelta(hours=9))).strftime('%Y%m%d')
+    # 学習と同じ日付順の計算法・全履歴。現在日の結果は含めない。
+    for j, ms in current_context([r for r in load_all() if r[0]<today]).items():
         for mno, v in ms.items():
-            data.setdefault(j, {}).setdefault(mno, {})["adj"] = v
+            data.setdefault(j, {}).setdefault(mno, {}).update(v)
     with gzip.open(OUT, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print(f"motor: {sum(len(v) for v in data.values())} motors")

@@ -177,6 +177,11 @@ def build_exstats(today: datetime | None = None):
     races = load_all((today - timedelta(days=EX_DAYS)).strftime("%Y%m%d"))
     dates = sorted({r[0] for r in races})
     j = {"window": f"{dates[0]}-{dates[-1]}" if dates else "", "r": ex_counts(races), "rank": ex_rank_table(races)}
+    # 従来の直近2年集計は維持し、期別は保存済み全履歴で別に集計する。
+    # 適用期と審査期間を分離。期別結果をその期の過去レース予想に戻して使わない。
+    from .exhibition_profile import profiles
+    all_races = [r for r in load_all() if r[0] < today.strftime("%Y%m%d")]
+    j["term_profiles"] = profiles(all_races)
     with gzip.open(EXSTATS_PATH, "wt", encoding="utf-8") as f:
         json.dump(j, f, ensure_ascii=False, separators=(",", ":"))
     print("exstats:", j["window"], len(j["r"]), "racers")

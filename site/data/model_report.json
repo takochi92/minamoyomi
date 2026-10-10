@@ -2,101 +2,101 @@
  "period": {
   "train": [
    "20240925",
-   "20251007"
+   "20251008"
   ],
   "test": [
-   "20251008",
-   "20261007"
+   "20251009",
+   "20261008"
   ]
  },
- "n_train": 56566,
- "n_test": 54353,
+ "n_train": 56681,
+ "n_test": 54381,
  "variants": {
   "コースだけ（場のコース別1着率）": {
-   "logloss": 1.3363,
+   "logloss": 1.3361,
    "win_acc": 0.5546
   },
   "＋選手力・機力・展示": {
-   "logloss": 1.1931,
-   "win_acc": 0.5683
+   "logloss": 1.1929,
+   "win_acc": 0.5684
   },
   "＋選手のコース別成績": {
-   "logloss": 1.1876,
+   "logloss": 1.1874,
    "win_acc": 0.5708
   },
   "＋インの負け方×攻め手": {
-   "logloss": 1.1875,
-   "win_acc": 0.5705
+   "logloss": 1.1873,
+   "win_acc": 0.5707
   },
   "＋波・風": {
-   "logloss": 1.1868,
-   "win_acc": 0.571
+   "logloss": 1.1866,
+   "win_acc": 0.5712
   },
   "＋インでの成績": {
-   "logloss": 1.1828,
-   "win_acc": 0.5734
+   "logloss": 1.1825,
+   "win_acc": 0.5735
   },
-  "＋展開の材料（壁とのST差・壁のF・壁の叩かれやすさ・展示で壁より速い・展示のいつもとの差）": {
-   "logloss": 1.1795,
-   "win_acc": 0.5746
+  "＋展開・本人比展示・乗り手補正展示": {
+   "logloss": 1.1791,
+   "win_acc": 0.5747
   }
  },
  "test": {
-  "races": 54334,
+  "races": 54361,
   "trifecta_topN": {
    "1": {
-    "hit": 0.0974,
-    "roi": 0.8377
+    "hit": 0.097,
+    "roi": 0.833
    },
    "3": {
-    "hit": 0.2402,
-    "roi": 0.8344
+    "hit": 0.2405,
+    "roi": 0.8366
    },
    "5": {
-    "hit": 0.3418,
-    "roi": 0.832
+    "hit": 0.3423,
+    "roi": 0.834
    },
    "8": {
-    "hit": 0.4532,
-    "roi": 0.8197
+    "hit": 0.4534,
+    "roi": 0.8185
    },
    "10": {
-    "hit": 0.5106,
-    "roi": 0.8146
+    "hit": 0.5112,
+    "roi": 0.8175
    },
    "15": {
-    "hit": 0.616,
-    "roi": 0.8022
+    "hit": 0.6154,
+    "roi": 0.8011
    },
    "20": {
     "hit": 0.6874,
-    "roi": 0.7856
+    "roi": 0.786
    }
   },
   "by_confidence": {
    "鉄板": {
-    "races": 18501,
-    "win_acc": 0.7507,
-    "top8_hit": 0.5645,
-    "top8_roi": 0.8287
+    "races": 18495,
+    "win_acc": 0.7505,
+    "top8_hit": 0.5643,
+    "top8_roi": 0.8271
    },
    "本命": {
-    "races": 14950,
-    "win_acc": 0.5914,
-    "top8_hit": 0.4692,
-    "top8_roi": 0.822
+    "races": 15019,
+    "win_acc": 0.5909,
+    "top8_hit": 0.4685,
+    "top8_roi": 0.8212
    },
    "やや混戦": {
-    "races": 12672,
-    "win_acc": 0.4496,
-    "top8_hit": 0.378,
-    "top8_roi": 0.811
+    "races": 12650,
+    "win_acc": 0.4519,
+    "top8_hit": 0.3793,
+    "top8_roi": 0.8121
    },
    "混戦・荒れ注意": {
-    "races": 8211,
-    "win_acc": 0.3415,
-    "top8_hit": 0.2892,
-    "top8_roi": 0.809
+    "races": 8197,
+    "win_acc": 0.339,
+    "top8_hit": 0.2896,
+    "top8_roi": 0.8044
    }
   }
  },
@@ -113,53 +113,53 @@
    "grid": [
     [
      {
-      "n": 10575,
-      "makuri_win": 0.0186,
-      "win": 0.0697
+      "n": 10587,
+      "makuri_win": 0.0188,
+      "win": 0.0698
      },
      {
-      "n": 11116,
-      "makuri_win": 0.0289,
-      "win": 0.0893
+      "n": 11135,
+      "makuri_win": 0.029,
+      "win": 0.0894
      },
      {
-      "n": 12331,
-      "makuri_win": 0.0488,
+      "n": 12343,
+      "makuri_win": 0.0489,
       "win": 0.1186
      }
     ],
     [
      {
-      "n": 11282,
+      "n": 11292,
       "makuri_win": 0.0265,
-      "win": 0.0903
+      "win": 0.0902
      },
      {
-      "n": 11281,
+      "n": 11297,
       "makuri_win": 0.0437,
       "win": 0.1141
      },
      {
-      "n": 11624,
+      "n": 11642,
       "makuri_win": 0.0689,
-      "win": 0.1526
+      "win": 0.1525
      }
     ],
     [
      {
-      "n": 11681,
-      "makuri_win": 0.0431,
+      "n": 11697,
+      "makuri_win": 0.0432,
       "win": 0.119
      },
      {
-      "n": 11401,
+      "n": 11414,
       "makuri_win": 0.062,
       "win": 0.152
      },
      {
-      "n": 11121,
-      "makuri_win": 0.1068,
-      "win": 0.2131
+      "n": 11136,
+      "makuri_win": 0.1069,
+      "win": 0.213
      }
     ]
    ]
@@ -176,53 +176,53 @@
    "grid": [
     [
      {
-      "n": 10435,
-      "makuri_win": 0.0203,
-      "win": 0.0541
+      "n": 10450,
+      "makuri_win": 0.0204,
+      "win": 0.0543
      },
      {
-      "n": 11363,
-      "makuri_win": 0.0335,
-      "win": 0.0789
+      "n": 11377,
+      "makuri_win": 0.0337,
+      "win": 0.079
      },
      {
-      "n": 12259,
+      "n": 12274,
       "makuri_win": 0.0573,
       "win": 0.1088
      }
     ],
     [
      {
-      "n": 11337,
-      "makuri_win": 0.0244,
-      "win": 0.065
+      "n": 11296,
+      "makuri_win": 0.0243,
+      "win": 0.0651
      },
      {
-      "n": 11375,
-      "makuri_win": 0.0402,
-      "win": 0.0936
+      "n": 11358,
+      "makuri_win": 0.0401,
+      "win": 0.0937
      },
      {
-      "n": 11441,
-      "makuri_win": 0.0799,
-      "win": 0.1432
+      "n": 11394,
+      "makuri_win": 0.0797,
+      "win": 0.1431
      }
     ],
     [
      {
-      "n": 12254,
-      "makuri_win": 0.0307,
-      "win": 0.0837
+      "n": 12327,
+      "makuri_win": 0.0308,
+      "win": 0.0836
      },
      {
-      "n": 11215,
+      "n": 11263,
       "makuri_win": 0.0546,
-      "win": 0.1227
+      "win": 0.1226
      },
      {
-      "n": 10636,
-      "makuri_win": 0.0968,
-      "win": 0.184
+      "n": 10707,
+      "makuri_win": 0.0969,
+      "win": 0.1838
      }
     ]
    ]
@@ -232,38 +232,41 @@
   "base_w": 0.983,
   "nat": 0.238,
   "loc": 0.056,
-  "A1": 0.272,
+  "A1": 0.274,
   "A2": 0.132,
-  "B2": -0.208,
-  "motor_adj": 0.294,
+  "B2": -0.206,
+  "motor_adj": 0.265,
   "boat": 0.019,
-  "ex_dev": 0.139,
-  "ex_top": 0.03,
-  "avg_st": 0.409,
+  "ex_dev": 0.115,
+  "ex_top": 0.036,
+  "avg_st": 0.411,
   "f_recent": -0.086,
-  "rc_win": 0.368,
+  "rc_win": 0.371,
   "mu": 0.043,
   "wave_in": -0.04,
   "wave_out": 0.012,
   "wind_in": -0.102,
   "wind_out": 0.047,
-  "rc_in": 0.825,
-  "st_wall": 0.315,
+  "rc_in": 0.827,
+  "st_wall": 0.314,
   "wall_f": 0.003,
   "wall_beat": 0.19,
-  "ex_wall": 0.107,
-  "ex_usual": 0.072,
-  "vw_in": 0.152,
-  "vw_out": -0.059,
-  "rv_top3": 0.441,
-  "rv_in": 0.102
+  "ex_wall": 0.109,
+  "ex_usual": 0.059,
+  "vw_in": 0.153,
+  "vw_out": -0.057,
+  "rv_top3": 0.443,
+  "rv_in": 0.102,
+  "ex_personal": 0.066,
+  "ex_rare_first": -0.028,
+  "motor_ex": 0.408
  },
  "ev": {
   "period": [
    "20251013",
-   "20261007"
+   "20261008"
   ],
-  "races": 10791,
+  "races": 10933,
   "rule": {
    "ev_min": 1.0,
    "max_odds": 200.0
@@ -279,7 +282,7 @@
    }
   ],
   "result": {
-   "races_checked": 10791,
+   "races_checked": 10933,
    "bet_races": 0,
    "bets": 0,
    "hits": 0,
@@ -290,7 +293,7 @@
   },
   "variants": {
    "オッズ50倍まで": {
-    "races_checked": 10791,
+    "races_checked": 10933,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -300,7 +303,7 @@
     "ci95": null
    },
    "オッズ200倍まで": {
-    "races_checked": 10791,
+    "races_checked": 10933,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -310,7 +313,7 @@
     "ci95": null
    },
    "オッズ上限なし倍まで": {
-    "races_checked": 10791,
+    "races_checked": 10933,
     "bet_races": 0,
     "bets": 0,
     "hits": 0,
@@ -320,29 +323,29 @@
     "ci95": null
    },
    "AI単独（オッズを混ぜない）": {
-    "races_checked": 10791,
-    "bet_races": 10790,
-    "bets": 145134,
-    "hits": 1766,
-    "invest": 14513400,
-    "return": 10682860,
-    "roi": 0.736,
+    "races_checked": 10933,
+    "bet_races": 10932,
+    "bets": 146949,
+    "hits": 1810,
+    "invest": 14694900,
+    "return": 10932650,
+    "roi": 0.744,
     "ci95": [
-     0.694,
-     0.779
+     0.704,
+     0.784
     ]
    },
    "参考：AIの上位8点を全レース": {
-    "races_checked": 10791,
-    "bet_races": 10791,
-    "bets": 86328,
-    "hits": 4839,
-    "invest": 8632800,
-    "return": 6752830,
-    "roi": 0.782,
+    "races_checked": 10933,
+    "bet_races": 10933,
+    "bets": 87464,
+    "hits": 4918,
+    "invest": 8746400,
+    "return": 6817250,
+    "roi": 0.779,
     "ci95": [
-     0.76,
-     0.807
+     0.757,
+     0.803
     ]
    }
   },
@@ -353,34 +356,34 @@
    "max_odds": 200.0,
    "status": "検証中"
   },
-  "market_ll": 3.6834,
+  "market_ll": 3.6844,
   "model_ll": 3.8195,
   "note": "はじめは「実際の進入コース」で検証して回収率205%に見えましたが、実際の進入は締切後にしか分からない情報のため不採用にしました。展示の並び・直前の気象だけで検証し直すと、期待値が1を超える買い目はほぼ出なくなります。オッズを土台に、AI・展示ST・チルトで補正するモデルも試しましたが、1着予想の精度が市場をわずかに上回るだけで、控除率25%を越える買い目は出ませんでした。確定オッズと直前情報は毎晩集め続け、条件を満たした時点で自動的に「有効」に切り替わります。"
  },
  "specialist": {
   "2": {
-   "boats": 114,
-   "win": 0.105,
-   "market": 0.156
+   "boats": 115,
+   "win": 0.104,
+   "market": 0.157
   },
   "3": {
-   "boats": 112,
-   "win": 0.196,
-   "market": 0.141
+   "boats": 115,
+   "win": 0.2,
+   "market": 0.144
   },
   "4": {
-   "boats": 185,
-   "win": 0.146,
-   "market": 0.121
+   "boats": 188,
+   "win": 0.149,
+   "market": 0.12
   },
   "5": {
-   "boats": 287,
-   "win": 0.091,
-   "market": 0.072
+   "boats": 290,
+   "win": 0.09,
+   "market": 0.073
   },
   "6": {
-   "boats": 598,
-   "win": 0.02,
+   "boats": 603,
+   "win": 0.022,
    "market": 0.036
   }
  },
@@ -606,5 +609,152 @@
     "roi": 0.8147
    }
   }
+ },
+ "production_integration": {
+  "schema": 1,
+  "candidate_accepted": true,
+  "candidate_features": [
+   "ex_personal",
+   "ex_rare_first",
+   "motor_ex"
+  ],
+  "active_features": [
+   "ex_personal",
+   "ex_rare_first",
+   "motor_ex"
+  ],
+  "baseline": {
+   "races": 54361,
+   "win_logloss": 1.1792479727882057,
+   "trifecta_logloss": 3.8205646446161254
+  },
+  "candidate": {
+   "races": 54361,
+   "win_logloss": 1.1790952374889225,
+   "trifecta_logloss": 3.8201187352477457
+  },
+  "motor_method": "prior_days_v2",
+  "reference": "completed_previous_two_terms",
+  "validation_status": "retrospective_actual_course;not_timestamp_verified_roi",
+  "selection_rule": "non_worse_win_and_trifecta_logloss",
+  "baseline_topN": {
+   "races": 54361,
+   "trifecta_topN": {
+    "1": {
+     "hit": 0.0969,
+     "roi": 0.8343
+    },
+    "3": {
+     "hit": 0.2397,
+     "roi": 0.8291
+    },
+    "5": {
+     "hit": 0.3414,
+     "roi": 0.8299
+    },
+    "8": {
+     "hit": 0.4531,
+     "roi": 0.819
+    },
+    "10": {
+     "hit": 0.5109,
+     "roi": 0.8154
+    },
+    "15": {
+     "hit": 0.6161,
+     "roi": 0.8023
+    },
+    "20": {
+     "hit": 0.6868,
+     "roi": 0.7844
+    }
+   },
+   "by_confidence": {
+    "鉄板": {
+     "races": 18480,
+     "win_acc": 0.7506,
+     "top8_hit": 0.5647,
+     "top8_roi": 0.8292
+    },
+    "本命": {
+     "races": 15001,
+     "win_acc": 0.5913,
+     "top8_hit": 0.4688,
+     "top8_roi": 0.819
+    },
+    "やや混戦": {
+     "races": 12671,
+     "win_acc": 0.4513,
+     "top8_hit": 0.3786,
+     "top8_roi": 0.8115
+    },
+    "混戦・荒れ注意": {
+     "races": 8209,
+     "win_acc": 0.3406,
+     "top8_hit": 0.2882,
+     "top8_roi": 0.8077
+    }
+   }
+  },
+  "candidate_topN": {
+   "races": 54361,
+   "trifecta_topN": {
+    "1": {
+     "hit": 0.097,
+     "roi": 0.833
+    },
+    "3": {
+     "hit": 0.2405,
+     "roi": 0.8366
+    },
+    "5": {
+     "hit": 0.3423,
+     "roi": 0.834
+    },
+    "8": {
+     "hit": 0.4534,
+     "roi": 0.8185
+    },
+    "10": {
+     "hit": 0.5112,
+     "roi": 0.8175
+    },
+    "15": {
+     "hit": 0.6154,
+     "roi": 0.8011
+    },
+    "20": {
+     "hit": 0.6874,
+     "roi": 0.786
+    }
+   },
+   "by_confidence": {
+    "鉄板": {
+     "races": 18495,
+     "win_acc": 0.7505,
+     "top8_hit": 0.5643,
+     "top8_roi": 0.8271
+    },
+    "本命": {
+     "races": 15019,
+     "win_acc": 0.5909,
+     "top8_hit": 0.4685,
+     "top8_roi": 0.8212
+    },
+    "やや混戦": {
+     "races": 12650,
+     "win_acc": 0.4519,
+     "top8_hit": 0.3793,
+     "top8_roi": 0.8121
+    },
+    "混戦・荒れ注意": {
+     "races": 8197,
+     "win_acc": 0.339,
+     "top8_hit": 0.2896,
+     "top8_roi": 0.8044
+    }
+   }
+  },
+  "roi_method": "historical_fixed_topN_diagnostic_without_refund_adjustment;not_forward_verified"
  }
 }

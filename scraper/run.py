@@ -85,14 +85,20 @@ def summarize(race: dict) -> dict:
     if pred:
         s["confidence"] = pred["confidence"]["label"]
         s["pts"] = [len(pred["bets"]["main"]), len(pred["bets"]["sub"])]
+        if race.get('primary_slip'):
+            s['pts'] = [len(race['primary_slip']['tickets']), 0] if race['primary_slip']['kind'] == 'ana' else s['pts']
+            s['primary_kind'] = race['primary_slip']['kind']
         s["level"] = pred["confidence"]["level"]
         s["honmei"] = [m["combo"] for m in pred["bets"]["main"][:3]]
+        if s.get('primary_kind') == 'ana':
+            s['honmei'] = race['primary_slip']['tickets'][:3]
+            s['confidence'] = '穴予想'
     if race.get("result", {}).get("finished"):
         s["result"] = race["result"]["trifecta"]
         s["payout"] = race["result"]["trifecta_payout"]
         s["ninki"] = race["result"].get("trifecta_ninki")
         s["hit"] = race.get("hit")
-    if race.get("reco"):
+    if race.get("reco") and s.get('primary_kind') != 'ana':
         rc = race["reco"]
         s["reco"] = {"verdict": rc["verdict"], "comp": rc["comp"], "n": len(rc["bets"]), "top": rc["bets"][0]["combo"] if rc["bets"] else None,
                      "market_hit": rc["market_hit"], "ai_hit": rc["ai_hit"],
@@ -104,7 +110,7 @@ def summarize(race: dict) -> dict:
         s["ana"] = pred["ana_pick"]["frame"]
         if "a_hit" in race:
             s["ana_hit"] = race["a_hit"]
-    if pred and pred.get("honmei_pick") and pred.get("stage") == "直前" and pred["bets"].get("mode") == "honmei":
+    if pred and pred.get("honmei_pick") and pred.get("stage") == "直前" and pred["bets"].get("mode") == "honmei" and s.get('primary_kind') != 'ana':
         hp = pred["honmei_pick"]
         s["hon"] = {"in": hp["in"], "axis": hp["axis"], "n": len(hp["bets"]), "comp": (race.get("honmei") or {}).get("comp")}
         if "h_hit" in race:
@@ -134,12 +140,13 @@ def judge(race: dict):
     pred, res = race.get("prediction"), race.get("result")
     if not pred or not res or not res.get("finished"):
         return
-    bought = [b["combo"] for b in pred["bets"]["main"] + pred["bets"]["sub"]]
+    from .primary_slip import tickets
+    bought = tickets(race)
     hit = res["trifecta"] in bought
     race["hit"] = hit
     race["invest"] = 100 * len(bought)
     race["return"] = (res["trifecta_payout"] or 0) if hit else 0
-    main = [b["combo"] for b in pred["bets"]["main"]]
+    main = bought if (race.get('primary_slip') or {}).get('kind') == 'ana' else [b["combo"] for b in pred["bets"]["main"]]
     race["hit_main"] = res["trifecta"] in main
     race["invest_main"] = 100 * len(main)
     race["return_main"] = (res["trifecta_payout"] or 0) if race["hit_main"] else 0
@@ -190,6 +197,9 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     race = _load(path) or {"date": date, "jcd": jcd, "venue": v["name"], "rno": rno, "deadline": r["deadline"]}
     dl = _dl(date, r["deadline"])
     changed = False
+    if race.get('deadline') != r['deadline']:
+        race['deadline'] = r['deadline']
+        changed = True
 
     # 1) 出走表
     # 締切まで2時間以内は必ず、それより先のレースも時間の余裕があれば取る（締切が近い順に処理するので直近が優先）
@@ -197,6 +207,8 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         rl = parse.parse_racelist(f.racelist(jcd, rno, date))
         if len(rl.get("boats", [])) == 6:
             race["racelist"] = rl
+            from .research_snapshot import mark_fetched
+            mark_fetched(race, 'racelist', datetime.now(JST))
             race["race_name"] = rl.get("race_name", "")
             changed = True
 
@@ -204,6 +216,8 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     if "racelist" in race and dl - timedelta(minutes=35) <= now < dl and not race.get("before_final"):
         bi = parse.parse_beforeinfo(f.beforeinfo(jcd, rno, date))
         race["before"] = bi
+        from .research_snapshot import mark_fetched
+        mark_fetched(race, 'before', datetime.now(JST))
         if bi["exhibition_done"] and not race.get("oriten"):
             try:
                 ot = parse.parse_oriten(f.oriten(jcd, rno, date)) if hasattr(f, "oriten") else None
@@ -211,6 +225,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 ot = None
             if ot:
                 race["oriten"] = ot
+                mark_fetched(race, 'oriten', datetime.now(JST))
         if bi["exhibition_done"] and now >= dl - timedelta(minutes=8):
             race["before_final"] = True
         changed = True
@@ -218,14 +233,18 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     from .predict import PRED_VERSION
     stale = (race.get("prediction") or {}).get("version") != PRED_VERSION
     if "racelist" in race and now < dl and (changed or stale):
-        race["prediction"] = predict(jcd, race["racelist"], race.get("before"))
+        race["prediction"] = predict(jcd, race["racelist"], race.get("before"), race_date=date, oriten=race.get('oriten'))
         race["prediction"]["made_at"] = now.strftime("%H:%M")
+        from .research_snapshot import mark_fetched
+        mark_fetched(race, 'prediction', datetime.now(JST))
         changed = True
 
     # 2b) 締切35分前〜締切：オッズを毎回取り直して表示。3連単オッズ × AI で期待値判定（締切後は固定）
     if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl:
         ov = O.parse_odds3t(f.odds3t(jcd, rno, date))
         if ov:
+            from .research_snapshot import mark_fetched
+            mark_fetched(race, 'odds_pre', datetime.now(JST))
             at = now.strftime("%H:%M")
             ex = O.parse_odds2t(f.odds2tf(jcd, rno, date)) or {}
             race["odds_pre"] = {"at": at, "v": [None if x != x else x for x in ov], "ex": ex}
@@ -287,6 +306,15 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             wo = O.parse_oddstf(f.oddstf(jcd, rno, date))
             if wo:
                 race["win_odds"] = {"at": now.strftime("%H:%M"), "v": [None if x != x else x for x in wo]}
+
+    # 取得中に締切を越える場合があるため、実際の取得完了時刻で判定する。
+    # 研究用入力だけを固定し、締切後・結果判明後には更新しない。
+    from .research_snapshot import capture
+    from .primary_slip import prepare
+    if now < dl and prepare(race, datetime.now(JST)):
+        changed = True
+    if now < dl and capture(race, datetime.now(JST), dl):
+        changed = True
 
     # 3) 結果
     if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:

@@ -21,7 +21,8 @@ M = 20        # 選手成績を全国平均に寄せる強さ（出走数換算�
 MV = 50       # 場成績を全国平均に寄せる強さ
 FEATS = ["base_w", "base_2", "base_3", "rc_win", "rc_place", "mu", "nat", "loc", "A1", "A2", "B2",
          "motor", "boat", "ex_dev", "ex_top", "avg_st", "f_recent", "wave_in", "wave_out", "wind_in", "wind_out", "rc_in",
-         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2", "vw_in", "vw_out", "rv_top3", "rv_in", "motor_adj"]
+         "st_wall", "wall_f", "wall_beat", "ex_wall", "ex_usual", "noko", "in2", "vw_in", "vw_out", "rv_top3", "rv_in", "motor_adj",
+         "ex_personal", "ex_rare_first", "motor_ex"]
 FEATURE_LABEL = {
     "base_w": "場のコース別1着率", "rc_win": "選手のコース別成績", "rc_place": "選手のコース別連対", "mu": "インの負け方×攻め手",
     "nat": "全国勝率", "loc": "当地勝率", "A1": "級別", "A2": "級別", "B2": "級別", "motor": "モーター", "boat": "ボート",
@@ -31,6 +32,7 @@ FEATURE_LABEL = {
     "ex_usual": "展示のいつもとの差", "noko": "逃げ残し", "in2": "インが勝つときの2着のくせ",
     "vw_in": "場×風向き", "vw_out": "場×風向き", "rv_top3": "選手のこの場の得意・苦手", "rv_in": "選手のこの場でのイン",
     "motor_adj": "モーター",
+    "motor_ex": "乗り手補正の機力展示", "ex_personal": "本人の通常展示との差", "ex_rare_first": "本人比の珍しい展示1位",
 }
 ROOT = Path(__file__).parent
 STATS_PATH = ROOT / "course_stats.json.gz"
@@ -285,9 +287,15 @@ def features(S: Stats, jcd: str, wave, wind_speed, boats: list[dict], wind_dir=N
         X[i, fi["motor"]] = mot[i]
         X[i, fi["boat"]] = bt[i]
         X[i, fi["motor_adj"]] = np.clip((b.get("motor_adj") or 0) * 10, -2, 2)
+        X[i, fi["motor_ex"]] = np.clip(b.get("motor_ex") or 0, -2, 2)
         if has_ex:
             X[i, fi["ex_dev"]] = np.clip((exm - b["ex"]) / 5, -3, 3)
             X[i, fi["ex_top"]] = b["ex"] == exmin
+            ref=b.get('ex_reference') or {}
+            if ref.get('n',0)>=100:
+                dev=(b['ex']-exm)/100
+                X[i,fi['ex_personal']]=np.clip((ref['dev_sum']/ref['n']-dev)*10,-2,2)
+                X[i,fi['ex_rare_first']]=int(ref['top1']/ref['n']<=.10 and b['ex']==exmin and exs.count(exmin)==1)
         rs = S.rst[toban]
         if rs[1] >= 5:
             X[i, fi["avg_st"]] = np.clip(0.17 - rs[0] / rs[1], -0.08, 0.08) * 10

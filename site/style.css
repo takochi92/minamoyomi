@@ -550,10 +550,47 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 @keyframes tglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--tc) 0%,transparent)}to{box-shadow:0 0 18px 2px color-mix(in srgb,var(--tc) 55%,transparent)}}
 @media (prefers-reduced-motion:reduce){.tier-gold,.tier-silver{animation:none}}
 .ai-r.tier-gold,.ai-r.tier-silver{padding:6px 8px;border-radius:10px;margin:0 -8px}.ai-b .tier-tag{margin-right:2px}
+
+/* 機力・本人比展示を読む黒背景。艇番の6色は共通のまま。 */
+:root[data-theme="dark"]{--bg:#070b10;--surface:#111923;--surface2:#182430;--ink:#f2f5f8;--ink2:#a5b2c1;--line:#283441;--accent:#59e1d0;--accent-ink:#071510;--water:#10303a;--water2:#1c4852}
+.insight-hero{display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:24px 0 32px;background:radial-gradient(ellipse at 85% 50%,#12343e,transparent 65%);gap:20px}
+.insight-hero h1{font-family:var(--body);font-size:clamp(30px,4vw,46px);line-height:1.4;letter-spacing:.04em;margin:14px 0}.insight-hero p{color:var(--ink2)}
+.insight-hero img{display:block;width:100%;height:auto}.insight-links{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--accent)}
+.evidence-panel,.evidence-home{display:grid;gap:14px;min-width:0}.evidence-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.evidence-title h2{margin:6px 0 0}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.evidence-card{border:1px solid var(--line);background:var(--surface);padding:18px;border-radius:12px;min-width:0}
+.evidence-head{display:flex;gap:10px;align-items:center}.evidence-head strong{margin-left:auto;white-space:nowrap;font:700 22px var(--mono);text-align:right}.evidence-card small,.evidence-reason small{display:block;font-size:11px;color:var(--ink2);line-height:1.65}.evidence-head small{font:11px/1.65 var(--body)}
+.evidence-metric{border-top:1px solid var(--line);padding-top:10px;margin-top:14px}.evidence-metric>span{display:block;color:var(--accent);font-size:11px;letter-spacing:.04em}.evidence-metric b{display:block;font-size:13px;margin:4px 0;overflow-wrap:anywhere}
+.evidence-reason{padding:18px;border:1px solid var(--line);border-top:3px solid #f5c86e;border-radius:10px;background:var(--surface)}.evidence-reason>b{color:#f5c86e}.evidence-reason p{margin:8px 0;font-size:14px}.evidence-watch{height:auto;min-height:150px;border-top:2px solid var(--accent)}
+.evidence-card .comments{font-size:12px;padding-left:18px}.evidence-panel>.sub,.evidence-home>.sub{margin:0}
+.prob-summary{display:flex;align-items:center;gap:16px;margin:18px 0}.prob-ring{position:relative;width:112px;min-width:112px;height:112px}.prob-ring svg{width:100%;height:100%;transform:rotate(-90deg)}.prob-ring circle{fill:none;stroke-width:9}.ring-track{stroke:var(--line)}.ring-value{stroke:var(--accent);stroke-linecap:round}.prob-ring>div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}.prob-ring b{font:700 23px var(--mono)}.prob-steps{flex:1;min-width:0}.prob-base{display:flex;justify-content:space-between;font-size:12px;margin-bottom:9px}.prob-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.prob-change{padding:6px 8px;background:var(--bg);border-radius:6px;font-size:11px}.prob-change b{display:block;font:700 15px var(--mono)}.prob-change b small{display:inline;font-size:10px;margin-left:2px}.prob-change.up{color:var(--accent)}.prob-change.down{color:#f68d88}.evidence-details summary{cursor:pointer;font-size:12px;color:var(--ink2);padding:8px 0}.primary-note{font-size:12px;color:var(--ink2);line-height:1.7}.primary-ana .slip-h{border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:600px){.insight-hero{grid-template-columns:1fr;gap:0;padding-top:14px}.insight-hero img{max-height:200px;object-fit:contain}.evidence-grid{grid-template-columns:1fr}.evidence-title{align-items:flex-start;flex-direction:column}.evidence-card{padding:16px}}
+
+/* 深い水面の色と控えめな陰影で、画面全体を落ち着かせる */
+:root,:root[data-theme="dark"]{
+  --bg:#080e14;--surface:#111a23;--surface2:#17232d;--ink:#edf4f6;--ink2:#9aadb8;--line:#293944;
+  --accent:#59d8c7;--accent-ink:#071511;--water:#102c38;--water2:#194453;
+  --good:#58d6a0;--warn:#f2c16b;--bad:#ff7770;
+}
+body{background:radial-gradient(ellipse at 50% -18%,#142633 0,transparent 54%),var(--bg)}
+.top{background:rgba(8,14,20,.94);border-bottom-color:rgba(117,157,174,.2);backdrop-filter:blur(14px)}
+.panel,.venue,.soon a,.evidence-card,.vt{background:linear-gradient(155deg,color-mix(in srgb,var(--surface) 96%,#274453),var(--surface) 58%);border-color:color-mix(in srgb,var(--line) 86%,#638392);box-shadow:0 8px 24px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.025)}
+.panel{border-radius:14px}
+.venue,.soon a,.vt{transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+.venue:hover,.soon a:hover,.vt:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 62%,var(--line));box-shadow:0 12px 28px rgba(0,0,0,.24),0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent)}
+.panel h2{letter-spacing:.015em}
+.panel h2:before{content:"";width:3px;height:1em;align-self:center;border-radius:4px;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 26%,transparent));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 28%,transparent)}
+.slit svg{border:1px solid rgba(155,207,218,.18);border-radius:13px;box-shadow:inset 0 1px rgba(255,255,255,.05),0 12px 28px rgba(0,0,0,.22)}
+.slit{overflow:hidden}
+.chip,.pill{filter:saturate(.9)}
+button,.btn{transition:filter .16s ease,transform .16s ease}
+button:hover,.btn:hover{filter:brightness(1.1)}
+@media(prefers-reduced-motion:reduce){.venue,.soon a,.vt,button,.btn{transition:none}.venue:hover,.soon a:hover,.vt:hover{transform:none}}
+
+
 .gbars{display:grid;gap:8px}.gb{display:grid;grid-template-columns:84px 1fr 54px;align-items:center;gap:4px 8px;font-size:13px}.gb small{grid-column:2/4;margin-top:-4px}
 .gt{height:14px;border-radius:4px;background:var(--surface2);overflow:hidden}.gt i{display:block;height:100%;border-radius:4px;background:var(--accent)}.gb b{text-align:right}
 .guide-list{display:grid;gap:10px}.guide-card{display:grid;gap:4px;text-decoration:none;color:var(--ink)}.guide-card b{color:var(--accent)}
-@media (max-width:720px){.hero img{width:min(300px,70vw)}}
 
 /* スマホでは表を詰め、はみ出しやすい列を隠す・折り返す（PCではそのまま） */
 @media (max-width:720px){

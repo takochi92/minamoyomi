@@ -9,7 +9,7 @@
 - Claude はアカウント作成・パスワード・トークン・支払いの入力をしない。トークンをチャットに貼らない
 - 「20歳未満は購入不可」「のめり込み注意」の表示は消さない。「必ず儲かる」とは書かない
 - まとめファイル（zip）は「まとめて」「フォルダ作って」と言われたときだけ作る
-- 機能を作ったら、X 用のツイート文と画像（1200×675）をセットで出す。出したツイートは claude-hub にも保存する（下の「claude-hub への記録」）
+- 機能を作ったら、X 用のツイート文と画像（1200×675）をセットで出す。出したツイートは Atelier に入れる（下の「投稿原稿（Atelier）」）
 - 説明はやさしい日本語で短く。偶数日・奇数日ではなく「前半・後半」と言う
 
 ## しくみ
@@ -29,11 +29,11 @@
 - 画面の確認：tests/test_sitegen.py の `_site()` でページを作り、Playwright でスクショを撮る
 - 変更したら push する前にテストを全部通す。ブランチ・PR の運用はたこさんに合わせる
 
-## claude-hub への記録
-たこさんはタスク・作成物・ツイートを非公開リポジトリ `takochi92/claude-hub` で管理している。
-タスクを終えたとき・ツイートを作ったときは、claude-hub をセッションに追加（add_repo）して記録する
-（書き方は claude-hub の CLAUDE.md。tasks.json の status を done にする／tweets/ に .md と画像を追加）。
-記録して push すると、たこさんのスマホ（ntfy）に通知が届く。Claude のコミットを push したときも自動で通知される。
+## 投稿原稿（Atelier）
+- 司令塔（claude-hub）はもう使わない（2026-10-10 で更新終了）。claude-hub に記録しない。
+- SNS の原稿は、たこさんの下書き置き場 Atelier の「自動作成された投稿」に入れる。艇ろぐは **X のみ**（project: teirogu）。
+- 毎朝 8:13 に `.github/workflows/daily-x.yml` が `tools/make_daily_x.py` で原稿を作り、Atelier へ送る（Secrets の ATELIER_* 3つ）。
+- 送る形：`{"project":"teirogu","channel":"X","date":"YYYY-MM-DD","slot":"morning","text":"…"}`。同じ日・媒体・slot は上書き。機能紹介のツイートは slot を `feature` などにする。
 
 ## いまの状態・保留
 HANDOFF.md を参照（最新の状態・入れたもの・検討中のこと）。
