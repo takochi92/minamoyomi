@@ -16,3 +16,22 @@ def test_daily_x_fits_and_keeps_notice():
     assert "20歳未満は購入不可" in text and "のめり込み" in text
     assert "143レース中 32的中" in text
     assert "必ず" not in text
+
+
+def test_evening_lists_flyings_and_fits(tmp_path):
+    import json
+    from make_daily_x import build_evening
+    day = tmp_path / "20261010"
+    day.mkdir()
+    for rno in range(1, 13):
+        race = {"venue": "桐生", "rno": rno, "deadline": f"{10 + rno}:00",
+                "racelist": {"boats": [{"frame": f, "name": f"選手 {rno}{f}"} for f in range(1, 7)]},
+                "result": {"finished": True, "start": [{"frame": f, "flag": "F" if f <= 2 else ""} for f in range(1, 7)]}}
+        (day / f"01{rno:02d}.json").write_text(json.dumps(race, ensure_ascii=False), encoding="utf-8")
+    history = {"20261010": {"races": 150, "hits_main": 30, "best": [{"venue": "桐生", "rno": 1, "combo": "1-2-3", "payout": 9000}]}}
+    date, text = build_evening({"date": "20261010"}, history, tmp_path)
+    assert date == "2026-10-10" and x_len(text) <= 280
+    assert "今日のフライング 24人" in text and "・桐生1R 選手 11" in text and "ほか" in text
+    assert "150R中30的中" in text and "20歳未満は購入不可" in text and "必ず" not in text
+    date, text = build_evening({"date": "20261011"}, history, tmp_path)
+    assert "今日のフライングは0人でした" in text
