@@ -587,3 +587,17 @@ button,.btn{transition:filter .16s ease,transform .16s ease}
 button:hover,.btn:hover{filter:brightness(1.1)}
 @media(prefers-reduced-motion:reduce){.venue,.soon a,.vt,button,.btn{transition:none}.venue:hover,.soon a:hover,.vt:hover{transform:none}}
 
+
+.gbars{display:grid;gap:8px}.gb{display:grid;grid-template-columns:84px 1fr 54px;align-items:center;gap:4px 8px;font-size:13px}.gb small{grid-column:2/4;margin-top:-4px}
+.gt{height:14px;border-radius:4px;background:var(--surface2);overflow:hidden}.gt i{display:block;height:100%;border-radius:4px;background:var(--accent)}.gb b{text-align:right}
+.guide-list{display:grid;gap:10px}.guide-card{display:grid;gap:4px;text-decoration:none;color:var(--ink)}.guide-card b{color:var(--accent)}
+
+/* スマホでは表を詰め、はみ出しやすい列を隠す・折り返す（PCではそのまま） */
+@media (max-width:720px){
+ .tbl-wrap td,.tbl-wrap th{padding:6px 5px;font-size:12.5px}
+ .t-tgt :is(th,td):is(:nth-child(1),:nth-child(3),:nth-child(5)),.t-esc :is(th,td):is(:nth-child(1),:nth-child(3),:nth-child(5)),
+ .t-mk :is(th,td):is(:nth-child(1),:nth-child(3)),.t-today :is(th,td):nth-child(5),.t-vc :is(th,td):nth-child(5),.t-rc :is(th,td):is(:nth-child(4),:nth-child(6)){display:none}
+ .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8),.t-today td:is(:nth-child(2),:nth-child(7)),.t-race td:nth-child(2){white-space:normal}
+ .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8){min-width:5em}
+ .t-ex td:first-child,.t-ori td:first-child,.cond td:first-child{white-space:normal;min-width:5.5em}
+}

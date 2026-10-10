@@ -155,11 +155,28 @@ def ex_counts(races: list) -> dict:
     return out
 
 
+def ex_rank_table(races: list) -> dict:
+    """コース → 展示タイムの順位(1〜6) → [出走, 1着, 3着内]（読みもの「展示タイムの見方」用）"""
+    out = {}
+    for r in races:
+        es = [e for e in r[11] if len(e) > 6 and e[6] and e[2]]
+        if len(es) != 6:
+            continue
+        xs = sorted(e[6] for e in es)
+        for e in es:
+            pl = e[5] if isinstance(e[5], int) else 9
+            c = out.setdefault(str(e[2]), {}).setdefault(str(xs.index(e[6]) + 1), [0, 0, 0])
+            c[0] += 1
+            c[1] += int(pl == 1)
+            c[2] += int(pl <= 3)
+    return out
+
+
 def build_exstats(today: datetime | None = None):
     today = today or datetime.now(JST)
     races = load_all((today - timedelta(days=EX_DAYS)).strftime("%Y%m%d"))
     dates = sorted({r[0] for r in races})
-    j = {"window": f"{dates[0]}-{dates[-1]}" if dates else "", "r": ex_counts(races)}
+    j = {"window": f"{dates[0]}-{dates[-1]}" if dates else "", "r": ex_counts(races), "rank": ex_rank_table(races)}
     # 従来の直近2年集計は維持し、期別は保存済み全履歴で別に集計する。
     # 適用期と審査期間を分離。期別結果をその期の過去レース予想に戻して使わない。
     from .exhibition_profile import profiles
@@ -170,11 +187,12 @@ def build_exstats(today: datetime | None = None):
     print("exstats:", j["window"], len(j["r"]), "racers")
 
 
-def load_exstats() -> dict:
+def load_exstats(full: bool = False) -> dict:
     if not EXSTATS_PATH.exists():
         return {}
     with gzip.open(EXSTATS_PATH, "rt", encoding="utf-8") as f:
-        return json.load(f).get("r", {})
+        j = json.load(f)
+    return j if full else j.get("r", {})
 
 
 def main(argv=None):
