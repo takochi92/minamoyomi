@@ -131,11 +131,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out/x.json")
     ap.add_argument("--slot", default="morning", choices=["morning", "evening", "feature"])
+    ap.add_argument("--date", default="", help="evening だけ：YYYYMMDD の日の結果で作る（作りそびれた日の分）")
     a = ap.parse_args()
     index = json.loads((DATA / "index.json").read_text(encoding="utf-8"))
     history = json.loads((DATA / "history.json").read_text(encoding="utf-8"))
     if a.slot == "evening":
-        date, text = build_evening(index, history, DATA / "races")
+        date, text = build_evening({**index, "date": a.date} if a.date else index, history, DATA / "races")
     elif a.slot == "feature":
         date = (dt.datetime.utcnow() + dt.timedelta(hours=9)).date().isoformat()
         text = (ROOT / "tools" / "x_feature.txt").read_text(encoding="utf-8").strip()

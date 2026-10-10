@@ -15,6 +15,9 @@ on:
       slot:
         description: "morning（朝）／evening（夜の結果）／feature（tools/x_feature.txt の機能紹介）"
         default: "morning"
+      date:
+        description: "evening だけ：YYYYMMDD（作りそびれた日の分。空なら今日）"
+        default: ""
 
 permissions:
   contents: read
@@ -32,7 +35,7 @@ jobs:
           if [ -z "$SLOT" ]; then
             if [ "${{ github.event.schedule }}" = "43 12 * * *" ]; then SLOT=evening; else SLOT=morning; fi
           fi
-          python3 tools/make_daily_x.py --slot "$SLOT" --out out/x.json
+          python3 tools/make_daily_x.py --slot "$SLOT" --date "${{ github.event.inputs.date }}" --out out/x.json
       - name: Send draft to Atelier
         env:
           ATELIER_SITE_URL: ${{ secrets.ATELIER_SITE_URL }}
