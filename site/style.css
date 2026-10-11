@@ -613,3 +613,5 @@ button:hover,.btn:hover{filter:brightness(1.1)}
  .vt.off{opacity:.55}
  .vt.off .bd{padding:0}
 }
+.vt i.tz{background:none;border:0;padding:0 1px;font-size:14px;line-height:1}
+@media (max-width:720px){.vt i.tz{font-size:13px}}

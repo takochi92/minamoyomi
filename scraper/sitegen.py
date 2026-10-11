@@ -1269,9 +1269,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             rest = ",".join(f'{r["rno"]}@{r["deadline"]}' for r in v["races"] if r["deadline"] > hm and not r.get("result"))
             st = (f'<span data-dl="{self.idx.get("date")} {nxt["deadline"]}" data-next="{rest}">{nxt["rno"]}R <span class="num">{nxt["deadline"]}</span></span>'
                   if nxt else "本日終了")
-        tz = {"ナイター": "ナイター", "モーニング": "モーニング", "ミッドナイト": "ミッドナイト", "サマータイム": "サマー"}.get(v.get("timezone", ""), "")
+        # 時間帯は絵文字1つにして、「一般」などと同じ行に収める（長押し・読み上げで名前が分かるよう title と aria-label）
+        tz = {"モーニング": ("🌄", "モーニング"), "サマータイム": ("☀️", "サマータイム"), "ナイター": ("🌆", "ナイター"), "ミッドナイト": ("🌃", "ミッドナイト")}.get(v.get("timezone", ""))
         g = v.get("grade", "")
-        badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz">{tz}</i>' if tz else "")
+        badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz" title="{tz[1]}" aria-label="{tz[1]}">{tz[0]}</i>' if tz else "")
         return f'<a class="vt on{" done" if st == "本日終了" else ""}" href="{href}"><b>{e(name)}</b><span>{e(day)}</span><span class="st">{st}</span><span class="bd">{badges}</span></a>'
 
     def index_page(self):
@@ -1378,7 +1379,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}
