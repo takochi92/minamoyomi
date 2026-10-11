@@ -1256,7 +1256,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         name = VENUES[jcd]["name"]
         href = page.u(f"venue/{SLUG[jcd]}.html")
         if not v:
-            return f'<a class="vt off" href="{href}"><b>{e(name)}</b><span>本日開催なし</span><span class="st">&nbsp;</span><span class="bd"></span></a>'
+            return f'<a class="vt off" href="{href}"><b>{e(name)}</b><span>開催なし</span><span class="st">&nbsp;</span><span class="bd"></span></a>'
         import re as _re
         dd = v.get("day", "")
         m = _re.search(r"(\d)日目$", dd)
@@ -1291,10 +1291,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 if not r.get("result") and r["deadline"] > self.now.strftime("%H:%M") and not v.get("cancelled"):
                     soon.append((r["deadline"], v, r))
         soon.sort(key=lambda x: x[0])
-        tiles = "".join(self.venue_tile(page, jcd, held[jcd]) for jcd in sorted(VENUES) if jcd in held)
-        off = [jcd for jcd in sorted(VENUES) if jcd not in held]
-        offh = (f'<details class="more"><summary>開催のない場（{len(off)}場）</summary><div class="vtiles" style="margin-top:8px">'
-                + "".join(self.venue_tile(page, jcd, None) for jcd in off) + "</div></details>") if off else ""
+        # 24場をいつもの順番で全部並べる（開催のない場はその位置で薄く）
+        tiles = "".join(self.venue_tile(page, jcd, held.get(jcd)) for jcd in sorted(VENUES))
         soonh = []
         for k, (_, v, r) in enumerate(soon[:8]):
             rc = r.get("reco")
@@ -1380,7 +1378,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div>{offh}</section>
+<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}

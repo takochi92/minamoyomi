@@ -293,7 +293,7 @@ td{padding-block:10px}
        background:rgba(11,17,22,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
   .nav a{display:grid;place-items:center;text-align:center;min-height:52px;padding:4px 2px;border-radius:10px;font-size:11px;line-height:1.3;font-weight:700;opacity:.75}
   .nav a[aria-current="page"]{background:rgba(255,107,53,.16);color:var(--accent);opacity:1}
-  .vtiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .vtiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
   table{font-size:13px}
 }
 .nav i{display:none;font-style:normal}
@@ -600,4 +600,16 @@ button:hover,.btn:hover{filter:brightness(1.1)}
  .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8),.t-today td:is(:nth-child(2),:nth-child(7)),.t-race td:nth-child(2){white-space:normal}
  .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8){min-width:5em}
  .t-ex td:first-child,.t-ori td:first-child,.cond td:first-child{white-space:normal;min-width:5.5em}
+}
+/* スマホは24場を4×6で全部並べるので、タイルを小さく */
+@media (max-width:720px){
+ .vt{border-radius:9px}
+ .vt b{font-size:14px;padding:5px 1px;letter-spacing:0}
+ .vt span{font-size:10.5px;line-height:1.35}
+ .vt span:nth-of-type(1){padding-top:4px}
+ .vt .st{font-size:12px;padding-bottom:4px}
+ .vt .bd{padding:4px 1px;gap:2px}
+ .vt i{font-size:9px;padding:0 3px}
+ .vt.off{opacity:.55}
+ .vt.off .bd{padding:0}
 }
