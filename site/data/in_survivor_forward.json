@@ -15,12 +15,12 @@
   "baseline_on_same_races": {
     "strategy": "existing_ai_main_sub_100_v1",
     "simulation": true,
-    "races": 2,
+    "races": 8,
     "hits": 0,
-    "invested": 900,
-    "refund": 0,
+    "invested": 4300,
+    "refund": 600,
     "payout": 0,
-    "gross_roi": 0.0,
+    "gross_roi": 0.13953488372093023,
     "net_roi": 0.0,
     "excluded_reason_counts": {},
     "settled_details": [
@@ -45,18 +45,84 @@
         "refund": 0,
         "payout": 0,
         "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "02",
+        "rno": 11,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 300,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "06",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 400,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "09",
+        "rno": 1,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 300,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "09",
+        "rno": 3,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 1100,
+        "refund": 600,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "16",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 700,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "18",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 600,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
       }
     ],
     "by_model_and_month": [
       {
         "model_version": "da32adf1f120889c",
         "month": "202610",
-        "races": 2,
+        "races": 8,
         "hits": 0,
-        "invested": 900,
-        "refund": 0,
+        "invested": 4300,
+        "refund": 600,
         "payout": 0,
-        "gross_roi": 0.0,
+        "gross_roi": 0.13953488372093023,
         "net_roi": 0.0
       }
     ]
@@ -64,12 +130,12 @@
   "shadow": {
     "strategy": "in_survivor_value_v1",
     "simulation": true,
-    "races": 2,
+    "races": 8,
     "hits": 0,
-    "invested": 200,
-    "refund": 0,
+    "invested": 900,
+    "refund": 100,
     "payout": 0,
-    "gross_roi": 0.0,
+    "gross_roi": 0.1111111111111111,
     "net_roi": 0.0,
     "excluded_reason_counts": {},
     "settled_details": [
@@ -94,33 +160,99 @@
         "refund": 0,
         "payout": 0,
         "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "02",
+        "rno": 11,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "06",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "09",
+        "rno": 1,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 200,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "09",
+        "rno": 3,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 100,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "16",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261011",
+        "jcd": "18",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
       }
     ],
     "by_model_and_month": [
       {
         "model_version": "da32adf1f120889c",
         "month": "202610",
-        "races": 2,
+        "races": 8,
         "hits": 0,
-        "invested": 200,
-        "refund": 0,
+        "invested": 900,
+        "refund": 100,
         "payout": 0,
-        "gross_roi": 0.0,
+        "gross_roi": 0.1111111111111111,
         "net_roi": 0.0
       }
     ]
   },
   "excluded_reason_counts": {
-    "fingerprint_mismatch": 2419,
-    "missing_or_invalid_timestamps": 2290,
-    "unverified_inputs": 2156,
-    "fixed_tickets_mismatch": 2419,
-    "missing_or_changed_protocol": 2419,
-    "entry_mismatch": 2419,
-    "no_research_tickets": 2446,
-    "missing_exhibition_model_decision": 2156,
-    "no_tickets": 2156,
-    "missing_fixed_decision": 2156,
+    "unverified_inputs": 2004,
+    "missing_fixed_decision": 2004,
+    "missing_or_invalid_timestamps": 2138,
+    "no_research_tickets": 2440,
+    "entry_mismatch": 2267,
+    "missing_exhibition_model_decision": 2004,
+    "no_tickets": 2004,
+    "missing_or_changed_protocol": 2267,
+    "fingerprint_mismatch": 2267,
+    "fixed_tickets_mismatch": 2267,
     "incomplete_odds": 185
   },
   "limits": [
