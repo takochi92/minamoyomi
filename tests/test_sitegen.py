@@ -203,3 +203,21 @@ def test_buffs_and_ai_block(tmp_path):
     from scraper import share
     t = share.buff_all([("桐生", 1, "10:00", 1, 1, ["展示", "モーター", "得意コース", "得意場"])], "u")
     assert share.weight(t) <= 280 and "1号艇" in t
+
+
+def test_arechu_shown_on_race_and_top(tmp_path):
+    s, _ = _site(tmp_path)
+    p = tmp_path / "data" / "races" / "20260925" / "0112.json"
+    race = json.loads(p.read_text(encoding="utf-8"))
+    for b in race["racelist"]["boats"]:        # 1号艇A1で外との差が小さい
+        b["class"] = "A1" if b["frame"] == 1 else "B1"
+        b["nat_win"] = 6.0 if b["frame"] == 1 else 5.6
+    race["before"]["weather"] = {"wave_cm": 5, "wind_speed": 4}
+    for b in race["before"]["boats"]:
+        b["exhibit_time"] = 6.9 if b["frame"] == 1 else 6.75
+    p.write_text(json.dumps(race, ensure_ascii=False), encoding="utf-8")
+    assert "荒れ注意" in s.arechu_block(race)
+    s._arechu = None
+    assert "荒れ注意のレース" in s.arechu_top(sitegen.Page("index.html"))
+    race["racelist"]["boats"][0]["class"] = "B1"
+    assert s.arechu_block(race) == ""

@@ -27,7 +27,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import coursest, fstart, ogimg, overperf, share
+from . import arechu, coursest, fstart, ogimg, overperf, share
 from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
@@ -1150,6 +1150,7 @@ class Site:
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
+{self.arechu_block(race)}
 {self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p)) if not race.get('primary_slip') else ''}
@@ -1530,6 +1531,56 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         self._targets = items
         return items
 
+    def arechu_of(self, race):
+        """そのレースの荒れ注意（万舟の確率）。印をつけないときは None"""
+        rl = race.get("racelist") or {}
+        bi = race.get("before") or {}
+        w = bi.get("weather") or {}
+        ex = {b["frame"]: b.get("exhibit_time") for b in bi.get("boats", [])}
+        pr = arechu.score(rl.get("boats", []), ex, w.get("wave_cm"), w.get("wind_speed"))
+        return pr if pr is not None and pr >= arechu.MARK else None
+
+    def arechu_block(self, race):
+        pr = self.arechu_of(race)
+        if pr is None:
+            return ""
+        head, combos = arechu.ana((race.get("racelist") or {}).get("boats", []))
+        cs = " ".join(f"{a}-{b}-{c}" for a, b, c in combos)
+        return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意・穴予想 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
+                f'<p style="margin:0">このレースは無難な本線より、<b>穴の目</b>で。頭は{bt(head)}（外の選手で全国勝率1位）、2・3着は<b>1号艇を入れずに</b>残りの外の4艇（{len(combos)}点）。</p>'
+                f'<p class="num" style="margin:0;word-break:break-all">{cs}</p>'
+                f'<p class="sub" style="margin:0">1号艇はA級でも、外との勝率の差が小さく展示・水面も安心できません（A級1号艇のレース全体の万舟率は約{round(arechu.BASE * 100)}%）。'
+                f'過去約3年の同じ条件では、この買い方の的中は約{arechu.HIT}%、回収率は約{arechu.RET}%で、<b>プラスにはなっていません</b>（ほかの買い方は約63〜77%）。当たれば配当は大きいですが、外れる回の方が多い買い方です。必ず儲かるものではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
+
+    def arechu_races(self):
+        if getattr(self, "_arechu", None) is not None:
+            return self._arechu
+        items, d = [], self.idx.get("date")
+        for v in self.idx.get("venues", []):
+            if v.get("cancelled"):
+                continue
+            for r in v["races"]:
+                if r.get("result"):
+                    continue
+                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
+                pr = self.arechu_of(race)
+                if pr is not None:
+                    items.append((pr, v, r, arechu.ana((race.get("racelist") or {}).get("boats", []))[0]))
+        items.sort(key=lambda x: -x[0])
+        self._arechu = items
+        return items
+
+    def arechu_top(self, page):
+        items = self.arechu_races()
+        if not items:
+            return ""
+        d = self.idx.get("date")
+        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{r["deadline"]}</span></td><td class="r num">{head}号艇頭</td><td class="r num best">約{round(pr * 100)}%</td></tr>'
+                       for pr, v, r, head in items[:5])
+        return (f'<section style="display:grid;gap:8px"><h2>荒れ注意のレース <small>本線より穴予想で</small></h2>'
+                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">万舟の確率の目安</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。穴予想は「外で勝率1位を頭に、1号艇を入れない12点」。過去の的中は約7%・回収は約82%で、プラスにはなっていません。必ず儲かるものではありません。</p></details></section>')
+
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""
         d = self.idx.get("date")
@@ -1581,6 +1632,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub" style="margin:0">{e(op_note)}</p></div>
 <p class="sub">公式の競走成績（直近1年）から毎日自動で集計。出走が少ない選手ほどスコアを1に寄せています。</p>
 <p class="toc">{' '.join(f'<a href="#c{c}">{c}コース</a>' for c in range(2, 7))} <a href="#esc">逃げ</a> <a href="#mk">捲られやすいイン</a></p></section>
+{self.arechu_top(page)}
 {self.today_targets(page)}
 {''.join(secs)}
 <section class="panel" id="esc"><h2>実力以上にインで逃げる選手 <small>1コース{OP_MIN}走以上・全国の1コース1着率 {pct(p1, 1)}</small></h2><div class="tbl-wrap"><table class="t-esc"><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th></tr></thead><tbody>{esc_rows}</tbody></table></div></section>
