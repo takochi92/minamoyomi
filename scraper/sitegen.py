@@ -1124,7 +1124,7 @@ class Site:
                 if ana:
                     pmap = dict(zip(COMBO_LIST, p.get('p3') or []))
                     content = '<div class="bets">'+cells([{'combo':c, 'p':pmap.get(c,0)} for c in selected['tickets']])+'</div>'
-                    content += ('<p class="primary-note">荒れ注意のレースなので、無難な本線・押さえは出さず、この穴予想だけを採用します。的中は約7%、過去の回収は約82%でプラスではありません。</p>' if selected.get('source') == 'arechu' else
+                    content += ('<p class="primary-note">荒れ注意のレースなので、無難な本線・押さえは出さず、この穴予想だけを採用します。</p>' if selected.get('source') == 'arechu' else
                                 '<p class="primary-note">厳選穴の条件が成立したため、通常の本線・押さえを追加せず、この券だけを採用します。的中率は低くなり得ます。回収率改善は未確認です。</p>')
                 else:
                     content = self.slip_body(p, cells)
@@ -1544,8 +1544,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         pr = ar["p"]
         return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
                 f'<p style="margin:0">このレースは無難な本線をやめて、下の<b>穴予想</b>に絞ります。頭は{bt(ar["head"])}（外の選手で全国勝率1位）、2・3着は<b>1号艇を入れずに</b>残りの外の4艇（{len(ar["tickets"])}点）。</p>'
-                f'<p class="sub" style="margin:0">1号艇はA級でも、外との勝率の差が小さく展示・水面も安心できません（A級1号艇のレース全体の万舟率は約{round(arechu.BASE * 100)}%）。'
-                f'過去約3年の同じ条件では、この買い方の的中は約{arechu.HIT}%、回収率は約{arechu.RET}%で、<b>プラスにはなっていません</b>（ほかの買い方は約63〜77%）。当たれば配当は大きいですが、外れる回の方が多い買い方です。的中・収支はほかのレースと同じ集計に入ります。必ず儲かるものではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
+                f'<p class="sub" style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。過去の同じ条件では、A級1号艇のレース全体（万舟率 約{round(arechu.BASE * 100)}%）より万舟が出やすくなっています。必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
 
     def arechu_races(self):
         if getattr(self, "_arechu", None) is not None:
@@ -1574,7 +1573,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                        for pr, v, r, head in items[:5])
         return (f'<section style="display:grid;gap:8px"><h2>荒れ注意のレース <small>本線より穴予想で</small></h2>'
                 f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">万舟の確率の目安</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。穴予想は「外で勝率1位を頭に、1号艇を入れない12点」。過去の的中は約7%・回収は約82%で、プラスにはなっていません。必ず儲かるものではありません。</p></details></section>')
+                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。穴予想は「外で勝率1位を頭に、1号艇を入れない12点」です。必ず来るわけではありません。</p></details></section>')
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""
