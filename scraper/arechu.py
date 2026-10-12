@@ -63,12 +63,24 @@ KIM = {
 }
 
 
-def ana(boats: list):
-    """荒れ注意のレースの穴予想：頭＝外（2〜6号艇）で全国勝率1位。2・3着は、その頭の枠で多かった展開の順に12点。
-    （頭の枠なりの進入を想定）。過去の荒れ注意レースで試すと、的中約13%・回収約84%（学習2025年前・検証2025年以降で同じ）。
-    1号艇を入れない12点（的中約7%・回収約82%）より、同じ回収で的中が約2倍。"""
-    out = sorted(range(2, 7), key=lambda f: -(_f(next((b.get("nat_win") for b in boats if b.get("frame") == f), 0)) or 0))
-    head = out[0]
+# 頭の選び方：外（2〜6号艇）のうち、「全国勝率」「枠の勝ちやすさ」「展示タイム（6艇平均との差）」の合計がいちばん高い艇。
+# 荒れ注意の過去約1万レース（2025年より前）で学習し、2025年以降で検証した値。
+HEAD_SLOT = {2: 0.0, 3: -0.14, 4: -0.35, 5: -0.84, 6: -1.73}   # 勝率が高くても、5・6コースは頭を取りにくい
+HEAD_NAT = 0.68
+HEAD_EX = -4.97                                                    # 展示タイムが平均より1秒速いと+4.97（実際は0.1秒で0.5）
+
+
+def ana(boats: list, ex: dict | None = None):
+    """荒れ注意のレースの穴予想：頭＝外で「勝率・枠・展示」の合計がいちばん高い艇。2・3着は、その頭の枠で多かった展開の順に12点。
+    （頭の枠なりの進入を想定）。過去の荒れ注意レースで試すと（学習2025年前・検証2025年以降）、
+    頭の的中 約22%、3連単の的中 約17%、回収 約83%。頭を全国勝率だけで選ぶと、頭の的中 約17%・3連単 約13%・回収 約84%。"""
+    nat = {b.get("frame"): (_f(b.get("nat_win")) or 0) for b in boats}
+    ts = {f: _f((ex or {}).get(f)) for f in range(1, 7)}
+    avg = sum(ts.values()) / 6 if all(ts.values()) else None
+    def sc(f):
+        dev = (ts[f] - avg) if avg is not None else 0.0
+        return HEAD_SLOT[f] + HEAD_NAT * nat.get(f, 0) + HEAD_EX * dev
+    head = max(range(2, 7), key=sc)
     return head, [(head, b, c) for b, c in PAIRS[head]]
 
 
@@ -104,7 +116,12 @@ def from_race(race: dict):
     pr = score(rl, ex, w.get("wave_cm"), w.get("wind_speed"))
     if pr is None or pr < MARK:
         return None
-    head, combos = ana(rl)
+    head, combos = ana(rl, ex)
     ts = {f: _f(t) for f, t in ex.items()}
     rank = {f: 1 + sum(1 for t in ts.values() if t < ts[f]) for f in ts} if len(ts) == 6 and all(ts.values()) else None
-    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos], "tenkai": tenkai(head, combos, rank)}
+    nat = {b.get("frame"): _f(b.get("nat_win")) or 0 for b in rl}
+    nrank = 1 + sum(1 for f in range(2, 7) if nat[f] > nat[head])
+    why = f"頭に選んだ理由：全国勝率{nat[head]:.2f}（外の5艇で{nrank}位）"
+    why += f"、展示タイム{rank[head]}位" if rank else ""
+    why += "。勝率が高くても5・6コースは頭を取りにくいので、枠の勝ちやすさも合わせて選んでいます。"
+    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos], "why": why, "tenkai": tenkai(head, combos, rank)}
