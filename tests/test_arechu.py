@@ -21,7 +21,11 @@ def test_closer_rivals_and_slow_exhibition_raise_score():
     assert 0 < strong < 1
 
 
-def test_ana_excludes_first_boat():
+def test_ana_follows_scenario_table():
     head, combos = arechu.ana(boats(nat=(6.0, 5.0, 6.5, 5.5, 4.0, 4.5)))
     assert head == 3 and len(combos) == 12
-    assert all(1 not in c and c[0] == 3 and len(set(c)) == 3 for c in combos)
+    assert combos[0] == (3, 1, 5)                     # 3号艇頭は、1号艇が2着に残る形がいちばん多い
+    assert all(c[0] == 3 and len(set(c)) == 3 for c in combos)
+    tk = arechu.tenkai(head, combos, {3: 2})
+    assert "まくり40%" in tk["kimarite"] and "2位" in tk["kimarite"]
+    assert tk["groups"][0]["second"] == 1 and sum(len(g["tickets"]) for g in tk["groups"]) == 12
