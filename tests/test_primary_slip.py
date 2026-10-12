@@ -67,7 +67,7 @@ def test_arechu_race_uses_ana_slip_and_counts_in_normal_totals():
     assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST))
     s = r['primary_slip']
     assert s['kind'] == 'ana' and s['source'] == 'arechu' and len(s['tickets']) == 12
-    assert all(t.startswith('4-') and '1' not in t.split('-') for t in s['tickets'])
+    assert all(t.startswith('4-') and len(set(t.split('-'))) == 3 for t in s['tickets'])
     r['result'] = {'finished': True, 'trifecta': '4-2-3', 'trifecta_payout': 15000}
     judge(r)
     assert r['hit'] and r['invest'] == 1200 and r['return'] == 15000

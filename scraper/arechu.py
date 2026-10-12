@@ -44,18 +44,55 @@ def score(boats: list, ex: dict | None = None, wave_cm=None, wind=None):
     return 1 / (1 + math.exp(-z))
 
 
-HIT = 7       # 穴予想の的中率（過去、％）
-RET = 82      # 同じく回収率（％）。100%には届かない
+# 頭の枠別：荒れ注意のレース（過去約3年・約1万）で、2着・3着の組み合わせが多かった順（上位12）。
+# 頭が外のとき、1号艇が2着に残る形（差し・まくり差しで頭を譲る）がいちばん多く、次に外・内の艇が続く。
+PAIRS = {
+    2: [(1, 3), (1, 4), (1, 5), (1, 6), (4, 1), (3, 1), (3, 4), (3, 5), (3, 6), (4, 5), (5, 1), (4, 3)],
+    3: [(1, 5), (1, 4), (1, 2), (1, 6), (2, 4), (4, 1), (2, 5), (2, 1), (4, 5), (5, 1), (4, 2), (4, 6)],
+    4: [(1, 2), (1, 3), (1, 5), (5, 1), (5, 6), (2, 1), (5, 2), (3, 5), (2, 5), (1, 6), (2, 3), (3, 6)],
+    5: [(1, 3), (1, 2), (1, 4), (1, 6), (2, 1), (2, 3), (6, 1), (4, 1), (3, 1), (2, 6), (4, 6), (4, 3)],
+    6: [(1, 2), (1, 5), (2, 1), (1, 3), (1, 4), (4, 2), (2, 3), (5, 4), (3, 2), (2, 5), (4, 3), (4, 1)],
+}
+# 頭の枠別：その枠が頭に来たときの決まり手の割合（％）
+KIM = {
+    2: [("差し", 59), ("まくり", 25), ("抜き", 10)],
+    3: [("まくり", 40), ("まくり差し", 36), ("差し", 12)],
+    4: [("まくり", 44), ("差し", 23), ("まくり差し", 23)],
+    5: [("まくり差し", 57), ("まくり", 22), ("抜き", 10)],
+    6: [("まくり差し", 33), ("まくり", 28), ("差し", 21)],
+}
 
 
 def ana(boats: list):
-    """荒れ注意のレースの穴予想：頭＝外（2〜6号艇）で全国勝率1位、2・3着＝1号艇以外の残り4艇（12点）。
-    過去約3年の荒れ注意レース約1万で試すと、的中約7%・回収約82%（前半・後半とも同じ。1号艇を入れる買い方は63〜77%）。
-    万舟になったレースの約56%は1号艇が3着にも入らない。"""
+    """荒れ注意のレースの穴予想：頭＝外（2〜6号艇）で全国勝率1位。2・3着は、その頭の枠で多かった展開の順に12点。
+    （頭の枠なりの進入を想定）。過去の荒れ注意レースで試すと、的中約13%・回収約84%（学習2025年前・検証2025年以降で同じ）。
+    1号艇を入れない12点（的中約7%・回収約82%）より、同じ回収で的中が約2倍。"""
     out = sorted(range(2, 7), key=lambda f: -(_f(next((b.get("nat_win") for b in boats if b.get("frame") == f), 0)) or 0))
     head = out[0]
-    rest = [f for f in range(2, 7) if f != head]
-    return head, [(head, b, c) for b in rest for c in rest if b != c]
+    return head, [(head, b, c) for b, c in PAIRS[head]]
+
+
+def tenkai(head: int, combos: list, ex_rank: dict | None = None) -> dict:
+    """穴予想の展開の説明。{'kimarite': 文, 'groups': [{'second': 2着の枠, 'story': 文, 'tickets': [...]}]}（2着の枠ごと）"""
+    km = "・".join(f"{k}{v}%" for k, v in KIM[head])
+    groups, order = {}, []
+    for _, b, c in combos:
+        if b not in groups:
+            groups[b] = []
+            order.append(b)
+        groups[b].append(f"{head}-{b}-{c}")
+    story = {}
+    for b in order:
+        if b == 1:
+            story[b] = "1号艇は頭を譲っても2着に残る（差し・まくり差しで頭が入れ替わる展開）"
+        elif b > head:
+            story[b] = f"外の{b}号艇が続く（{head}号艇が攻めた外を回って流れ込む）"
+        else:
+            story[b] = f"内の{b}号艇が残る（{head}号艇が攻めたあと、内で粘る）"
+    rank = (ex_rank or {}).get(head)
+    ex = f"展示タイムは6艇中{rank}位。" if rank else ""
+    return {"kimarite": f"{head}号艇は、{head}コースから{km}で頭に立つ形が多い。{ex}",
+            "groups": [{"second": b, "story": story[b], "tickets": groups[b]} for b in order]}
 
 
 def from_race(race: dict):
@@ -68,4 +105,6 @@ def from_race(race: dict):
     if pr is None or pr < MARK:
         return None
     head, combos = ana(rl)
-    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos]}
+    ts = {f: _f(t) for f, t in ex.items()}
+    rank = {f: 1 + sum(1 for t in ts.values() if t < ts[f]) for f in ts} if len(ts) == 6 and all(ts.values()) else None
+    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos], "tenkai": tenkai(head, combos, rank)}
