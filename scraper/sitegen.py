@@ -1544,9 +1544,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         pr = self.arechu_of(race)
         if pr is None:
             return ""
-        return (f'<section class="panel" style="display:grid;gap:4px;border-color:#E0A030"><h2>⚠ 荒れ注意 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
-                f'<p class="sub" style="margin:0">1号艇はA級ですが、外の選手との勝率の差が小さく、展示・水面も安心できません。過去の同じ条件では約{round(pr * 100)}%で万舟が出ています（A級1号艇のレース全体は約{round(arechu.BASE * 100)}%）。'
-                f'当てる印ではなく、荒れやすさの目安です。必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
+        head, combos = arechu.ana((race.get("racelist") or {}).get("boats", []))
+        cs = " ".join(f"{a}-{b}-{c}" for a, b, c in combos)
+        return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意・穴予想 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
+                f'<p style="margin:0">このレースは無難な本線より、<b>穴の目</b>で。頭は{bt(head)}（外の選手で全国勝率1位）、2・3着は<b>1号艇を入れずに</b>残りの外の4艇（{len(combos)}点）。</p>'
+                f'<p class="num" style="margin:0;word-break:break-all">{cs}</p>'
+                f'<p class="sub" style="margin:0">1号艇はA級でも、外との勝率の差が小さく展示・水面も安心できません（A級1号艇のレース全体の万舟率は約{round(arechu.BASE * 100)}%）。'
+                f'過去約3年の同じ条件では、この買い方の的中は約{arechu.HIT}%、回収率は約{arechu.RET}%で、<b>プラスにはなっていません</b>（ほかの買い方は約63〜77%）。当たれば配当は大きいですが、外れる回の方が多い買い方です。必ず儲かるものではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
 
     def arechu_races(self):
         if getattr(self, "_arechu", None) is not None:
@@ -1558,9 +1562,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             for r in v["races"]:
                 if r.get("result"):
                     continue
-                pr = self.arechu_of(load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {}))
+                race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
+                pr = self.arechu_of(race)
                 if pr is not None:
-                    items.append((pr, v, r))
+                    items.append((pr, v, r, arechu.ana((race.get("racelist") or {}).get("boats", []))[0]))
         items.sort(key=lambda x: -x[0])
         self._arechu = items
         return items
@@ -1570,11 +1575,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if not items:
             return ""
         d = self.idx.get("date")
-        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{r["deadline"]}</span></td><td class="r num best">約{round(pr * 100)}%</td></tr>'
-                       for pr, v, r in items[:5])
-        return (f'<section style="display:grid;gap:8px"><h2>荒れ注意のレース <small>1号艇A級でも万舟が出やすい条件</small></h2>'
-                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">万舟の確率の目安</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。当てる印ではなく荒れやすさの目安で、買い目は決められません。必ず儲かるものではありません。</p></details></section>')
+        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{r["deadline"]}</span></td><td class="r num">{head}号艇頭</td><td class="r num best">約{round(pr * 100)}%</td></tr>'
+                       for pr, v, r, head in items[:5])
+        return (f'<section style="display:grid;gap:8px"><h2>荒れ注意のレース <small>本線より穴予想で</small></h2>'
+                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">万舟の確率の目安</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。穴予想は「外で勝率1位を頭に、1号艇を入れない12点」。過去の的中は約7%・回収は約82%で、プラスにはなっていません。必ず儲かるものではありません。</p></details></section>')
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""

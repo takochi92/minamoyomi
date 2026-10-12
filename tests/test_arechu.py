@@ -19,3 +19,9 @@ def test_closer_rivals_and_slow_exhibition_raise_score():
     slow = arechu.score(boats(), {1: 6.85, 2: 6.75, 3: 6.75, 4: 6.75, 5: 6.75, 6: 6.75})
     assert slow > fast
     assert 0 < strong < 1
+
+
+def test_ana_excludes_first_boat():
+    head, combos = arechu.ana(boats(nat=(6.0, 5.0, 6.5, 5.5, 4.0, 4.5)))
+    assert head == 3 and len(combos) == 12
+    assert all(1 not in c and c[0] == 3 and len(set(c)) == 3 for c in combos)

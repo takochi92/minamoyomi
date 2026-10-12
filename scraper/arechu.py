@@ -42,3 +42,17 @@ def score(boats: list, ex: dict | None = None, wave_cm=None, wind=None):
          (_f(wave_cm) if _f(wave_cm) is not None else 2.5) / 10, (_f(wind) if _f(wind) is not None else 2.7) / 10]
     z = BIAS + sum(c * (v - m) / s for c, v, m, s in zip(COEF, x, MEAN, SD))
     return 1 / (1 + math.exp(-z))
+
+
+HIT = 7       # 穴予想の的中率（過去、％）
+RET = 82      # 同じく回収率（％）。100%には届かない
+
+
+def ana(boats: list):
+    """荒れ注意のレースの穴予想：頭＝外（2〜6号艇）で全国勝率1位、2・3着＝1号艇以外の残り4艇（12点）。
+    過去約3年の荒れ注意レース約1万で試すと、的中約7%・回収約82%（前半・後半とも同じ。1号艇を入れる買い方は63〜77%）。
+    万舟になったレースの約56%は1号艇が3着にも入らない。"""
+    out = sorted(range(2, 7), key=lambda f: -(_f(next((b.get("nat_win") for b in boats if b.get("frame") == f), 0)) or 0))
+    head = out[0]
+    rest = [f for f in range(2, 7) if f != head]
+    return head, [(head, b, c) for b in rest for c in rest if b != c]
