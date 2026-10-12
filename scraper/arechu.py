@@ -84,6 +84,61 @@ def ana(boats: list, ex: dict | None = None):
     return head, [(head, b, c) for b, c in PAIRS[head]]
 
 
+# スタート展示と行き足から組む「展開」で頭を選ぶ（15日・約1,400レースで学習。頭に来る艇の選び方の係数）
+# 検証（日ごとに分けた交差検証）：行き足＋枠 頭の的中 17.5%、全国勝率だけ 16.5%、展示STを重くすると13〜15%に下がる。
+# 展示STは参考程度の重みにとどめ、主役は行き足（直線・一周・まわり足・展示タイム）と枠。
+# 特徴：内側の艇より展示STが速い幅、すぐ内側の艇との展示STの差、直線・一周・まわり足・展示タイムの6艇内の位置（速いほど+）
+TK_SLOT = {2: 0.0, 3: 0.25, 4: 0.03, 5: -0.61, 6: -1.12}
+TK_W = {"st_inner": 2.77, "st_adj": -0.93, "str": -0.01, "lap": 0.31, "turn": 0.10, "ext": 0.26}
+
+
+def _z(vals):
+    m = sum(vals) / len(vals)
+    sd = (sum((v - m) ** 2 for v in vals) / len(vals)) ** 0.5 or 1.0
+    return [(v - m) / sd for v in vals]
+
+
+def head_by_tenkai(race: dict):
+    """スタート展示（展示ST・展示の進入）と、一周・まわり足・直線・展示タイムから頭を選ぶ。
+    データがそろわなければ None。{'head', 'info': {...頭の艇の根拠}}"""
+    bi = race.get("before") or {}
+    se = bi.get("start_exhibition") or []
+    ori = race.get("oriten") or {}
+    if len(se) != 6 or not ori.get("rows") or len(ori["rows"]) != 6:
+        return None
+    try:
+        items = ori["items"]
+        idx = {k: items.index(k) for k in ("一周", "まわり足", "直線")}
+        o = {int(f): v for f, v in ori["rows"].items()}
+        st = {int(x["frame"]): float(x["st"]) for x in se}
+        crs = {int(x["frame"]): int(x["course"]) for x in se}
+        ext = {int(b["frame"]): float(b["exhibit_time"]) for b in bi.get("boats", [])}
+        if len(st) != 6 or len(ext) != 6 or len(o) != 6:
+            return None
+        fs = list(range(1, 7))
+        zs = {k: dict(zip(fs, _z([float(o[f][idx[k]]) for f in fs]))) for k in idx}
+        zx = dict(zip(fs, _z([ext[f] for f in fs])))
+    except (KeyError, ValueError, TypeError, IndexError):
+        return None
+    by_c = {c: f for f, c in crs.items()}
+    best = None
+    for f in range(1, 7):
+        c = crs[f]
+        if c < 2:
+            continue
+        inner = [st[by_c[i]] for i in range(1, c) if i in by_c]
+        adv = min(inner) - st[f] if inner else 0.0
+        adj = st[by_c[c - 1]] - st[f] if (c - 1) in by_c else 0.0
+        sc = (TK_SLOT.get(c, -1.5) + TK_W["st_inner"] * adv + TK_W["st_adj"] * adj + TK_W["str"] * -zs["直線"][f]
+              + TK_W["lap"] * -zs["一周"][f] + TK_W["turn"] * -zs["まわり足"][f] + TK_W["ext"] * -zx[f])
+        if best is None or sc > best[0]:
+            def rk(vals, f=f):
+                return 1 + sum(1 for g in fs if vals[g] < vals[f])
+            best = (sc, f, dict(course=c, st=st[f], adv=adv, str=rk({g: float(o[g][idx["直線"]]) for g in fs}),
+                                lap=rk({g: float(o[g][idx["一周"]]) for g in fs}), turn=rk({g: float(o[g][idx["まわり足"]]) for g in fs}), ext=rk(ext)))
+    return {"head": best[1], "info": best[2]} if best else None
+
+
 def tenkai(head: int, combos: list, ex_rank: dict | None = None) -> dict:
     """穴予想の展開の説明。{'kimarite': 文, 'groups': [{'second': 2着の枠, 'story': 文, 'tickets': [...]}]}（2着の枠ごと）"""
     km = "・".join(f"{k}{v}%" for k, v in KIM[head])
@@ -116,12 +171,23 @@ def from_race(race: dict):
     pr = score(rl, ex, w.get("wave_cm"), w.get("wind_speed"))
     if pr is None or pr < MARK:
         return None
-    head, combos = ana(rl, ex)
+    tk0 = head_by_tenkai(race)
+    if tk0:
+        head = tk0["head"]
+        combos = [(head, b, c) for b, c in PAIRS[head]]
+    else:
+        head, combos = ana(rl, ex)
     ts = {f: _f(t) for f, t in ex.items()}
     rank = {f: 1 + sum(1 for t in ts.values() if t < ts[f]) for f in ts} if len(ts) == 6 and all(ts.values()) else None
-    nat = {b.get("frame"): _f(b.get("nat_win")) or 0 for b in rl}
-    nrank = 1 + sum(1 for f in range(2, 7) if nat[f] > nat[head])
-    why = f"頭に選んだ理由：全国勝率{nat[head]:.2f}（外の5艇で{nrank}位）"
-    why += f"、展示タイム{rank[head]}位" if rank else ""
-    why += "。勝率が高くても5・6コースは頭を取りにくいので、枠の勝ちやすさも合わせて選んでいます。"
+    if tk0:
+        i = tk0["info"]
+        fast = f"内側の艇より{i['adv']:.2f}秒速くスリットを抜ける形" if i["adv"] > 0.005 else "内側の艇とスタートはほぼ同じ"
+        why = (f"頭に選んだ理由（スタート展示と行き足から組んだ展開）：{head}号艇は{i['course']}コースで、展示STは{i['st']:.2f}。{fast}。"
+               f"行き足は、直線{i['str']}位・一周{i['lap']}位・まわり足{i['turn']}位・展示タイム{i['ext']}位（6艇中）。")
+    else:
+        nat = {b.get("frame"): _f(b.get("nat_win")) or 0 for b in rl}
+        nrank = 1 + sum(1 for f in range(2, 7) if nat[f] > nat[head])
+        why = f"頭に選んだ理由（スタート展示がまだ出ていないため仮）：全国勝率{nat[head]:.2f}（外の5艇で{nrank}位）"
+        why += f"、展示タイム{rank[head]}位" if rank else ""
+        why += "。スタート展示が出たら、スタートと行き足から選び直します。"
     return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos], "why": why, "tenkai": tenkai(head, combos, rank)}
