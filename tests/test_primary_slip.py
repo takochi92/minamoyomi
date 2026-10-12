@@ -52,3 +52,23 @@ def test_probability_steps_reconstruct_scores_and_include_opponent_changes():
     assert ex['4']['changes'][1]['delta'] > 0
     assert ex['1']['changes'][1]['delta'] < 0
     assert explain([{'frame':1}]) == {}
+
+
+def arechu_race():
+    r = race()
+    r['racelist'] = {'boats': [{'frame': f, 'class': 'A1' if f == 1 else 'B1', 'nat_win': 6.0 if f == 1 else 5.5 + (0.3 if f == 4 else 0)} for f in range(1, 7)]}
+    r['before'] = {'weather': {'wave_cm': 5, 'wind_speed': 4}, 'boats': [{'frame': f, 'exhibit_time': 6.95 if f == 1 else 6.75} for f in range(1, 7)]}
+    r['tsuke']['active'] = False
+    return r
+
+
+def test_arechu_race_uses_ana_slip_and_counts_in_normal_totals():
+    r = arechu_race()
+    assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST))
+    s = r['primary_slip']
+    assert s['kind'] == 'ana' and s['source'] == 'arechu' and len(s['tickets']) == 12
+    assert all(t.startswith('4-') and '1' not in t.split('-') for t in s['tickets'])
+    r['result'] = {'finished': True, 'trifecta': '4-2-3', 'trifecta_payout': 15000}
+    judge(r)
+    assert r['hit'] and r['invest'] == 1200 and r['return'] == 15000
+    assert r['hit_main'] and r['invest_main'] == 1200
