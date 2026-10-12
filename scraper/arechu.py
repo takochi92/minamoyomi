@@ -56,3 +56,16 @@ def ana(boats: list):
     head = out[0]
     rest = [f for f in range(2, 7) if f != head]
     return head, [(head, b, c) for b in rest for c in rest if b != c]
+
+
+def from_race(race: dict):
+    """レースのデータ（出走表・展示・水面）から荒れ注意を判定。印がつくなら {p, head, tickets}、つかなければ None"""
+    rl = (race.get("racelist") or {}).get("boats", [])
+    bi = race.get("before") or {}
+    w = bi.get("weather") or {}
+    ex = {b.get("frame"): b.get("exhibit_time") for b in bi.get("boats", [])}
+    pr = score(rl, ex, w.get("wave_cm"), w.get("wind_speed"))
+    if pr is None or pr < MARK:
+        return None
+    head, combos = ana(rl)
+    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos]}
