@@ -52,9 +52,11 @@ jobs:
             return { id: `${post.date}-teirogu-X-${post.slot}`, project: 'teirogu', channel: 'X', date: post.date, slot: post.slot, text: post.text, images: [], created_at: now };
           });
           const keys = new Set(additions.map(post => post.id));
+          const todayJst = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+          const keepFrom = new Date(Date.parse(todayJst) - 13 * 86400e3).toISOString().slice(0, 10);
           const posts = [...additions, ...history.posts.filter(post => !keys.has(post.id))]
             .sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)))
-            .slice(0, 60);
+            .filter(post => post.date >= keepFrom);
           fs.writeFileSync('archive/index.json', JSON.stringify({ updated: now, posts }, null, 2) + '\n');
           JS
           cd archive
