@@ -1,15 +1,15 @@
 {
-  "updated": "2026-10-13T05:09:26.247Z",
+  "updated": "2026-10-13T19:31:04.788Z",
   "posts": [
     {
-      "id": "2026-10-13-teirogu-X-evening",
+      "id": "2026-10-14-teirogu-X-evening",
       "project": "teirogu",
       "channel": "X",
-      "date": "2026-10-13",
+      "date": "2026-10-14",
       "slot": "evening",
-      "text": "【10/13（火）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "text": "【10/14（水）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
-      "created_at": "2026-10-12T21:23:54.038Z"
+      "created_at": "2026-10-13T19:31:04.788Z"
     },
     {
       "id": "2026-10-13-teirogu-X-morning",
@@ -22,24 +22,14 @@
       "created_at": "2026-10-13T03:30:51.920Z"
     },
     {
-      "id": "2026-10-12-teirogu-X-evening",
+      "id": "2026-10-13-teirogu-X-evening",
       "project": "teirogu",
       "channel": "X",
-      "date": "2026-10-12",
+      "date": "2026-10-13",
       "slot": "evening",
-      "text": "【10/12（月）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "text": "【10/13（火）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
-      "created_at": "2026-10-11T17:46:27.521Z"
-    },
-    {
-      "id": "2026-10-12-teirogu-X-feature",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-12",
-      "slot": "feature",
-      "text": "【新機能】荒れ注意レース🚤\nA級1号艇でも万舟が出やすい条件を、過去3年のデータで調べました。\n\n印のつくレースの万舟率は約22%（A級1号艇全体は約16%）。\n穴予想は的中約7%・回収約82%で、プラスではありません。\nhttps://teilog.pages.dev\n※20歳未満は購入できません",
-      "images": [],
-      "created_at": "2026-10-12T01:13:43.912Z"
+      "created_at": "2026-10-12T21:23:54.038Z"
     },
     {
       "id": "2026-10-12-teirogu-X-morning",
@@ -52,14 +42,24 @@
       "created_at": "2026-10-12T02:19:51.558Z"
     },
     {
-      "id": "2026-10-11-teirogu-X-feature",
+      "id": "2026-10-12-teirogu-X-feature",
       "project": "teirogu",
       "channel": "X",
-      "date": "2026-10-11",
+      "date": "2026-10-12",
       "slot": "feature",
-      "text": "展示タイムが1位の艇って、本当に勝つの？🚤\n\n過去2年の公式データで調べると、4コースは\n展示1位 17.1%\n展示6位 6.2%\nで、約3倍の差がありました。\n\n艇ろぐに初心者向けの読みものを6本まとめました（舟券の種類・展示・風と波・モーター）\nhttps://teilog.pages.dev/guide/\n※20歳未満は購入できません",
+      "text": "【新機能】荒れ注意レース🚤\nA級1号艇でも万舟が出やすい条件を、過去3年のデータで調べました。\n\n印のつくレースの万舟率は約22%（A級1号艇全体は約16%）。\n穴予想は的中約7%・回収約82%で、プラスではありません。\nhttps://teilog.pages.dev\n※20歳未満は購入できません",
       "images": [],
-      "created_at": "2026-10-10T16:08:18.391Z"
+      "created_at": "2026-10-12T01:13:43.912Z"
+    },
+    {
+      "id": "2026-10-12-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-12",
+      "slot": "evening",
+      "text": "【10/12（月）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-10-11T17:46:27.521Z"
     },
     {
       "id": "2026-10-11-teirogu-X-morning",
@@ -80,6 +80,16 @@
       "text": "【10/10（土）の結果】\nAI本線 156R中21的中\n\n今日のフライング 5人（F後はスタート控えめになりがち）\n・福岡1R 加木 郁\n・唐津8R 井上 茂\n・常滑5R 丹下 将\n・常滑5R 永田 啓二\n・桐生12R 向所 浩二\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-10-10T17:58:41.232Z"
+    },
+    {
+      "id": "2026-10-11-teirogu-X-feature",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-11",
+      "slot": "feature",
+      "text": "展示タイムが1位の艇って、本当に勝つの？🚤\n\n過去2年の公式データで調べると、4コースは\n展示1位 17.1%\n展示6位 6.2%\nで、約3倍の差がありました。\n\n艇ろぐに初心者向けの読みものを6本まとめました（舟券の種類・展示・風と波・モーター）\nhttps://teilog.pages.dev/guide/\n※20歳未満は購入できません",
+      "images": [],
+      "created_at": "2026-10-10T16:08:18.391Z"
     },
     {
       "id": "2026-10-10-teirogu-X-morning",
