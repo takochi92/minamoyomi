@@ -1,26 +1,26 @@
-# 毎朝・毎晩、その日の X 投稿文を site/data から作り、持ち主の下書き置き場 Atelier（自動作成された投稿）に入れる
-#  - 文の作り方は tools/make_daily_x.py（今日の開催・AIの自信が高いレース・昨日のAI本線の結果）
-#  - Secrets の ATELIER_SITE_URL・ATELIER_SERVICE_TOKEN・ATELIER_INGEST_TOKEN があるときだけ送る（無ければ文を作ってログに出すだけ）
-#  - 投稿はしない。Atelier の「投稿文をコピー」から X に貼って投稿する
+# 毎朝・毎晩、その日の X 投稿文を site/data から作り、x-auto ブランチに保存する。
+# AFE ポータルは x-auto/index.json を読み、本文コピーを提供する。
 name: Daily X post
 
 on:
   schedule:
-    # 23:13 UTC = 日本時間 8:13（その日の事前予想が出たあと）
     - cron: "13 23 * * *"
-    # 12:43 UTC = 日本時間 21:43（その日の結果とフライング）
     - cron: "43 12 * * *"
   workflow_dispatch:
     inputs:
       slot:
-        description: "morning（朝）／evening（夜の結果）／feature（tools/x_feature.txt の機能紹介）"
+        description: "morning（朝）／evening（夜の結果）／feature（機能紹介）"
         default: "morning"
       date:
-        description: "evening だけ：YYYYMMDD（作りそびれた日の分。空なら今日）"
+        description: "evening だけ：YYYYMMDD（空なら今日）"
         default: ""
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: daily-x
+  cancel-in-progress: false
 
 jobs:
   make:
@@ -28,46 +28,41 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Make today's X post
-        # 手動はえらんだ slot、予定は時刻で朝・夜を分ける
         run: |
           SLOT="${{ github.event.inputs.slot }}"
           if [ -z "$SLOT" ]; then
             if [ "${{ github.event.schedule }}" = "43 12 * * *" ]; then SLOT=evening; else SLOT=morning; fi
           fi
           python3 tools/make_daily_x.py --slot "$SLOT" --date "${{ github.event.inputs.date }}" --out out/x.json
-      - name: Send draft to Atelier
-        env:
-          ATELIER_SITE_URL: ${{ secrets.ATELIER_SITE_URL }}
-          ATELIER_SERVICE_TOKEN: ${{ secrets.ATELIER_SERVICE_TOKEN }}
-          ATELIER_INGEST_TOKEN: ${{ secrets.ATELIER_INGEST_TOKEN }}
-        if: env.ATELIER_SITE_URL != '' && env.ATELIER_INGEST_TOKEN != ''
+      - name: Get draft history
+        run: git clone --depth 1 -b x-auto "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" archive
+      - name: Save drafts for AFE portal
         run: |
           node - <<'JS'
-          const fs = require("fs");
-          const { posts } = JSON.parse(fs.readFileSync("out/x.json", "utf8"));
-          // Secrets に引用符・"site_url":・https:// なし・/api/posts つきで入っていても読めるようにする
-          const clean = (v) => (v || "").trim().replace(/^.*?:\s*(?=["'])/, "").replace(/^["']+|["',\s]+$/g, "").trim();
-          const rawSite = clean(process.env.ATELIER_SITE_URL);
-          console.log("site check: length", rawSite.length, "scheme", /^https?:\/\//.test(rawSite), "space", /\s/.test(rawSite), "quote", /["']/.test(rawSite));
-          console.log("token check: service", clean(process.env.ATELIER_SERVICE_TOKEN).length, "ingest", clean(process.env.ATELIER_INGEST_TOKEN).length);
-          const found = rawSite.match(/https?:\/\/[^\s"',]+/) || rawSite.match(/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"',]*)?/i);
-          // URL の形でなければ、Atelier の公開アドレスを使う（URL は秘密ではない）
-          const site = (!found ? "https://atelier-task-studio.politechar16.chatgpt.site" : /^https?:/.test(found[0]) ? found[0] : "https://" + found[0]).replace(/\/api\/posts\/?$/, "").replace(/\/+$/, "");
-          (async () => {
-            for (const post of posts) {
-              const r = await fetch(site + "/api/posts", {
-                method: "POST",
-                headers: {
-                  "content-type": "application/json",
-                  "OAI-Sites-Authorization": "Bearer " + clean(process.env.ATELIER_SERVICE_TOKEN),
-                  "x-atelier-token": clean(process.env.ATELIER_INGEST_TOKEN)
-                },
-                body: JSON.stringify(post)
-              });
-              const body = await r.json().catch(() => ({}));
-              if (!r.ok || !body.ok) { console.error(`Atelier ${post.channel}: failed (${r.status}) ${body.error || ""}`); process.exitCode = 1; continue; }
-              console.log(`${body.post.project} / ${body.post.channel} / ${body.post.date}: saved`);
-            }
-          })();
+          const fs = require('fs');
+          const history = JSON.parse(fs.readFileSync('archive/index.json', 'utf8'));
+          const generated = JSON.parse(fs.readFileSync('out/x.json', 'utf8'));
+          if (!Array.isArray(history.posts) || !Array.isArray(generated.posts)) throw Error('Invalid draft data');
+          const now = new Date().toISOString();
+          const additions = generated.posts.map(post => {
+            if (post.project !== 'teirogu' || post.channel !== 'X' || !/^\d{4}-\d{2}-\d{2}$/.test(post.date) || !/^[a-z]+$/.test(post.slot) || typeof post.text !== 'string') throw Error('Invalid X draft');
+            return { id: `${post.date}-teirogu-X-${post.slot}`, project: 'teirogu', channel: 'X', date: post.date, slot: post.slot, text: post.text, images: [], created_at: now };
+          });
+          const keys = new Set(additions.map(post => post.id));
+          const posts = [...additions, ...history.posts.filter(post => !keys.has(post.id))]
+            .sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)))
+            .slice(0, 60);
+          fs.writeFileSync('archive/index.json', JSON.stringify({ updated: now, posts }, null, 2) + '\n');
           JS
+          cd archive
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Save X drafts $(date -u +%F)"
+            git push origin HEAD:x-auto
+          fi
+
