@@ -617,16 +617,16 @@
     ]
   },
   "excluded_reason_counts": {
-    "fingerprint_mismatch": 2263,
-    "unverified_inputs": 2000,
-    "missing_exhibition_model_decision": 2000,
-    "missing_or_changed_protocol": 2263,
     "missing_or_invalid_timestamps": 2134,
     "no_tickets": 2000,
-    "no_research_tickets": 2867,
-    "entry_mismatch": 2263,
     "missing_fixed_decision": 2000,
+    "entry_mismatch": 2263,
+    "fingerprint_mismatch": 2263,
     "fixed_tickets_mismatch": 2263,
+    "unverified_inputs": 2000,
+    "no_research_tickets": 2867,
+    "missing_or_changed_protocol": 2263,
+    "missing_exhibition_model_decision": 2000,
     "incomplete_odds": 178
   },
   "limits": [
