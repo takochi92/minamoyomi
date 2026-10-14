@@ -1546,6 +1546,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             f'<li><b>2着{bt(g["second"])}</b> {e(g["story"])}<br><span class="num">{" ".join(g["tickets"])}</span></li>' for g in tk["groups"])
         return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030"><h2>⚠ 荒れ注意の展開予想 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
                 f'<p style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。ここは無難な本線ではなく、<b>{bt(ar["head"])}の頭</b>で狙います。{e(tk["kimarite"])}</p>'
+                f'<p class="sub" style="margin:0">{e(ar["why"])}</p>'
                 f'<ul style="margin:0;padding-left:18px;display:grid;gap:6px">{groups}</ul>'
                 f'<p class="sub" style="margin:0">過去の荒れ注意のレースで、頭が{ar["head"]}号艇のときに2着・3着へ多かった形を、多い順に{len(ar["tickets"])}点にしています（A級1号艇のレース全体の万舟率は約{round(arechu.BASE * 100)}%）。必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
 
