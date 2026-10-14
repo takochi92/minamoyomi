@@ -485,17 +485,17 @@
     ]
   },
   "excluded_reason_counts": {
-    "missing_exhibition_model_decision": 1995,
     "fingerprint_mismatch": 2258,
-    "missing_fixed_decision": 1995,
+    "no_research_tickets": 2717,
     "unverified_inputs": 1995,
-    "fixed_tickets_mismatch": 2258,
+    "missing_exhibition_model_decision": 1995,
     "entry_mismatch": 2258,
     "no_tickets": 1995,
-    "missing_or_invalid_timestamps": 2129,
-    "no_research_tickets": 2717,
     "missing_or_changed_protocol": 2258,
-    "incomplete_odds": 54
+    "fixed_tickets_mismatch": 2258,
+    "missing_or_invalid_timestamps": 2129,
+    "missing_fixed_decision": 1995,
+    "incomplete_odds": 53
   },
   "limits": [
     "券は締切前のオッズ・予想・選手のコース成績から固定し、後から追加しない",
