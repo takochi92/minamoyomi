@@ -19,12 +19,12 @@
     "gross_roi": 0.6580249318270355,
     "net_roi": 0.6556100431541781,
     "excluded_reason_counts": {
-      "missing_exhibition_model_decision": 2147,
-      "missing_fixed_decision": 2147,
-      "missing_or_invalid_timestamps": 2281,
-      "no_tickets": 2147,
-      "unverified_inputs": 2147,
-      "incomplete_odds": 171
+      "missing_exhibition_model_decision": 2155,
+      "missing_fixed_decision": 2155,
+      "missing_or_invalid_timestamps": 2289,
+      "no_tickets": 2155,
+      "unverified_inputs": 2155,
+      "incomplete_odds": 179
     },
     "settled_details": [
       {
@@ -20766,17 +20766,17 @@
     ]
   },
   "excluded_reason_counts": {
-    "invalid_entry": 2147,
-    "invalid_fixed_probabilities": 2147,
-    "missing_exhibition_model_decision": 2147,
-    "missing_fixed_decision": 2147,
-    "missing_or_changed_shadow_protocol": 2244,
-    "missing_or_invalid_timestamps": 2281,
-    "missing_or_mismatched_fingerprint": 2244,
-    "no_shadow_tickets": 2454,
-    "no_tickets": 2147,
-    "unverified_inputs": 2147,
-    "incomplete_odds": 171
+    "invalid_entry": 2155,
+    "invalid_fixed_probabilities": 2155,
+    "missing_exhibition_model_decision": 2155,
+    "missing_fixed_decision": 2155,
+    "missing_or_changed_shadow_protocol": 2252,
+    "missing_or_invalid_timestamps": 2289,
+    "missing_or_mismatched_fingerprint": 2252,
+    "no_shadow_tickets": 2462,
+    "no_tickets": 2155,
+    "unverified_inputs": 2155,
+    "incomplete_odds": 179
   },
   "overlapping_evidence_groups": {
     "course_model_support": {
