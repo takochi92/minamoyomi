@@ -794,13 +794,13 @@
   },
   "excluded_reason_counts": {
     "no_research_tickets": 3182,
+    "missing_exhibition_model_decision": 2017,
+    "fixed_tickets_mismatch": 2280,
+    "no_tickets": 2017,
     "missing_fixed_decision": 2017,
     "fingerprint_mismatch": 2280,
     "unverified_inputs": 2017,
-    "fixed_tickets_mismatch": 2280,
-    "missing_exhibition_model_decision": 2017,
     "missing_or_changed_protocol": 2280,
-    "no_tickets": 2017,
     "entry_mismatch": 2280,
     "missing_or_invalid_timestamps": 2151,
     "incomplete_odds": 49
