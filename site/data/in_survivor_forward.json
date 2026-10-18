@@ -881,17 +881,17 @@
     ]
   },
   "excluded_reason_counts": {
-    "no_tickets": 2010,
-    "unverified_inputs": 2010,
-    "missing_or_invalid_timestamps": 2144,
     "missing_fixed_decision": 2010,
+    "no_tickets": 2010,
     "entry_mismatch": 2273,
     "no_research_tickets": 3334,
+    "missing_or_invalid_timestamps": 2144,
+    "fingerprint_mismatch": 2273,
     "missing_exhibition_model_decision": 2010,
+    "unverified_inputs": 2010,
     "missing_or_changed_protocol": 2273,
     "fixed_tickets_mismatch": 2273,
-    "fingerprint_mismatch": 2273,
-    "incomplete_odds": 32
+    "incomplete_odds": 31
   },
   "limits": [
     "券は締切前のオッズ・予想・選手のコース成績から固定し、後から追加しない",
