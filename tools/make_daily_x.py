@@ -136,7 +136,12 @@ def main():
     index = json.loads((DATA / "index.json").read_text(encoding="utf-8"))
     history = json.loads((DATA / "history.json").read_text(encoding="utf-8"))
     if a.slot == "evening":
-        date, text = build_evening({**index, "date": a.date} if a.date else index, history, DATA / "races")
+        day = a.date
+        if not day:
+            # GitHub の実行が遅れて日付をまたいだら（日本時間の昼より前）、前日の結果で作る
+            now = dt.datetime.utcnow() + dt.timedelta(hours=9)
+            day = (now.date() - dt.timedelta(days=1 if now.hour < 12 else 0)).strftime("%Y%m%d")
+        date, text = build_evening({**index, "date": day}, history, DATA / "races")
     elif a.slot == "feature":
         date = (dt.datetime.utcnow() + dt.timedelta(hours=9)).date().isoformat()
         text = (ROOT / "tools" / "x_feature.txt").read_text(encoding="utf-8").strip()
