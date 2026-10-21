@@ -1255,15 +1255,15 @@
     ]
   },
   "excluded_reason_counts": {
-    "no_tickets": 2043,
+    "entry_mismatch": 2306,
     "no_research_tickets": 3914,
     "unverified_inputs": 2043,
-    "missing_or_invalid_timestamps": 2177,
     "fixed_tickets_mismatch": 2306,
+    "no_tickets": 2043,
     "missing_fixed_decision": 2043,
     "missing_exhibition_model_decision": 2043,
     "missing_or_changed_protocol": 2306,
-    "entry_mismatch": 2306,
+    "missing_or_invalid_timestamps": 2177,
     "fingerprint_mismatch": 2306,
     "incomplete_odds": 215
   },
