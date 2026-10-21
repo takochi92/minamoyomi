@@ -15,13 +15,13 @@
   "baseline_on_same_races": {
     "strategy": "existing_ai_main_sub_100_v1",
     "simulation": true,
-    "races": 51,
+    "races": 54,
     "hits": 11,
-    "invested": 25500,
+    "invested": 27600,
     "refund": 1400,
     "payout": 15300.0,
-    "gross_roi": 0.6549019607843137,
-    "net_roi": 0.6348547717842323,
+    "gross_roi": 0.605072463768116,
+    "net_roi": 0.583969465648855,
     "excluded_reason_counts": {},
     "settled_details": [
       {
@@ -584,31 +584,64 @@
         "refund": 0,
         "payout": 0,
         "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "09",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 800,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "14",
+        "rno": 3,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 500,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "16",
+        "rno": 10,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 800,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
       }
     ],
     "by_model_and_month": [
       {
         "model_version": "da32adf1f120889c",
         "month": "202610",
-        "races": 51,
+        "races": 54,
         "hits": 11,
-        "invested": 25500,
+        "invested": 27600,
         "refund": 1400,
         "payout": 15300.0,
-        "gross_roi": 0.6549019607843137,
-        "net_roi": 0.6348547717842323
+        "gross_roi": 0.605072463768116,
+        "net_roi": 0.583969465648855
       }
     ]
   },
   "shadow": {
     "strategy": "in_survivor_value_v1",
     "simulation": true,
-    "races": 51,
+    "races": 54,
     "hits": 0,
-    "invested": 5600,
+    "invested": 5900,
     "refund": 200,
     "payout": 0,
-    "gross_roi": 0.03571428571428571,
+    "gross_roi": 0.03389830508474576,
     "net_roi": 0.0,
     "excluded_reason_counts": {},
     "settled_details": [
@@ -1172,33 +1205,66 @@
         "refund": 0,
         "payout": 0,
         "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "09",
+        "rno": 12,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "14",
+        "rno": 3,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261021",
+        "jcd": "16",
+        "rno": 10,
+        "model_version": "da32adf1f120889c",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
       }
     ],
     "by_model_and_month": [
       {
         "model_version": "da32adf1f120889c",
         "month": "202610",
-        "races": 51,
+        "races": 54,
         "hits": 0,
-        "invested": 5600,
+        "invested": 5900,
         "refund": 200,
         "payout": 0,
-        "gross_roi": 0.03571428571428571,
+        "gross_roi": 0.03389830508474576,
         "net_roi": 0.0
       }
     ]
   },
   "excluded_reason_counts": {
-    "fingerprint_mismatch": 2446,
-    "missing_or_invalid_timestamps": 2317,
-    "missing_exhibition_model_decision": 2183,
-    "fixed_tickets_mismatch": 2446,
-    "unverified_inputs": 2183,
-    "missing_or_changed_protocol": 2446,
-    "missing_fixed_decision": 2183,
-    "no_research_tickets": 3917,
-    "no_tickets": 2183,
-    "entry_mismatch": 2446,
+    "entry_mismatch": 2306,
+    "no_research_tickets": 3914,
+    "no_tickets": 2043,
+    "missing_or_invalid_timestamps": 2177,
+    "missing_fixed_decision": 2043,
+    "fingerprint_mismatch": 2306,
+    "missing_exhibition_model_decision": 2043,
+    "unverified_inputs": 2043,
+    "missing_or_changed_protocol": 2306,
+    "fixed_tickets_mismatch": 2306,
     "incomplete_odds": 217
   },
   "limits": [
