@@ -29,3 +29,23 @@ def test_ana_follows_scenario_table():
     tk = arechu.tenkai(head, combos, {3: 2})
     assert "まくり40%" in tk["kimarite"] and "2位" in tk["kimarite"]
     assert tk["groups"][0]["second"] == 1 and sum(len(g["tickets"]) for g in tk["groups"]) == 12
+
+
+def tenkai_race(sts, ext=None, rows=None):
+    return {"before": {"start_exhibition": [{"course": c, "frame": c, "st": sts[c - 1], "flag": ""} for c in range(1, 7)],
+                       "boats": [{"frame": f, "exhibit_time": (ext or [6.8] * 6)[f - 1]} for f in range(1, 7)]},
+            "oriten": {"items": ["一周", "まわり足", "直線"], "rows": rows or {str(f): [37.5, 5.5, 7.0] for f in range(1, 7)}}}
+
+
+def test_head_follows_speed_of_boat():
+    rows = {str(f): [37.5, 5.5, 7.0] for f in range(1, 7)}
+    rows["4"] = [36.5, 5.0, 6.8]                                 # 4号艇だけ一周・まわり足・直線が速い
+    r = tenkai_race([0.15] * 6, ext=[6.8, 6.8, 6.8, 6.7, 6.8, 6.8], rows=rows)
+    t = arechu.head_by_tenkai(r)
+    assert t["head"] == 4 and t["info"]["lap"] == 1 and t["info"]["ext"] == 1
+    r2 = tenkai_race([0.20, 0.15, 0.14, 0.15, 0.16, 0.18])
+    assert arechu.head_by_tenkai(r2)["head"] in (2, 3)         # 差がなければ、枠のくせで内側寄り
+
+
+def test_head_none_without_start_exhibition():
+    assert arechu.head_by_tenkai({"before": {}, "oriten": {}}) is None
