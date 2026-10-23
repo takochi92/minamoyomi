@@ -221,6 +221,13 @@ class Site:
         self.cst = coursest.load()
 
     def put(self, path, text):
+        if getattr(self, 'stream_output', False) and path.startswith(('racer/', 'database/')):
+            f=OUT/path
+            f.parent.mkdir(parents=True,exist_ok=True)
+            f.write_text(text,encoding='utf-8')
+            self.files[path]=''
+            self._streamed.add(path)
+            return
         self.files[path] = text
 
     # ------------------------------------------------------------ 共通の計算
@@ -1819,6 +1826,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         from . import racer_database as rd
         database = rd.load(self.now.strftime("%Y%m%d"))
         roster = load_json(Path(__file__).parent / "racers.json", {}) or {}
+        if database.get('compiled'):
+            self.racers = {**database['roster'], **self.racers}
+            for t,info in self.racers.items():
+                saved=database['roster'].get(t,{})
+                for key in ('historical','period'):
+                    if key in saved:info[key]=saved[key]
         meta = {k: database[k] for k in ("from", "through", "as_of", "races")}
         meta["roster_source"] = roster.get("source", "適用期未確認")
         today = self.today_entries()
@@ -1841,6 +1854,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             listing.append(t)
         self.fav_today(today)
         self.racer_index(listing, today)
+        from .database_views import catalog_pages
+        if database.get('compiled'):
+            catalog_pages(self,Page,VENUES)
 
     def fav_today(self, today):
         """お気に入り選手の「今日の出走」用。登番 → [[場, R, ページ, 締切, 枠]]（ブラウザ側で読む）"""
@@ -1887,7 +1903,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         for t, info in rs:
             tod = [[j, rn, f] for d, j, rn, f in today.get(t, [])]
             rj.append([t, info["name"], info.get("kana", ""), info.get("branch", ""), info.get("ki") or 0, info.get("class", ""),
-                       info.get("win") if info.get("win") is not None else -1, 1 if info.get("lady") else 0, tod])
+                       info.get("win") if info.get("win") is not None else -1, 1 if info.get("lady") else 0, tod, bool(info.get('historical')), info.get('period','')])
         by = defaultdict(list)
         for t, info in rs:
             by[info.get("branch", "")].append(f'<a href="{t}.html">{e(info["name"])}</a>')
@@ -1899,7 +1915,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         vnames = {j: VENUES[j]["name"] for j in VENUES}
         held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
         opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
-        body = f"""<h1>選手・モーター検索</h1>
+        body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><p><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a></p>
 <p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（この端末だけに保存）。</p>
 <div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
 <section class="tabp sx" id="sx-r" data-tab="r">
@@ -1909,7 +1925,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <select id="fb" aria-label="支部"><option value="">支部：すべて</option>{opt((b, b) for b in branches)}</select>
 {f'<select id="fk" aria-label="期"><option value="">期：すべて</option>{opt((str(k), f"{k}期") for k in kis)}</select>' if has_ki else ''}
 <select id="fc" aria-label="級別"><option value="">級：すべて</option>{opt((c, c) for c in ("A1", "A2", "B1", "B2"))}</select>
-<select id="fx" aria-label="しぼりこみ"><option value="">全員</option><option value="l">女子だけ</option><option value="t">今日出走する人</option><option value="f">☆お気に入りだけ</option></select>
+<select id="fx" aria-label="しぼりこみ"><option value="">全員（過去掲載を含む）</option><option value="a">最新期に掲載</option><option value="h">過去掲載の選手</option><option value="l">女子だけ</option><option value="t">今日出走する人</option><option value="f">☆お気に入りだけ</option></select>
 <select id="fs" aria-label="並び順"><option value="b">支部順</option><option value="w">勝率が高い順</option>{'<option value="k">期が新しい順</option>' if has_ki else ''}<option value="t">登録番号順</option></select>
 </div>
 <p class="sub sx-n" aria-live="polite"></p>
@@ -2487,6 +2503,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
 
     def write(self):
         for p, text in self.files.items():
+            if p in getattr(self,'_streamed',set()):continue
             f = OUT / p
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(text, encoding="utf-8")
@@ -2494,11 +2511,20 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             f = OUT / p
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_bytes(b)
+        from .database_sources import BASE
+        import gzip, shutil
+        dest=OUT/'data'/'players'
+        for source in (BASE/'player_history').glob('*.json.gz'):
+            dest.mkdir(parents=True,exist_ok=True)
+            with gzip.open(source,'rb') as src, (dest/source.stem).open('wb') as target:
+                shutil.copyfileobj(src,target)
         print("pages", len(self.files), "images", len(self.bins))
 
 
 def main():
     s = Site()
+    s.stream_output=True
+    s._streamed=set()
     s.build()
     s.write()
 

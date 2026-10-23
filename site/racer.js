@@ -60,7 +60,7 @@
     $('course').innerHTML=section('コース別成績',stats(w.course,function(c){return c+'コース';}),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+methods+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('艇番別成績',stats(w.frame,function(c){return c+'号艇';}))+section('1コースが逃げたときの残り方',matrix(['コース','2着','3着','2・3着'],rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。');
   }
   function changeWindow(key){
-    var w=data.windows[key],labels={'365':'直近1年','730':'直近2年','all':'保存全期間'};
+    var w=data.windows[key],labels={'90':'直近3か月','365':'直近1年','730':'直近2年','all':'保存全期間'};
     document.querySelectorAll('[data-rd-window]').forEach(function(b){var on=b.dataset.rdWindow===key;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
     $('rd-period-label').textContent=labels[key]+' · '+date(w.from)+'〜'+date(w.through)+'の保存分';
     overview(w);courses(w);
@@ -69,16 +69,26 @@
   }
   document.querySelectorAll('[data-rd-window]').forEach(function(b){b.addEventListener('click',function(){changeWindow(b.dataset.rdWindow);});});
   var links=Array.from(document.querySelectorAll('.rd-tabs a'));
-  function tab(){var key=location.hash.slice(1);if(!links.some(function(a){return a.hash==='#'+key;}))key='overview';document.querySelectorAll('.rd-panel').forEach(function(p){p.hidden=p.id!==key;});links.forEach(function(a){var on=a.hash==='#'+key;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});}
+  var historyPromise=null;
+  function loadHistory(){
+    if(!data.history_url)return Promise.resolve();
+    if(!historyPromise){
+      $('rd-history-count').textContent='全出走結果を読み込んでいます…';
+      historyPromise=fetch(data.root+data.history_url).then(function(r){if(!r.ok)throw Error('fetch');return r.json();}).then(function(rows){data.rows=rows;data.history_url=null;historyRows();}).catch(function(){historyPromise=null;$('rd-history-count').textContent='読み込めませんでした。全出走結果タブを開き直すと再試行します。';});
+    }
+    return historyPromise;
+  }
+  function tab(){var key=location.hash.slice(1);if(!links.some(function(a){return a.hash==='#'+key;}))key='overview';document.querySelectorAll('.rd-panel').forEach(function(p){p.hidden=p.id!==key;});links.forEach(function(a){var on=a.hash==='#'+key;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});if(key==='history')loadHistory();}
   links.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();history.pushState(null,'',a.hash);tab();});});window.addEventListener('hashchange',tab);window.addEventListener('popstate',tab);tab();
   function historyRows(){
     var y=$('rd-year').value,v=$('rd-venue').value,c=$('rd-course').value;
     var rows=data.rows.filter(function(r){return (!y||r[0].slice(0,4)===y)&&(!v||r[1]===v)&&(!c||String(r[4])===c);});
     var pages=Math.max(1,Math.ceil(rows.length/size));pageNo=Math.max(0,Math.min(pageNo,pages-1));
-    $('rd-history-count').textContent='該当 '+rows.length.toLocaleString('ja-JP')+'件 / 全'+data.rows.length.toLocaleString('ja-JP')+'件';
+    $('rd-history-count').textContent=data.history_url?'最新30件 / 全'+data.history_count.toLocaleString('ja-JP')+'件（全出走結果タブで読み込み）':'該当 '+rows.length.toLocaleString('ja-JP')+'件 / 全'+data.rows.length.toLocaleString('ja-JP')+'件';
     $('rd-history-table').innerHTML='<div class="rv-races">'+(rows.slice(pageNo*size,(pageNo+1)*size).map(function(r){
       var numeric=typeof r[5]==='number',place=String(r[5]),fields=[['艇番',r[3]],['進入',r[4]?r[4]+'コース':'—'],['ST',r[6]==null?'—':r[7]+(r[6]/100).toFixed(2)],['展示',r[8]?(r[8]/100).toFixed(2):'—'],['モーター',r[9]==null?'未保存':r[9]],['ボート',r[10]==null?'未保存':r[10]]];
-      return '<details class="rv-race"><summary><time>'+date(r[0])+'</time><span>'+esc(data.venues[r[1]]||r[1])+' '+r[2]+'R</span><b class="rv-finish rv-finish-'+(numeric?place:'other')+'">'+esc(place+(numeric?'着':''))+'</b><i>＋</i></summary><dl>'+fields.map(function(f){return '<div><dt>'+f[0]+'</dt><dd>'+esc(f[1])+'</dd></div>';}).join('')+'</dl><p>勝者の決まり手：'+esc(r[11]||'未確認')+'</p></details>';
+      var meta=r[15]||{};
+      return '<details class="rv-race"><summary><time>'+date(r[0])+'</time><span>'+esc(data.venues[r[1]]||r[1])+' '+r[2]+'R</span><b class="rv-finish rv-finish-'+(numeric?place:'other')+'">'+esc(place+(numeric?'着':''))+'</b><i>＋</i></summary>'+(meta.title?'<p>'+esc(meta.title)+' · '+esc(meta.race_name)+'</p>':'')+'<dl>'+fields.map(function(f){return '<div><dt>'+f[0]+'</dt><dd>'+esc(f[1])+'</dd></div>';}).join('')+'</dl><p>勝者の決まり手：'+esc(r[11]||'未確認')+' · 3連単払戻 '+(r[13]==null?'未保存':Number(r[13]).toLocaleString('ja-JP')+'円／100円')+'</p></details>';
     }).join('')||'<p class="rv-caption">該当する記録はありません。</p>')+'</div>';
     $('rd-page').textContent=(pageNo+1)+' / '+pages;$('rd-prev').hidden=false;$('rd-next').hidden=false;$('rd-prev').disabled=pageNo===0;$('rd-next').disabled=pageNo>=pages-1;
   }

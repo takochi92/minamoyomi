@@ -1,0 +1,79 @@
+name: update-player-database
+
+on:
+  schedule:
+    - cron: '45 21 * * *' # JST 6:45, after the history collection
+  workflow_dispatch:
+    inputs:
+      start:
+        description: '追加取得の開始日 YYYYMMDD（空欄は直近3日）'
+        default: ''
+      end:
+        description: '終了日 YYYYMMDD（空欄は前日）'
+        default: ''
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: player-database
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: .cache/public-database.sqlite*
+          key: player-db-v1-${{ github.run_id }}
+          restore-keys: player-db-v1-
+      - name: 公式ファイルを追加取得（予想用履歴とは別保存）
+        env:
+          INPUT_START: ${{ inputs.start }}
+          INPUT_END: ${{ inputs.end }}
+        run: |
+          python - <<'PY'
+          import os,subprocess,sys
+          from datetime import datetime,timedelta,timezone
+          now=datetime.now(timezone(timedelta(hours=9)))
+          start=os.environ.get('INPUT_START') or (now-timedelta(days=3)).strftime('%Y%m%d')
+          end=os.environ.get('INPUT_END') or (now-timedelta(days=1)).strftime('%Y%m%d')
+          datetime.strptime(start,'%Y%m%d');datetime.strptime(end,'%Y%m%d')
+          command=[sys.executable,'-m','scraper.database_sources','--periods','--start',start,'--end',end,'--workers','2']
+          if not os.environ.get('INPUT_START'):command.append('--refresh')
+          subprocess.run(command,check=True)
+          if not os.environ.get('INPUT_START'):
+              subprocess.run([sys.executable,'-m','scraper.database_sources','--backfill-months','24','--workers','2'],check=True)
+          PY
+      - name: 全選手の公開データを集計
+        run: python -m scraper.database_build
+      - name: テスト
+        run: |
+          pip install pytest
+          python -m pytest -q tests/test_racer_database.py tests/test_database_archive.py
+      - name: 公開データを保存
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scraper/database
+          if ! git diff --cached --quiet; then
+            git commit -m "official player database $(TZ=Asia/Tokyo date +%F)"
+            for i in 1 2 3 4; do
+              if git pull --rebase origin main && git push origin HEAD:main; then break; fi
+              git rebase --abort 2>/dev/null || true
+              if [ "$i" = 4 ]; then exit 1; fi
+              sleep 15
+            done
+          fi
+      - name: 本番ページの再生成を依頼
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update.yml --ref main

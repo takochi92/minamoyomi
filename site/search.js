@@ -29,7 +29,7 @@
   var tbody = $("sx-rows");
   var V = DATA.venues || {}, SL = DATA.slug || {};
   var RS = (DATA.racers || []).map(function (r, i) {
-    return { t: r[0], n: r[1], k: r[2], b: r[3], ki: r[4], c: r[5], w: r[6], l: r[7], tod: r[8] || [], i: i, key: norm(r[1]) + " " + norm(r[2]) + " " + r[0] };
+    return { t: r[0], n: r[1], k: r[2], b: r[3], ki: r[4], c: r[5], w: r[6], l: r[7], tod: r[8] || [], historical:!!r[9], period:r[10]||'', i: i, key: norm(r[1]) + " " + norm(r[2]) + " " + r[0] };
   });
   var byT = {}; RS.forEach(function (r) { byT[r.t] = r; });
   function todChips(r) {
@@ -37,7 +37,7 @@
   }
   function rowH(r) {
     return '<tr data-t="' + r.t + '"' + (Fav.has(r.t) ? ' class="is-fav"' : "") + '><td><button type="button" class="fav-btn sm" data-toban="' + r.t + '" data-name="' + esc(r.n) + '">☆</button></td>' +
-      '<td><a href="' + r.t + '.html"><b>' + esc(r.n) + '</b></a><span class="sub rk"> ' + r.t + (r.l ? " 女子" : "") + "</span></td><td>" + esc(r.c) + "</td><td>" + esc(r.b) + '</td>' + (DATA.hasKi ? '<td class="r num">' + (r.ki || "-") + "</td>" : "") +
+      '<td><a href="' + r.t + '.html"><b>' + esc(r.n) + '</b></a><span class="sub rk"> ' + r.t + (r.l ? " 女子" : "") + (r.historical?' · 過去掲載':'') + "</span></td><td>" + esc(r.c) + "</td><td>" + esc(r.b) + '</td>' + (DATA.hasKi ? '<td class="r num">' + (r.ki || "-") + "</td>" : "") +
       '<td class="r num">' + (r.w >= 0 ? r.w.toFixed(2) : "-") + '</td><td class="tod">' + todChips(r) + "</td></tr>";
   }
   var shown = PAGE;
@@ -46,7 +46,7 @@
     var q = norm($("q").value), b = $("fb").value, k = $("fk") ? +$("fk").value : 0, c = $("fc").value, x = $("fx").value, s = $("fs").value;
     var hit = RS.filter(function (r) {
       return (!q || r.key.indexOf(q) >= 0) && (!b || r.b === b) && (!k || r.ki === k) && (!c || r.c === c) &&
-        (!x || (x === "l" ? r.l : x === "f" ? Fav.has(r.t) : r.tod.length));
+        (!x || (x === 'a' ? !r.historical : x === 'h' ? r.historical : x === "l" ? r.l : x === "f" ? Fav.has(r.t) : r.tod.length));
     });
     var key = {
       w: function (r) { return -r.w; },

@@ -25,3 +25,6 @@ site/results/
 site/share.html
 site/weekly.html
 site/grade.html
+.cache/
+site/database/
+site/data/players/

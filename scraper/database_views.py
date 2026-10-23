@@ -1,0 +1,141 @@
+"""Public official-data catalogue; separate from recommendations and results ROI."""
+from __future__ import annotations
+import html, json
+from datetime import datetime
+from collections import defaultdict
+from . import racer_database as rd
+from .database_sources import BASE, read_json
+
+e=lambda x:html.escape(str(x if x is not None else '—'),quote=True)
+
+
+def matrix(headers,rows):
+    return '<table class="rv-matrix"><thead><tr>'+''.join('<th>'+e(x)+'</th>' for x in headers)+'</tr></thead><tbody>'+(''.join('<tr>'+''.join(('<th scope="row">' if i==0 else '<td>')+str(x)+('</th>' if i==0 else '</td>') for i,x in enumerate(row))+'</tr>' for row in rows) or '<tr><td colspan="'+str(len(headers))+'">該当する保存記録はありません</td></tr>')+'</tbody></table>'
+
+
+def period_label(term):return f'{term["year"]}年'+('前期' if term['half']==1 else '後期')
+
+
+def birth_date(stats):
+    value=stats.get('birth_date','');offset={'M':1867,'T':1911,'S':1925,'H':1988,'R':2018}.get(stats.get('birth_era'))
+    if offset is None or len(value)!=6 or not value.isdigit():return '未確認'
+    try:return datetime(offset+int(value[:2]),int(value[2:4]),int(value[4:])).strftime('%Y/%m/%d')
+    except ValueError:return '未確認'
+
+
+def period_panel(terms):
+    body='<p class="sub">適用期ごとの公式公表値です。着順点による勝率と、1着になった割合は異なります。前期は1〜6月、後期は7〜12月の適用。各期の審査対象期間を併記しています。</p>'
+    for term in reversed(terms):
+        s=term['stats'];n=s['starts']
+        cards=matrix(['公式勝率','2連対率','出走','優出／優勝'],[[e(f'{s["win"]:.2f}'),e(f'{s["top2"]:.1f}%'),str(n),f'{s["finals"]}／{s["titles"]}']])
+        cards+='<p class="sub">生年月日 '+birth_date(s)+' · 出身地 '+e(s.get('birthplace'))+'（当期の公式掲載値）</p>'
+        courses=[];acc=[]
+        for c,m in enumerate(s['courses'],1):
+            p=m['places'];nn=m['entries']
+            courses.append([f'{c}コース<small>{nn}走</small>',str(p[0]),str(p[1]),str(p[2])])
+            a=m['accidents'];acc.append([str(c),str(sum(x or 0 for x in p[3:])),f'{a["F"]}／{(a["L0"] or 0)+(a["L1"] or 0)}',e(f'{m["st"]:.2f}')])
+        body+=f'<details class="panel db-term"><summary><b>{period_label(term)}</b><span>{e(s["class"])} · 勝率 {s["win"]:.2f} · {n}走</span></summary><p class="sub">対象：{rd.date(term["from"])}〜{rd.date(term["through"])}<br>当時の掲載名：{e(s["name"])} · {e(s.get("branch") or s.get("location"))}{"（当時の住所。支部ではありません）" if s.get("location") else "支部"}</p>{cards}<h3>進入コース別の着順回数</h3>{matrix(["コース","1着","2着","3着"],courses)}{matrix(["コース","4〜6着","F／L","平均ST"],acc)}<details><summary>4・5・6着と事故内訳</summary>{matrix(["コース","4着","5着","6着"],[[str(c),*[str(v) for v in m["places"][3:]]] for c,m in enumerate(s["courses"],1)])}<p class="sub">'+e(' ／ '.join(f'{c}コース '+', '.join(f'{k}:{v}' for k,v in m['accidents'].items()) for c,m in enumerate(s['courses'],1)))+'</p><p>進入コースなし：'+e(' ／ '.join(f'{k}:{v}' for k,v in s.get('no_course_accidents',{}).items()) or '未収録')+'</p></details>'+matrix(['コース','公式2連対','平均ST','平均ST順'],[[str(c),f'{m["top2"]:.1f}%',f'{m["st"]:.2f}',f'{m["st_rank"]:.2f}'] for c,m in enumerate(s['courses'],1)])+f'<p class="sub">平均ST {s["st"]:.2f} · {e(s.get("ki"))}期 · {e(s.get("age"))}歳（当期時点） · {e(s.get("height"))}cm · {e(s.get("weight"))}kg · {e(s.get("blood"))}型</p><p class="sub">直前3期の級：{e(" / ".join(s.get("prior_classes",[])) or "未収録")} · 能力指数：{e(s.get("prior_ability"))} → {e(s.get("ability"))}</p><a href="{e(term["source"])}">公式の期別成績ファイル</a></details>'
+    return rd.section('公式期別成績',body if terms else '<p>この選手の公式期別ファイルは未収録です。</p>')
+
+
+def titles_panel(events,toban,venues):
+    rows=[]
+    for ev in events:
+        f=ev['final'];win=toban in f['winners']
+        rows.append([rd.date(f['date'])+'<small>'+e(venues.get(ev['venue'],{}).get('name',ev['venue']))+'</small>',e(ev['grade'] or '格付未確認'),('<b class="db-gold">優勝</b>' if win else '優出')+'<small>'+e(ev['title'])+'</small>'])
+    return rd.section('保存結果から確認できた優勝・優出',matrix(['日付・場','格付','結果・開催名'],rows),'公式Kファイルで「優勝戦」を確認できたレースのみ。準優勝戦は含めません。格付の記載が確認できない開催は未確認と表示します。生涯の優勝回数やSG出場回数の一覧ではありません。公式期別の優出・優勝回数も参照してください。')
+
+
+def catalog_pages(site,Page,venues):
+    catalog=read_json(BASE/'catalog.json.gz')
+    if not catalog:return
+    from .database_build import periods
+    terms=periods();summary=read_json(BASE/'summary.json.gz',{});roster=catalog['roster']
+    vn=lambda j:venues.get(j,{}).get('name',j)
+    name=lambda t:f'<a href="../racer/{e(t)}.html">{e(roster.get(t,{}).get("name",t))}</a>'
+    def put(path,title,body):
+        p=Page('database/'+path)
+        back='<nav class="db-nav"><a href="index.html">データバンク</a><a href="../racer/index.html">選手検索</a><a href="coverage.html">収録状況</a></nav>'
+        site.put(p.path,p.render(title+'｜艇ろぐ',title+'。公式成績の保存分を期間・件数つきで掲載。',f'<link rel="stylesheet" href="../racer.css">{back}<h1>{e(title)}</h1>{body}',[('database/index.html','データバンク'),('',title)]))
+    def cards(items):return '<div class="db-cards">'+''.join(f'<a class="panel" href="{e(url)}"><b>{e(title)}</b><span>{e(note)}</span></a>' for url,title,note in items)+'</div>'
+    stats=f'<div class="rd-summary"><div><span>掲載選手</span><strong>{len(roster):,}</strong><small>過去掲載選手を含む</small></div><div><span>公式期別</span><strong>{len(terms)}期</strong><small>公式公表ファイル</small></div><div><span>保存結果</span><strong>{catalog["races"]:,}</strong><small>レース</small></div><div><span>最終結果日</span><strong>{rd.date(catalog["through"])[5:]}</strong><small>{catalog["through"][:4]}年</small></div></div>'
+    put('index.html','選手データバンク',f'<p>選手の得意コース、過去の期別成績、場の傾向を、出走数と期間を確かめながら比較できます。</p>{stats}'+cards([
+        ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
+        ('branches.html','支部別','各期の所属選手と実績'),('terms.html','養成期別','同期の選手と各期の成績'),('venues.html','場別データ','コース・決まり手・配当分布'),
+        ('events.html','優勝戦・開催記録','確認できた優勝者と優出選手'),('rankings.html','コース別ランキング','直近90日・15走以上の実測1着率'),
+        ('records.html','高配当・同着・スタート事故','保存結果の記録一覧'),('../motor.html','モーター機歴','交換周期を考慮した機歴と乗り手'),
+        ('equipment.html','ボート・モーター公式値','出走表に掲載された2連対・3連対率'),('coverage.html','収録範囲と更新状況','取得済み・不足・未確認を公開')]))
+    put('periods.html','公式期別の一覧',rd.section('適用期と審査対象期間',matrix(['適用期','対象期間','掲載人数'],[[e(period_label(t)),rd.date(t['from'])+'<small>〜'+rd.date(t['through'])+'</small>',f'{len(t["players"]):,}人'] for t in reversed(terms)]))+'<p>各選手の「公式期別」タブで、全収録期の詳細を確認できます。次期分は公式公表後に追加します。</p>')
+    for category,field,label in [('branches','branch','支部'),('terms','ki','養成期')]:
+        groups=defaultdict(list)
+        for term in terms:
+            tmp=defaultdict(list)
+            for t,s in term['players'].items():
+                if s.get(field):tmp[str(s[field])].append((t,s))
+            for key,players in tmp.items():groups[key].append((term,players))
+        links=[]
+        for i,key in enumerate(sorted(groups,key=lambda x:int(x) if x.isdigit() else x)):
+            url=f'{category}-{i}.html';title=key+('期' if field=='ki' else '支部')
+            links.append((url,title,f'{len(groups[key])}期分の掲載'))
+            body='<p class="sub">各適用期に公式ファイルへ記載された所属・養成期で分類しています。2014年前期以前の住所欄を支部とは扱いません。人数や合計は当該期の掲載分です。</p>'
+            for term,ps in reversed(groups[key]):
+                n=sum(s['starts'] for _,s in ps);wins=sum(s['wins'] for _,s in ps);top2=sum(s['wins']+s['second'] for _,s in ps)
+                rows=[[name(t),e(s['class']),f'{s["win"]:.2f}',f'{s["top2"]:.1f}%<small>{s["starts"]}走</small>'] for t,s in sorted(ps,key=lambda x:-x[1]['win'])]
+                body+=f'<details class="panel db-term"><summary><b>{period_label(term)}</b><span>{len(ps)}人 · {n:,}走 · 1着 {rd.rate(wins,n)}</span></summary><p>2連対 {rd.rate(top2,n)} · 優出 {sum(s["finals"] or 0 for _,s in ps)}回 · 優勝 {sum(s["titles"] or 0 for _,s in ps)}回</p>{matrix(["選手","級","公式勝率","2連対"],rows)}</details>'
+            put(url,title+'の成績',body)
+        put(category+'.html',label+'から探す',cards(links))
+    links=[]
+    for j,v in sorted(summary.get('venues',{}).items()):
+        links.append((f'venue-{j}.html',vn(j),f'{v["n"]:,}レース'))
+        rows=[[f'{i}コース',str(n),rd.rate(n,v['n'])] for i,n in enumerate(v['course'],1)]
+        pays=[[label,str(n),rd.rate(n,v['payout_n'])] for label,n in zip(('1,000円未満','1,000〜4,990円','5,000〜9,990円','1万〜99,990円','10万円以上'),v['payout_bins'])]
+        body=f'<p class="sub">{rd.date(catalog["from"])}〜{rd.date(catalog["through"])}の保存{v["n"]:,}レース。コース不明・同着を含む全レースが分母のため、1着率の合計は100%にならない場合があります。</p>'+rd.section('1着の進入コース',matrix(['コース','1着回数','全レース比'],rows))+rd.section('3連単払戻金の分布',f'<p>平均 {round(v["payout_sum"]/v["payout_n"]):,}円（払戻金が確認できた{v["payout_n"]:,}件）</p>'+matrix(['払戻金','件数','割合'],pays) if v['payout_n'] else '<p>払戻金未収録</p>')+rd.section('勝者の決まり手',matrix(['決まり手','件数','割合'],[[e(k),str(n),rd.rate(n,v['n'])] for k,n in v['kim'].items()]))
+        put(f'venue-{j}.html',vn(j)+'の保存結果集計',body)
+    put('venues.html','全24場のデータ',cards(links))
+    def event_rows(events):
+        return [[rd.date(ev['through'])+'<small>'+e(vn(ev['venue']))+'</small>',e(ev['title'])+'<small>'+e(ev['grade'] or '格付未確認')+'</small>','<br>'.join(name(t) for t in ev['final']['winners'])+'<details><summary>優出選手</summary>'+ '・'.join(name(t) for t in ev['final']['entrants'])+'</details>'] for ev in events if ev['final']]
+    events=summary.get('events',[]);years=sorted({ev['through'][:4] for ev in events},reverse=True)
+    put('events.html','優勝戦・開催記録','<p class="sub">公式結果のレース名で優勝戦を確認できた開催のみ。格付未確認を一般戦として補完しません。途中までの開催は優勝者を表示しません。</p>'+cards([(f'events-{y}.html',y+'年','優勝者・優出選手') for y in years])+rd.section('直近の確認済み優勝戦',matrix(['日付・場','開催','優勝者'],event_rows([v for v in events if v['final']][:30]))))
+    for y in years:put(f'events-{y}.html',y+'年の優勝戦',rd.section('保存結果で確認できた開催',matrix(['日付・場','開催','優勝者'],event_rows([v for v in events if v['through'].startswith(y)]))))
+    ranking='<p class="sub">直近90日、当該コース15走以上の選手。小標本の順位は変わりやすく、将来の勝率を示しません。実際に入った進入コースで集計しています。</p>'
+    for c in range(1,7):
+        rs=sorted((x for x in summary.get('rankings',[]) if x['course']==str(c)),key=lambda x:(-x['places'][0]/x['n'],-x['n']))[:50]
+        ranking+=rd.section(f'{c}コースの1着率',matrix(['選手','出走','1着率','平均ST'],[[name(x['player']),str(x['n']),rd.rate(x['places'][0],x['n']),f'{x["st"]:.2f}' if x['st'] is not None else '—'] for x in rs]))
+    put('rankings.html','直近90日・コース別ランキング',ranking)
+    record='<p class="sub">保存範囲内の記録です。3連単払戻金は100円あたり。舟券の購入実績・予想の回収率とは別の集計です。</p>'
+    record+=rd.section('高配当 上位200件',matrix(['日付・場','組番','払戻金'],[[rd.date(r[0])+'<small>'+e(vn(r[1]))+f' {r[2]}R</small>',e(r[3]),f'{r[4]:,}円'] for r in summary.get('high_payout',[])]))
+    record+=rd.section('確認できた1着同着',matrix(['日付・場','R','選手'],[[rd.date(r[0])+'<small>'+e(vn(r[1]))+'</small>',str(r[2]),'・'.join(name(t) for t in r[3])] for r in summary.get('ties',[])]))
+    record+=rd.section('直近のF・L記録（最大500レース）',matrix(['日付・場','R','記録のある選手'],[[rd.date(r[0])+'<small>'+e(vn(r[1]))+'</small>',str(r[2]),'・'.join(name(t) for t in r[3])] for r in summary.get('accidents',[])]))
+    record+=rd.section('3連単の出目',matrix(['組番','出現回数','保存組番内の割合'],[[e(k),str(n),rd.rate(n,sum(summary.get('combinations',{}).values()))] for k,n in sorted(summary.get('combinations',{}).items(),key=lambda x:-x[1])]))
+    put('records.html','高配当・同着・スタート事故',record)
+    equipment=[];seen=set()
+    from .sitegen import DATA, load_json
+    day=site.idx.get('date','')
+    for p in sorted((DATA/'races'/day).glob('*.json')):
+        raw=load_json(p,{}) or {};rl=raw.get('racelist') or {}
+        for b in rl.get('boats',[]):
+            j=p.stem[:2]
+            for kind,prefix in [('モーター','motor'),('ボート','boat')]:
+                number=b.get(prefix+'_no');key=(j,kind,number)
+                if number is None or key in seen:continue
+                seen.add(key);equipment.append([e(vn(j))+'<small>'+kind+str(number)+'</small>',e(b.get(prefix+'_2')),e(b.get(prefix+'_3'))])
+    put('equipment.html','ボート・モーターの公式出走表掲載値','<p class="sub">'+rd.date(day)+'の取得済み出走表に掲載された値（%）。当日の出走艇に限ります。交換周期不明の過去の同番号を混ぜて機力とは扱いません。乗り手補正・機歴はモーターページで確認できます。</p>'+rd.section('2連対率・3連対率',matrix(['場・番号','2連対率','3連対率'],equipment)))
+    audit=catalog.get('daily_files',{});pc=read_json(BASE/'period_coverage.json',{})
+    coverage=rd.section('現在の保存状況',f'<p>競走結果：{rd.date(catalog["from"])}〜{rd.date(catalog["through"])} · {catalog["races"]:,}レース<br>期別ファイル：公式一覧{pc.get("listed","—")}件中{len(terms)}件保存<br>日別追加取得：{audit.get("saved",0):,}日保存・{audit.get("unavailable",0):,}日未確認<br>集計基準日：{rd.date(catalog["as_of"])}（当日分を除外）</p><p>未確認日は非開催と同一視しません。旧保存履歴と追加Kファイルの重複は日付・場・Rで統合しています。</p>')
+    coverage+=rd.section('掲載項目と限界',matrix(['項目','状況'],[
+        ['選手・公式期別','取得済みの全期・全掲載選手。勝率・連対率・優出・優勝・コース別着順と事故'],
+        ['年度・場・コース・枠・展示順位','保存レースを再集計。期間・分母つき。展示順位は6艇分が揃う場合のみ'],
+        ['支部・養成期','各公式適用期の掲載値から分類。旧住所を支部に置換しない'],
+        ['優勝戦・優出選手','Kファイルの優勝戦表記が確認できた開催。追加取得に合わせ拡大'],
+        ['SG・G1等の全出場履歴','格付を公式で確認できた分のみ。全件照合は未完了'],
+        ['初出走・初勝利・初優出・初優勝','デビュー以前を含む完全収録の証明がないため生涯初とは表示しない'],
+        ['完全優勝・節間最高タイム','開催全日と走破タイムの照合未完了。未掲載'],
+        ['モーター・ボート','現行機歴と出走表の公式率を掲載。古い同番号を交換周期を越えて合算しない'],
+        ['詳細展示・攻め方','長期データと映像ラベル不足。全攻め試行・ツケマイ・意図の断定はしない']]))
+    monthly=[]
+    for p in sorted((BASE/'sources').glob('*.json.gz'),reverse=True):
+        a=read_json(p,{})
+        monthly.append([p.name[:4]+'/'+p.name[4:6],str(sum(v.get('status')=='saved' for v in a.values())),str(sum(v.get('status')!='saved' for v in a.values()))])
+    coverage+=rd.section('追加Kファイルの月別取得状況',matrix(['年月','取得日数','未確認日数'],monthly),'従来保存分とは別の追加取得ログです。取得失敗や形式未対応を非開催とは扱いません。毎朝の更新で新しい結果を取り込み、未取得の古い月も順に補完します。')
+    coverage+='<p class="sub">旧「艇国データバンク」の全保存データ・独自定義そのものは入手していません。同一性を保証する表示は行わず、公式データで再現できる項目を掲載しています。</p><p><a href="https://www.boatrace.jp/owpc/pc/extra/data/download.html">公式期別成績ダウンロード</a> · <a href="https://www.boatrace.jp/owpc/pc/extra/data/layout.html">公式データ仕様</a> · <a href="https://www1.mbrace.or.jp/od2/K/">公式競走成績ファイル</a></p>'
+    put('coverage.html','収録状況・未確認の項目',coverage)

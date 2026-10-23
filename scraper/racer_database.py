@@ -16,7 +16,7 @@ from pathlib import Path
 
 HISTORY = Path(__file__).resolve().parent.parent / "history"
 KIM = ("逃げ", "差し", "まくり", "まくり差し", "抜き", "恵まれ")
-WINDOWS = (("365", "直近1年"), ("730", "直近2年"), ("all", "保存全期間"))
+WINDOWS = (("90", "直近3か月"), ("365", "直近1年"), ("730", "直近2年"), ("all", "保存全期間"))
 # Row: date, venue, race, frame, course, place/code, ST centiseconds, F/L,
 # exhibition centiseconds, motor, boat, winner's decision, winner's course, payout.
 
@@ -99,8 +99,22 @@ def _load(signature, as_of):
 
 
 def load(as_of):
+    from .database_sources import BASE, read_json
+    catalog = read_json(BASE / 'catalog.json.gz')
+    if catalog and catalog['as_of'] <= as_of:
+        return {**catalog, 'players': {}, 'profiles': ProfileFiles(BASE / 'profiles'), 'compiled': True}
     signature = tuple((str(p), p.stat().st_mtime_ns, p.stat().st_size) for p in sorted(HISTORY.glob("*.jsonl.gz")))
     return _load(signature, as_of)
+
+
+class ProfileFiles:
+    """Read one player at a time, keeping the full archive out of RAM."""
+    def __init__(self, directory):self.directory=directory;self.extra={}
+    def __contains__(self, key):return key in self.extra or (self.directory/(key+'.json.gz')).exists()
+    def __setitem__(self,key,value):self.extra[key]=value
+    def __getitem__(self, key):
+        if key in self.extra:return self.extra[key]
+        with gzip.open(self.directory/(key+'.json.gz'),'rt',encoding='utf-8') as f:return json.load(f)
 
 
 def profile(rows, as_of):
@@ -159,12 +173,12 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
     n, p = m["n"], m["places"]
     head = f'''<header class="rd-hero"><a class="rd-back" href="index.html">← 選手・モーター検索</a>
 <div class="rd-heading"><div><span class="eyebrow">RACER DATABASE / 登録番号 {esc(toban)}</span><h1>{esc(info['name'])}<button type="button" class="fav-btn" data-toban="{esc(toban)}" data-name="{esc(info['name'])}" aria-label="お気に入り" aria-pressed="false" hidden>☆</button></h1>
-<p>{esc(info.get('branch',''))}支部 · {esc(info.get('class',''))}級{(' · '+str(info['ki'])+'期') if info.get('ki') else ''} · <a href="{page.u('motor.html')}">モーター相場を見る →</a></p></div><div class="rd-official"><small>公式期別勝率</small><strong>{format(info['win'], '.2f') if info.get('win') is not None else '—'}</strong><small>{esc(meta.get('roster_source', '適用期未確認'))}</small></div></div>
+<p>{esc(info.get('branch') or '所属未確認')} · {esc(info.get('class',''))}級{(' · '+str(info['ki'])+'期') if info.get('ki') else ''} · <a href="{page.u('motor.html')}">モーター相場を見る →</a></p><p class="sub">{('過去の公式期別掲載選手（現在の登録状況は未確認） · ' if info.get('historical') else '')}{esc(info.get('period',''))}</p><a href="{page.u('database/index.html')}">選手データバンク →</a></div><div class="rd-official"><small>公式期別勝率</small><strong>{format(info['win'], '.2f') if info.get('win') is not None else '—'}</strong><small>{esc(info.get('period') or meta.get('roster_source', '適用期未確認'))}</small></div></div>
 <p class="sub">公式期別勝率は着順点の平均です。下の1着率・連対率は艇ろぐの保存レースから集計した実測値です。</p></header>
 <section class="rd-controls" aria-label="成績の表示期間"><div class="rd-period">{''.join(f'<button type="button" data-rd-window="{k}" aria-pressed="{str(k == "365").lower()}" class="{"on" if k == "365" else ""}">{label}</button>' for k,label in WINDOWS)}</div>
 <p class="sub" id="rd-period-label">直近1年 · {date(w['from'])}〜{date(w['through'])}の保存分</p>
 <p class="rd-fresh">データ収録：{date(meta['from'])}〜{date(meta['through'])} · 当日分は翌朝以降に反映</p></section>
-<nav class="rd-tabs" aria-label="選手データのメニュー">{''.join(f'<a href="#{k}">{v}</a>' for k,v in [('overview','概要'),('course','コース・枠'),('venue','場別'),('year','年別'),('exhibition','展示'),('history','全出走結果')])}</nav>
+<nav class="rd-tabs" aria-label="選手データのメニュー">{''.join(f'<a href="#{k}">{v}</a>' for k,v in [('overview','概要'),('course','コース・枠'),('venue','場別'),('year','年別'),('period','公式期別'),('titles','優勝戦'),('exhibition','展示'),('history','全出走結果')])}</nav>
 <section class="panel nb" id="racer-memo" data-toban="{esc(toban)}" data-name="{esc(info['name'])}" hidden></section>'''
     if today_html:
         head += section('今日の出走', '<ul class="comments">'+today_html+'</ul>')
@@ -175,13 +189,18 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
     panels = '<div id="overview" class="rd-panel">' + section('成績の概要', overview) + '</div>'
     panels += '<div id="course" class="rd-panel">' + course_detail(w) + '</div>'
     panels += '<div id="venue" class="rd-panel">' + section('場別成績', stats_table(w['venue'], lambda j: venues.get(j,{}).get('name',j)), '各場での実測成績。少数例は変動が大きいため、出走数も確認してください。') + '</div>'
-    panels += '<div id="year" class="rd-panel">' + section('年別成績',stats_table(data['years'],lambda y:y+'年'), '暦年ごとの保存分。最初と最後の年は年間の全期間が揃っていない場合があります。期間ボタンの対象外です。') + '</div>'
+    from .database_views import matrix
+    year_places=''.join('<details class="db-term"><summary>'+esc(y)+'年 · '+str(m['n'])+'走の着順分布</summary>'+matrix(['着順','回数','割合'],[[str(i+1)+'着',str(n),rate(n,m['n'])] for i,n in enumerate(m['places'])]+[['その他',str(m['other']),rate(m['other'],m['n'])]])+'</details>' for y,m in sorted(data['years'].items(),reverse=True))
+    panels += '<div id="year" class="rd-panel">' + section('年別成績',stats_table(data['years'],lambda y:y+'年')+year_places, '暦年ごとの保存分。最初と最後の年は年間の全期間が揃っていない場合があります。期間ボタンの対象外です。') + '</div>'
+    from .database_views import period_panel, titles_panel
+    panels += '<div id="period" class="rd-panel">'+period_panel(data.get('periods',[]))+'</div>'
+    panels += '<div id="titles" class="rd-panel">'+titles_panel(data.get('finals',[]),toban,venues)+'</div>'
     panels += '<div id="exhibition" class="rd-panel">' + section('展示タイム順位別の成績',stats_table(w['exhibition'],lambda k:k+'位'), '6艇の展示タイムが揃ったレースだけ。最速を1位とし、同タイムは同順位（1位・1位・3位）。展示順位による因果効果ではありません。') + '</div>'
     years = sorted(data['years'], reverse=True)
     filters = '<div class="rd-filters"><label>年<select id="rd-year"><option value="">すべて</option>' + ''.join(f'<option>{y}</option>' for y in years) + '</select></label><label>場<select id="rd-venue"><option value="">全24場</option>' + ''.join(f'<option value="{j}">{esc(v["name"])}</option>' for j,v in sorted(venues.items())) + '</select></label><label>コース<select id="rd-course"><option value="">すべて</option>'+''.join(f'<option value="{c}">{c}コース</option>' for c in range(1,7))+'</select></label></div>'
     history = filters + '<p class="sub" id="rd-history-count" aria-live="polite">全期間の保存結果。最新30件を表示しています。</p>' + '<div id="rd-history-table">' + history_table(data['rows'][:30], venues, slugs, page.u('')) + '</div><div class="rd-pagination"><button id="rd-prev" type="button" hidden>← 前へ</button><span id="rd-page"></span><button id="rd-next" type="button" hidden>次へ →</button></div><noscript>JavaScriptを有効にすると、全件の絞り込みとページ送りを利用できます。</noscript>'
     panels += '<div id="history" class="rd-panel">'+section('全出走結果（保存分）',history,'全出走結果は期間ボタンの対象外です。決まり手はレースの勝者のもの。号機の「—」は未保存で、0号機ではありません。古い結果は場公式結果で確認してください。')+'</div>'
-    notes = section('データの範囲・集計方法', f'<p>収録範囲は{date(meta["from"])}〜{date(meta["through"])}。この選手の生涯通算成績ではありません。未取得のレースがある場合があります。</p><p>1着率・2連対率・3連対率は、進入コースが判明した出走を分母に計算します。2連対は1・2着、3連対は1〜3着です。欠場（K0）・出遅れ返還（L0）は除外し、F・失格等は含めます。ST平均はF・Lと未取得値を除外し、括弧内に有効件数を示します。F/Lは記録上の発生回数で、現在の未消化本数ではありません。</p><p>勝者の決まり手から全攻め試行・ツケマイ・意図は判定できません。公式の生涯記録、優勝・SG履歴、適用期別の詳細は未収録です。</p>', '出典：BOAT RACE公式の競走成績・期別成績。更新処理で保存履歴を再集計します。', fold=True)
+    notes = section('データの範囲・集計方法', f'<p>収録範囲は{date(meta["from"])}〜{date(meta["through"])}。この選手の生涯通算成績ではありません。未取得のレースがある場合があります。</p><p>1着率・2連対率・3連対率は、進入コースが判明した出走を分母に計算します。2連対は1・2着、3連対は1〜3着です。欠場（K0）・出遅れ返還（L0）は除外し、F・失格等は含めます。ST平均はF・Lと未取得値を除外し、括弧内に有効件数を示します。F/Lは記録上の発生回数で、現在の未消化本数ではありません。</p><p>公式期別成績と保存レースの集計は対象期間・算定規則が異なります。勝者の決まり手から全攻め試行・ツケマイ・意図は判定できません。<a href="{page.u("database/coverage.html")}">収録状況・未確認項目</a>を確認してください。</p>', '出典：BOAT RACE公式の競走成績・期別成績。日次で保存履歴を再集計します。', fold=True)
     payload = {**data, "venues":{j:v['name'] for j,v in venues.items()},"slugs":slugs,"root":page.u('')}
     encoded = json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
     return head+panels+extras+notes+f'<script id="rd-data" type="application/json">{encoded}</script><script src="{page.u("racer.js")}" defer></script>'
