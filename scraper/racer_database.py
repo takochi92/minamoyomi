@@ -8,6 +8,7 @@ from __future__ import annotations
 import gzip
 import html
 import json
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import lru_cache
@@ -122,7 +123,17 @@ def rate(n, d):
 
 
 def table(headers, rows):
-    return '<div class="tbl-wrap"><table class="rd-table"><thead><tr>' + ''.join(f'<th>{html.escape(h)}</th>' for h in headers) + '</tr></thead><tbody>' + (''.join(rows) or f'<tr><td colspan="{len(headers)}">該当する記録はありません</td></tr>') + '</tbody></table></div>'
+    def labeled(row):
+        column = 0
+        def cell(match):
+            nonlocal column
+            label = headers[column] if column < len(headers) else ''
+            lead = ' data-rd-lead="true"' if column == 0 else ''
+            column += 1
+            return f'<{match[1]}{match[2]} data-label="{html.escape(label, quote=True)}"{lead}>{match[3]}</{match[1]}>'
+        return re.sub(r'<(td|th)([^>]*)>(.*?)</\1>', cell, row, flags=re.S)
+    kind = ' data-rd-kind="stats"' if len(headers) == 7 and headers[2] == '1着率' else ''
+    return '<div class="tbl-wrap rd-table-wrap"><table class="rd-table"'+kind+'><thead><tr>' + ''.join(f'<th scope="col">{html.escape(h)}</th>' for h in headers) + '</tr></thead><tbody>' + (''.join(labeled(row) for row in rows) or f'<tr><td colspan="{len(headers)}">該当する記録はありません</td></tr>') + '</tbody></table></div>'
 
 
 def stats_row(label, m):
@@ -133,8 +144,11 @@ def stats_row(label, m):
         f'{m["st"]:.2f} ({m["st_n"]})' if m["st"] is not None else '—', f'{m["f"]}/{m["l"]}')) + '</tr>'
 
 
-def section(title, content, note=""):
-    return f'<section class="panel rd-section"><h2>{html.escape(title)}</h2>{content}' + (f'<p class="sub">{html.escape(note)}</p>' if note else '') + '</section>'
+def section(title, content, note="", fold=False):
+    note_html = f'<details class="rd-help"><summary>集計条件を確認</summary><p class="sub">{html.escape(note)}</p></details>' if note else ''
+    if fold:
+        return f'<details class="panel rd-methods"><summary>{html.escape(title)}</summary>{content}{note_html}</details>'
+    return f'<section class="panel rd-section"><h2>{html.escape(title)}</h2>{content}{note_html}</section>'
 
 
 def render(toban, info, data, meta, page, venues, slugs, today_html="", extras=""):
@@ -167,7 +181,7 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
     filters = '<div class="rd-filters"><label>年<select id="rd-year"><option value="">すべて</option>' + ''.join(f'<option>{y}</option>' for y in years) + '</select></label><label>場<select id="rd-venue"><option value="">全24場</option>' + ''.join(f'<option value="{j}">{esc(v["name"])}</option>' for j,v in sorted(venues.items())) + '</select></label><label>コース<select id="rd-course"><option value="">すべて</option>'+''.join(f'<option value="{c}">{c}コース</option>' for c in range(1,7))+'</select></label></div>'
     history = filters + '<p class="sub" id="rd-history-count" aria-live="polite">全期間の保存結果。最新30件を表示しています。</p>' + '<div id="rd-history-table">' + history_table(data['rows'][:30], venues, slugs, page.u('')) + '</div><div class="rd-pagination"><button id="rd-prev" type="button" hidden>← 前へ</button><span id="rd-page"></span><button id="rd-next" type="button" hidden>次へ →</button></div><noscript>JavaScriptを有効にすると、全件の絞り込みとページ送りを利用できます。</noscript>'
     panels += '<div id="history" class="rd-panel">'+section('全出走結果（保存分）',history,'全出走結果は期間ボタンの対象外です。決まり手はレースの勝者のもの。号機の「—」は未保存で、0号機ではありません。古い結果は場公式結果で確認してください。')+'</div>'
-    notes = section('データの範囲・集計方法', f'<p>収録範囲は{date(meta["from"])}〜{date(meta["through"])}。この選手の生涯通算成績ではありません。未取得のレースがある場合があります。</p><p>1・2・3連対率は、進入コースが判明した出走を分母に計算します。欠場（K0）・出遅れ返還（L0）は除外し、F・失格等は含めます。ST平均はF・Lと未取得値を除外し、括弧内に有効件数を示します。F/Lは記録上の発生回数で、現在の未消化本数ではありません。</p><p>勝者の決まり手から全攻め試行・ツケマイ・意図は判定できません。公式の生涯記録、優勝・SG履歴、適用期別の詳細は未収録です。</p>', '出典：BOAT RACE公式の競走成績・期別成績。更新処理で保存履歴を再集計します。')
+    notes = section('データの範囲・集計方法', f'<p>収録範囲は{date(meta["from"])}〜{date(meta["through"])}。この選手の生涯通算成績ではありません。未取得のレースがある場合があります。</p><p>1着率・2連対率・3連対率は、進入コースが判明した出走を分母に計算します。2連対は1・2着、3連対は1〜3着です。欠場（K0）・出遅れ返還（L0）は除外し、F・失格等は含めます。ST平均はF・Lと未取得値を除外し、括弧内に有効件数を示します。F/Lは記録上の発生回数で、現在の未消化本数ではありません。</p><p>勝者の決まり手から全攻め試行・ツケマイ・意図は判定できません。公式の生涯記録、優勝・SG履歴、適用期別の詳細は未収録です。</p>', '出典：BOAT RACE公式の競走成績・期別成績。更新処理で保存履歴を再集計します。', fold=True)
     payload = {**data, "venues":{j:v['name'] for j,v in venues.items()},"slugs":slugs,"root":page.u('')}
     encoded = json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
     return head+panels+extras+notes+f'<script id="rd-data" type="application/json">{encoded}</script><script src="{page.u("racer.js")}" defer></script>'
@@ -180,8 +194,17 @@ def stats_table(groups, label):
 def overview_detail(w):
     m = w['total']
     decisions = ''.join(f'<div><span>{k}</span><b>{v}勝</b><small>{rate(v,m["n"])} / 全{m["n"]}走</small></div>' for k,v in m['kim'].items())
-    losses = table(('勝った相手・決まり手','回数','イン全出走比'), [f'<tr><th>{html.escape(k)}</th><td>{v}</td><td>{rate(v,w["inside_n"])}</td></tr>' for k,v in w['losses'].items()])
-    return '<h3>1着の決まり手</h3><div class="rd-decisions">'+decisions+'</div><h3>1コースで負けた相手</h3>'+losses+f'<p class="sub">分母は1コース全{w["inside_n"]}走。勝者を確認できたレースの結果です。</p>'
+    losses = []
+    for key, count in w['losses'].items():
+        course, _, decision = key.partition('コース・')
+        action = {'差し':'差して勝利', 'まくり':'まくって勝利', 'まくり差し':'まくり差して勝利'}.get(decision, f'「{decision}」で勝利')
+        label = f'{course}コースが{action}'
+        badge = f'<span class="bt bt{html.escape(course)}">{html.escape(course)}</span>' if course in '23456' and len(course) == 1 else ''
+        losses.append(f'<div class="rd-loss-row">{badge}<div><strong>{html.escape(label)}</strong><small>1コース{w["inside_n"]}走中、{count}回</small></div><b>{rate(count,w["inside_n"])}</b></div>')
+    shown = '<div class="rd-loss-list">'+''.join(losses[:3])+'</div>' if losses else '<p class="sub">勝者を確認できた負けレースはありません。</p>'
+    if len(losses) > 3:
+        shown += f'<details class="rd-more"><summary>ほか{len(losses)-3}パターンを見る</summary><div class="rd-loss-list">'+''.join(losses[3:])+'</div></details>'
+    return '<h3>1着になったときの勝ち方</h3><div class="rd-decisions">'+decisions+'</div><h3>1コースで負けたレース</h3><p class="sub">相手のコースと勝ち方を、多かった順に表示します。</p>'+shown+f'<p class="sub">割合は1コース全{w["inside_n"]}走に対するもの。事故等も含む結果で、負けた原因の断定ではありません。</p>'
 
 
 def course_detail(w):
@@ -203,4 +226,4 @@ def history_table(rows, venues, slugs, root):
         label = html.escape(venues.get(r[1],{}).get('name',r[1]))+f' {r[2]}R'
         st = (str(r[7])+f'{r[6]/100:.2f}') if r[6] is not None else '—'
         result.append('<tr>'+''.join(f'<td>{x}</td>' for x in (date(r[0]),label,r[3],r[4] or '—',html.escape(str(r[5])),st,f'{r[8]/100:.2f}' if r[8] else '—',r[9] if r[9] is not None else '—',r[10] if r[10] is not None else '—',html.escape(r[11] or '—')) )+'</tr>')
-    return table(('日付','場・R','艇番','進入','着','ST','展示','機','艇','勝者の決まり手'),result)
+    return table(('日付','場・R','艇番','進入コース','着順','ST','展示タイム','モーター','ボート','勝者の決まり手'),result)

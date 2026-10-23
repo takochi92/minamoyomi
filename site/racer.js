@@ -10,7 +10,9 @@
   var date = function (v) { return v ? v.slice(0,4)+'/'+v.slice(4,6)+'/'+v.slice(6,8) : '未保存'; };
   var labels = {'365':'直近1年','730':'直近2年','all':'保存全期間'};
   function table(headers, rows) {
-    return '<div class="tbl-wrap"><table class="rd-table"><thead><tr>'+headers.map(function (h) {return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+(rows.join('')||'<tr><td colspan="'+headers.length+'">該当する記録はありません</td></tr>')+'</tbody></table></div>';
+    rows=rows.map(function(row){var column=0;return row.replace(/<(td|th)([^>]*)>([\s\S]*?)<\/\1>/g,function(all,tag,attrs,content){var label=headers[column]||'',lead=column===0?' data-rd-lead="true"':'';column++;return '<'+tag+attrs+' data-label="'+esc(label)+'"'+lead+'>'+content+'</'+tag+'>';});});
+    var kind=headers.length===7&&headers[2]==='1着率'?' data-rd-kind="stats"':'';
+    return '<div class="tbl-wrap rd-table-wrap"><table class="rd-table"'+kind+'><thead><tr>'+headers.map(function (h) {return '<th scope="col">'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+(rows.join('')||'<tr><td colspan="'+headers.length+'">該当する記録はありません</td></tr>')+'</tbody></table></div>';
   }
   function stats(groups,label) {
     return table(['区分','出走','1着率','2連対率','3連対率','平均ST (件)','F/L'],Object.keys(groups).sort().map(function(k){
@@ -18,11 +20,14 @@
       return '<tr><th>'+esc(label(k))+(n>0&&n<30?'<br><small>少数例</small>':'')+'</th>'+[n,pc(p[0],n),pc(p[0]+p[1],n),pc(p[0]+p[1]+p[2],n),m.st==null?'—':m.st.toFixed(2)+' ('+m.st_n+')',m.f+'/'+m.l].map(function(v){return '<td>'+esc(v)+'</td>';}).join('')+'</tr>';
     }));
   }
-  function section(title,content,note) {return '<section class="panel rd-section"><h2>'+esc(title)+'</h2>'+content+(note?'<p class="sub">'+esc(note)+'</p>':'')+'</section>';}
+  function section(title,content,note) {return '<section class="panel rd-section"><h2>'+esc(title)+'</h2>'+content+(note?'<details class="rd-help"><summary>集計条件を確認</summary><p class="sub">'+esc(note)+'</p></details>':'')+'</section>';}
   function overview(w) {
     var m=w.total,p=m.places,n=m.n;
     $('rd-summary').innerHTML=[['出走数',n.toLocaleString('ja-JP'),'欠場・出遅れ返還を除く'],['1着率',pc(p[0],n),p[0]+'勝 / '+n+'走'],['2連対率',pc(p[0]+p[1],n),(p[0]+p[1])+'回 / '+n+'走'],['3連対率',pc(p[0]+p[1]+p[2],n),(p[0]+p[1]+p[2])+'回 / '+n+'走']].map(function(x){return '<div><span>'+x[0]+'</span><strong>'+x[1]+'</strong><small>'+x[2]+'</small></div>';}).join('');
-    $('rd-overview-detail').innerHTML='<h3>1着の決まり手</h3><div class="rd-decisions">'+Object.keys(m.kim).map(function(k){return '<div><span>'+esc(k)+'</span><b>'+m.kim[k]+'勝</b><small>'+pc(m.kim[k],n)+' / 全'+n+'走</small></div>';}).join('')+'</div><h3>1コースで負けた相手</h3>'+table(['勝った相手・決まり手','回数','イン全出走比'],Object.keys(w.losses).map(function(k){return '<tr><th>'+esc(k)+'</th><td>'+w.losses[k]+'</td><td>'+pc(w.losses[k],w.inside_n)+'</td></tr>';}))+'<p class="sub">分母は1コース全'+w.inside_n+'走。勝者を確認できたレースの結果です。</p>';
+    var losses=Object.keys(w.losses).map(function(k){var parts=k.split('コース・'),c=parts[0],decision=parts[1]||'決まり手不明',action={'差し':'差して勝利','まくり':'まくって勝利','まくり差し':'まくり差して勝利'}[decision]||'「'+decision+'」で勝利';return '<div class="rd-loss-row">'+(/^[2-6]$/.test(c)?'<span class="bt bt'+c+'">'+c+'</span>':'')+'<div><strong>'+esc(c+'コースが'+action)+'</strong><small>1コース'+w.inside_n+'走中、'+w.losses[k]+'回</small></div><b>'+pc(w.losses[k],w.inside_n)+'</b></div>';});
+    var lossHtml=losses.length?'<div class="rd-loss-list">'+losses.slice(0,3).join('')+'</div>':'<p class="sub">勝者を確認できた負けレースはありません。</p>';
+    if(losses.length>3)lossHtml+='<details class="rd-more"><summary>ほか'+(losses.length-3)+'パターンを見る</summary><div class="rd-loss-list">'+losses.slice(3).join('')+'</div></details>';
+    $('rd-overview-detail').innerHTML='<h3>1着になったときの勝ち方</h3><div class="rd-decisions">'+Object.keys(m.kim).map(function(k){return '<div><span>'+esc(k)+'</span><b>'+m.kim[k]+'勝</b><small>'+pc(m.kim[k],n)+' / 全'+n+'走</small></div>';}).join('')+'</div><h3>1コースで負けたレース</h3><p class="sub">相手のコースと勝ち方を、多かった順に表示します。</p>'+lossHtml+'<p class="sub">割合は1コース全'+w.inside_n+'走に対するもの。事故等も含む結果で、負けた原因の断定ではありません。</p>';
   }
   function courses(w) {
     var bars='<p class="rd-legend"><span>● 1着</span><span>● 2着</span><span>● 3着</span><small>残りは4着以下・事故等</small></p>';
@@ -61,7 +66,7 @@
     var pages=Math.max(1,Math.ceil(rows.length/size));pageNo=Math.max(0,Math.min(pageNo,pages-1));
     var visible=rows.slice(pageNo*size,(pageNo+1)*size);
     $('rd-history-count').textContent='該当 '+rows.length.toLocaleString('ja-JP')+'件 / 全'+data.rows.length.toLocaleString('ja-JP')+'件（保存全期間）';
-    $('rd-history-table').innerHTML=table(['日付','場・R','艇番','進入','着','ST','展示','機','艇','勝者の決まり手'],visible.map(function(r){return '<tr>'+[date(r[0]),(data.venues[r[1]]||r[1])+' '+r[2]+'R',r[3],r[4],r[5],r[6]==null?'—':r[7]+(r[6]/100).toFixed(2),r[8]?(r[8]/100).toFixed(2):'—',r[9],r[10],r[11]||'—'].map(function(v){return '<td>'+esc(v)+'</td>';}).join('')+'</tr>';}));
+    $('rd-history-table').innerHTML=table(['日付','場・R','艇番','進入コース','着順','ST','展示タイム','モーター','ボート','勝者の決まり手'],visible.map(function(r){return '<tr>'+[date(r[0]),(data.venues[r[1]]||r[1])+' '+r[2]+'R',r[3],r[4],r[5],r[6]==null?'—':r[7]+(r[6]/100).toFixed(2),r[8]?(r[8]/100).toFixed(2):'—',r[9],r[10],r[11]||'—'].map(function(v){return '<td>'+esc(v)+'</td>';}).join('')+'</tr>';}));
     $('rd-page').textContent=(pageNo+1)+' / '+pages;$('rd-prev').hidden=false;$('rd-next').hidden=false;$('rd-prev').disabled=pageNo===0;$('rd-next').disabled=pageNo>=pages-1;
   }
   ['rd-year','rd-venue','rd-course'].forEach(function(id){$(id).addEventListener('change',function(){pageNo=0;historyRows();});});
