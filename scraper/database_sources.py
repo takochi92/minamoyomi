@@ -241,7 +241,7 @@ def main():
     if a.periods:download_periods()
     if a.start:
         end=a.end or (datetime.now(JST)-timedelta(days=1)).strftime('%Y%m%d')
-        with ThreadPoolExecutor(max_workers=max(1,min(a.workers,3))) as pool:
+        with ThreadPoolExecutor(max_workers=max(1,min(a.workers,8))) as pool:
             list(pool.map(lambda item:archive_month(item,a.refresh),month_dates(a.start,end).items()))
     if a.backfill_months:
         end=(datetime.now(JST)-timedelta(days=1)).strftime('%Y%m%d')
@@ -250,6 +250,6 @@ def main():
             audit=read_json(BASE/'sources'/(ym+'.json.gz'),{})
             if any(needs_update(d,audit.get(d)) for d in days):pending.append((ym,days))
             if len(pending)>=a.backfill_months:break
-        with ThreadPoolExecutor(max_workers=max(1,min(a.workers,3))) as pool:list(pool.map(archive_month,pending))
+        with ThreadPoolExecutor(max_workers=max(1,min(a.workers,8))) as pool:list(pool.map(archive_month,pending))
 
 if __name__=='__main__':main()

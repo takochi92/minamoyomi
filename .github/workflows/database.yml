@@ -49,11 +49,11 @@ jobs:
           start=os.environ.get('INPUT_START') or (now-timedelta(days=3)).strftime('%Y%m%d')
           end=os.environ.get('INPUT_END') or (now-timedelta(days=1)).strftime('%Y%m%d')
           datetime.strptime(start,'%Y%m%d');datetime.strptime(end,'%Y%m%d')
-          command=[sys.executable,'-m','scraper.database_sources','--periods','--start',start,'--end',end,'--workers','2']
+          command=[sys.executable,'-m','scraper.database_sources','--periods','--start',start,'--end',end,'--workers','8']
           if not os.environ.get('INPUT_START'):command.append('--refresh')
           subprocess.run(command,check=True)
           if not os.environ.get('INPUT_START'):
-              subprocess.run([sys.executable,'-m','scraper.database_sources','--backfill-months','24','--workers','2'],check=True)
+              subprocess.run([sys.executable,'-m','scraper.database_sources','--backfill-months','24','--workers','8'],check=True)
           PY
       - name: 全選手の公開データを集計
         run: python -m scraper.database_build
