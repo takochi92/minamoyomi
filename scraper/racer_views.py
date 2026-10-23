@@ -65,6 +65,14 @@ def overview_detail(w):
     return '<h3>1コースの結果</h3>'+donut(parts,w['inside_n'])+'<h3>負けた相手と勝ち方</h3>'+loss_matrix(w)+f'<p class="rv-caption">本番の進入コース別。数値は回数。対象：1コース{w["inside_n"]}走。</p><h3>1着の決まり手</h3>'+bars(items,wins)+f'<p class="rv-caption">決まり手を確認できた1着{wins}回の内訳。</p>'
 
 
+def attack_rates(w):
+    rows=[]
+    for c in range(1,7):
+        m=w['course'].get(str(c),metric([]));n=m['n']
+        rows.append(f'<tr><th>{c}コース<small>{n}走</small></th>'+''.join('<td'+heat(m['kim'].get(k,0),n)+'><b>'+rate(m['kim'].get(k,0),n)+'</b><small>'+str(m['kim'].get(k,0))+'勝</small></td>' for k in ('差し','まくり','まくり差し'))+'</tr>')
+    return matrix(('コース','差し','まくり','まくり差し'),rows)
+
+
 def course_detail(w):
     wins=[]
     for c in range(1,7):
@@ -76,7 +84,7 @@ def course_detail(w):
     for c,m in sorted(w['remain'].items()):
         n=m['n'];p=m['places']
         rows.append(f'<tr><th>{esc(c)}コース<small>{n}走</small></th><td>{rate(p[1],n)}</td><td>{rate(p[2],n)}</td><td>{rate(sum(p[1:3]),n)}</td></tr>')
-    return section('コース別成績',stats_table(w['course'],lambda c:c+'コース'),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+''.join(wins)+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('艇番別成績',stats_table(w['frame'],lambda c:c+'号艇'))+section('1コースが逃げたときの残り方',matrix(('コース','2着','3着','2・3着'),rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。')
+    return section('コース別成績',stats_table(w['course'],lambda c:c+'コース'),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+''.join(wins)+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('差し・まくり・まくり差しでの1着率',attack_rates(w),'各コースの全出走が分母です。攻めた試行に対する成功率ではありません。勝者の決まり手を本人の1着だけに集計しています。')+section('艇番別成績',stats_table(w['frame'],lambda c:c+'号艇'))+section('1コースが逃げたときの残り方',matrix(('コース','2着','3着','2・3着'),rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。')
 
 
 def history_table(rows, venues):

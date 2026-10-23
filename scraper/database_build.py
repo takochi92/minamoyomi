@@ -114,6 +114,16 @@ def event_summary(db,as_of):
 def compile_database(as_of=None,cache=None):
     as_of=as_of or datetime.now(JST).strftime('%Y%m%d')
     terms=periods();roster,by_player=roster_catalog(terms)
+    from .championships import records as official_records
+    championships=official_records();official_finals=defaultdict(list)
+    for record in sorted(championships,key=lambda r:r['date']):
+        if record['date']>=as_of:continue
+        for division,entries in enumerate(record['divisions']):
+            for entry in entries:
+                t=entry['player']
+                official_finals[t].append({k:record[k] for k in ('category','number','date','name','group','edition','venue','source')} | {'division':division,'place':entry['place']})
+                if t not in roster:
+                    roster[t]={'name':entry['name'],'branch':entry['fields'].get('支部',''),'class':'','historical':True,'period':'公式大会記録 '+rd.date(record['date'])}
     db=open_cache(cache or ROOT/'.cache'/'public-database.sqlite')
     ingest(db,[*sorted((ROOT/'history').glob('*.jsonl.gz')),*sorted((BASE/'races').glob('*.jsonl.gz'))])
     bounds=db.execute('SELECT min(day),max(day),count(*) FROM races WHERE day<?',(as_of,)).fetchone()
@@ -135,6 +145,7 @@ def compile_database(as_of=None,cache=None):
         data=rd.profile(rows,as_of)
         data.update(periods=by_player[t],history_url=f'data/players/{t}.json',history_count=len(rows))
         data['finals']=finals[t]
+        data['official_finals']=sorted(official_finals[t],key=lambda r:r['date'],reverse=True)
         for c,m in data['windows']['90']['course'].items():
             if m['n']>=15:rankings.append({'player':t,'course':c,**m})
         data['rows']=rows[:30]

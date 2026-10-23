@@ -50,14 +50,15 @@
     $('rd-overview-detail').innerHTML='<h3>1コースの結果</h3>'+donut(parts(w),w.inside_n)+'<h3>負けた相手と勝ち方</h3>'+losses(w)+'<p class="rv-caption">本番の進入コース別。数値は回数。対象：1コース'+w.inside_n+'走。</p><h3>1着の決まり手</h3>'+bars(items,wins)+'<p class="rv-caption">決まり手を確認できた1着'+wins+'回の内訳。</p>';
   }
   function courses(w){
-    var methods='';
+    var methods='',attack=[];
     for(var c=1;c<=6;c++){
       var m=w.course[c]||{n:0,kim:{}},count=0;
       methods+='<div class="rv-method-row"><span class="bt bt'+c+'">'+c+'</span><div class="rv-track rv-stack">'+kim.map(function(k,i){var v=m.kim[k]||0;count+=v;return '<i style="width:'+(m.n?100*v/m.n:0)+'%;background:'+colors[i]+'" title="'+k+' '+v+'勝"></i>';}).join('')+'</div><b>'+count+'<small>勝</small></b></div>';
+      attack.push('<tr><th>'+c+'コース<small>'+m.n+'走</small></th>'+['差し','まくり','まくり差し'].map(function(k){var v=m.kim[k]||0;return '<td'+heat(v,m.n)+'><b>'+pc(v,m.n)+'</b><small>'+v+'勝</small></td>';}).join('')+'</tr>');
     }
     var legend='<p class="rv-swatches">'+kim.map(function(k,i){return '<span><i style="background:'+colors[i]+'"></i>'+k+'</span>';}).join('')+'</p>';
     var rows=Object.keys(w.remain).sort().map(function(c){var m=w.remain[c],n=m.n,p=m.places;return '<tr><th>'+esc(c)+'コース<small>'+n+'走</small></th><td>'+pc(p[1],n)+'</td><td>'+pc(p[2],n)+'</td><td>'+pc(p[1]+p[2],n)+'</td></tr>';});
-    $('course').innerHTML=section('コース別成績',stats(w.course,function(c){return c+'コース';}),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+methods+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('艇番別成績',stats(w.frame,function(c){return c+'号艇';}))+section('1コースが逃げたときの残り方',matrix(['コース','2着','3着','2・3着'],rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。');
+    $('course').innerHTML=section('コース別成績',stats(w.course,function(c){return c+'コース';}),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+methods+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('差し・まくり・まくり差しでの1着率',matrix(['コース','差し','まくり','まくり差し'],attack),'各コースの全出走が分母です。攻めた試行に対する成功率ではありません。勝者の決まり手を本人の1着だけに集計しています。')+section('艇番別成績',stats(w.frame,function(c){return c+'号艇';}))+section('1コースが逃げたときの残り方',matrix(['コース','2着','3着','2・3着'],rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。');
   }
   function changeWindow(key){
     var w=data.windows[key],labels={'90':'直近3か月','365':'直近1年','730':'直近2年','all':'保存全期間'};

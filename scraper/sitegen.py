@@ -1825,6 +1825,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     def racer_pages(self):
         from . import racer_database as rd
         database = rd.load(self.now.strftime("%Y%m%d"))
+        from .championships import player_index
+        title_roster,title_index=player_index(self.now.strftime('%Y%m%d'))
         roster = load_json(Path(__file__).parent / "racers.json", {}) or {}
         if database.get('compiled'):
             self.racers = {**database['roster'], **self.racers}
@@ -1832,6 +1834,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 saved=database['roster'].get(t,{})
                 for key in ('historical','period'):
                     if key in saved:info[key]=saved[key]
+            self.racers={**title_roster,**self.racers}
         meta = {k: database[k] for k in ("from", "through", "as_of", "races")}
         meta["roster_source"] = roster.get("source", "適用期未確認")
         today = self.today_entries()
@@ -1843,6 +1846,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             if t not in profiles:
                 profiles[t] = rd.profile(database["players"].get(t, []), database["as_of"])
             profile = profiles[t]
+            profile['official_finals']=title_index[t]
             tod = "".join(f'<li><a href="{page.u(f"race/{dd}/{SLUG[j]}-{rn}.html")}">{e(VENUES[j]["name"])} {rn}R</a>（{f}号艇）</li>' for dd, j, rn, f in today.get(t, []))
             ps = self._pairs.get(t, [])
             sm = self.st_summary(ps)

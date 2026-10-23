@@ -168,12 +168,13 @@ def section(title, content, note="", fold=False):
 def render(toban, info, data, meta, page, venues, slugs, today_html="", extras=""):
     """Server-render a usable 1-year overview; JS adds windows, tabs and pagination."""
     esc = html.escape
+    class_label=esc(info['class'])+'級' if info.get('class') else '級別未収録'
     w = data["windows"]["365"]
     m = w["total"]
     n, p = m["n"], m["places"]
     head = f'''<header class="rd-hero"><a class="rd-back" href="index.html">← 選手・モーター検索</a>
 <div class="rd-heading"><div><span class="eyebrow">RACER DATABASE / 登録番号 {esc(toban)}</span><h1>{esc(info['name'])}<button type="button" class="fav-btn" data-toban="{esc(toban)}" data-name="{esc(info['name'])}" aria-label="お気に入り" aria-pressed="false" hidden>☆</button></h1>
-<p>{esc(info.get('branch') or '所属未確認')} · {esc(info.get('class',''))}級{(' · '+str(info['ki'])+'期') if info.get('ki') else ''} · <a href="{page.u('motor.html')}">モーター相場を見る →</a></p><p class="sub">{('過去の公式期別掲載選手（現在の登録状況は未確認） · ' if info.get('historical') else '')}{esc(info.get('period',''))}</p><a href="{page.u('database/index.html')}">選手データバンク →</a></div><div class="rd-official"><small>公式期別勝率</small><strong>{format(info['win'], '.2f') if info.get('win') is not None else '—'}</strong><small>{esc(info.get('period') or meta.get('roster_source', '適用期未確認'))}</small></div></div>
+<p>{esc(info.get('branch') or '所属未確認')} · {class_label}{(' · '+str(info['ki'])+'期') if info.get('ki') else ''} · <a href="{page.u('motor.html')}">モーター相場を見る →</a></p><p class="sub">{('過去の公式記録に掲載（現在の登録状況は未確認） · ' if info.get('historical') else '')}{esc(info.get('period',''))}</p><a href="{page.u('database/index.html')}">選手データバンク →</a></div><div class="rd-official"><small>公式期別勝率</small><strong>{format(info['win'], '.2f') if info.get('win') is not None else '—'}</strong><small>{esc(info.get('period') or meta.get('roster_source', '適用期未確認'))}</small></div></div>
 <p class="sub">公式期別勝率は着順点の平均です。下の1着率・連対率は艇ろぐの保存レースから集計した実測値です。</p></header>
 <section class="rd-controls" aria-label="成績の表示期間"><div class="rd-period">{''.join(f'<button type="button" data-rd-window="{k}" aria-pressed="{str(k == "365").lower()}" class="{"on" if k == "365" else ""}">{label}</button>' for k,label in WINDOWS)}</div>
 <p class="sub" id="rd-period-label">直近1年 · {date(w['from'])}〜{date(w['through'])}の保存分</p>
@@ -192,9 +193,9 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
     from .database_views import matrix
     year_places=''.join('<details class="db-term"><summary>'+esc(y)+'年 · '+str(m['n'])+'走の着順分布</summary>'+matrix(['着順','回数','割合'],[[str(i+1)+'着',str(n),rate(n,m['n'])] for i,n in enumerate(m['places'])]+[['その他',str(m['other']),rate(m['other'],m['n'])]])+'</details>' for y,m in sorted(data['years'].items(),reverse=True))
     panels += '<div id="year" class="rd-panel">' + section('年別成績',stats_table(data['years'],lambda y:y+'年')+year_places, '暦年ごとの保存分。最初と最後の年は年間の全期間が揃っていない場合があります。期間ボタンの対象外です。') + '</div>'
-    from .database_views import period_panel, titles_panel
-    panels += '<div id="period" class="rd-panel">'+period_panel(data.get('periods',[]))+'</div>'
-    panels += '<div id="titles" class="rd-panel">'+titles_panel(data.get('finals',[]),toban,venues)+'</div>'
+    from .database_views import period_panel, titles_panel, official_finals_panel
+    panels += '<div id="period" class="rd-panel">'+period_panel(data.get('periods',[]),meta['as_of'])+'</div>'
+    panels += '<div id="titles" class="rd-panel">'+official_finals_panel(data.get('official_finals',[]))+titles_panel(data.get('finals',[]),toban,venues)+'</div>'
     panels += '<div id="exhibition" class="rd-panel">' + section('展示タイム順位別の成績',stats_table(w['exhibition'],lambda k:k+'位'), '6艇の展示タイムが揃ったレースだけ。最速を1位とし、同タイムは同順位（1位・1位・3位）。展示順位による因果効果ではありません。') + '</div>'
     years = sorted(data['years'], reverse=True)
     filters = '<div class="rd-filters"><label>年<select id="rd-year"><option value="">すべて</option>' + ''.join(f'<option>{y}</option>' for y in years) + '</select></label><label>場<select id="rd-venue"><option value="">全24場</option>' + ''.join(f'<option value="{j}">{esc(v["name"])}</option>' for j,v in sorted(venues.items())) + '</select></label><label>コース<select id="rd-course"><option value="">すべて</option>'+''.join(f'<option value="{c}">{c}コース</option>' for c in range(1,7))+'</select></label></div>'

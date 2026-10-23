@@ -16,6 +16,7 @@ on:
       - 'scraper/database_build.py'
       - 'scraper/database_sources.py'
       - 'scraper/database_views.py'
+      - 'scraper/championships.py'
       - 'scraper/database/**'
       - 'site/search.js'
       - 'site/racer.js'
@@ -48,7 +49,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     env:
       SITE_URL: ${{ vars.SITE_URL }}
       HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}

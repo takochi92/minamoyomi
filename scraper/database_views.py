@@ -23,8 +23,17 @@ def birth_date(stats):
     except ValueError:return '未確認'
 
 
-def period_panel(terms):
+def period_panel(terms,as_of=None):
     body='<p class="sub">適用期ごとの公式公表値です。着順点による勝率と、1着になった割合は異なります。前期は1〜6月、後期は7〜12月の適用。各期の審査対象期間を併記しています。</p>'
+    if as_of and terms:
+        year=int(as_of[:4]);half=1 if int(as_of[4:6])<=6 else 2
+        upcoming=(year,2) if half==1 else (year+1,1)
+        applied=[]
+        for label,key in [('現適用',(year,half)),('次期',upcoming)]:
+            term=next((t for t in terms if (t['year'],t['half'])==key),None)
+            s=term['stats'] if term else None
+            applied.append([label+'<small>'+str(key[0])+'年'+('前期' if key[1]==1 else '後期')+'</small>',f'{s["win"]:.2f}' if s else '未公表・未収録',f'{s["top2"]:.1f}%' if s else '—',str(s['starts']) if s else '—'])
+        body+=matrix(['適用','公式勝率','2連対率','出走'],applied)
     for term in reversed(terms):
         s=term['stats'];n=s['starts']
         cards=matrix(['公式勝率','2連対率','出走','優出／優勝'],[[e(f'{s["win"]:.2f}'),e(f'{s["top2"]:.1f}%'),str(n),f'{s["finals"]}／{s["titles"]}']])
@@ -46,11 +55,19 @@ def titles_panel(events,toban,venues):
     return rd.section('保存結果から確認できた優勝・優出',matrix(['日付・場','格付','結果・開催名'],rows),'公式Kファイルで「優勝戦」を確認できたレースのみ。準優勝戦は含めません。格付の記載が確認できない開催は未確認と表示します。生涯の優勝回数やSG出場回数の一覧ではありません。公式期別の優出・優勝回数も参照してください。')
 
 
+def official_finals_panel(records):
+    rows=[]
+    for r in records:
+        url='../database/champion-'+r['category']+'-'+r['number']+'.html'
+        rows.append([rd.date(r['date'])+'<small>'+e(r['venue'])+'</small>',e(r['name'])+'<small>'+e(r['group'])+'</small>',f'<a href="{url}">'+('優勝' if r['place']=='1' else e(r['place'])+'着')+'</a>'])
+    return rd.section('公式SG・PG1・G1記録集の決勝履歴',matrix(['日付・場','大会・記録集区分','結果'],rows),'公式記録集の決勝出走表で登番を照合した記録です。大会の記録集区分は、過去の開催当時の格付と異なる場合があります。全SG出場回数とは異なり、予選のみの出場は含みません。未取得の大会を0回とは扱いません。')
+
+
 def catalog_pages(site,Page,venues):
     catalog=read_json(BASE/'catalog.json.gz')
     if not catalog:return
     from .database_build import periods
-    terms=periods();summary=read_json(BASE/'summary.json.gz',{});roster=catalog['roster']
+    terms=periods();summary=read_json(BASE/'summary.json.gz',{});roster={**catalog['roster'],**site.racers}
     vn=lambda j:venues.get(j,{}).get('name',j)
     name=lambda t:f'<a href="../racer/{e(t)}.html">{e(roster.get(t,{}).get("name",t))}</a>'
     def put(path,title,body):
@@ -62,7 +79,7 @@ def catalog_pages(site,Page,venues):
     put('index.html','選手データバンク',f'<p>選手の得意コース、過去の期別成績、場の傾向を、出走数と期間を確かめながら比較できます。</p>{stats}'+cards([
         ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
         ('branches.html','支部別','各期の所属選手と実績'),('terms.html','養成期別','同期の選手と各期の成績'),('venues.html','場別データ','コース・決まり手・配当分布'),
-        ('events.html','優勝戦・開催記録','確認できた優勝者と優出選手'),('rankings.html','コース別ランキング','直近90日・15走以上の実測1着率'),
+        ('events.html','優勝戦・開催記録','確認できた優勝者と優出選手'),('championships.html','SG・PG1・G1公式記録集','歴代優勝者・決勝出走表・節間成績'),('rankings.html','コース別ランキング','直近90日・15走以上の実測1着率'),
         ('records.html','高配当・同着・スタート事故','保存結果の記録一覧'),('../motor.html','モーター機歴','交換周期を考慮した機歴と乗り手'),
         ('equipment.html','ボート・モーター公式値','出走表に掲載された2連対・3連対率'),('coverage.html','収録範囲と更新状況','取得済み・不足・未確認を公開')]))
     put('periods.html','公式期別の一覧',rd.section('適用期と審査対象期間',matrix(['適用期','対象期間','掲載人数'],[[e(period_label(t)),rd.date(t['from'])+'<small>〜'+rd.date(t['through'])+'</small>',f'{len(t["players"]):,}人'] for t in reversed(terms)]))+'<p>各選手の「公式期別」タブで、全収録期の詳細を確認できます。次期分は公式公表後に追加します。</p>')
@@ -120,14 +137,43 @@ def catalog_pages(site,Page,venues):
                 if number is None or key in seen:continue
                 seen.add(key);equipment.append([e(vn(j))+'<small>'+kind+str(number)+'</small>',e(b.get(prefix+'_2')),e(b.get(prefix+'_3'))])
     put('equipment.html','ボート・モーターの公式出走表掲載値','<p class="sub">'+rd.date(day)+'の取得済み出走表に掲載された値（%）。当日の出走艇に限ります。交換周期不明の過去の同番号を混ぜて機力とは扱いません。乗り手補正・機歴はモーターページで確認できます。</p>'+rd.section('2連対率・3連対率',matrix(['場・番号','2連対率','3連対率'],equipment)))
+    from .championships import ROOT as CHAMPIONSHIPS, records as championship_records
+    cats=read_json(CHAMPIONSHIPS/'categories.json.gz',[])
+    detailed={(r['category'],r['number']):r for r in championship_records()}
+    put('championships.html','SG・PG1・G1公式記録集','<p>公式記録集の歴代優勝者と、取得済みの決勝出走表を掲載します。現在の公式記録集の分類で、当時の格付を推定しません。</p>'+cards([(f'title-{c["id"]}.html',c['name'],c['group']) for c in cats]))
+    for cat in cats:
+        records=read_json(CHAMPIONSHIPS/'lists'/(cat['id']+'.json.gz'),{}).get('records',[])
+        rows=[]
+        for r in records:
+            detail=detailed.get((r['category'],r['number']))
+            winner=' ／ '.join(e(w) for w in r['winners_label'])
+            if detail:
+                winner=' ／ '.join(name(x['player']) for div in detail['divisions'] for x in div if x['place']=='1') or winner
+            link=f'champion-{r["category"]}-{r["number"]}.html' if detail else r['source']
+            rows.append([rd.date(r['date'])+'<small>'+e(r['venue'])+'</small>',winner,f'<a href="{e(link)}">{e(r["edition"])} 詳細</a>'+('' if detail else '<small>公式ページ</small>')])
+            if not detail:continue
+            body=f'<p>{e(r["edition"])} · {rd.date(r["date"])} · {e(r["venue"])}</p><p class="sub">記録集区分：{e(r["group"])}。昔の大会は複数のボート種別の決勝があるため、表を分けて保存しています。</p>'
+            for i,division in enumerate(detail['divisions'],1):
+                result=[]
+                for x in division:
+                    fields=x['fields'];extra='<details><summary>節間成績・詳細</summary><dl class="db-facts">'+''.join('<div><dt>'+e(k)+'</dt><dd>'+e(v)+'</dd></div>' for k,v in fields.items())+'</dl></details>'
+                    result.append([e(x['place']),name(x['player'])+extra,e(fields.get('ST'))+'<small>'+e(fields.get('コース'))+'コース</small>'])
+                body+=rd.section('決勝出走表'+(f' {i}' if len(detail['divisions'])>1 else ''),matrix(['着','選手','ST・進入'],result))
+            body+=f'<p><a href="{e(r["source"])}">公式の原記録を確認 →</a></p><p class="sub">公式記録にも未記載・調査に基づく項目があります。「-」を0や記録なしに置き換えません。</p>'
+            put(f'champion-{r["category"]}-{r["number"]}.html',r['name']+' '+r['edition'],body)
+        listing=matrix(['決勝日・場','優勝者','大会'],rows) if records else f'<p>この分類の一覧は取得待ちです。<a href="{e(cat["source"])}">公式の記録集を見る →</a></p>'
+        put(f'title-{cat["id"]}.html',cat['name']+' 歴代記録',rd.section('公式記録集の掲載分',listing))
     audit=catalog.get('daily_files',{});pc=read_json(BASE/'period_coverage.json',{})
     coverage=rd.section('現在の保存状況',f'<p>競走結果：{rd.date(catalog["from"])}〜{rd.date(catalog["through"])} · {catalog["races"]:,}レース<br>期別ファイル：公式一覧{pc.get("listed","—")}件中{len(terms)}件保存<br>日別追加取得：{audit.get("saved",0):,}日保存・{audit.get("unavailable",0):,}日未確認<br>集計基準日：{rd.date(catalog["as_of"])}（当日分を除外）</p><p>未確認日は非開催と同一視しません。旧保存履歴と追加Kファイルの重複は日付・場・Rで統合しています。</p>')
+    championship_coverage=read_json(CHAMPIONSHIPS/'coverage.json',{})
+    listed_finals=sum(len(read_json(CHAMPIONSHIPS/'lists'/(c['id']+'.json.gz'),{}).get('records',[])) for c in cats)
+    coverage+=rd.section('公式大会記録の取得状況',f'<p>分類 {len(cats)}件 · 歴代決勝一覧 {listed_finals:,}大会 · 詳細出走表 {len(detailed):,}大会保存。取得済みの表では登番から選手ページへ結びつけています。</p>')
     coverage+=rd.section('掲載項目と限界',matrix(['項目','状況'],[
         ['選手・公式期別','取得済みの全期・全掲載選手。勝率・連対率・優出・優勝・コース別着順と事故'],
         ['年度・場・コース・枠・展示順位','保存レースを再集計。期間・分母つき。展示順位は6艇分が揃う場合のみ'],
         ['支部・養成期','各公式適用期の掲載値から分類。旧住所を支部に置換しない'],
         ['優勝戦・優出選手','Kファイルの優勝戦表記が確認できた開催。追加取得に合わせ拡大'],
-        ['SG・G1等の全出場履歴','格付を公式で確認できた分のみ。全件照合は未完了'],
+        ['SG・PG1・G1記録','公式記録集の歴代優勝者一覧と取得済み決勝出走表。予選を含む全出場履歴の全件照合は未完了'],
         ['初出走・初勝利・初優出・初優勝','デビュー以前を含む完全収録の証明がないため生涯初とは表示しない'],
         ['完全優勝・節間最高タイム','開催全日と走破タイムの照合未完了。未掲載'],
         ['モーター・ボート','現行機歴と出走表の公式率を掲載。古い同番号を交換周期を越えて合算しない'],
