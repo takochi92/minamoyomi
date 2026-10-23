@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
-from .kfile import parse_k
+from .kfile import parse_k, RE_ENTRY
 from .lzh import unlzh
 
 BASE = Path(__file__).parent / 'database'
@@ -20,6 +20,19 @@ JST = timezone(timedelta(hours=9))
 _lock = threading.Lock()
 _last_request = 0.0
 _deadline = float('inf')
+PARSER_VERSION=2
+ARCHIVE_START='19960101'
+
+
+def needs_update(day,entry,now=None):
+    if not entry:return True
+    if entry.get('parser_version',1)<PARSER_VERSION and (entry.get('status')!='saved' or day<'20030101'):return True
+    if entry.get('status')=='saved':return False
+    now=now or datetime.now(JST)
+    try:checked=datetime.fromisoformat(entry['checked_at'])
+    except (KeyError,ValueError):return True
+    wait_days=30 if entry.get('http_status')==404 or entry.get('error')=='ValueError' else 1
+    return now-checked>=timedelta(days=wait_days)
 
 
 def read_json(path, default=None):
@@ -124,13 +137,28 @@ def download_periods():
     return report
 
 
+def normalize_k(raw):
+    text=raw.decode('cp932',errors='replace')
+    # Old official files use YY/MM/DD, spaced weather, and extra blank lines.
+    # Normalize only this independent archive; never rewrite prediction input.
+    lines=[]
+    for line in text.replace('\r','').split('\n'):
+        if not line.strip():continue
+        line=re.sub(r'(第\s*\d+日\s+)(\d{2})(/\s*\d{1,2}/\s*\d{1,2})',lambda m:m[1]+str((1900 if int(m[2])>=80 else 2000)+int(m[2]))+m[3],line)
+        line=re.sub(r'(H\d{4}m)\s+(.*?)\s+風',lambda m:m[1]+' '+re.sub(r'\s+','',m[2])+' 風',line)
+        if re.match(r'^\s*\d{1,2}R.*H\d{4}m',line):
+            line=re.sub(r'(風\s+)(.*?)(\d+)m',lambda m:m[1]+(re.sub(r'\s+','',m[2]) or ('無風' if int(m[3])==0 else '不明'))+m[3]+'m',line)
+        lines.append(line)
+    return '\n'.join(lines)
+
+
 def parse_database_k(raw):
-    text=raw.decode('cp932',errors='replace');races=parse_k(text)
-    context={};jcd=None;title_next=False;title='';day=None
+    text=normalize_k(raw);races=parse_k(text)
+    context={};entry_counts={};jcd=None;title_next=False;title='';day=None;current_race=None
     for line in text.replace('\r','').split('\n'):
         m=re.match(r'^(\d{2})KBGN',line)
-        if m:jcd=m[1];title='';day=None
-        if '競走成績' in line and '＊＊＊' in line:title_next=True;continue
+        if m:jcd=m[1];title='';day=None;title_next=False;current_race=None
+        if '競走成績' in line and '***' in unicodedata.normalize('NFKC',line):title_next=True;continue
         if title_next and line.strip():title=line.strip();title_next=False
         m=re.search(r'第\s*(\d+)日\s+(\d{4})/\s*(\d{1,2})/\s*(\d{1,2})',line)
         if m:day=int(m[1])
@@ -139,15 +167,25 @@ def parse_database_k(raw):
             label=unicodedata.normalize('NFKC',title)
             label=re.sub(r'GIII','G3',label);label=re.sub(r'GII','G2',label);label=re.sub(r'GI','G1',label)
             grade=re.match(r'^(SG|PG1|G[123])(?=[^A-Za-z0-9]|$)',label)
-            context[(jcd,int(m[1]))]={'title':title,'race_name':m[2].strip(),'day':day,'grade':grade[1] if grade else None,
+            context[(jcd,int(m[1]))]={'title':title,'race_name':re.sub(r'\s+','',m[2]),'day':day,'grade':grade[1] if grade else None,
                                       'grade_source':'official_title_prefix' if grade else None}
+            current_race=(jcd,int(m[1]))
+            entry_counts[current_race]=0
+        if current_race and RE_ENTRY.match(line):entry_counts[current_race]+=1
+        decision=re.search(r'決まり手\s+([^\s]+)',line)
+        if decision and current_race in context:
+            context[current_race]['decision']=decision[1].strip()
+    expected={k for k,n in entry_counts.items() if n>=2}
+    if not expected.issubset({(r['jcd'],r['rno']) for r in races}):
+        raise ValueError('Official race sections missing after parsing')
     records=[]
     for r in races:
         ents=[]
         for e in r['entries']:
             ents.append([e['frame'],e['toban'],e['course'],round(e['st']*100) if e['st'] is not None else None,e['st_flag'],
                          e['place'] if e['place'] is not None else e['code'],round(e['exhibit_time']*100) if e['exhibit_time'] else None,None,e['motor_no'],e['boat_no'],e['name']])
-        records.append([r['date'],r['jcd'],r['rno'],r['kimarite'],r['wind_dir'],r['wind_speed'],r['wave'],int(r['fixed']),
+        info=context.get((r['jcd'],r['rno']),{})
+        records.append([r['date'],r['jcd'],r['rno'],r['kimarite'] or info.get('decision',''),r['wind_dir'],r['wind_speed'],r['wave'],int(r['fixed']),
                         r.get('trifecta'),r.get('trifecta_payout'),r.get('trifecta_ninki'),ents,context.get((r['jcd'],r['rno']),{})])
     return records
 
@@ -169,16 +207,22 @@ def archive_month(item,refresh=False):
     s=session()
     for day in sorted(days,reverse=True):
         if time.monotonic()>=_deadline:break
-        if not refresh and provenance.get(day,{}).get('status')=='saved':continue
+        old=provenance.get(day,{})
+        reparse_old=day<'20030101' and old.get('parser_version',1)<PARSER_VERSION
+        if not refresh and old.get('status')=='saved' and not reparse_old:continue
+        if not refresh and old and old.get('status')!='saved' and not needs_update(day,old):continue
         url=f'https://www1.mbrace.or.jp/od2/K/{ym}/k{day[2:]}.lzh'
         try:
             blob=fetch(s,url);values=parse_database_k(unlzh(blob))
             if not values:raise ValueError('No parsed races; not treated as a non-racing day')
+            if any(r[0]!=day for r in values):raise ValueError('Official result date does not match requested file')
+            # A fresh official day replaces its old rows, including cancellations.
+            records={k:v for k,v in records.items() if k[0]!=day}
             for r in values:records[(r[0],r[1],r[2])]=r
-            provenance[day]={'status':'saved','races':len(values),'source':url,'sha256':hashlib.sha256(blob).hexdigest()}
+            provenance[day]={'status':'saved','races':len(values),'source':url,'sha256':hashlib.sha256(blob).hexdigest(),'parser_version':PARSER_VERSION,'checked_at':datetime.now(JST).isoformat()}
         except Exception as ex:
             # A failed refresh never erases a previously verified source.
-            if provenance.get(day,{}).get('status')!='saved':provenance[day]={'status':'unavailable','error':type(ex).__name__,'source':url}
+            if provenance.get(day,{}).get('status')!='saved':provenance[day]={'status':'unavailable','error':type(ex).__name__,'source':url,'parser_version':PARSER_VERSION,'http_status':getattr(getattr(ex,'response',None),'status_code',None),'checked_at':datetime.now(JST).isoformat()}
         if int(day[-2:])%7==0:print('archive progress',ym,day,flush=True)
     dest.parent.mkdir(parents=True,exist_ok=True)
     data=''.join(json.dumps(records[k],ensure_ascii=False,separators=(',',':'))+'\n' for k in sorted(records))
@@ -202,9 +246,9 @@ def main():
     if a.backfill_months:
         end=(datetime.now(JST)-timedelta(days=1)).strftime('%Y%m%d')
         pending=[]
-        for ym,days in month_dates('20010101',end).items():
+        for ym,days in month_dates(ARCHIVE_START,end).items():
             audit=read_json(BASE/'sources'/(ym+'.json.gz'),{})
-            if any(d not in audit for d in days):pending.append((ym,days))
+            if any(needs_update(d,audit.get(d)) for d in days):pending.append((ym,days))
             if len(pending)>=a.backfill_months:break
         with ThreadPoolExecutor(max_workers=max(1,min(a.workers,3))) as pool:list(pool.map(archive_month,pending))
 

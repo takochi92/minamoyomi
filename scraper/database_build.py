@@ -4,7 +4,7 @@ The SQLite file is a disposable build cache, never a prediction input. Public
 summaries and per-player histories are gzip files committed separately.
 """
 from __future__ import annotations
-import argparse, gzip, json, re, sqlite3
+import argparse, gzip, hashlib, json, re, sqlite3
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -44,7 +44,8 @@ def open_cache(path):
 
 def ingest(db, files):
     for path in files:
-        stamp=f'{path.stat().st_mtime_ns}:{path.stat().st_size}'
+        # Git checkouts change mtimes; content hashes preserve the daily cache.
+        stamp=hashlib.sha256(path.read_bytes()).hexdigest()
         old=db.execute('SELECT stamp FROM files WHERE path=?',(str(path),)).fetchone()
         if old and old[0]==stamp:continue
         count=0;race_rows=[];entry_rows=[];keys=[]
@@ -53,11 +54,12 @@ def ingest(db, files):
         month=path.name[:6]
         candidates=db.execute('SELECT day,venue,race,payload FROM races WHERE day BETWEEN ? AND ?',(month+'01',month+'31')) if re.fullmatch(r'\d{6}',month) else db.execute('SELECT day,venue,race,payload FROM races')
         protected={(d,j,r) for d,j,r,raw in candidates if len(json.loads(raw))>12}
+        protected_days={key[0] for key in protected}
         with gzip.open(path,'rt',encoding='utf-8') as f:
             for race in map(json.loads,f):
                 # Rich K-file rows take precedence over legacy records.
                 if len(race)<13:
-                    if tuple(race[:3]) in protected:continue
+                    if race[0] in protected_days:continue
                 race_rows.append((*race[:3],json.dumps(race,ensure_ascii=False,separators=(',',':'))))
                 keys.append(race[:3])
                 index=rd.build_index([race],'99991231')
@@ -66,6 +68,10 @@ def ingest(db, files):
                     row.append(race[12] if len(race)>12 else {})
                     entry_rows.append((t,*race[:3],json.dumps(row,ensure_ascii=False,separators=(',',':'))))
                 count+=1
+        if path.parent==BASE/'races':
+            verified_days={r[0] for r in race_rows}
+            db.executemany('DELETE FROM races WHERE day=?',[(d,) for d in verified_days])
+            db.executemany('DELETE FROM entries WHERE day=?',[(d,) for d in verified_days])
         db.executemany('INSERT OR REPLACE INTO races VALUES(?,?,?,?)',race_rows)
         # Remove replaced race entries as a single indexed month operation, not
         # a full entries-table scan for every race.
@@ -103,7 +109,7 @@ def event_summary(db,as_of):
             key=j+':'+start+':'+title
             ev=events.setdefault(key,{'venue':j,'start':start,'through':r[0],'title':title,'grade':meta.get('grade'),'final':None,'races':0})
             ev['through']=r[0];ev['races']+=1
-            label=meta.get('race_name','')
+            label=re.sub(r'\s+','',meta.get('race_name',''))
             if '優勝' in label and '準' not in label:
                 ev['final']={'date':r[0],'race':r[2],'entrants':[str(x[1]) for x in ents],'winners':[str(x[1]) for x in winners]}
     return {'venues':venues,'combinations':dict(combinations),'high_payout':sorted(high,key=lambda x:x[4],reverse=True)[:200],

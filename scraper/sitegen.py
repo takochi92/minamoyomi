@@ -2522,6 +2522,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             dest.mkdir(parents=True,exist_ok=True)
             with gzip.open(source,'rb') as src, (dest/source.stem).open('wb') as target:
                 shutil.copyfileobj(src,target)
+        from .race_archive import write_assets
+        write_assets(OUT,self.now.strftime('%Y%m%d'))
         print("pages", len(self.files), "images", len(self.bins))
 
 

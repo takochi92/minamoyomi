@@ -41,7 +41,7 @@ def test_roster_union_keeps_historical_status_and_period_values():
 def test_sqlite_merge_prefers_richer_official_row_and_excludes_future(tmp_path):
     ents=[[i,str(4000+i),i,15,'',i,680+i,None,20+i,50+i,'選手'] for i in range(1,7)]
     basic=['20261023','01',12,'逃げ','北',2,1,0,'1-2-3',1200,1,ents]
-    rich=basic+[{'title':'公式開催','day':1,'race_name':'優勝戦','grade':None}]
+    rich=basic+[{'title':'公式開催','day':1,'race_name':'優 勝 戦','grade':None}]
     paths=[]
     for i,rows in enumerate(([basic],[rich],[basic])):
         p=tmp_path/f'{i}.jsonl.gz';p.write_bytes(gzip.compress(('\n'.join(json.dumps(r) for r in rows)+'\n').encode()));paths.append(p)
@@ -66,3 +66,52 @@ def test_ninety_day_window_is_separate_from_year():
     row=['20260101','01',1,1,1,1,15,'',680,20,50,'逃げ',1,1200,1]
     p=rd.profile([row],'20261024')
     assert p['windows']['90']['total']['n']==0 and p['windows']['365']['total']['n']==1
+
+
+def test_old_k_dates_weather_spacing_and_payout_decision():
+    lines=['24KBGN','＊＊＊ 競走成績 ＊＊＊','公式テスト','第 1日 97/ 1/ 1',
+           ' 1R 予 選 H1800m は れ 風 南東 4m 波 3cm',
+           ' 着 艇 登番 選手名 ﾓｰﾀｰ ﾎﾞｰﾄ 展示 進入 ｽﾀｰﾄﾀｲﾐﾝｸﾞ ﾚｰｽﾀｲﾑ','---------------',
+           ' 01 3 4001 テスト一 53 66 6.76 1 0.33 1.50.7',
+           ' 02 2 4002 テスト二 50 53 6.73 4 0.18 1.51.6',
+           ' 連複 2-3 1500 人気 8 決まり手 抜き']
+    records=source.parse_database_k(('\r\r\n\r\r\n'.join(lines)).encode('cp932'))
+    assert len(records)==1 and records[0][:4]==['19970101','24',1,'抜き']
+    assert records[0][8] is None and records[0][9] is None # never relabel 2連複 as 3連単
+    assert len(records[0][11])==2 and records[0][11][0][2]==1
+    assert records[0][12]['race_name']=='予選'
+    calm=source.parse_database_k(('\n'.join(lines).replace('南東 4m','無　風 0m')).encode('cp932'))
+    assert calm[0][4]=='無風' and calm[0][5]==0
+    import pytest
+    with pytest.raises(ValueError,match='Official race sections missing'):
+        source.parse_database_k(('\n'.join(lines).replace('は れ','')).encode('cp932'))
+
+
+def test_complete_official_day_removes_cancelled_legacy_race(tmp_path,monkeypatch):
+    official=tmp_path/'database';raw=official/'races';raw.mkdir(parents=True)
+    old=tmp_path/'history';old.mkdir()
+    monkeypatch.setattr(build,'BASE',official)
+    ents=[[i,str(4000+i),i,15,'',i,680,None,20,50] for i in range(1,7)]
+    r=['20261023','01',1,'逃げ','北',2,0,0,'1-2-3',1200,1,ents]
+    cancelled=[*r];cancelled[2]=2
+    baseline=old/'202610.jsonl.gz';updated=raw/'202610.jsonl.gz'
+    baseline.write_bytes(gzip.compress(('\n'.join(json.dumps(x) for x in [r,cancelled])+'\n').encode()))
+    updated.write_bytes(gzip.compress((json.dumps(r+[{'title':'公式'}])+'\n').encode()))
+    db=build.open_cache(tmp_path/'cache.sqlite');build.ingest(db,[baseline,updated])
+    assert db.execute('SELECT count(*) FROM races').fetchone()[0]==1
+    assert db.execute('SELECT count(*) FROM entries').fetchone()[0]==6
+    # Even a subsequently changed legacy source cannot resurrect that race.
+    baseline.write_bytes(gzip.compress(('\n'.join(json.dumps(x) for x in [cancelled,r])+'\n').encode()))
+    build.ingest(db,[baseline])
+    assert db.execute('SELECT count(*) FROM races').fetchone()[0]==1
+    db.close()
+
+
+def test_temporary_download_failures_retry_without_repeated_404_requests():
+    from datetime import datetime,timedelta
+    now=datetime(2026,10,24,tzinfo=source.JST)
+    failed={'status':'unavailable','error':'ReadTimeout','parser_version':source.PARSER_VERSION,'checked_at':(now-timedelta(days=2)).isoformat()}
+    assert source.needs_update('20200101',failed,now)
+    assert not source.needs_update('20200101',{**failed,'http_status':404},now)
+    assert not source.needs_update('20200101',{**failed,'status':'saved'},now)
+    assert source.needs_update('19970101',{'status':'saved','parser_version':1},now)

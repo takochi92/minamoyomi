@@ -80,7 +80,7 @@ def catalog_pages(site,Page,venues):
         ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
         ('branches.html','支部別','各期の所属選手と実績'),('terms.html','養成期別','同期の選手と各期の成績'),('venues.html','場別データ','コース・決まり手・配当分布'),
         ('events.html','優勝戦・開催記録','確認できた優勝者と優出選手'),('championships.html','SG・PG1・G1公式記録集','歴代優勝者・決勝出走表・節間成績'),('rankings.html','コース別ランキング','直近90日・15走以上の実測1着率'),
-        ('records.html','高配当・同着・スタート事故','保存結果の記録一覧'),('../motor.html','モーター機歴','交換周期を考慮した機歴と乗り手'),
+        ('records.html','高配当・同着・スタート事故','保存結果の記録一覧'),('races.html','全保存レースを探す','月・場・万舟・F/L・同着で検索'),('../motor.html','モーター機歴','交換周期を考慮した機歴と乗り手'),
         ('equipment.html','ボート・モーター公式値','出走表に掲載された2連対・3連対率'),('coverage.html','収録範囲と更新状況','取得済み・不足・未確認を公開')]))
     put('periods.html','公式期別の一覧',rd.section('適用期と審査対象期間',matrix(['適用期','対象期間','掲載人数'],[[e(period_label(t)),rd.date(t['from'])+'<small>〜'+rd.date(t['through'])+'</small>',f'{len(t["players"]):,}人'] for t in reversed(terms)]))+'<p>各選手の「公式期別」タブで、全収録期の詳細を確認できます。次期分は公式公表後に追加します。</p>')
     for category,field,label in [('branches','branch','支部'),('terms','ki','養成期')]:
@@ -125,6 +125,11 @@ def catalog_pages(site,Page,venues):
     record+=rd.section('直近のF・L記録（最大500レース）',matrix(['日付・場','R','記録のある選手'],[[rd.date(r[0])+'<small>'+e(vn(r[1]))+'</small>',str(r[2]),'・'.join(name(t) for t in r[3])] for r in summary.get('accidents',[])]))
     record+=rd.section('3連単の出目',matrix(['組番','出現回数','保存組番内の割合'],[[e(k),str(n),rd.rate(n,sum(summary.get('combinations',{}).values()))] for k,n in sorted(summary.get('combinations',{}).items(),key=lambda x:-x[1])]))
     put('records.html','高配当・同着・スタート事故',record)
+    from .race_archive import months
+    available=months(site.now.strftime('%Y%m%d'))
+    race_payload=json.dumps({'months':available,'venues':{j:vn(j) for j in venues},'names':{t:i['name'] for t,i in roster.items()}},ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
+    controls='<div class="panel"><div class="rd-filters"><label>月<select id="db-month">'+''.join(f'<option value="{m}">{m[:4]}年{m[4:]}月</option>' for m in available)+'</select></label><label>場<select id="db-venue"><option value="">全24場</option>'+''.join(f'<option value="{j}">{e(vn(j))}</option>' for j in venues)+'</select></label><label>日<select id="db-day"><option value="">月の全日</option>'+''.join(f'<option value="{d:02d}">{d}日</option>' for d in range(1,32))+'</select></label><label>配当<select id="db-payout"><option value="0">すべて</option><option value="10000">万舟以上</option><option value="100000">10万円以上</option></select></label><label>種類<select id="db-type"><option value="">全レース</option><option value="final">優勝戦（レース名確認分）</option><option value="fl">F・Lのあるレース</option><option value="tie">1着同着</option></select></label></div><p id="db-count" class="sub" aria-live="polite">選んだ月の結果を読み込みます。</p></div>'
+    put('races.html','全保存レースの結果検索','<p class="sub">公式結果の保存分です。予想の的中実績ではありません。当日分は含めず、月単位で読み込みます。未取得日は非開催と同一視しません。</p>'+controls+'<div id="db-races"></div><div class="rd-pagination"><button type="button" id="db-prev">← 前へ</button><span id="db-page"></span><button type="button" id="db-next">次へ →</button></div><noscript>結果検索はJavaScriptが必要です。選手ページの保存履歴も利用できます。</noscript><script id="db-data" type="application/json">'+race_payload+'</script><script src="../database.js" defer></script>')
     equipment=[];seen=set()
     from .sitegen import DATA, load_json
     day=site.idx.get('date','')

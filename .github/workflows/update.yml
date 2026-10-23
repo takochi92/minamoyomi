@@ -17,6 +17,8 @@ on:
       - 'scraper/database_sources.py'
       - 'scraper/database_views.py'
       - 'scraper/championships.py'
+      - 'scraper/race_archive.py'
+      - 'site/database.js'
       - 'scraper/database/**'
       - 'site/search.js'
       - 'site/racer.js'
