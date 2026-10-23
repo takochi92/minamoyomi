@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-23T01:27:23.555Z",
+  "updated": "2026-10-23T17:25:43.964Z",
   "posts": [
+    {
+      "id": "2026-10-23-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-23",
+      "slot": "evening",
+      "text": "【10/23（金）の結果】\nAI本線 167R中31的中\n\n今日のフライング 6人（F後はスタート控えめになりがち）\n・鳴門3R 佐々木 和伸\n・鳴門3R 山崎 聖司\n・鳴門3R 西原 明生\n・芦屋6R 木場 悠介\nほか\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-10-23T17:25:43.964Z"
+    },
     {
       "id": "2026-10-23-teirogu-X-morning",
       "project": "teirogu",
@@ -252,16 +262,6 @@
       "created_at": "2026-10-11T01:49:53.698Z"
     },
     {
-      "id": "2026-10-10-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-10",
-      "slot": "evening",
-      "text": "【10/10（土）の結果】\nAI本線 156R中21的中\n\n今日のフライング 5人（F後はスタート控えめになりがち）\n・福岡1R 加木 郁\n・唐津8R 井上 茂\n・常滑5R 丹下 将\n・常滑5R 永田 啓二\n・桐生12R 向所 浩二\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-10T17:58:41.232Z"
-    },
-    {
       "id": "2026-10-11-teirogu-X-feature",
       "project": "teirogu",
       "channel": "X",
@@ -270,16 +270,6 @@
       "text": "展示タイムが1位の艇って、本当に勝つの？🚤\n\n過去2年の公式データで調べると、4コースは\n展示1位 17.1%\n展示6位 6.2%\nで、約3倍の差がありました。\n\n艇ろぐに初心者向けの読みものを6本まとめました（舟券の種類・展示・風と波・モーター）\nhttps://teilog.pages.dev/guide/\n※20歳未満は購入できません",
       "images": [],
       "created_at": "2026-10-10T16:08:18.391Z"
-    },
-    {
-      "id": "2026-10-10-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-10",
-      "slot": "morning",
-      "text": "【10/10（土）の艇ろぐ】\n今日は13場で開催\n🏆江戸川 G3\n\nAIの自信が高いレース\n・唐津1R、徳山1R、唐津3R\n\n昨日のAI本線：143レース中 32的中\n最高配当 常滑2R 5-3-4 6,480円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-10T02:17:18.570Z"
     }
   ]
 }
