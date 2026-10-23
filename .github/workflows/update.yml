@@ -12,6 +12,7 @@ on:
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
       - 'scraper/racer_database.py'
+      - 'scraper/racer_views.py'
       - 'site/racer.js'
       - 'site/racer.css'
       - 'scraper/primary_slip.py'

@@ -169,7 +169,7 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
     if today_html:
         head += section('今日の出走', '<ul class="comments">'+today_html+'</ul>')
     cards = ''.join(f'<div><span>{label}</span><strong>{value}</strong><small>{note}</small></div>' for label,value,note in (
-        ('出走数', f'{n:,}', '欠場・出遅れ返還を除く'), ('1着率', rate(p[0],n), f'{p[0]}勝 / {n}走'),
+        ('出走数', f'{n:,}', '保存された出走'), ('1着率', rate(p[0],n), f'{p[0]}勝 / {n}走'),
         ('2連対率',rate(sum(p[:2]),n),f'{sum(p[:2])}回 / {n}走'),('3連対率',rate(sum(p[:3]),n),f'{sum(p[:3])}回 / {n}走')))
     overview = f'<div class="rd-summary" id="rd-summary">{cards}</div><div id="rd-overview-detail">' + overview_detail(w) + '</div>'
     panels = '<div id="overview" class="rd-panel">' + section('成績の概要', overview) + '</div>'
@@ -188,42 +188,20 @@ def render(toban, info, data, meta, page, venues, slugs, today_html="", extras="
 
 
 def stats_table(groups, label):
-    return table(('区分','出走','1着率','2連対率','3連対率','平均ST (件)','F/L'), [stats_row(label(k),v) for k,v in sorted(groups.items(),key=lambda x:x[0], reverse=False)])
+    from .racer_views import stats_table as view
+    return view(groups, label)
 
 
 def overview_detail(w):
-    m = w['total']
-    decisions = ''.join(f'<div><span>{k}</span><b>{v}勝</b><small>{rate(v,m["n"])} / 全{m["n"]}走</small></div>' for k,v in m['kim'].items())
-    losses = []
-    for key, count in w['losses'].items():
-        course, _, decision = key.partition('コース・')
-        action = {'差し':'差して勝利', 'まくり':'まくって勝利', 'まくり差し':'まくり差して勝利'}.get(decision, f'「{decision}」で勝利')
-        label = f'{course}コースが{action}'
-        badge = f'<span class="bt bt{html.escape(course)}">{html.escape(course)}</span>' if course in '23456' and len(course) == 1 else ''
-        losses.append(f'<div class="rd-loss-row">{badge}<div><strong>{html.escape(label)}</strong><small>1コース{w["inside_n"]}走中、{count}回</small></div><b>{rate(count,w["inside_n"])}</b></div>')
-    shown = '<div class="rd-loss-list">'+''.join(losses[:3])+'</div>' if losses else '<p class="sub">勝者を確認できた負けレースはありません。</p>'
-    if len(losses) > 3:
-        shown += f'<details class="rd-more"><summary>ほか{len(losses)-3}パターンを見る</summary><div class="rd-loss-list">'+''.join(losses[3:])+'</div></details>'
-    return '<h3>1着になったときの勝ち方</h3><div class="rd-decisions">'+decisions+'</div><h3>1コースで負けたレース</h3><p class="sub">相手のコースと勝ち方を、多かった順に表示します。</p>'+shown+f'<p class="sub">割合は1コース全{w["inside_n"]}走に対するもの。事故等も含む結果で、負けた原因の断定ではありません。</p>'
+    from .racer_views import overview_detail as view
+    return view(w)
 
 
 def course_detail(w):
-    bars = ''
-    for c in range(1,7):
-        m = w['course'].get(str(c),metric([]))
-        n,p = m['n'],m['places']
-        bar = ''.join(f'<i class="rd-place-{i+1}" style="width:{100*v/n if n else 0:.3f}%"></i>' for i,v in enumerate(p[:3]))
-        bars += f'<div class="rd-course-bar"><span class="bt bt{c}">{c}</span><div><div class="rd-bar" aria-hidden="true">{bar}</div><small>1着 {rate(p[0],n)} · 2着 {rate(p[1],n)} · 3着 {rate(p[2],n)}</small></div><b>{n}走</b></div>'
-    content = '<p class="rd-legend"><span>● 1着</span><span>● 2着</span><span>● 3着</span><small>残りは4着以下・事故等</small></p>'+bars+stats_table(w['course'],lambda c:c+'コース')
-    content += '<h3>コースごとの勝ち方</h3>'+table(('コース','出走',*KIM), [f'<tr><th>{html.escape(c)}コース</th><td>{m["n"]}</td>'+''.join(f'<td>{v}勝<br><small>{rate(v,m["n"])}</small></td>' for v in m['kim'].values())+'</tr>' for c,m in sorted(w['course'].items())])
-    remain = table(('コース','対象数','2着率','3着率','2・3着率'), [f'<tr><th>{html.escape(c)}コース</th><td>{m["n"]}</td><td>{rate(m["places"][1],m["n"])}</td><td>{rate(m["places"][2],m["n"])}</td><td>{rate(sum(m["places"][1:3]),m["n"])}</td></tr>' for c,m in sorted(w['remain'].items())])
-    return section('進入コース別成績',content,'艇番ではなく本番の進入コースで集計。勝ち方の率はそのコース全出走が分母です。') + section('艇番別成績',stats_table(w['frame'],lambda c:c+'号艇')) + section('1コースが逃げたときの残り方',remain,'この選手が2〜6コースに入り、1コースの選手が「逃げ」で勝ったレースが分母。対象数が少ない場合は変動が大きくなります。')
+    from .racer_views import course_detail as view
+    return view(w)
 
 
 def history_table(rows, venues, slugs, root):
-    result = []
-    for r in rows:
-        label = html.escape(venues.get(r[1],{}).get('name',r[1]))+f' {r[2]}R'
-        st = (str(r[7])+f'{r[6]/100:.2f}') if r[6] is not None else '—'
-        result.append('<tr>'+''.join(f'<td>{x}</td>' for x in (date(r[0]),label,r[3],r[4] or '—',html.escape(str(r[5])),st,f'{r[8]/100:.2f}' if r[8] else '—',r[9] if r[9] is not None else '—',r[10] if r[10] is not None else '—',html.escape(r[11] or '—')) )+'</tr>')
-    return table(('日付','場・R','艇番','進入コース','着順','ST','展示タイム','モーター','ボート','勝者の決まり手'),result)
+    from .racer_views import history_table as view
+    return view(rows, {j: v['name'] for j, v in venues.items()})

@@ -84,3 +84,29 @@ def test_roster_players_without_recent_records_still_get_pages(monkeypatch):
     s.racer_pages()
     assert listed == ["4001","9999"]
     assert "racer/9999.html" in s.files and "未保存" in s.files["racer/9999.html"]
+
+
+def test_donut_parts_have_one_denominator_and_include_unknown_results():
+    from scraper import racer_views as views
+    records = [race("20261018"),race("20261019", "差し"),race("20261020")]
+    records[1][11][0][5], records[1][11][1][5] = 2,1
+    records[2][11][0][5] = 'F'
+    records[2][11][0][4] = 'F'
+    db = rd.build_index(records, '20261024')
+    w = rd.profile(db['players']['4001'],'20261024')['windows']['365']
+    parts = views.inside_parts(w)
+    assert w['inside_n'] == 3 and sum(v for _,v in parts) == 3
+    assert parts[0][1] == 1 and parts[1][1] == 1 and parts[-1][1] == 1
+    assert all(v >= 0 for _,v in parts)
+    assert 'viewBox="0 0 100 100"' in views.donut(parts,3)
+    assert 'stroke-dasharray' not in views.donut([(x,0) for x,_ in parts],0)
+
+
+def test_compact_history_keeps_equipment_and_start_details():
+    from scraper import racer_views as views
+    db = rd.build_index([race()], '20261024')
+    rows = db['players']['4001']
+    result = views.history_table(rows, {'01':'桐生'})
+    assert '<summary>' in result and '1着' in result
+    assert 'モーター' in result and '<dd>21</dd>' in result and '<dd>51</dd>' in result
+    assert '勝者の決まり手：逃げ' in result
