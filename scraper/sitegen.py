@@ -1816,73 +1816,28 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'<p class="sub">15走以上で、全体より12ポイント以上高い場を「得意」、低い場を「苦手」にしています。予想AIにも入っています。</p></section>')
 
     def racer_pages(self):
-        self._pairs = fstart.load_pairs()
-        rec = self.recent_index()
+        from . import racer_database as rd
+        database = rd.load(self.now.strftime("%Y%m%d"))
+        roster = load_json(Path(__file__).parent / "racers.json", {}) or {}
+        meta = {k: database[k] for k in ("from", "through", "as_of", "races")}
+        meta["roster_source"] = roster.get("source", "適用期未確認")
         today = self.today_entries()
         listing = []
+        self._pairs = fstart.load_pairs()
+        profiles = database.setdefault("profiles", {})
         for t, info in self.racers.items():
-            d = self.S.rc.get(t)
-            if not d:
-                continue
             page = Page(f"racer/{t}.html")
-            name = info["name"]
-            rows, tags = [], []
-            for c in range(1, 7):
-                me = d.get(c)
-                nt = self.S.nc[c]
-                if me is None or me[0] == 0:
-                    rows.append(f'<tr><td>{c}コース</td><td class="r num">0</td><td colspan="6" class="sub">出走なし</td></tr>')
-                    continue
-                n = me[0]
-                kim = "・".join(f"{k}{int(me[4 + i])}" for i, k in enumerate(KIM) if me[4 + i]) or "-"
-                ratio = self.shrunk_ratio(t, c)
-                op = self.op_of(t, c)
-                if c >= 2 and op and op[0] >= OP_MIN and op[3] >= OP_MARK:
-                    tags.append(f"{c}コース巧者（実力比{op[3]:.1f}）")
-                rows.append(f'<tr><td>{c}コース</td><td class="r num">{int(n)}</td><td class="r num {"best" if ratio >= 1.3 and n >= MIN_STARTS else ""}">{pct(me[1] / n, 1)}</td>'
-                            f'<td class="r num sub">{pct(nt[1] / nt[0] if nt[0] else None, 1)}</td><td class="r num">{pct((me[1] + me[2]) / n, 1)}</td><td class="r num">{pct((me[1] + me[2] + me[3]) / n, 1)}</td><td class="r num">{f"{sr[0] / sr[1]:.1f}" if (sr := self.S.rsr[t].get(c)) is not None and sr[1] >= 3 else "-"}</td><td>{e(kim)}</td></tr>')
-            c1 = d.get(1)
-            loss = ""
-            if c1 is not None and c1[0] >= 10:
-                L = self.S.rl[t]
-                lr = {"差され": L.get("2-差し", 0), "捲られ": sum(v for k, v in L.items() if k.endswith("-まくり")),
-                      "捲り差され": sum(v for k, v in L.items() if k.endswith("-まくり差し"))}
-                nl = {"差され": self.S.nl.get("2-差し", 0), "捲られ": sum(v for k, v in self.S.nl.items() if k.endswith("-まくり")),
-                      "捲り差され": sum(v for k, v in self.S.nl.items() if k.endswith("-まくり差し"))}
-                for k in lr:
-                    r1, r0 = lr[k] / c1[0], nl[k] / self.S.nn
-                    if c1[0] >= 30 and r1 >= r0 * 1.3 and r1 >= 0.06:
-                        tags.append(f"インで{k}やすい")
-                loss = ("<section class=\"panel\"><h2>1コースでの負け方 <small>" + f"{int(c1[0])}走・逃げ率 {pct(c1[1] / c1[0], 1)}" + "</small></h2><div class=\"tbl-wrap\"><table><thead><tr><th></th><th class=\"r\">この選手</th><th class=\"r\">全国</th></tr></thead><tbody>"
-                        + "".join(f'<tr><td>{k}</td><td class="r num">{pct(lr[k] / c1[0], 1)}</td><td class="r num sub">{pct(nl[k] / self.S.nn, 1)}</td></tr>' for k in lr) + "</tbody></table></div></section>")
-            st = self.S.rst[t]
-            recent = "".join(
-                f'<tr><td class="num">{int(x[0][4:6])}/{int(x[0][6:])}</td><td>{e(VENUES.get(x[1], {}).get("name", x[1]))} {x[2]}R</td><td class="r num">{x[3]}</td><td class="r num">{x[4] or "-"}</td><td class="r num"><b>{x[5]}</b></td><td>{e(x[6])}</td></tr>'
-                for x in rec.get(t, [])[:12])
-            bycourse = self.course_recent(rec.get(t, []))
+            if t not in profiles:
+                profiles[t] = rd.profile(database["players"].get(t, []), database["as_of"])
+            profile = profiles[t]
+            tod = "".join(f'<li><a href="{page.u(f"race/{dd}/{SLUG[j]}-{rn}.html")}">{e(VENUES[j]["name"])} {rn}R</a>（{f}号艇）</li>' for dd, j, rn, f in today.get(t, []))
             ps = self._pairs.get(t, [])
             sm = self.st_summary(ps)
-            stsec = (f'<section class="panel" style="display:grid;gap:6px"><h2>展示ST → 本番ST <small>{sm["n"]}走・{sm["type"]}（相関 {sm["cor"]:.2f}）</small></h2>{self.st_chart(ps)}'
-                     f'<p class="sub">展示の平均 {sm["ex"]:.2f} → 本番の平均 {sm["st"]:.2f}（ばらつき±{sm["sd"]:.2f}）。色はコース（1白・2灰・3赤・4青・5黄・6緑）。</p></section>') if sm else ""
-            tod = "".join(f'<li><a href="{page.u(f"race/{dd}/{SLUG[j]}-{rn}.html")}">{e(VENUES[j]["name"])} {rn}R</a>（{f}号艇）</li>' for dd, j, rn, f in today.get(t, []))
-            tagh = " ".join(f'<span class="pill lv4">{e(x)}</span>' for x in tags)
-            body = f"""<section style="display:grid;gap:6px"><span class="eyebrow">登録番号 {t}</span>
-<h1 class="fav-h">{e(name)}のコース別成績 <button type="button" class="fav-btn" data-toban="{t}" data-name="{e(name)}" aria-pressed="false" aria-label="お気に入り" hidden>☆</button></h1>
-<p>{e(info.get('branch', ''))}支部・{f"{info['ki']}期・" if info.get('ki') else ''}{e(info.get('birthplace', ''))}出身・{info.get('age') or '-'}歳・{e(info.get('class', ''))}級{'・女子' if info.get('lady') else ''}・勝率 {info.get('win') or '-'}　{tagh}</p>
-{f'<div class="panel"><b>今日の出走</b><ul class="comments">{tod}</ul></div>' if tod else ''}</section>
-<section class="panel nb" id="racer-memo" data-toban="{t}" data-name="{e(name)}" hidden></section>
-<section class="panel"><h2>コース別成績 <small>直近1年・平均ST {f"{st[0] / st[1]:.2f}" if st[1] else "-"}</small></h2>
-<div class="tbl-wrap"><table class="t-rc"><thead><tr><th>コース</th><th class="r">出走</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th class="r">ST順</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
-<p class="sub">ST順＝そのレースで何番目に早いスタートだったかの平均（1が最速）。</p></section>
-{self.racer_entry_sec(t)}
-{self.racer_venue_sec(t)}
-{loss}
-{bycourse}
-{stsec}
-<section class="panel"><h2>最近のレース <small>全コース</small></h2><div class="tbl-wrap"><table><thead><tr><th>日付</th><th>レース</th><th class="r">枠</th><th class="r">コース</th><th class="r">着</th><th>決まり手</th></tr></thead><tbody>{recent or '<tr><td colspan="6" class="empty">直近のデータなし</td></tr>'}</tbody></table></div></section>
-<p class="sub">データ：BOAT RACE公式の競走成績（直近1年）・期別成績。</p>"""
-            desc = f"ボートレーサー{name}（{t}・{info.get('branch', '')}支部）のコース別1着率・連対率・決まり手、インでの負け方、最近の成績。"
-            self.put(page.path, page.render(f"{name}（{t}）ボートレーサーのコース別成績・決まり手・当地成績｜{SITE_NAME}", desc, body, [("racer/index.html", "選手・モーター"), ("", name)]))
+            extras = (f'<details class="panel"><summary>展示STと本番STの比較（別集計）</summary><p class="sub">参照{sm["n"]}走。この欄は期間ボタンの対象外です。</p>{self.st_chart(ps)}</details>' if sm else '')
+            body = f'<link rel="stylesheet" href="{page.u("racer.css")}">' + rd.render(t, info, profile, meta, page, VENUES, SLUG, tod, extras)
+            self.put(page.path, page.render(f'{info["name"]}（{t}）選手データ・コース別・場別・年別成績｜{SITE_NAME}',
+                f'{info["name"]}のコース別・場別・年別・展示順位別成績と保存全出走結果。出走数、期間、決まり手を確認できます。', body,
+                [("racer/index.html", "選手・モーター"), ("", info["name"])]))
             listing.append(t)
         self.fav_today(today)
         self.racer_index(listing, today)
