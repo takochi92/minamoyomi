@@ -82,9 +82,8 @@ def test_old_k_dates_weather_spacing_and_payout_decision():
     assert records[0][12]['race_name']=='予選'
     calm=source.parse_database_k(('\n'.join(lines).replace('南東 4m','無　風 0m')).encode('cp932'))
     assert calm[0][4]=='無風' and calm[0][5]==0
-    import pytest
-    with pytest.raises(ValueError,match='Official race sections missing'):
-        source.parse_database_k(('\n'.join(lines).replace('は れ','')).encode('cp932'))
+    missing_weather=source.parse_database_k(('\n'.join(lines).replace('は れ','')).encode('cp932'))
+    assert len(missing_weather)==1 and len(missing_weather[0][11])==2
 
 
 def test_complete_official_day_removes_cancelled_legacy_race(tmp_path,monkeypatch):
@@ -137,3 +136,18 @@ def test_double_championship_keeps_both_finals(tmp_path):
     assert {e['final']['race'] for e in result['events'] if e['final']}=={11,12}
     assert {t for e in result['events'] for t in e['final']['winners']}=={'4011','4021'}
     db.close()
+
+
+def test_old_carriage_returns_and_blank_finish_preserve_accidents():
+    lines=['21KBGN','＊＊＊ 競走成績 ＊＊＊','公式テスト','第 1日 97/ 4/17',
+           ' 3R 予選 H1800m 風 北西4m 波 3cm',
+           ' 着 艇 登番 選手名 ﾓｰﾀｰ ﾎﾞｰﾄ 展示 進入 ｽﾀｰﾄﾀｲﾐﾝｸﾞ ﾚｰｽﾀｲﾑ','---------------',
+           '      1 4001 テスト一 34 38 6.72 1 0.06 . .',
+           '   F  2 4002 テスト二 13 49 6.66 2 0.03 . .',
+           ' 連複 不成立']
+    result=source.parse_database_k(('\r'.join(lines)).encode('cp932'))
+    assert len(result)==1 and result[0][0]=='19970417'
+    assert result[0][11][0][5]=='?' and result[0][11][1][4:6]==['F','F']
+    assert result[0][8:11]==[None,None,None]
+    assert not source.needs_update('19970417',{'status':'saved','parser_version':2})
+    assert source.needs_update('19970417',{'status':'unavailable','parser_version':2})

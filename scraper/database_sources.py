@@ -20,13 +20,13 @@ JST = timezone(timedelta(hours=9))
 _lock = threading.Lock()
 _last_request = 0.0
 _deadline = float('inf')
-PARSER_VERSION=2
+PARSER_VERSION=3
 ARCHIVE_START='19960101'
 
 
 def needs_update(day,entry,now=None):
     if not entry:return True
-    if entry.get('parser_version',1)<PARSER_VERSION and (entry.get('status')!='saved' or day<'20030101'):return True
+    if entry.get('parser_version',1)<PARSER_VERSION and (entry.get('status')!='saved' or (entry.get('parser_version',1)<2 and day<'20030101')):return True
     if entry.get('status')=='saved':return False
     now=now or datetime.now(JST)
     try:checked=datetime.fromisoformat(entry['checked_at'])
@@ -142,10 +142,13 @@ def normalize_k(raw):
     # Old official files use YY/MM/DD, spaced weather, and extra blank lines.
     # Normalize only this independent archive; never rewrite prediction input.
     lines=[]
-    for line in text.replace('\r','').split('\n'):
+    for line in text.replace('\r\n','\n').replace('\r','\n').split('\n'):
         if not line.strip():continue
         line=re.sub(r'(第\s*\d+日\s+)(\d{2})(/\s*\d{1,2}/\s*\d{1,2})',lambda m:m[1]+str((1900 if int(m[2])>=80 else 2000)+int(m[2]))+m[3],line)
-        line=re.sub(r'(H\d{4}m)\s+(.*?)\s+風',lambda m:m[1]+' '+re.sub(r'\s+','',m[2])+' 風',line)
+        line=re.sub(r'(H\d{4}m)\s+(.*?)\s*風',lambda m:m[1]+' '+(re.sub(r'\s+','',m[2]) or '未確認')+' 風',line)
+        # Some official non-established races leave a finisher's place blank.
+        # Preserve that unknown code so following F rows are still readable.
+        line=re.sub(r'^\s{4,}([1-6])\s+(\d{4})\s',r'   ?  \1 \2 ',line)
         if re.match(r'^\s*\d{1,2}R.*H\d{4}m',line):
             line=re.sub(r'(風\s+)(.*?)(\d+)m',lambda m:m[1]+(re.sub(r'\s+','',m[2]) or ('無風' if int(m[3])==0 else '不明'))+m[3]+'m',line)
         lines.append(line)
@@ -184,6 +187,7 @@ def parse_database_k(raw):
         for e in r['entries']:
             ents.append([e['frame'],e['toban'],e['course'],round(e['st']*100) if e['st'] is not None else None,e['st_flag'],
                          e['place'] if e['place'] is not None else e['code'],round(e['exhibit_time']*100) if e['exhibit_time'] else None,None,e['motor_no'],e['boat_no'],e['name']])
+            if not ents[-1][4] and e['code'] in ('F','L'):ents[-1][4]=e['code']
         info=context.get((r['jcd'],r['rno']),{})
         records.append([r['date'],r['jcd'],r['rno'],r['kimarite'] or info.get('decision',''),r['wind_dir'],r['wind_speed'],r['wave'],int(r['fixed']),
                         r.get('trifecta'),r.get('trifecta_payout'),r.get('trifecta_ninki'),ents,context.get((r['jcd'],r['rno']),{})])
@@ -203,12 +207,15 @@ def archive_month(item,refresh=False):
     records={};provenance=read_json(audit,{})
     if dest.exists():
         with gzip.open(dest,'rt',encoding='utf-8') as f:
-            for r in map(json.loads,f):records[(r[0],r[1],r[2])]=r
+            for r in map(json.loads,f):
+                for e in r[11]:
+                    if not e[4] and e[5] in ('F','L'):e[4]=e[5]
+                records[(r[0],r[1],r[2])]=r
     s=session()
     for day in sorted(days,reverse=True):
         if time.monotonic()>=_deadline:break
         old=provenance.get(day,{})
-        reparse_old=day<'20030101' and old.get('parser_version',1)<PARSER_VERSION
+        reparse_old=day<'20030101' and old.get('parser_version',1)<2
         if not refresh and old.get('status')=='saved' and not reparse_old:continue
         if not refresh and old and old.get('status')!='saved' and not needs_update(day,old):continue
         url=f'https://www1.mbrace.or.jp/od2/K/{ym}/k{day[2:]}.lzh'
