@@ -77,7 +77,7 @@ def catalog_pages(site,Page,venues):
         back='<nav class="db-nav"><a href="index.html">データバンク</a><a href="../racer/index.html">選手検索</a><a href="coverage.html">収録状況</a></nav>'
         site.put(p.path,p.render(title+'｜艇ろぐ',title+'。公式成績の保存分を期間・件数つきで掲載。',f'<link rel="stylesheet" href="../racer.css">{back}<h1>{e(title)}</h1>{body}',[('database/index.html','データバンク'),('',title)]))
     def cards(items):return '<div class="db-cards">'+''.join(f'<a class="panel" href="{e(url)}"><b>{e(title)}</b><span>{e(note)}</span></a>' for url,title,note in items)+'</div>'
-    stats=f'<div class="rd-summary"><div><span>掲載選手</span><strong>{len(roster):,}</strong><small>過去掲載選手を含む</small></div><div><span>公式期別</span><strong>{len(terms)}期</strong><small>公式公表ファイル</small></div><div><span>保存結果</span><strong>{catalog["races"]:,}</strong><small>レース</small></div><div><span>最終結果日</span><strong>{rd.date(catalog["through"])[5:]}</strong><small>{catalog["through"][:4]}年</small></div></div>'
+    stats=f'<div class="rd-summary db-summary"><div><span>掲載選手</span><strong>{len(roster):,}</strong><small>過去掲載選手を含む</small></div><div><span>公式期別</span><strong>{len(terms)}期</strong><small>公式公表ファイル</small></div><div><span>保存結果</span><strong>{catalog["races"]:,}</strong><small>レース</small></div><div><span>最終結果日</span><strong>{rd.date(catalog["through"])[5:]}</strong><small>{catalog["through"][:4]}年</small></div></div>'
     put('index.html','選手データバンク',f'<p>選手の得意コース、過去の期別成績、場の傾向を、出走数と期間を確かめながら比較できます。</p>{stats}'+cards([
         ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
         ('branches.html','支部別','各期の所属選手と実績'),('terms.html','養成期別','同期の選手と各期の成績'),('venues.html','場別データ','コース・決まり手・配当分布'),
