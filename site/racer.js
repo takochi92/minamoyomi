@@ -82,8 +82,13 @@
   function tab(){var key=location.hash.slice(1);if(!links.some(function(a){return a.hash==='#'+key;}))key='overview';document.querySelectorAll('.rd-panel').forEach(function(p){p.hidden=p.id!==key;});links.forEach(function(a){var on=a.hash==='#'+key;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});if(key==='history')loadHistory();}
   links.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();history.pushState(null,'',a.hash);tab();});});window.addEventListener('hashchange',tab);window.addEventListener('popstate',tab);tab();
   function historyRows(){
-    var y=$('rd-year').value,v=$('rd-venue').value,c=$('rd-course').value;
-    var rows=data.rows.filter(function(r){return (!y||r[0].slice(0,4)===y)&&(!v||r[1]===v)&&(!c||String(r[4])===c);});
+    var y=$('rd-year').value,v=$('rd-venue').value,c=$('rd-course').value,g=$('rd-grade').value,outcome=$('rd-result').value;
+    var rows=data.rows.filter(function(r){
+      var meta=r[15]||{},label=String(meta.race_name||'').replace(/\s/g,'');
+      return (!y||r[0].slice(0,4)===y)&&(!v||r[1]===v)&&(!c||String(r[4])===c)&&
+        (!g||(g==='unknown'?!meta.grade:meta.grade===g))&&
+        (!outcome||(outcome==='win'&&r[5]===1)||(outcome==='fl'&&(r[7]==='F'||r[7]==='L'))||(outcome==='final'&&label.indexOf('優勝')>=0&&label.indexOf('準')<0));
+    });
     var pages=Math.max(1,Math.ceil(rows.length/size));pageNo=Math.max(0,Math.min(pageNo,pages-1));
     $('rd-history-count').textContent=data.history_url?'最新30件 / 全'+data.history_count.toLocaleString('ja-JP')+'件（全出走結果タブで読み込み）':'該当 '+rows.length.toLocaleString('ja-JP')+'件 / 全'+data.rows.length.toLocaleString('ja-JP')+'件';
     $('rd-history-table').innerHTML='<div class="rv-races">'+(rows.slice(pageNo*size,(pageNo+1)*size).map(function(r){
@@ -93,5 +98,5 @@
     }).join('')||'<p class="rv-caption">該当する記録はありません。</p>')+'</div>';
     $('rd-page').textContent=(pageNo+1)+' / '+pages;$('rd-prev').hidden=false;$('rd-next').hidden=false;$('rd-prev').disabled=pageNo===0;$('rd-next').disabled=pageNo>=pages-1;
   }
-  ['rd-year','rd-venue','rd-course'].forEach(function(id){$(id).addEventListener('change',function(){pageNo=0;historyRows();});});$('rd-prev').addEventListener('click',function(){pageNo--;historyRows();});$('rd-next').addEventListener('click',function(){pageNo++;historyRows();});historyRows();
+  ['rd-year','rd-venue','rd-course','rd-grade','rd-result'].forEach(function(id){$(id).addEventListener('change',function(){pageNo=0;historyRows();});});$('rd-prev').addEventListener('click',function(){pageNo--;historyRows();});$('rd-next').addEventListener('click',function(){pageNo++;historyRows();});historyRows();
 })();
