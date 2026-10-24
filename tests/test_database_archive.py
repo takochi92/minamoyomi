@@ -115,3 +115,11 @@ def test_temporary_download_failures_retry_without_repeated_404_requests():
     assert not source.needs_update('20200101',{**failed,'http_status':404},now)
     assert not source.needs_update('20200101',{**failed,'status':'saved'},now)
     assert source.needs_update('19970101',{'status':'saved','parser_version':1},now)
+
+
+def test_git_friendly_cache_is_readable_by_existing_profile_loader(tmp_path):
+    row=['20261023','01',1,1,1,1,15,'',680,20,50,'逃げ',1,1200,1]
+    data=rd.profile([row],'20261024')
+    source.write_json(tmp_path/'4001.json.gz',data,compression=0)
+    assert source.read_json(tmp_path/'4001.json.gz')==data
+    assert rd.ProfileFiles(tmp_path)['4001']==data

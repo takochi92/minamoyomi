@@ -41,11 +41,11 @@ def read_json(path, default=None):
     with opener(path,'rt',encoding='utf-8') as f:return json.load(f)
 
 
-def write_json(path, value):
+def write_json(path, value, compression=9):
     path.parent.mkdir(parents=True,exist_ok=True)
     raw=json.dumps(value,ensure_ascii=False,separators=(',',':')).encode()
     tmp=path.with_name(path.name+'.tmp')
-    tmp.write_bytes(gzip.compress(raw,mtime=0) if path.suffix=='.gz' else raw)
+    tmp.write_bytes(gzip.compress(raw,compresslevel=compression,mtime=0) if path.suffix=='.gz' else raw)
     tmp.replace(path)
 
 

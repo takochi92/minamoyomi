@@ -149,14 +149,17 @@ def compile_database(as_of=None,cache=None):
     for i,t in enumerate(roster):
         rows=[json.loads(x[0]) for x in db.execute('SELECT row FROM entries WHERE player=? AND day<? ORDER BY day DESC,venue DESC,race DESC',(t,as_of))]
         data=rd.profile(rows,as_of)
+        for window in data['windows'].values():window.pop('since',None)
         data.update(periods=by_player[t],history_url=f'data/players/{t}.json',history_count=len(rows))
         data['finals']=finals[t]
         data['official_finals']=sorted(official_finals[t],key=lambda r:r['date'],reverse=True)
         for c,m in data['windows']['90']['course'].items():
             if m['n']>=15:rankings.append({'player':t,'course':c,**m})
         data['rows']=rows[:30]
-        write_json(BASE/'profiles'/(t+'.json.gz'),data)
-        write_json(BASE/'player_history'/(t+'.json.gz'),rows)
+        # Stored DEFLATE blocks keep these frequently changing caches delta-
+        # friendly in Git. Git's object pack supplies the actual compression.
+        write_json(BASE/'profiles'/(t+'.json.gz'),data,compression=0)
+        write_json(BASE/'player_history'/(t+'.json.gz'),rows,compression=0)
         if i%500==0:print(f'profiles {i}/{len(roster)}',flush=True)
     summary['rankings']=rankings
     write_json(BASE/'finals.json.gz',dict(finals))
