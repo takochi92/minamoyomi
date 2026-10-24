@@ -1629,17 +1629,17 @@
     ]
   },
   "excluded_reason_counts": {
-    "unverified_inputs": 2193,
-    "entry_mismatch": 2456,
-    "fixed_tickets_mismatch": 2456,
-    "no_tickets": 2193,
-    "fingerprint_mismatch": 2456,
-    "missing_exhibition_model_decision": 2193,
-    "missing_fixed_decision": 2193,
-    "missing_or_changed_protocol": 2456,
-    "no_research_tickets": 4376,
-    "missing_or_invalid_timestamps": 2327,
-    "incomplete_odds": 201
+    "fingerprint_mismatch": 2478,
+    "unverified_inputs": 2215,
+    "missing_or_changed_protocol": 2478,
+    "entry_mismatch": 2478,
+    "missing_or_invalid_timestamps": 2349,
+    "fixed_tickets_mismatch": 2478,
+    "missing_fixed_decision": 2215,
+    "missing_exhibition_model_decision": 2215,
+    "no_tickets": 2215,
+    "no_research_tickets": 4398,
+    "incomplete_odds": 223
   },
   "limits": [
     "券は締切前のオッズ・予想・選手のコース成績から固定し、後から追加しない",
