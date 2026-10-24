@@ -103,7 +103,7 @@ def collect(budget_seconds=1800):
             result.update(sha256=hashlib.sha256(blob).hexdigest(),downloaded_at=datetime.now(JST).isoformat())
             write_json(dest,result)
         except Exception as ex:fail.append({'source':record['source'],'error':type(ex).__name__})
-    with ThreadPoolExecutor(max_workers=8) as pool:list(pool.map(one,sorted(all_records,key=lambda r:r['date'],reverse=True)))
+    with ThreadPoolExecutor(max_workers=24) as pool:list(pool.map(one,sorted(all_records,key=lambda r:r['date'],reverse=True)))
     saved=len(list((ROOT/'finals').glob('*.json.gz')))
     report={'categories':len(categories),'listed_finals':len(all_records),'saved_finals':saved,'errors':fail,'checked_at':datetime.now(JST).isoformat()}
     write_json(ROOT/'coverage.json',report);print({k:v for k,v in report.items() if k!='errors'} | {'errors':len(fail)},flush=True)
