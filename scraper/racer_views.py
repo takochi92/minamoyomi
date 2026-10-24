@@ -87,11 +87,12 @@ def course_detail(w):
     return section('コース別成績',stats_table(w['course'],lambda c:c+'コース'),'本番の進入コース別。出走数が30未満の行には「少数」と表示。')+section('コースごとの勝ち方',legend+'<div class="rv-bars">'+''.join(wins)+'</div>','棒全体を各コースの全出走としています。色のない部分は1着以外・決まり手未確認。')+section('差し・まくり・まくり差しでの1着率',attack_rates(w),'各コースの全出走が分母です。攻めた試行に対する成功率ではありません。勝者の決まり手を本人の1着だけに集計しています。')+section('艇番別成績',stats_table(w['frame'],lambda c:c+'号艇'))+section('1コースが逃げたときの残り方',matrix(('コース','2着','3着','2・3着'),rows),'自艇が外に入り、1コースの選手が「逃げ」で勝ったレースが分母。')
 
 
-def history_table(rows, venues):
+def history_table(rows, venues, archive_root='../database/races.html'):
     output=[]
     for r in rows:
         place=str(r[5]); numeric=isinstance(r[5],int)
         status=place+'着' if numeric else place
         fields=[('艇番',r[3]),('進入',str(r[4])+'コース' if r[4] else '—'),('ST',str(r[7])+f'{r[6]/100:.2f}' if r[6] is not None else '—'),('展示',f'{r[8]/100:.2f}' if r[8] else '—'),('モーター',r[9] if r[9] is not None else '未保存'),('ボート',r[10] if r[10] is not None else '未保存')]
-        output.append(f'<details class="rv-race"><summary><time>{date(r[0])}</time><span>{esc(venues.get(r[1],r[1]))} {r[2]}R</span><b class="rv-finish rv-finish-{place if numeric else "other"}">{esc(status)}</b><i>＋</i></summary><dl>'+''.join(f'<div><dt>{k}</dt><dd>{esc(str(v))}</dd></div>' for k,v in fields)+f'</dl><p>勝者の決まり手：{esc(r[11] or "未確認")}</p></details>')
+        link=f'{archive_root}?month={r[0][:6]}&day={r[0][6:]}&venue={r[1]}&race={r[2]}'
+        output.append(f'<details class="rv-race"><summary><time>{date(r[0])}</time><span>{esc(venues.get(r[1],r[1]))} {r[2]}R</span><b class="rv-finish rv-finish-{place if numeric else "other"}">{esc(status)}</b><i>＋</i></summary><dl>'+''.join(f'<div><dt>{k}</dt><dd>{esc(str(v))}</dd></div>' for k,v in fields)+f'</dl><p>勝者の決まり手：{esc(r[11] or "未確認")}</p><a href="{esc(link,quote=True)}">このレースの全艇を見る →</a></details>')
     return '<div class="rv-races">'+(''.join(output) or '<p class="rv-caption">該当する記録はありません。</p>')+'</div>'

@@ -110,3 +110,19 @@ def test_compact_history_keeps_equipment_and_start_details():
     assert '<summary>' in result and '1着' in result
     assert 'モーター' in result and '<dd>21</dd>' in result and '<dd>51</dd>' in result
     assert '勝者の決まり手：逃げ' in result
+    assert 'month=202610&amp;day=20&amp;venue=01&amp;race=1' in result
+
+
+def test_new_period_values_are_not_overwritten_by_prediction_roster(monkeypatch):
+    from scraper import database_views
+    db=rd.build_index([race()],'20261024')
+    db.update(compiled=True,roster={'4001':{'name':'最新名簿','class':'A1','win':7.0,'period':'2027-1','historical':False}},profiles={'4001':rd.profile(db['players']['4001'],'20261024')})
+    monkeypatch.setattr(rd,'load',lambda _:db)
+    monkeypatch.setattr(sitegen.fstart,'load_pairs',lambda:{})
+    monkeypatch.setattr(database_views,'catalog_pages',lambda *args:None)
+    s=sitegen.Site(datetime(2026,10,24,tzinfo=sitegen.JST));s.racers={'4001':{'name':'旧名簿','class':'B1','win':4.0}}
+    s.idx={'date':'20261024','venues':[]};s.racer_index=lambda *args:None
+    s.racer_pages()
+    page=s.files['racer/4001.html']
+    assert '最新名簿' in page and '7.00' in page and '2027-1' in page
+    assert s.racers['4001']['class']=='A1'

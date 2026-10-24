@@ -224,4 +224,4 @@ def course_detail(w):
 
 def history_table(rows, venues, slugs, root):
     from .racer_views import history_table as view
-    return view(rows, {j: v['name'] for j, v in venues.items()})
+    return view(rows, {j: v['name'] for j, v in venues.items()},root+'database/races.html')

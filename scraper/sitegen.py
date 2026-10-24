@@ -1829,7 +1829,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         title_roster,title_index=player_index(self.now.strftime('%Y%m%d'))
         roster = load_json(Path(__file__).parent / "racers.json", {}) or {}
         if database.get('compiled'):
-            self.racers = {**database['roster'], **self.racers}
+            # Period labels and values must come from the same official file.
+            # The prediction roster can lag a newly published next-period file.
+            self.racers = {**self.racers, **database['roster']}
             for t,info in self.racers.items():
                 saved=database['roster'].get(t,{})
                 for key in ('historical','period'):
