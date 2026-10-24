@@ -123,3 +123,17 @@ def test_git_friendly_cache_is_readable_by_existing_profile_loader(tmp_path):
     source.write_json(tmp_path/'4001.json.gz',data,compression=0)
     assert source.read_json(tmp_path/'4001.json.gz')==data
     assert rd.ProfileFiles(tmp_path)['4001']==data
+
+
+def test_double_championship_keeps_both_finals(tmp_path):
+    rows=[]
+    for race_no,label,start in [(10,'準優勝戦',4000),(11,'優勝戦',4010),(12,'優勝戦',4020)]:
+        entries=[[i,str(start+i),i,15,'',i,680,None,20,50] for i in range(1,7)]
+        rows.append(['20261023','01',race_no,'逃げ','北',2,0,0,'1-2-3',1200,1,entries,{'title':'男女W優勝戦','day':6,'race_name':label}])
+    source_file=tmp_path/'races.jsonl.gz'
+    source_file.write_bytes(gzip.compress(('\n'.join(json.dumps(r) for r in rows)+'\n').encode()))
+    db=build.open_cache(tmp_path/'cache.sqlite');build.ingest(db,[source_file])
+    result=build.event_summary(db,'20261024')
+    assert {e['final']['race'] for e in result['events'] if e['final']}=={11,12}
+    assert {t for e in result['events'] for t in e['final']['winners']}=={'4011','4021'}
+    db.close()

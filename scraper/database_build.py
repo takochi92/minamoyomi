@@ -107,14 +107,20 @@ def event_summary(db,as_of):
         if title and day:
             start=(datetime.strptime(r[0],'%Y%m%d')-timedelta(days=day-1)).strftime('%Y%m%d')
             key=j+':'+start+':'+title
-            ev=events.setdefault(key,{'venue':j,'start':start,'through':r[0],'title':title,'grade':meta.get('grade'),'final':None,'races':0})
+            ev=events.setdefault(key,{'venue':j,'start':start,'through':r[0],'title':title,'grade':meta.get('grade'),'final':None,'races':0,'_finals':[]})
             ev['through']=r[0];ev['races']+=1
             label=re.sub(r'\s+','',meta.get('race_name',''))
             if '優勝' in label and '準' not in label:
-                ev['final']={'date':r[0],'race':r[2],'entrants':[str(x[1]) for x in ents],'winners':[str(x[1]) for x in winners]}
+                ev['_finals'].append({'date':r[0],'race':r[2],'label':meta.get('race_name',''),'entrants':[str(x[1]) for x in ents],'winners':[str(x[1]) for x in winners]})
+    # A mixed meeting can have both an 11R and a 12R final. Each is a real
+    # championship race; keep both rather than overwriting one meeting slot.
+    event_rows=[]
+    for ev in events.values():
+        finals=ev.pop('_finals')
+        event_rows.extend([{**ev,'final':f} for f in finals] if finals else [ev])
     return {'venues':venues,'combinations':dict(combinations),'high_payout':sorted(high,key=lambda x:x[4],reverse=True)[:200],
             'accidents':accidents[-500:][::-1],'ties':ties[-200:][::-1],
-            'events':sorted(events.values(),key=lambda x:x['through'],reverse=True)}
+            'events':sorted(event_rows,key=lambda x:(x['through'],x['final']['race'] if x['final'] else 0),reverse=True)}
 
 
 def compile_database(as_of=None,cache=None):

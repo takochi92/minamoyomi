@@ -51,7 +51,7 @@ def titles_panel(events,toban,venues):
     rows=[]
     for ev in events:
         f=ev['final'];win=toban in f['winners']
-        rows.append([rd.date(f['date'])+'<small>'+e(venues.get(ev['venue'],{}).get('name',ev['venue']))+'</small>',e(ev['grade'] or '格付未確認'),('<b class="db-gold">優勝</b>' if win else '優出')+'<small>'+e(ev['title'])+'</small>'])
+        rows.append([rd.date(f['date'])+'<small>'+e(venues.get(ev['venue'],{}).get('name',ev['venue']))+(' '+str(f['race'])+'R' if f.get('race') else '')+'</small>',e(ev['grade'] or '格付未確認'),('<b class="db-gold">優勝</b>' if win else '優出')+'<small>'+e(ev['title'])+'</small>'])
     return rd.section('保存結果から確認できた優勝・優出',matrix(['日付・場','格付','結果・開催名'],rows),'公式Kファイルで「優勝戦」を確認できたレースのみ。準優勝戦は含めません。格付の記載が確認できない開催は未確認と表示します。生涯の優勝回数やSG出場回数の一覧ではありません。公式期別の優出・優勝回数も参照してください。')
 
 
@@ -110,7 +110,7 @@ def catalog_pages(site,Page,venues):
         put(f'venue-{j}.html',vn(j)+'の保存結果集計',body)
     put('venues.html','全24場のデータ',cards(links))
     def event_rows(events):
-        return [[rd.date(ev['through'])+'<small>'+e(vn(ev['venue']))+'</small>',e(ev['title'])+'<small>'+e(ev['grade'] or '格付未確認')+'</small>','<br>'.join(name(t) for t in ev['final']['winners'])+'<details><summary>優出選手</summary>'+ '・'.join(name(t) for t in ev['final']['entrants'])+'</details>'] for ev in events if ev['final']]
+        return [[rd.date(ev['through'])+'<small>'+e(vn(ev['venue']))+' '+str(ev['final']['race'])+'R</small>',e(ev['title'])+'<small>'+e(ev['grade'] or '格付未確認')+'</small>','<br>'.join(name(t) for t in ev['final']['winners'])+'<details><summary>優出選手</summary>'+ '・'.join(name(t) for t in ev['final']['entrants'])+'</details>'] for ev in events if ev['final']]
     events=summary.get('events',[]);years=sorted({ev['through'][:4] for ev in events},reverse=True)
     put('events.html','優勝戦・開催記録','<p class="sub">公式結果のレース名で優勝戦を確認できた開催のみ。格付未確認を一般戦として補完しません。途中までの開催は優勝者を表示しません。</p>'+cards([(f'events-{y}.html',y+'年','優勝者・優出選手') for y in years])+rd.section('直近の確認済み優勝戦',matrix(['日付・場','開催','優勝者'],event_rows([v for v in events if v['final']][:30]))))
     for y in years:put(f'events-{y}.html',y+'年の優勝戦',rd.section('保存結果で確認できた開催',matrix(['日付・場','開催','優勝者'],event_rows([v for v in events if v['through'].startswith(y)]))))
