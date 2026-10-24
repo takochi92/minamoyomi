@@ -177,6 +177,11 @@ def catalog_pages(site,Page,venues):
         put(f'title-{cat["id"]}.html',cat['name']+' 歴代記録',rd.section('公式記録集の掲載分',listing))
     audit=catalog.get('daily_files',{});pc=read_json(BASE/'period_coverage.json',{})
     coverage=rd.section('現在の保存状況',f'<p>競走結果：{rd.date(catalog["from"])}〜{rd.date(catalog["through"])} · {catalog["races"]:,}レース<br>期別ファイル：公式一覧{pc.get("listed","—")}件中{len(terms)}件保存<br>日別追加取得：{audit.get("saved",0):,}日保存・{audit.get("unavailable",0):,}日未確認<br>集計基準日：{rd.date(catalog["as_of"])}（当日分を除外）</p><p>未確認日は非開催と同一視しません。旧保存履歴と追加Kファイルの重複は日付・場・Rで統合しています。</p>')
+    source_days={d:v for path in (BASE/'sources').glob('*.json.gz') for d,v in read_json(path,{}).items()}
+    issues=[(d,v) for d,v in sorted(source_days.items(),reverse=True) if v.get('status')!='saved']
+    missing=sum(v.get('http_status')==404 for _,v in issues)
+    issue_rows=[[rd.date(d),'公式ファイル未発見（404）' if v.get('http_status')==404 else '内容・書式を確認中' if v.get('error')=='ValueError' else '通信等で未取得',f'<a href="{e(v.get("source"))}">公式ファイル</a>'] for d,v in issues[:400]]
+    coverage+=rd.section('未確認日の内訳',f'<p>公式ファイル未発見 {missing:,}日 ／ 内容・通信などの未確認 {len(issues)-missing:,}日。</p><details><summary>未確認日を確認（最大400日）</summary>'+matrix(['日付','状況','出典'],issue_rows)+'</details><p class="sub">中止表記だけの日や中身が空のファイルも、出走結果として扱いません。404は公式サイトで取得できなかった意味で、レース非開催の証明ではありません。</p>')
     championship_coverage=read_json(CHAMPIONSHIPS/'coverage.json',{})
     listed_finals=sum(len(read_json(CHAMPIONSHIPS/'lists'/(c['id']+'.json.gz'),{}).get('records',[])) for c in cats)
     coverage+=rd.section('公式大会記録の取得状況',f'<p>分類 {len(cats)}件 · 歴代決勝一覧 {listed_finals:,}大会 · 詳細出走表 {len(detailed):,}大会保存。取得済みの表では登番から選手ページへ結びつけています。</p>')
