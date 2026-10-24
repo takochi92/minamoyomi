@@ -59,7 +59,9 @@ def official_finals_panel(records):
     rows=[]
     for r in records:
         url='../database/champion-'+r['category']+'-'+r['number']+'.html'
-        rows.append([rd.date(r['date'])+'<small>'+e(r['venue'])+'</small>',e(r['name'])+'<small>'+e(r['group'])+'</small>',f'<a href="{url}">'+('優勝' if r['place']=='1' else e(r['place'])+'着')+'</a>'])
+        place=str(r.get('place') or '')
+        result='優勝' if place=='1' else place+'着' if place.isdigit() else place or '記載なし'
+        rows.append([rd.date(r['date'])+'<small>'+e(r['venue'])+'</small>',e(r['name'])+'<small>'+e(r['group'])+'</small>',f'<a href="{url}">'+e(result)+'</a>'])
     return rd.section('公式SG・PG1・G1記録集の決勝履歴',matrix(['日付・場','大会・記録集区分','結果'],rows),'公式記録集の決勝出走表で登番を照合した記録です。大会の記録集区分は、過去の開催当時の格付と異なる場合があります。全SG出場回数とは異なり、予選のみの出場は含みません。未取得の大会を0回とは扱いません。')
 
 
@@ -156,6 +158,7 @@ def catalog_pages(site,Page,venues):
             winner=' ／ '.join(e(w) for w in r['winners_label'])
             if detail:
                 winner=' ／ '.join(name(x['player']) for div in detail['divisions'] for x in div if x['place']=='1') or winner
+            if not winner:winner='原記録で確認'
             link=f'champion-{r["category"]}-{r["number"]}.html' if detail else r['source']
             rows.append([rd.date(r['date'])+'<small>'+e(r['venue'])+'</small>',winner,f'<a href="{e(link)}">{e(r["edition"])} 詳細</a>'+('' if detail else '<small>公式ページ</small>')])
             if not detail:continue

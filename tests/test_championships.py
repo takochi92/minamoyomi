@@ -37,3 +37,9 @@ def test_attack_rates_use_all_course_starts_not_only_wins():
     rendered=rv.attack_rates({'course':{'3':m}})
     assert '20走' in rendered and '10.0%' in rendered and '15.0%' in rendered
     assert '40.0%' not in rendered and '60.0%' not in rendered
+
+
+def test_accident_and_missing_finish_are_not_fabricated_places():
+    base={'date':'20260329','venue':'蒲郡','name':'クラシック','group':'SG','category':'0100','number':'61'}
+    result=views.official_finals_panel([{**base,'place':'F'},{**base,'place':''}])
+    assert '>F</a>' in result and 'F着' not in result and '記載なし' in result
