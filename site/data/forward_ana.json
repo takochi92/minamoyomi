@@ -24,7 +24,7 @@
       "missing_or_invalid_timestamps": 2181,
       "no_tickets": 2047,
       "unverified_inputs": 2047,
-      "incomplete_odds": 210
+      "incomplete_odds": 209
     },
     "settled_details": [
       {
@@ -58671,7 +58671,7 @@
     "no_shadow_tickets": 2673,
     "no_tickets": 2047,
     "unverified_inputs": 2047,
-    "incomplete_odds": 210
+    "incomplete_odds": 209
   },
   "overlapping_evidence_groups": {
     "course_model_support": {
