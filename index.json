@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-24T01:32:49.096Z",
+  "updated": "2026-10-24T02:24:46.541Z",
   "posts": [
+    {
+      "id": "2026-10-24-teirogu-X-feature",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-24",
+      "slot": "feature",
+      "text": "艇ろぐのデータバンクを大幅更新🚤\n1996年以降の保存結果159万レース超、公式50期、公式記録集の決勝1,448大会を掲載。\n開催・コース・決まり手で絞り、イン1着率や配当分布を確認できます。\n収録範囲と不足も明記。予想記事は維持しています。\nhttps://teilog.pages.dev/database/\n※20歳未満は購入不可",
+      "images": [],
+      "created_at": "2026-10-24T02:24:46.541Z"
+    },
     {
       "id": "2026-10-24-teirogu-X-morning",
       "project": "teirogu",
@@ -10,16 +20,6 @@
       "text": "【10/24（土）の艇ろぐ】\n今日は14場で開催\n🏆浜名湖 G3\n🏆住之江 G3\n\nAIの自信が高いレース\n・鳴門1R、芦屋1R\n\n昨日のAI本線：167レース中 31的中\n最高配当 徳山1R 3-1-5 4,330円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-10-24T01:32:49.096Z"
-    },
-    {
-      "id": "2026-10-24-teirogu-X-feature",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-24",
-      "slot": "feature",
-      "text": "【新機能】選手データバンク🚤\n公式50期（2002年前期〜2026年後期）・期別掲載2,868人分を追加。\n期別成績、コース別着順・ST、支部・養成期、優勝戦や高配当を確認できます。\n期間と件数も明記。予想記事は維持しています。\nhttps://teilog.pages.dev/database/\n※20歳未満は購入不可",
-      "images": [],
-      "created_at": "2026-10-24T01:28:11.071Z"
     },
     {
       "id": "2026-10-23-teirogu-X-evening",
