@@ -437,44 +437,45 @@ class Site:
                 f'<p class="sub">今日のコース（展示後は進入）での成績を、全体・この場・今日の風・今日の波高に分けたもの。1着率の緑は同じコース・同じ条件の全選手の平均よりはっきり良い（1.3倍以上）、赤は悪い（0.7倍以下）。風は2m以下を「風2m以下」にまとめ、それより強いときは追い風・向かい風・横風に分けています。5走未満は「-」。</p></section>')
 
     def ex_tab(self, d, jcd, rno, race, p):
-        """展示タブ：展示タイム（今節・いつもの1位率）・チルト・スタート展示・展示の数字"""
+        """6艇のタイム一覧を先頭に。重複しない補足比較は閉じておく。"""
         rl = (race.get("racelist") or {}).get("boats") or []
         bi = race.get("before") or {}
         bx = {b["frame"]: b for b in bi.get("boats", [])}
-        pb = {b["frame"]: b for b in p.get("boats", [])}
         rows = []
         for b in rl:
             f, x = b["frame"], bx.get(b["frame"], {})
             m = self.meet_ex(d, jcd, b.get("toban", ""), rno)
             t = self.ex_top(b.get("toban", ""))
             tl = x.get("tilt")
-            ex = x.get("exhibit_time") or pb.get(f, {}).get("exhibit_time")
-            mc = f'{m[0]:.2f}<small class="sub">/{m[1]}走</small>' if m else "-"
+            mc = f'{m[0]:.2f}<small class="sub">{m[1]}走</small>' if m else "-"
             tc = f'<span class="{"dgood" if t[0] >= 0.25 else ""}">{t[0] * 100:.0f}%</span>' if t else "-"
-            lc = (f"{tl:+.1f}" + (' <span class="pill tilt">伸び型</span>' if tl >= 1.0 else "")) if tl is not None else "-"
-            rows.append(f'<tr><td>{bt(f)} {e(b.get("name", ""))}</td><td class="r num" data-label="展示タイム">{f"{ex:.2f}" if ex else "-"}</td>'
+            lc = f"{tl:+.1f}" if tl is not None else "-"
+            rows.append(f'<tr><td><span class="ex-boat">{bt(f)} <span>{e(b.get("name", ""))}</span></span></td>'
                         f'<td class="r num" data-label="今節平均">{mc}</td><td class="r num" data-label="いつもの1位率">{tc}</td><td class="r num" data-label="チルト">{lc}</td></tr>')
-        tbl = ""
+        reference = ''
         if rows:
-            tbl = (f'<section class="panel"><h2>展示タイム <small>{"展示前" if not bx else "今節・いつもと比べて"}</small></h2>'
-                   f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">展示T</th><th class="r">今節平均</th><th class="r">いつもの<br>1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                   '<p class="sub">「今節の平均」は今節これまでの展示タイムの平均。「いつもの1位率」は過去2年で展示タイムが6艇の中でいちばん速かった割合（平均は約17%。25%以上は緑）。チルト+1.0以上は伸び型。</p></section>')
-        rest = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html')) + self.oriten_block(race)
-        if not bx:
-            rest += '<section class="panel"><p class="sub" style="margin:0">展示は締切の30分前ごろに表示します。</p></section>'
-        return tbl + rest
+            reference = (f'<details class="panel ex-reference ex-compact" id="ex-reference"><summary>今節・普段との比較／チルト</summary>'
+                         f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">今節平均</th><th class="r">通常の<br>展示1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                         '<p class="sub">今節平均は、このレースより前に保存した今節の展示タイム平均。通常の展示1位率は、過去2年で展示タイムが6艇中1位だった割合（25％以上は緑）。同タイム1位を含み、今回の1着確率ではありません。</p></details>')
+        times = self.oriten_block(race, p)
+        slit = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))
+        waiting = '<p class="sub">展示の取得待ちです。取得できた項目から表示します。</p>' if not bx else ''
+        return times + reference + waiting + slit
 
-    def oriten_block(self, race):
+    def oriten_block(self, race, fallback=None):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
         ot = race.get("oriten")
         bi = race.get("before") or {}
         ex = {str(b["frame"]): b.get("exhibit_time") for b in bi.get("boats", [])}
-        if not ot and not any(ex.values()):
+        for b in (fallback or {}).get('boats', []):
+            key = str(b['frame'])
+            if not ex.get(key) and b.get('exhibit_time'):
+                ex[key] = b['exhibit_time']
+        if not ot and not any(ex.values()) and not (race.get('racelist') or {}).get('boats'):
             return ""
-        items = (["展示タイム"] if any(ex.values()) else []) + (ot["items"] if ot else [])
+        items = ['展示タイム'] + [it for it in (ot['items'] if ot else []) if it != '展示タイム']
         cols = {}
-        if any(ex.values()):
-            cols["展示タイム"] = ex
+        cols["展示タイム"] = ex
         for i, it in enumerate(ot["items"] if ot else []):
             cols[it] = {f: (v[i] if i < len(v) else None) for f, v in ot["rows"].items()}
         rank = {}
@@ -483,7 +484,7 @@ class Site:
             rank[it] = {f: (vals.index(v) + 1 if v else None) for f, v in col.items()}
         names = {str(b["frame"]): b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
         dmeans = self.day_means(race.get("date", ""), race.get("jcd", "")) if race.get("date") and race.get("jcd") else {}
-        head = "".join(f'<th class="r">{e(it)}</th>' for it in items)
+        head = "".join(f'<th class="r">{e("展示T" if it == "展示タイム" else it)}</th>' for it in items)
         rows = []
         for f in map(str, range(1, 7)):
             cells = []
@@ -494,9 +495,9 @@ class Site:
                 dd = ""
                 if v and dm:
                     diff = v - dm[0]
-                    dd = f'<br><small class="{"dgood" if diff <= -0.05 else ("dbad" if diff >= 0.05 else "sub")}">{diff:+.2f}</small>'
-                cells.append(f'<td class="r num {cls}" data-label="{e(it)}">{f"{v:.2f}" if v else "-"}<small class="sub ex-rank">{f" {r}位" if r else ""}</small>{dd}</td>')
-            rows.append(f'<tr><td>{bt(int(f))} {e(names.get(f, ""))}</td>{"".join(cells)}</tr>')
+                    dd = f'<small class="{"dgood" if diff <= -0.05 else ("dbad" if diff >= 0.05 else "sub")}">{diff:+.2f}</small>'
+                cells.append(f'<td class="r num {cls}" data-label="{e(it)}"><span class="ex-value">{f"{v:.2f}" if v else "-"}</span><small class="sub ex-rank">{f" {r}位" if r else ""}</small>{dd}</td>')
+            rows.append(f'<tr><td><span class="ex-boat">{bt(int(f))}<span>{e(names.get(f, ""))}</span></span></td>{"".join(cells)}</tr>')
         tops = []
         for it in items:
             best = [f for f, r in rank[it].items() if r == 1]
@@ -506,9 +507,9 @@ class Site:
         if dmeans:
             note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
                      "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
-        return (f'<section class="panel"><h2>展示の数字 <small>{e("・".join(tops))}</small></h2>'
-                f'<div class="tbl-wrap"><table class="t-ori" style="--ex-cols:{min(4, len(items))}"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                f'<p class="sub">{note}</p></section>')
+        return (f'<section class="panel ex-compact ex-primary"><h2>展示タイム・足の比較</h2>'
+                f'<div class="tbl-wrap"><table class="t-ori{" ex-many" if len(items) > 4 else ""}{" ex-dense" if len(items) > 5 else ""}"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<details class="ex-explain"><summary>順位・平均との差の見方</summary><p class="sub">{e("・".join(tops))}</p><p class="sub">{note}</p></details></section>')
 
     def worry_block(self, p):
         w = p.get("in_worry")

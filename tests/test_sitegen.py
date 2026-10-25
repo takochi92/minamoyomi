@@ -71,13 +71,22 @@ def test_exhibition_mobile_labels_preserve_all_values_and_missing_items():
             'before': {'boats': [{'frame': f, 'exhibit_time': 6.80, 'tilt': 3.0} for f in range(1, 7)]},
             'oriten': {'items': ['一周', 'まわり足', '直線', '半周'], 'rows': {'1': [36.72, 5.12, 7.63, None]}}}
     html = s.oriten_block(race)
-    assert 'style="--ex-cols:4"' in html
+    assert 'class="panel ex-compact ex-primary"' in html
     for label in ['展示タイム', '一周', 'まわり足', '直線', '半周']:
         assert html.count(f'data-label="{label}"') == 6
     assert '36.72' in html and '7.63' in html
     html = s.ex_tab('20261025', '03', 1, race, {})
     for label in ['展示タイム', '今節平均', 'いつもの1位率', 'チルト']:
         assert f'data-label="{label}"' in html
+    assert html.count('data-label="展示タイム"') == 6
+    assert '<details class="panel ex-reference ex-compact"' in html
+    assert 'id="ex-reference" open' not in html
+    assert html.index('<table class="t-ori') < html.index('id="ex-reference"')
+    waiting = dict(race, before={}, oriten=None)
+    fallback = s.oriten_block(waiting, {'boats': [{'frame': 1, 'exhibit_time': 6.79}]})
+    assert fallback.count('data-label="展示タイム"') == 6 and '6.79' in fallback
+    official = s.oriten_block(race, {'boats': [{'frame': 1, 'exhibit_time': 6.79}]})
+    assert '6.79' not in official  # Existing official beforeinfo takes priority.
 
 
 def test_motor_history_has_all_users_dates_and_official_result_links():
