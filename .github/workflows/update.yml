@@ -9,6 +9,8 @@ on:
       - 'scraper/predict.py'
       - 'scraper/prediction_context.py'
       - 'scraper/motoradj.py'
+      - 'scraper/motor.py'
+      - 'scraper/motor_renewals.json'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
       - 'scraper/start_timing.py'

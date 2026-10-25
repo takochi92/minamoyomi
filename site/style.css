@@ -488,6 +488,20 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 .mt-res{display:flex;flex-wrap:wrap;gap:4px;font-family:var(--mono,monospace);font-size:13px}
 .mt-res b,.mt-res span{min-width:1.4em;text-align:center;border-radius:4px;padding:1px 3px;background:rgba(255,255,255,.05)}
 .mt-res b.r1{background:#E5484D;color:#fff}.mt-res b.r2{background:rgba(229,72,77,.45)}.mt-res b.r3{background:rgba(229,72,77,.22)}
+.mt-history-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px;border-top:1px solid var(--line);padding-top:12px}
+.mt-history-note{font-size:12px;line-height:1.8;margin:2px 0 8px}
+.mt-period{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.mt-period>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;padding:10px 12px;background:rgba(255,255,255,.025)}
+.mt-period-date{grid-column:1/-1;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.mt-period>summary>b{font-size:15px;overflow-wrap:anywhere}.mt-period>summary::after{content:'着順を見る ＋';grid-column:1/-1;font-size:11px;color:var(--accent)}
+.mt-period[open]>summary::after{content:'着順を閉じる −'}
+.mt-period-stat{font-size:12px;text-align:right;display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.mt-period-body{padding:10px 12px;font-size:12px;border-top:1px solid var(--line)}
+.mt-finishes{display:grid;grid-template-columns:repeat(auto-fit,minmax(65px,1fr));gap:6px;margin-top:10px}
+.mt-finish{display:grid;gap:3px;text-align:center;background:rgba(255,255,255,.035);border-radius:5px;padding:7px 2px;text-decoration:none;color:var(--ink)}
+.mt-finish>small{font-size:10px;color:var(--ink2)}.mt-finish>b{font-size:17px}.mt-finish b small{font-size:10px;margin-left:2px}
+.mt-finish.place-1{box-shadow:inset 0 -2px var(--accent)}.mt-finish.place-2{box-shadow:inset 0 -2px #75a9ce}.mt-finish.place-3{box-shadow:inset 0 -2px #967daf}
+@media(max-width:420px){.mt>summary{gap:8px;padding:10px}.mt-no{font-size:20px;min-width:2.8em}.mt-v b{font-size:15px}.mt-body{padding:0 9px 10px}.mt-period>summary{padding:9px}.mt-period-body{padding:9px}}
 .alt-bets{border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
 .alt-bets>summary{cursor:pointer;line-height:1.5}
 /* 場ページのレースカード：高さと並びをそろえる */

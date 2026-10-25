@@ -63,6 +63,20 @@ def test_st_page_uses_saved_local_estimate_and_separates_meeting(tmp_path):
     assert 'img/slit-boat-1.svg' in s.bins and 'img/slit-boat-6.svg' in s.bins
 
 
+def test_motor_history_has_all_users_dates_and_official_result_links():
+    from scraper.motor import build
+    from tests.test_motor_history import race
+    rows = [race('20260525', '5082'), race('20261008'), race('20261022', '4925')]
+    s = sitegen.Site()
+    s._motor_page('03', sitegen.VENUES['03'], build(rows, []))
+    html = s.files['venue/edogawa-motor.html']
+    assert '西田 和加' in html and '2026/10/08' in html and '2026/05/25' in html
+    assert '全使用履歴' in html and '公式の節区分ではありません' in html
+    assert 'hd=20261008&amp;jcd=03&amp;rno=1' in html
+    assert '交換日不明' in html
+    assert '初卸からの網羅性は未確認' in html
+
+
 def test_seo_basics(tmp_path):
     _, files = _site(tmp_path)
     page = files["race/20260925/kiryu-12.html"]

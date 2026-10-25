@@ -56,6 +56,7 @@ def renewals(races: list) -> dict:
 
 def build(races: list, race_files: list[dict]) -> dict:
     renew = renewals(races)
+    verified = json.loads(Path(__file__).with_name("motor_renewals.json").read_text(encoding="utf-8"))
     by = defaultdict(list)          # (jcd, motor) -> [(date, exdev, place, kimarite_if_win)]
     for r in sorted(races, key=lambda r: (r[0], r[1], r[2])):
         if r[0] < renew.get(r[1], ""):
@@ -68,6 +69,22 @@ def build(races: list, race_files: list[dict]) -> dict:
         for e in E:
             dev = round((e[6] - m) / 100, 3) if (m is not None and e[6]) else None
             by[(r[1], e[8])].append((r[0], dev, e[5], r[3] if e[5] == 1 else "", e[1], r[2]))
+    # 表示用の全使用履歴。予想用の従来集計・直近2節は変更しない。
+    # 他艇の番号欠落で、番号が確認できる艇まで履歴から落とさない。
+    history = defaultdict(list)
+    unknown = Counter()
+    through = {}
+    for r in sorted(races, key=lambda r: (r[0], r[1], r[2])):
+        if r[0] < renew.get(r[1], ""):
+            continue
+        through[r[1]] = r[0]
+        for entry in r[11]:
+            if len(entry) <= 8 or entry[8] is None:
+                unknown[r[1]] += 1
+                continue
+            history[(r[1], str(entry[8]))].append({
+                "date": r[0], "rno": r[2], "toban": str(entry[1]),
+                "place": entry[5], "frame": entry[0], "course": entry[2]})
     # オリジナル展示（直近14日）
     ori = defaultdict(list)          # (jcd, motor) -> [(date, {item: dev})]
     for race in race_files:
@@ -125,9 +142,33 @@ def build(races: list, race_files: list[dict]) -> dict:
                      "win": sum(1 for x in ls if x[2] == 1), "makuri": sum(1 for x in ls if x[3] in ("まくり", "まくり差し")),
                      "ori": {it: round(sum(v) / len(v), 3) for it, v in oavg.items()}, "ori_n": len(oo)},
         }
+    for (jcd, mno), rows in history.items():
+        periods = []
+        for row in rows:
+            if (not periods or periods[-1]["toban"] != row["toban"]
+                    or (_d(row["date"]) - _d(periods[-1]["to"])).days > 2):
+                periods.append({"from": row["date"], "to": row["date"],
+                                "toban": row["toban"], "races": []})
+            periods[-1]["to"] = row["date"]
+            periods[-1]["races"].append(row)
+        m = out[jcd].setdefault(mno, {})
+        m.update({"history": list(reversed(periods)), "history_n": len(rows),
+                  "history_first": rows[0]["date"], "history_last": rows[-1]["date"],
+                  "history_as_of": through[jcd], "history_unknown_motor": unknown[jcd],
+                  "history_boundary": renew.get(jcd),
+                  "history_boundary_source": "zero_rate_inferred" if jcd in renew else "unknown"})
+        # 表示の分母は選手責任外の失格・欠場を除外。予想用の既存値は維持。
+        counted = [r for r in rows if r['place'] not in ('S0', 'L0', 'K0')]
+        m['history_stats'] = {'n': len(counted),
+                              'top2': sum(r['place'] in (1, 2) for r in counted),
+                              'top3': sum(r['place'] in (1, 2, 3) for r in counted)}
+        # 確認済み日付と推定世代が一致する場合だけ公式確認済みとする。
+        if renew.get(jcd) and verified.get(jcd, {}).get("date") == renew[jcd]:
+            m["history_boundary_source"] = "official_confirmed"
+            m["history_boundary_url"] = verified[jcd]["url"]
     # 場の中での順位（展示タイム差が小さい＝速い順）
     for jcd, ms in out.items():
-        order = sorted((k for k in ms if ms[k]["ex"] is not None), key=lambda k: ms[k]["ex"])
+        order = sorted((k for k in ms if ms[k].get("ex") is not None), key=lambda k: ms[k]["ex"])
         for i, k in enumerate(order):
             ms[k]["rank"] = i + 1
             ms[k]["of"] = len(order)
@@ -139,6 +180,11 @@ def load() -> dict:
         return {}
     with gzip.open(OUT, "rt", encoding="utf-8") as f:
         return json.load(f)
+
+
+def display_stats(m):
+    """画面用の出走回数・連対数。旧保存形式にも対応する。"""
+    return m.get('history_stats') or m
 
 
 def main():
@@ -157,8 +203,11 @@ def main():
     for j, ms in current_context([r for r in load_all() if r[0]<today]).items():
         for mno, v in ms.items():
             data.setdefault(j, {}).setdefault(mno, {}).update(v)
-    with gzip.open(OUT, "wt", encoding="utf-8") as f:
+    # ページ生成などが同時に読む場合も、書きかけのgzipを渡さない。
+    temp = OUT.with_suffix('.gz.tmp')
+    with gzip.open(temp, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+    temp.replace(OUT)
     print(f"motor: {sum(len(v) for v in data.values())} motors")
     for jcd, d in sorted(renewals(races).items()):
         print("  renewal", jcd, d)

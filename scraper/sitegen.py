@@ -1915,12 +1915,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         rows = []
         for jcd in sorted(data):
             for no, m in (data.get(jcd) or {}).items():
-                n = m.get("n", 0)
+                stats = _motor.display_stats(m)
+                n = stats.get("n", 0)
                 if not n:
                     continue
                 mt = m.get("meets") or []
                 prev = self.racer_name(mt[0].get("toban", ""), "") if mt else ""
-                rows.append([jcd, int(no), n, round(m.get("top2", 0) / n, 3), round(m.get("top3", 0) / n, 3),
+                rows.append([jcd, int(no), n, round(stats.get("top2", 0) / n, 3), round(stats.get("top3", 0) / n, 3),
                              m.get("rank") or 0, prev, use.get((jcd, str(no)), "")])
         return rows
 
@@ -2081,30 +2082,34 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             print("motor index skip", ex)
 
     def _motor_index(self, data):
+        from .motor import display_stats
         page = Page("motor.html")
         held = {x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")}
         cards = []
         for jcd in sorted(VENUES):
             ms = data.get(jcd) or {}
             since = next((m.get("since") for m in ms.values() if m.get("since")), "")
-            best = max(((no, m["top2"] / m["n"]) for no, m in ms.items() if m.get("n", 0) >= 20 and "top2" in m), key=lambda x: x[1], default=None)
-            sub = (f"{int(since[4:6])}/{int(since[6:])}入れ替え" if since else "集計中")
+            best = max(((no, st['top2'] / st['n']) for no, m in ms.items() if (st := display_stats(m)).get('n', 0) >= 20 and 'top2' in st), key=lambda x: x[1], default=None)
+            confirmed = any(m.get('history_boundary_source') == 'official_confirmed' for m in ms.values())
+            sub = (f"{int(since[4:6])}/{int(since[6:])}使用開始{'確認済' if confirmed else '推定'}" if since else "集計中")
             top = f'<span class="sub">最高 {e(best[0])}号機 {best[1] * 100:.0f}%</span>' if best else '<span class="sub">&nbsp;</span>'
             cards.append(f'<a class="vt on{"" if jcd in held else " off"}" href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}"><b>{e(VENUES[jcd]["name"])}</b>'
                          f'<span>{"本日開催" if jcd in held else "&nbsp;"}</span><span class="st" style="font-size:12px">{sub}</span>{top}</a>')
         body = f"""<h1>モーター一覧</h1>
-<p class="sub">場を選ぶと、その場の全モーターの2連対率・3連対率、前節・前々節の使用者と着順が見られます。数字はモーターが入れ替わってからの成績だけで数えています。各モーターの欄に、自分用のメモも書けます（この端末だけに保存）。</p>
+<p class="sub">場を選ぶと、各モーターの2連対率・3連対率と、保存されている全使用履歴が見られます。公式確認済みの場以外は交換日を推定しています。使用者ごとに期間と着順をまとめ、古い履歴は折りたたんでいます。メモはこの端末だけに保存されます。</p>
 <div class="vtiles">{''.join(cards)}</div>"""
         self.put(page.path, page.render(f"ボートレース全24場のモーター一覧（2連対率・前節の使用者）｜{SITE_NAME}",
-                                        "全24場のモーターを場ごとに一覧。モーター入れ替え後の2連対率・3連対率、前節・前々節の使用者と着順。", body, [("", "モーター一覧")]))
+                                        "全24場のモーターを場ごとに一覧。2連対率・3連対率と、保存済みの全使用者・期間・レースごとの着順。", body, [("", "モーター一覧")]))
 
     def _motor_page(self, jcd, v, data):
+        from .motor import display_stats
         if True:
             page = Page(f"venue/{SLUG[jcd]}-motor.html")
             ms = data.get(jcd) or {}
             since = next((m.get("since") for m in ms.values() if m.get("since")), "")
 
             def rate(m, k):
+                m = display_stats(m)
                 return m[k] / m["n"] if m.get("n") and k in m else None
 
             def meet(x, label):
@@ -2118,24 +2123,59 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 return (f'<div class="mt-meet"><span class="sub">{label} {int(x["from"][4:6])}/{int(x["from"][6:])}〜{int(x["to"][4:6])}/{int(x["to"][6:])}</span>'
                         f'<div>{who} <span class="sub">{e(self.racers.get(t, {}).get("class", ""))}</span></div><div class="mt-res">{res}</div></div>')
 
+            def full_history(m):
+                periods = m.get("history")
+                if periods is None:
+                    mt = m.get("meets") or []
+                    return '<p class="sub">全使用履歴を更新中です。以下は保存済みの直近使用記録です。</p>' + ''.join(meet(x, "使用記録") for x in mt)
+                def date(s):
+                    return f'{s[:4]}/{s[4:6]}/{s[6:]}'
+                boundary = m.get("history_boundary")
+                if m.get("history_boundary_source") == "official_confirmed":
+                    intro = f'現モーター使用開始 {date(boundary)}（<a href="{e(m["history_boundary_url"])}" target="_blank" rel="noopener">公式確認済み</a>）'
+                else:
+                    intro = (f'交換推定日 {date(boundary)}（公式未照合）' if boundary else '交換日不明：初卸からの網羅性は未確認')
+                parts = [f'<div class="mt-history-head"><b>全使用履歴 <span class="num">{len(periods)}</span>件</b>'
+                         f'<span class="sub">{m.get("history_n", 0)}記録・{date(m["history_as_of"])}の記録まで</span></div>',
+                         f'<p class="sub mt-history-note">{intro}<br>この号機の初回保存 {date(m["history_first"])} ／ 最終使用記録 {date(m["history_last"])}</p>']
+                if m.get("history_unknown_motor"):
+                    parts.append(f'<p class="sub">同場・集計期間内に号機不明の記録が{m["history_unknown_motor"]}走あります。履歴が欠ける可能性があります。</p>')
+                for i, x in enumerate(periods):
+                    t = x['toban']
+                    rows = x['races']
+                    top2 = sum(r['place'] in (1, 2) for r in rows)
+                    res = ''.join(f'<a class="mt-finish place-{e(str(r["place"]))}" href="https://www.boatrace.jp/owpc/pc/race/raceresult?hd={r["date"]}&amp;jcd={jcd}&amp;rno={r["rno"]}" '
+                                  f'target="_blank" rel="noopener" title="{date(r["date"])} {r["rno"]}R・公式結果">'
+                                  f'<small>{r["date"][4:6]}/{r["date"][6:]} {r["rno"]}R</small><b>{e(str(r["place"]))}<small>{"着" if isinstance(r["place"], int) else ""}</small></b></a>' for r in rows)
+                    parts.append(f'<details class="mt-period"{" open" if i == 0 else ""}><summary>'
+                                 f'<span class="mt-period-date">{date(x["from"])}〜{date(x["to"])}</span>'
+                                 f'<b>{e(self.racer_name(t, "登録" + t))}</b>'
+                                 f'<span class="mt-period-stat">{len(rows)}記録 <span>2着以内 {top2}回</span></span>'
+                                 f'</summary><div class="mt-period-body"><a href="{self.racer_link(page, t) or "#"}">選手データ →</a>'
+                                 f'<div class="mt-finishes">{res}</div></div></details>')
+                parts.append('<p class="sub mt-history-note">新しい順。同じ使用者の記録が2日以内で続く期間をまとめています。公式の節区分ではありません。節途中の交代も分けて表示します。記録件数には欠場・事故も含みます。着順を押すと公式結果を確認できます。保存データの欠落は補完していません。</p>')
+                return ''.join(parts)
+
             cards = []
             for no, m in sorted(ms.items(), key=lambda kv: -(rate(kv[1], "top2") or 0)):
                 r2, r3 = rate(m, "top2"), rate(m, "top3")
                 exs = f'展示 {m["rank"]}位/{m["of"]}' if m.get("rank") else ""
-                mt = m.get("meets") or []
                 cards.append(f'<details class="mt" id="m{e(no)}"><summary><b class="mt-no num">{e(no)}<small>号機</small></b>'
                              f'<span class="mt-v"><small>2連対率</small><b class="num {"best" if r2 is not None and r2 >= 0.40 else ""}">{pct(r2, 1)}</b></span>'
                              f'<span class="mt-v"><small>3連対率</small><b class="num">{pct(r3, 1)}</b></span>'
-                             f'<span class="mt-v"><small>出走</small><b class="num">{m.get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
-                             f'<div class="mt-body">{meet(mt[0] if mt else None, "前節")}{meet(mt[1] if len(mt) > 1 else None, "前々節")}'
+                             f'<span class="mt-v"><small>出走</small><b class="num">{display_stats(m).get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
+                             f'<div class="mt-body">{full_history(m)}'
                              f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
             sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
+            official = any(m.get('history_boundary_source') == 'official_confirmed' for m in ms.values())
+            boundary_note = (f'現モーターの使用開始は{sh}（公式確認済み）。' if official else
+                             f'交換推定日は{sh}。番組表の2連率0％から判定しており、公式の初卸日とは未照合です。' if sh else '交換日は未確認です。')
             body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
-<p class="sub">{f'{sh}にモーターが入れ替わってからの成績です（入れ替え前のモーターはまぜていません）。' if sh else ''}2連対率の高い順。タップで前節・前々節の使用者と着順、メモ欄が開きます。メモはこの端末だけに保存されます。</p>
+<p class="sub">2連対率の高い順。号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}メモはこの端末だけに保存されます。</p>
 <div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
-<p class="sub">データ：BOAT RACE公式の競走成績・番組表から集計。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
+<p class="sub">データ：BOAT RACE公式の競走成績・番組表から独自集計。一覧の出走回数・連対率は選手責任外の失格・欠場（S0・L0・K0）を除外します。全使用履歴の記録件数にはこれらも含めます。取得期間や欠落により公式表示と異なる場合があります。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
-                                            f"{v['name']}のモーターを2連対率・3連対率の順に一覧。前節・前々節の使用者と着順、展示タイムの順位。", body,
+                                            f"{v['name']}のモーターを2連対率・3連対率の順に一覧。保存済みの全使用者・使用期間・着順と、展示タイムの順位。", body,
                                             [("motor.html", "モーター一覧"), ("", v["name"])]))
 
     def venue_extra(self, jcd):
