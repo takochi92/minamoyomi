@@ -18,10 +18,12 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import json
 import math
 import re
 from collections import Counter, defaultdict
+from functools import lru_cache
 
 import numpy as np
 from datetime import datetime, timedelta, timezone
@@ -135,6 +137,12 @@ from itertools import permutations as _perm
 COMBO_LIST = [f"{a}-{b}-{c}" for a, b, c in _perm(range(1, 7), 3)]
 
 
+@lru_cache(maxsize=64)
+def _asset_fingerprint(path: Path, modified_ns: int, size: int) -> str:
+    """Read each asset once per revision, rather than once per generated page."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+
 class Page:
     """1ページ分。path はサイトルートからの相対パス（例 race/20260925/kiryu-12.html）"""
 
@@ -144,6 +152,15 @@ class Page:
 
     def u(self, target: str) -> str:
         return "../" * self.depth + target
+
+    def asset(self, target: str) -> str:
+        path = ROOT / 'site' / target
+        try:
+            stat = path.stat()
+            version = _asset_fingerprint(path, stat.st_mtime_ns, stat.st_size)
+        except FileNotFoundError:
+            return self.u(target)
+        return self.u(target) + '?v=' + version
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False, og=None):
         nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
@@ -166,13 +183,13 @@ class Page:
 <meta name="theme-color" content="#0B1116">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="{self.u('style.css')}">
+<link rel="stylesheet" href="{self.asset('style.css')}">
 <script>window.SITE_ROOT = "{self.u('')}";</script>
-<script src="{self.u('config.js')}"></script>
-<script src="{self.u('clock.js')}" defer></script>
-<script src="{self.u('note-store.js')}" defer></script>
-<script src="{self.u('note-account.js')}" defer></script>
-<script src="{self.u('note.js')}" defer></script>
+<script src="{self.asset('config.js')}"></script>
+<script src="{self.asset('clock.js')}" defer></script>
+<script src="{self.asset('note-store.js')}" defer></script>
+<script src="{self.asset('note-account.js')}" defer></script>
+<script src="{self.asset('note.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
@@ -1988,7 +2005,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 </section>
 <section class="tabp sx" id="sx-f" data-tab="f" hidden><div id="fav-list" class="panel"><p class="sub">☆を押した選手がここに並びます。</p></div></section>
 <script id="sx-data" type="application/json">{json.dumps({"racers": rj, "motors": mrows, "venues": vnames, "slug": SLUG, "held": held, "date": self.idx.get("date", ""), "hasKi": has_ki}, ensure_ascii=False, separators=(",", ":"))}</script>
-<script src="{page.u('search.js')}" defer></script>
+<script src="{page.asset('search.js')}" defer></script>
 <p class="sub">データ：BOAT RACE公式の期別成績・競走成績・番組表。</p>"""
         self.put(page.path, page.render(f"ボートレーサー検索・モーター検索（支部・期・級別）｜{SITE_NAME}",
                                         f"ボートレーサー約{len(rs):,}人を名前・よみ・支部{'・期' if has_ki else ''}・級別でさがせます。全24場のモーターを2連対率で検索。お気に入り選手の今日の出走も。",

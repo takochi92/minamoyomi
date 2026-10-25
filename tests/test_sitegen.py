@@ -11,6 +11,28 @@ import fixtures as fx  # noqa: E402
 from scraper import fan, parse, predict as P, sitegen, run  # noqa: E402
 
 
+def test_account_assets_refresh_cached_clients_only_when_content_changes(tmp_path, monkeypatch):
+    monkeypatch.setattr(sitegen, 'ROOT', tmp_path)
+    assets = tmp_path / 'site'
+    assets.mkdir()
+    for name in ('style.css', 'config.js', 'clock.js', 'note-store.js', 'note-account.js', 'note.js'):
+        (assets / name).write_text('initial-' + name, encoding='utf-8')
+    page = sitegen.Page('racer/5037.html')
+    before = page.asset('config.js')
+    assert re.fullmatch(r'../config\.js\?v=[a-f0-9]{12}', before)
+    assert page.asset('config.js') == before
+    html = page.render('test', 'test', '')
+    for name in ('style.css', 'config.js', 'clock.js', 'note-store.js', 'note-account.js', 'note.js'):
+        assert page.asset(name) in html
+    # A rollout/config change must bypass the old browser-cached script, while
+    # untouched scripts keep their URL and can still use the browser cache.
+    unchanged = page.asset('note.js')
+    (assets / 'config.js').write_text('public account configuration', encoding='utf-8')
+    assert page.asset('config.js') != before
+    assert page.asset('note.js') == unchanged
+    assert sitegen.Page('mynote.html').asset('config.js').startswith('config.js?v=')
+
+
 def _site(tmp_path):
     rl = parse.parse_racelist(fx.racelist_html())
     bi = parse.parse_beforeinfo(fx.beforeinfo_html())
