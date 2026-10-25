@@ -13,6 +13,8 @@ on:
       - 'scraper/motor_renewals.json'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
+      - 'scraper/target_methods.py'
+      - 'scraper/overperf.py'
       - 'scraper/season_watch.py'
       - 'scraper/season_views.py'
       - 'scraper/fl_leave.py'

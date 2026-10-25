@@ -21,6 +21,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 from .history import load_all
+from .model import KIM
 
 PATH = Path(__file__).resolve().parent / "overperf.json.gz"
 CL = {"A1": 0, "A2": 1, "B1": 2}
@@ -81,6 +82,22 @@ def score(o, e):
     return (o + PRIOR) / (e + PRIOR)
 
 
+def course_methods(rows):
+    """Same accepted rows as oe: [starts, wins, six official methods, unknown]."""
+    counts = defaultdict(lambda: defaultdict(lambda: [0] * 9))
+    through, races = '', 0
+    for r, entries, _, _ in rows:
+        through = max(through, r[0])
+        races += 1
+        for e in entries:
+            v = counts[e[1]][str(e[2])]
+            v[0] += 1
+            if e[5] == 1:
+                v[1] += 1
+                v[2 + KIM.index(r[3]) if r[3] in KIM else 8] += 1
+    return {t: dict(d) for t, d in counts.items()}, through, races
+
+
 def main(now=None):
     now = now or datetime.now(timezone(timedelta(hours=9)))
     since = (now - timedelta(days=365)).strftime("%Y%m%d")
@@ -96,6 +113,7 @@ def main(now=None):
             a[2] += float(p[i])
     out = {"since": since, "races": len(rows), "coef": [round(float(x), 4) for x in b],
            "oe": {t: {str(c): [v[0], v[1], round(v[2], 2)] for c, v in d.items()} for t, d in oe.items()}}
+    out["course_methods"], out["methods_through"], _ = course_methods(rows)
     with gzip.open(PATH, "wt", encoding="utf-8") as f:
         json.dump(out, f, separators=(",", ":"))
     print("overperf", len(rows), "races", len(oe), "racers")

@@ -27,7 +27,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import arechu, coursest, fstart, ogimg, overperf, share
+from . import arechu, coursest, fstart, ogimg, overperf, share, target_methods
 from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
@@ -216,7 +216,11 @@ class Site:
         self.racers = (load_json(Path(__file__).parent / "racers.json", {}) or {}).get("racers", {})
         self.idx = load_json(DATA / "index.json", {"date": self.now.strftime("%Y%m%d"), "venues": []})
         self.report = load_json(Path(__file__).parent / "model_report.json", {})
-        self.op = (overperf.load() or {}).get("oe", {})
+        op_report = overperf.load() or {}
+        self.op = op_report.get("oe", {})
+        self.op_methods = op_report.get("course_methods", {})
+        self.op_since = op_report.get("since", "")
+        self.op_through = op_report.get("methods_through", "")
         self.exs = load_exstats()
         self.cst = coursest.load()
 
@@ -1610,6 +1614,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         page = Page("targets.html")
         cour, (p1, esc), (nat_mk, mk) = self.rankings()
         op_note = (self.report.get("overperf") or {}).get("note", "")
+        method_date = lambda d: f'{d[:4]}/{d[4:6]}/{d[6:]}' if len(d) == 8 and d.isdigit() else '未確認'
 
         def rname(t):
             return f'<a href="{page.u("racer/" + t + ".html")}">{e(self.racer_name(t))}</a> <span class="sub">{e(self.racers.get(t, {}).get("class", ""))} {e(self.racers.get(t, {}).get("branch", ""))}</span>'
@@ -1617,9 +1622,15 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         vb = (self.report.get("overperf") or {}).get("by_course", {})
         secs = []
         for c, (p, rows) in cour.items():
-            tr = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(w, 1)}</td><td class="r num sub">{pct(ex, 1)}</td>'
-                         f'<td class="r num best">{sc:.2f}</td><td>{("".join(f'<span class="target-method">{e(k)} <b>{v}</b></span>' for k, v in kim.items()) or "—")}</td></tr>'
-                         for i, (sc, t, n, w, ex, kim) in enumerate(rows))
+            bars = []
+            for sc, t, n, w, ex, _ in rows:
+                wins = round(n*w)
+                methods = self.op_methods.get(t, {}).get(str(c))
+                bars.append(f'<article class="tm-row"><div class="tm-head"><div class="tm-name">{rname(t)}</div>'
+                            f'<div class="tm-win"><strong>{pct(w, 1)}</strong><span>1着率 · {wins}勝／{n}走</span></div></div>'
+                            f'<div class="tm-score">巧者スコア <b>{sc:.2f}</b> ／ 実力からの1着率目安 {pct(ex, 1)}</div>'
+                            f'{target_methods.render(methods, n, wins)}</article>')
+            tr = ''.join(bars)
             chk = ""
             if str(c) in vb:
                 parts = []
@@ -1630,7 +1641,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     parts.append(f'{lab}：実際 {pct(w_, 1)} / オッズの見立て {pct(m_, 1)} → <b class="num {tone}">{r_:.2f}倍</b>（{n_}艇）')
                 chk = f'<p class="sub">過去1年の検証（スコア{OP_MARK}以上の艇）　' + "　".join(parts) + "</p>"
             secs.append(f'<section class="panel" id="c{c}"><h2>{c}コース巧者 <small>実力のわりに{c}コースで勝てる選手・{OP_MIN}走以上</small></h2>'
-                        f'<div class="tbl-wrap"><table class="t-tgt"><thead><tr><th class="r">#</th><th>選手</th><th class="r">{c}コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th><th>勝ち方</th></tr></thead><tbody>{tr}</tbody></table></div>{chk}</section>')
+                        f'{target_methods.legend()}<div class="tm-list">{tr}</div>{chk}</section>')
         esc_rows = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(w, 1)}</td><td class="r num sub">{pct(ex, 1)}</td><td class="r num best">{sc:.2f}</td></tr>' for i, (sc, t, n, w, ex) in enumerate(esc))
         mk_rows = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(r, 1)}</td><td class="r num sub">{pct(w, 1)}</td></tr>' for i, (r, t, n, w) in enumerate(mk))
         warn = ""
@@ -1639,6 +1650,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p style="margin:0">A1の選手はどのコースでもよく勝つので、コース別1着率の順位ではA1が並ぶだけです。ここでは全国勝率・級別・コースから「実力どおりなら何%勝てるか」を出し、実際の1着率がそれを何倍上回っているか（<b>スコア</b>）で並べています。スコア1.6＝実力から見込まれるより6割多く勝っている。</p>
 <p class="sub" style="margin:0">{e(op_note)}</p></div>
 <p class="sub">公式の競走成績（直近1年）から毎日自動で集計。出走が少ない選手ほどスコアを1に寄せています。</p>
+<p class="sub tm-period">決まり手集計：{method_date(self.op_since)}〜{method_date(self.op_through)}。横棒全体は巧者スコアと同じ対象出走の100％です。</p>
+<details class="more"><summary>横棒の集計条件</summary><p>6艇・進入・番組情報などを確認できる、巧者スコアと同じ走だけを集計しています。固定進入や欠損等は同じ条件で除外。「その他」は逃げ・抜き・恵まれ。決まり手が不明の1着は「未確認」として区別します。決まり手は1着になった結果の内訳で、攻めを試みた全回数に対する成功率ではありません。</p></details>
 <p class="toc">{' '.join(f'<a href="#c{c}">{c}コース</a>' for c in range(2, 7))} <a href="#esc">逃げ</a> <a href="#mk">捲られやすいイン</a></p></section>
 {self.arechu_top(page)}
 {self.today_targets(page)}
