@@ -13,6 +13,7 @@ jobs:
       - run: node worker/test.mjs
       - run: node tests/test_note_store.cjs
       - run: node tests/test_note_account.cjs
+      - run: node tests/test_pwa.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.com
@@ -32,5 +33,13 @@ jobs:
             site/note-account.js
             site/vendor/
             site/mynote.html
+            site/install.html
+            site/pwa.js
+            site/sw.js
+            site/manifest.webmanifest
+            site/offline.html
+            site/img/pwa-180-v1.png
+            site/img/pwa-192-v1.png
+            site/img/pwa-512-v1.png
             site/img/boat-v2.webp
             site/race/20261009/tokoname-4.html

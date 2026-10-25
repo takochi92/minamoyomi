@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "艇ろぐ",
+  "short_name": "艇ろぐ",
+  "description": "ボートレースの予想・選手データ・マイノート",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1116",
+  "theme_color": "#0b1116",
+  "icons": [
+    {"src":"/img/pwa-192-v1.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/img/pwa-512-v1.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"/img/pwa-512-v1.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

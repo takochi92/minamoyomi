@@ -49,6 +49,12 @@ on:
       - 'site/note-account.js'
       - 'site/vendor/**'
       - 'site/about_body.html'
+      - 'site/install_body.html'
+      - 'site/pwa.js'
+      - 'site/sw.js'
+      - 'site/manifest.webmanifest'
+      - 'site/offline.html'
+      - 'site/_headers'
       - 'site/img/**'
   schedule:
     # GitHub の cron は UTC。

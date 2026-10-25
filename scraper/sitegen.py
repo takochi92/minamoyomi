@@ -181,6 +181,10 @@ class Page:
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
 <meta property="og:image" content="{SITE_URL}/{og or 'img/og.jpg'}"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
 <meta name="theme-color" content="#0B1116">
+<link rel="manifest" href="{self.asset('manifest.webmanifest')}">
+<link rel="apple-touch-icon" sizes="180x180" href="{self.u('img/pwa-180-v1.png')}">
+<meta name="apple-mobile-web-app-title" content="艇ろぐ">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="{self.asset('style.css')}">
@@ -190,6 +194,7 @@ class Page:
 <script src="{self.asset('note-store.js')}" defer></script>
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
+<script src="{self.asset('pwa.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
@@ -200,11 +205,13 @@ class Page:
 <main class="wrap">
 <p class="crumbs">{bc}</p>
 {body}
+{f'<p class="sub"><a href="{self.u("install.html")}">ホーム画面に追加 →</a></p>' if self.path in ('index.html', 'mynote.html') else ''}
 </main>
 <footer><div class="wrap">
   <p>掲載している買い目・データは過去の公式データと直前情報にもとづく参考情報で、的中や利益を保証するものではありません。舟券の購入はご自身の判断と責任でお願いします。</p>
   <p>20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>
   <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a></p>
+  <p><a href="{self.u('install.html')}">ホーム画面に追加する方法</a></p>
 </div></footer>
 {script}
 </body></html>"""
@@ -2458,6 +2465,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         self.put(page.path, page.render(f"モーターの見方｜モーター2連率の落とし穴と乗り手を差し引いた評価｜{SITE_NAME}", "ボートレースのモーターの見方。モーター2連率が選手の腕に左右される理由と、乗り手の実力を差し引いてモーターそのものの力を見る方法を解説。", body, [("guide/index.html", "初心者ガイド"), ("", "モーターの見方")]))
 
     def static_pages(self):
+        install_body = (ROOT / 'site' / 'install_body.html').read_text(encoding='utf-8')
+        install_page = Page('install.html')
+        self.put(install_page.path, install_page.render('ホーム画面に追加｜艇ろぐ',
+                 'Android・iPhone・パソコンで艇ろぐをホーム画面に追加する手順。',
+                 install_body, [('', 'ホーム画面に追加')]))
         page = Page("mynote.html")
         vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
         body = f"""<h1>マイノート</h1>
