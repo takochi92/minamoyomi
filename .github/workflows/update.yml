@@ -15,6 +15,7 @@ on:
       - 'scraper/sitegen.py'
       - 'scraper/season_watch.py'
       - 'scraper/season_views.py'
+      - 'scraper/fl_leave.py'
       - 'scraper/parse.py'
       - 'site/season.js'
       - 'scraper/start_timing.py'

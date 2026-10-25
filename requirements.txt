@@ -3,3 +3,5 @@ beautifulsoup4>=4.12
 numpy>=1.26
 scipy>=1.11
 pillow>=10
+
+pypdf>=5.0

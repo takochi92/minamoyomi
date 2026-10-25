@@ -39,6 +39,25 @@
     by('sw-count').textContent=`${rows.length.toLocaleString()}人 ／ ${Math.min(limit,rows.length)}人を表示・参考値です`;
     by('sw-more').hidden=limit>=rows.length;
   }
+  function leaveList(){
+    const scope=by('sw-leave-scope').value,all=(data.fl_leave||{}).records||[];
+    const active=new Set(['scheduled','in_period','snapshot_unserved']);
+    const rows=all.filter(p=>hit(p,by('sw-leave-q').value)&&(scope==='all'||(scope==='active'?active.has(p.status):!active.has(p.status))));
+    const list=by('sw-leave-list');list.replaceChildren();
+    const labels={scheduled:'休み前（公式日程）',in_period:'休み期間内（公式日程）',snapshot_unserved:'未消化の記載あり',ended_unverified:'掲載期間終了・再確認なし',stale_unverified:'過去の記載・要再確認'};
+    for(const p of rows){
+      const card=el('article',undefined,'sw-card sw-leave-row'),head=el('div',undefined,'sw-card-head');
+      head.append(who(p),el('span',`${p.class||'級未確認'} · ${p.branch||'支部未確認'}`,'sub'));
+      const status=el('strong',labels[p.status]||'未確認','sw-leave-status');
+      const dates=p.start&&p.end?`${fmt(p.start)}〜${fmt(p.end)}`:`未消化 ${p.days}日（前検時点）・開始／終了は未掲載`;
+      const details=el('details'),summary=el('summary',`${p.venue} ${fmt(p.document_date)}出走表 · 出典`);
+      details.append(summary,el('p',`資料の基準：${p.basis} ／ 取得 ${p.checked_at.slice(0,10)}。掲載予定の実施・全FL休みの消化完了を保証する表示ではありません。`,'sub'));
+      const proof=el('a','公式の未消化欄を確認 →','sw-proof');proof.href=p.source;proof.target='_blank';proof.rel='noopener';details.append(proof);
+      card.append(head,status,el('p',dates,'sw-f-observed'),details);list.append(card);
+    }
+    by('sw-leave-count').textContent=`${rows.length}件を表示 ／ 全国の一部・公式記載の確認分です。`;
+    if(!rows.length)list.append(el('p','該当する確認記録はありません。未消化の選手がいないことや、消化済みを示すものではありません。','sub'));
+  }
   function fList(){
     const scope=by('sw-f-scope').value;
     const end=new Date(`${data.f_period.through.slice(0,4)}-${data.f_period.through.slice(4,6)}-${data.f_period.through.slice(6)}T00:00:00Z`);end.setUTCDate(end.getUTCDate()-59);
@@ -65,5 +84,6 @@
   by('sw-more').addEventListener('click',()=>{limit+=20;scoreList();});
   for(const id of ['sw-f-scope','sw-f-q'])by(id).addEventListener('input',()=>{fLimit=20;fList();});
   by('sw-f-more').addEventListener('click',()=>{fLimit+=20;fList();});
-  scoreList();fList();
+  for(const id of ['sw-leave-scope','sw-leave-q'])by(id).addEventListener('input',leaveList);
+  scoreList();fList();leaveList();
 })();

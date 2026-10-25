@@ -681,3 +681,23 @@ button:hover,.btn:hover{filter:brightness(1.1)}
  .t-ex .pill.tilt{display:block;font-size:10px;padding:0 2px}
 }
 @media(max-width:800px){.slit-pair{grid-template-columns:1fr}.slit-pair>.slit>svg{max-width:420px!important;margin:auto}.slit-chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 締切リンクは補助の短い一覧。強調は時刻だけ。 */
+.soon{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;border-top:1px solid var(--line)}
+.soon a,.soon a.urgent{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:9px 2px;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0;background:none;box-shadow:none;color:var(--ink)!important;transform:none}
+.soon a strong,.soon a.urgent strong{font-size:14px;font-weight:600;color:var(--ink)!important}.soon a .num{font-size:14px;white-space:nowrap}.soon small{font-size:10px;color:var(--ink2);margin-left:4px}.soon a:hover,.soon a:focus-visible{background:rgba(255,255,255,.025);box-shadow:none;transform:none}
+.target-method{display:inline-flex;gap:3px;align-items:baseline;white-space:nowrap;margin:1px 7px 1px 0;font-size:12px}.target-method b{font-variant-numeric:tabular-nums;font-weight:500}
+@media(max-width:720px){
+ .soon{grid-template-columns:1fr}.soon a{padding:8px 2px}
+ .t-tgt,.t-tgt thead,.t-tgt tbody{display:block;width:100%;min-width:0}
+ .t-tgt tr{display:grid;grid-template-columns:minmax(0,1fr) 74px 52px;align-items:center;gap:2px 4px;border-bottom:1px solid var(--line);padding:7px 0}
+ .t-tgt :is(th,td){min-width:0;padding:2px 3px;border:0;white-space:normal;font-size:12px}
+ .t-tgt th:nth-child(7){display:none}.t-tgt td:nth-child(2)>.sub{display:block;font-size:10px}
+ .t-tgt td:nth-child(6){background:none;color:var(--accent)}
+ .t-tgt td:nth-child(7){grid-column:1/-1;min-width:0;line-height:1.5;color:var(--ink2)}
+ .t-tgt td:nth-child(7)::before{content:"勝ち方";font-size:10px;margin-right:9px;color:var(--ink2)}
+ .t-tgt .target-method{font-size:11px;margin-right:9px}
+}
+
+.sw-leave-status{font-size:12px;font-weight:600;color:var(--accent);line-height:1.5;text-align:right}.sw-leave-row .sw-f-observed{font-variant-numeric:tabular-nums}.sw-history{margin-top:20px;border-top:1px solid var(--line);padding-top:12px}.sw-history>summary{cursor:pointer;color:var(--ink2);font-size:12px}.sw-history h3{font-size:16px;margin-top:14px}
+@media(max-width:650px){.sw-leave-status{max-width:135px;font-size:11px}}

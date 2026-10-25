@@ -1319,18 +1319,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         tiles = "".join(self.venue_tile(page, jcd, held.get(jcd)) for jcd in sorted(VENUES))
         soonh = []
         for k, (_, v, r) in enumerate(soon[:8]):
-            rc = r.get("reco")
-            if rc and rc["verdict"] == "購入非推奨":
-                line = '<span class="sub">購入非推奨（ガチガチ）</span>'
-            elif rc and rc["verdict"] == "自信あり":
-                line = self.reco_summary(rc)
-            elif r.get("pts"):
-                line = (f'<span class="rs"><span class="sub">穴予想</span><span class="rs-n">{r["pts"][0]}点</span></span>' if r.get('primary_kind') == 'ana' else f'<span class="rs"><span class="sub">本線</span><span class="rs-n">{r["pts"][0]}点</span><span class="sub">押さえ</span><span class="rs-n">{r["pts"][1]}点</span></span>')
-            else:
-                line = '<span class="sub">締切35分前に買い目を出します</span>'
-            cfh = '<span class="chip cf">自信あり</span> ' if rc and rc["verdict"] == "自信あり" else ""
-            soonh.append(f'<a data-dl="{d} {r["deadline"]}" data-soon="1"{" hidden" if k >= 4 else ""} href="{self.race_link(page, d, v["jcd"], r["rno"])}"><div class="row"><strong>{cfh}{e(v["name"])} {r["rno"]}R</strong>'
-                         f'<span class="num">{r["deadline"]}締切</span></div><div class="row">{line}</div></a>')
+            soonh.append(f'<a data-dl="{d} {r["deadline"]}" data-soon="1"{" hidden" if k >= 4 else ""} href="{self.race_link(page, d, v["jcd"], r["rno"])}"><strong>{e(v["name"])} {r["rno"]}R</strong>'
+                         f'<span class="num">{r["deadline"]}<small>締切</small></span></a>')
         soonh = "".join(soonh)
         cards, done = [], []
         conf.sort(key=lambda x: x[1]["deadline"])
@@ -1628,7 +1618,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         secs = []
         for c, (p, rows) in cour.items():
             tr = "".join(f'<tr><td class="r num">{i + 1}</td><td>{rname(t)}</td><td class="r num">{n}</td><td class="r num">{pct(w, 1)}</td><td class="r num sub">{pct(ex, 1)}</td>'
-                         f'<td class="r num best">{sc:.2f}</td><td>{e("・".join(f"{k}{v}" for k, v in kim.items()) or "-")}</td></tr>'
+                         f'<td class="r num best">{sc:.2f}</td><td>{("".join(f'<span class="target-method">{e(k)} <b>{v}</b></span>' for k, v in kim.items()) or "—")}</td></tr>'
                          for i, (sc, t, n, w, ex, kim) in enumerate(rows))
             chk = ""
             if str(c) in vb:

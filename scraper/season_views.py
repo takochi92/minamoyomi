@@ -34,7 +34,7 @@ def render(page, report):
     class_note = (class_period[:4] + '年' + ('前期' if class_period.endswith('-1') else '後期')) if class_period else '未確認'
     return f'''<h1>期末ボーダー・期初F確認</h1>
 <p class="sub">{e(period['label'])}適用分 ／ 審査 {date(period['from'])}〜{date(period['through'])}<br>{date(report['through'])}の結果まで・日次更新</p>
-<nav class="sw-links"><a class="btn" href="#border">A1・A2の目安</a><a class="btn" href="#f-check">期初のF確認</a></nav>
+<nav class="sw-links"><a class="btn" href="#border">A1・A2の目安</a><a class="btn" href="#f-check">未消化FL休み</a></nav>
 <section class="panel" id="border"><h2>期末の勝率ボーダー <small>公式確定ではありません</small></h2>
 <div class="sw-borders">{''.join(cards)}</div>
 <p class="sw-warning">勝率だけで昇格・維持は決まりません。出走回数・2連対率30％・3連対率40％・事故率0.70以下などの条件があります。試算は参考名簿{report['roster_n']:,}人の20％枠を使用。期末の登録人数・同率時の扱い・正式な事故点・特殊開催等により変わります。</p>{quality}
@@ -48,10 +48,15 @@ def render(page, report):
 <p class="sub">一覧の勝率は参考値です。級別は未確定。数値の下に目標との差を表示します。</p>
 <p class="sub" id="sw-count" aria-live="polite"></p><div class="sw-list" id="sw-list"></div><button class="btn" id="sw-more" type="button" hidden>もっと見る</button>
 <noscript><p>絞り込み一覧にはJavaScriptが必要です。上のボーダーと出典はそのまま確認できます。</p></noscript></section>
-<section class="panel" id="f-check"><h2>{f_title}</h2><p>{f_note}</p>
+<section class="panel" id="f-check"><h2>未消化FL休み <small>公式に掲載された確認分</small></h2>
+<p class="sub">公式出走表の「未消化FL休み」欄を確認。休み期間、掲載時点、出典を選手ごとに表示します。F・Lをまとめた資料のため、すべてを隠れFとは呼びません。</p>
+<div class="sw-controls"><label>表示<select id="sw-leave-scope"><option value="active">未消化の記載・掲載日程</option><option value="ended">掲載期間終了・再確認が必要</option><option value="all">保存した確認記録すべて</option></select></label><label>選手をさがす<input id="sw-leave-q" type="search" placeholder="名前・登録番号・支部"></label></div>
+<p class="sub" id="sw-leave-count" aria-live="polite"></p><div class="sw-list" id="sw-leave-list"></div>
+<details class="sw-method"><summary>確認範囲と「消化済み」の扱い</summary><p>浜名湖の休み日程8件を公式PDFの画像で照合。津は公式の未消化日数欄を毎朝取得します。全国全選手の網羅一覧ではありません。期間が過ぎただけで「消化済み」へ変更せず、「掲載期間終了・再確認なし」とします。欄が空白の選手、未取得の選手も消化済みとは扱いません。津の情報は前検日時点で、開始日・終了日は未掲載。浜名湖は文字を抽出できないため、掲載済み8件以降の追加は画像での確認が必要です。</p></details>
+<details class="sw-history"><summary>F履歴・期初F0の照合を見る（消化状況は未確認）</summary><h3>{f_title}</h3><p>{f_note}</p>
 <p class="sw-warning">「隠れF」の確定一覧ではありません。前期にFがあっても、F休みを既に消化している場合があります。休みの開始・終了・未消化日数は未照合です。長い出走間隔だけでF休みと判定しません。</p>
 <p class="sub">F記録の対象：{date(report['f_period']['from'])}〜{date(report['f_period']['through'])}。出走表F0は、その表の日時時点の表示です。</p>
 <div class="sw-controls"><label>表示<select id="sw-f-scope"><option value="recent">期末60日間にF記録</option><option value="f0">今期の出走表F0を確認</option><option value="all">対象期間のF記録すべて</option></select></label><label>選手をさがす<input id="sw-f-q" type="search" placeholder="名前・登録番号・支部"></label></div>
-<p class="sub" id="sw-f-count" aria-live="polite"></p><div class="sw-list" id="sw-f-list"></div><button class="btn" id="sw-f-more" type="button" hidden>もっと見る</button></section>
+<p class="sub" id="sw-f-count" aria-live="polite"></p><div class="sw-list" id="sw-f-list"></div><button class="btn" id="sw-f-more" type="button" hidden>もっと見る</button></details></section>
 <p class="sub"><a href="{page.u('racer/index.html')}">選手・モーター検索へ戻る →</a></p>
 <script id="sw-data" type="application/json">{payload}</script><script src="{page.u('season.js')}" defer></script>'''

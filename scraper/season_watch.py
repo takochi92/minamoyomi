@@ -296,6 +296,8 @@ def main():
     start = period((datetime.strptime(current['from'], '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d'))['from']
     through = (datetime.strptime(today, '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d')
     report = build_report(today, load_records(start, through), calendars(), periods(), programme_snapshots(today))
+    from .fl_leave import published_records
+    report['fl_leave'] = published_records(today)
     write_json(STORE / 'summary.json.gz', report)
     print('season watch:', len(report['players']), 'players;', len(report['f_players']), 'F histories', flush=True)
 
