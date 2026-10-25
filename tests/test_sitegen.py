@@ -61,6 +61,23 @@ def test_st_page_uses_saved_local_estimate_and_separates_meeting(tmp_path):
     assert 'slit-animation' in race_html and 'slit.js' in race_html
     assert 'data/races/20260925/0112.json' in race_html
     assert 'img/slit-boat-1.svg' in s.bins and 'img/slit-boat-6.svg' in s.bins
+    assert 'slit-zoom' in race_html and '到達差を拡大' in race_html
+
+
+def test_exhibition_mobile_labels_preserve_all_values_and_missing_items():
+    s = sitegen.Site()
+    race = {'date': '20261025', 'jcd': '03', 'rno': 1, 'deadline': '23:59',
+            'racelist': {'boats': [{'frame': f, 'name': '長い名前の選手', 'toban': str(4000 + f)} for f in range(1, 7)]},
+            'before': {'boats': [{'frame': f, 'exhibit_time': 6.80, 'tilt': 3.0} for f in range(1, 7)]},
+            'oriten': {'items': ['一周', 'まわり足', '直線', '半周'], 'rows': {'1': [36.72, 5.12, 7.63, None]}}}
+    html = s.oriten_block(race)
+    assert 'style="--ex-cols:4"' in html
+    for label in ['展示タイム', '一周', 'まわり足', '直線', '半周']:
+        assert html.count(f'data-label="{label}"') == 6
+    assert '36.72' in html and '7.63' in html
+    html = s.ex_tab('20261025', '03', 1, race, {})
+    for label in ['展示タイム', '今節平均', 'いつもの1位率', 'チルト']:
+        assert f'data-label="{label}"' in html
 
 
 def test_motor_history_has_all_users_dates_and_official_result_links():

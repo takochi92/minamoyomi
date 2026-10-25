@@ -448,8 +448,8 @@ class Site:
             mc = f'{m[0]:.2f}<small class="sub">/{m[1]}走</small>' if m else "-"
             tc = f'<span class="{"dgood" if t[0] >= 0.25 else ""}">{t[0] * 100:.0f}%</span>' if t else "-"
             lc = (f"{tl:+.1f}" + (' <span class="pill tilt">伸び型</span>' if tl >= 1.0 else "")) if tl is not None else "-"
-            rows.append(f'<tr><td>{bt(f)} {e(b.get("name", ""))}</td><td class="r num">{f"{ex:.2f}" if ex else "-"}</td>'
-                        f'<td class="r num">{mc}</td><td class="r num">{tc}</td><td class="r num">{lc}</td></tr>')
+            rows.append(f'<tr><td>{bt(f)} {e(b.get("name", ""))}</td><td class="r num" data-label="展示タイム">{f"{ex:.2f}" if ex else "-"}</td>'
+                        f'<td class="r num" data-label="今節平均">{mc}</td><td class="r num" data-label="いつもの1位率">{tc}</td><td class="r num" data-label="チルト">{lc}</td></tr>')
         tbl = ""
         if rows:
             tbl = (f'<section class="panel"><h2>展示タイム <small>{"展示前" if not bx else "今節・いつもと比べて"}</small></h2>'
@@ -491,7 +491,7 @@ class Site:
                 if v and dm:
                     diff = v - dm[0]
                     dd = f'<br><small class="{"dgood" if diff <= -0.05 else ("dbad" if diff >= 0.05 else "sub")}">{diff:+.2f}</small>'
-                cells.append(f'<td class="r num {cls}">{f"{v:.2f}" if v else "-"}<small class="sub">{f" {r}位" if r else ""}</small>{dd}</td>')
+                cells.append(f'<td class="r num {cls}" data-label="{e(it)}">{f"{v:.2f}" if v else "-"}<small class="sub ex-rank">{f" {r}位" if r else ""}</small>{dd}</td>')
             rows.append(f'<tr><td>{bt(int(f))} {e(names.get(f, ""))}</td>{"".join(cells)}</tr>')
         tops = []
         for it in items:
@@ -503,7 +503,7 @@ class Site:
             note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
                      "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
         return (f'<section class="panel"><h2>展示の数字 <small>{e("・".join(tops))}</small></h2>'
-                f'<div class="tbl-wrap"><table class="t-ori"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<div class="tbl-wrap"><table class="t-ori" style="--ex-cols:{min(4, len(items))}"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                 f'<p class="sub">{note}</p></section>')
 
     def worry_block(self, p):
@@ -670,7 +670,7 @@ class Site:
         animation = f'''<section class="panel slit-animation" data-source="{page.u(f'data/races/{d}/{jcd}{int(rno):02d}.json')}" data-boats-root="{page.u('img/')}" data-deadline="{deadline}">
 <h2>予想スリット動画 <small>目安ST＋行き足＋伸び</small></h2>
 <canvas width="1280" height="720" role="img" aria-label="展示タイム換算によるスタートから1マークまでの隊形予想"></canvas>
-<button type="button" class="btn" disabled>再生</button><p class="slit-status sub" role="status">表示すると、このレースの記録だけを読み込みます。</p>
+<div class="slit-controls"><button type="button" class="btn" disabled>再生</button><button type="button" class="btn slit-zoom" aria-pressed="false" disabled>到達差を拡大</button></div><p class="slit-view-note sub" aria-live="polite">全体表示は0〜150m。拡大表示は位置の見やすさだけを変えます。</p><p class="slit-status sub" role="status">表示すると、このレースの記録だけを読み込みます。</p>
 <div class="slit-chips"></div><p class="sub">実時間約7秒を5秒で再生。展示進入を仮定した直線換算で、1マークの攻防・実測距離ではありません。まわり足の独自補正は加えていません。</p></section>'''
         return f'<div class="slit-pair">{static}{animation}</div><script src="{page.u("slit.js")}" defer></script>'
 
