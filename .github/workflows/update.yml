@@ -11,6 +11,7 @@ on:
       - 'scraper/motoradj.py'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
+      - 'scraper/start_timing.py'
       - 'scraper/racer_database.py'
       - 'scraper/racer_views.py'
       - 'scraper/database_build.py'

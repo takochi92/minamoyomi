@@ -43,6 +43,22 @@ def test_pages_and_links(tmp_path):
             assert target in files or target in ("about.html",), (path, href)
 
 
+def test_st_page_uses_saved_local_estimate_and_separates_meeting(tmp_path):
+    s, _ = _site(tmp_path)
+    path = tmp_path / 'data/races/20260925/0112.json'
+    race = json.loads(path.read_text(encoding='utf-8'))
+    b = race['racelist']['boats'][0]
+    c = next(x['course'] for x in race['before']['start_exhibition'] if x['frame'] == b['frame'])
+    race['start_timing'] = {'boats': {str(b['frame']): {'toban': b['toban'], 'course': c, 'st': .15, 'sd': .04,
+        'course_mean': .16, 'n': 50, 'local_mean': .13, 'local_n': 12, 'meeting_mean': .12, 'meeting_n': 3}}}
+    path.write_text(json.dumps(race), encoding='utf-8')
+    s.st_pages()
+    html = s.files['race/20260925/kiryu-12-st.html']
+    assert '0.15秒' in html and '0.13秒・12走' in html
+    assert '0.12秒・3走（全コース・前日まで）' in html
+    assert '今節平均は参考表示のみ' in html
+
+
 def test_seo_basics(tmp_path):
     _, files = _site(tmp_path)
     page = files["race/20260925/kiryu-12.html"]

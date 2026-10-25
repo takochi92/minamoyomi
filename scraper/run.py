@@ -239,6 +239,16 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         mark_fetched(race, 'prediction', datetime.now(JST))
         changed = True
 
+    # 本番STの参考値を締切前に固定。勝率・買い目のモデルとは独立。
+    if "racelist" in race and now < dl:
+        from .start_timing import capture as capture_start_timing
+        timing = capture_start_timing(race, v, datetime.now(JST))
+        completed_at = datetime.now(JST)
+        if timing and completed_at < dl:
+            timing['captured_at'] = completed_at.isoformat()
+            race["start_timing"] = timing
+            changed = True
+
     # 2b) 締切35分前〜締切：オッズを毎回取り直して表示。3連単オッズ × AI で期待値判定（締切後は固定）
     if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl:
         ov = O.parse_odds3t(f.odds3t(jcd, rno, date))

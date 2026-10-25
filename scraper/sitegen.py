@@ -658,7 +658,7 @@ class Site:
             return f"""<div class="slit" style="margin-top:10px"><h3 style="margin:0 0 6px;font-size:14px">本番のスタート <small class="sub">右ほど早い・黄色は決まり手</small></h3>{svg}</div>"""
         return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
 <p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p>
-<p style="margin:0"><a href="{link}">この6人の「展示ST → 本番ST」のくせを見る →</a></p></section>"""
+<p style="margin:0"><a href="{link}">本番STの目安・当地／今節の参考を見る →</a></p></section>"""
 
     # ------------------------------------------------------------ 1周1マークの展開イメージ（上から見た図）
     DEFAULT_MOVE = {2: "差し", 3: "まくり", 4: "まくり", 5: "まくり差し", 6: "展開待ち"}
@@ -1736,6 +1736,17 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                                 f'<p class="sub" style="margin:0">{sm["n"]}走：展示の平均 {sm["ex"]:.2f} → 本番の平均 {sm["st"]:.2f}。<b>{sm["type"]}</b>（相関 {sm["cor"]:.2f}）</p>')
                     else:
                         info = '<p class="sub">展示と本番の両方がそろったデータがまだ少ない選手です。</p>'
+                    timing = (race.get("start_timing") or {}).get("boats", {}).get(str(f))
+                    if timing and timing.get("course") == c and timing.get("toban") == b.get("toban"):
+                        local = (f'{timing["local_mean"]:.2f}秒・{timing["local_n"]}走' if timing.get("local_mean") is not None else '当地同コースの記録なし')
+                        meeting = (f'{timing["meeting_mean"]:.2f}秒・{timing["meeting_n"]}走（全コース・前日まで）' if timing.get("meeting_mean") is not None else '前日までの今節記録なし／開催期間未確認')
+                        info = (f'<div class="tiles"><div class="tile"><small>本番STの目安</small><b>{timing["st"]:.2f}秒</b></div>'
+                                f'<div class="tile"><small>過去のばらつき</small><b>±{timing["sd"]:.2f}秒</b></div></div>'
+                                f'<dl><dt>普段の{c}コース</dt><dd>{timing["course_mean"]:.2f}秒・{timing["n"]}走</dd>'
+                                f'<dt>当地の{c}コース</dt><dd>{local}</dd><dt>今節の参考</dt><dd>{meeting}</dd></dl>'
+                                '<p class="sub">前日までの直近2年の本番STから算出。当地の走数が少ない場合は普段のコース平均を重視します。'
+                                '今節平均は参考表示のみ。F・Lは平均から除外。進入は展示、未取得時は枠なりを仮定し、本番で変わる場合があります。ばらつきは的中保証や信頼区間ではありません。</p>'
+                                + ('<p class="sub">参照走数が少ないため、目安の振れに注意してください。</p>' if timing['n'] < 12 else ''))
                     link = self.racer_link(page, b.get("toban", ""))
                     nm = f'<a href="{link}#c{c}">{e(b.get("name", ""))}</a>' if link else e(b.get("name", ""))
                     cards.append(f'<section class="panel" style="display:grid;gap:6px"><h2>{bt(f)} {nm} <small>{c}コース・{e(b.get("class", ""))}</small></h2>'
@@ -1745,8 +1756,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                         f'<p class="sub">点1つが1走。横が展示のスタートタイミング、縦が本番のスタートタイミング。黄色い点線より上なら「本番の方が遅い」。色はコース（今回のコースを濃く表示）、オレンジの縦線が今回の展示ST。</p>'
                         f'<p><a href="{back}">← {e(v["name"])} {r["rno"]}R の予想に戻る</a></p></section>'
                         + "".join(cards) +
-                        '<section class="panel"><h2>展示STは当てになる？</h2><p>公式データ約5万5千走で調べると、展示のSTと本番のSTの相関はほぼ0（0.05）でした。展示でFを切っても本番は普通に行く人、展示で遅くても本番は早い人がたくさんいます。'
-                        '本番のSTを読むなら、展示の数字そのものより「その選手がそのコースで普段何秒で行っているか」の方がずっと当たります（誤差 0.095秒 → 0.054秒）。上のグラフで、点が縦に散らばっている選手ほど展示を気にしなくてよい選手です。</p></section>')
+                        '<section class="panel"><h2>本番STの目安の見方</h2><p>展示STの散布図と本番STの目安は参照対象が異なります。新しい目安は、展示と本番が両方保存された走だけに限定せず、前日までの本番STを使います。'
+                        '当地同コースの平均を走数に応じて普段のコース平均へ寄せ、今節平均は分けて表示します。締切前に保存した新しい目安がないレースでは、従来の展示・本番対応データの平均を表示します。'
+                        '展示STの数値そのものは新しい目安に混ぜません。目安の改善が、舟券の的中率や回収率の改善を意味するわけではありません。</p></section>')
                 self.put(page.path, page.render(f"{v['name']}{r['rno']}R 展示STと本番ST｜{SITE_NAME}",
                                                 f"{jdate(d)} {v['name']}{r['rno']}Rの出走選手6人の、展示スタートと本番スタートの関係。", body,
                                                 [(f"venue/{SLUG[v['jcd']]}.html", v["name"]), (f"race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html", f"{r['rno']}R"), ("", "展示STと本番ST")], noindex=True))
