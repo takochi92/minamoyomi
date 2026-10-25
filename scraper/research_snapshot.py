@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 JST = timezone(timedelta(hours=9))
-FIELDS = ('date', 'jcd', 'rno', 'deadline', 'racelist', 'before', 'oriten', 'odds_pre', 'start_timing')
+FIELDS = ('date', 'jcd', 'rno', 'deadline', 'racelist', 'before', 'oriten', 'odds_pre', 'start_timing', 'start_slit')
 
 
 def mark_fetched(race, field, now):

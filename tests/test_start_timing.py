@@ -95,3 +95,38 @@ def test_update_keeps_research_capture_separate_and_freezes_after_deadline(monke
     # At the deadline neither ST nor research input is recaptured.
     run.process_race(object(), '20261025', venue, {'rno': 1, 'deadline': '23:00'}, Clock(2026, 10, 25, 23, tzinfo=tz))
     assert r['start_timing'] == saved and len(calls) == 1
+
+
+def test_final_eight_minutes_refresh_before_and_partial_details(monkeypatch):
+    from scraper import run, start_timing, research_snapshot, primary_slip, slit_model
+    from scraper.predict import PRED_VERSION
+    tz=timezone(timedelta(hours=9))
+    class Clock(datetime):
+        @classmethod
+        def now(cls, zone=None):return cls(2026,10,25,12,tzinfo=tz)
+    monkeypatch.setattr(run,'datetime',Clock)
+    r={'date':'20261025','jcd':'01','rno':1,'deadline':'12:07','before_final':True,
+       'racelist':{'boats':[]},'prediction':{'version':PRED_VERSION},
+       'oriten':{'items':['一周'],'rows':{'1':[37]}}}
+    monkeypatch.setattr(run,'_load',lambda p:r)
+    monkeypatch.setattr(run,'_save',lambda *args:None)
+    monkeypatch.setattr(run,'predict',lambda *args,**kwargs:{'version':PRED_VERSION})
+    monkeypatch.setattr(primary_slip,'prepare',lambda *args:False)
+    monkeypatch.setattr(research_snapshot,'capture',lambda *args:False)
+    monkeypatch.setattr(start_timing,'capture',lambda *args:None)
+    monkeypatch.setattr(slit_model,'build',lambda *args:{'status':'waiting'})
+    monkeypatch.setattr(run.parse,'parse_beforeinfo',lambda text:{'exhibition_done':True})
+    monkeypatch.setattr(run.parse,'parse_oriten',lambda text:{'items':['一周'],'rows':{'1':[36],'2':[37]}})
+    calls=[]
+    class Fetch:
+        def beforeinfo(self,*args):calls.append('before');return ''
+        def oriten(self,*args):calls.append('detail');return ''
+        def odds3t(self,*args):return ''
+    v={'jcd':'01','name':'桐生'}
+    run.process_race(Fetch(),'20261025',v,{'rno':1,'deadline':'12:07'},Clock.now())
+    assert calls==['before','detail']
+    assert r['oriten']['rows']['2']==[37]
+    assert r['start_slit']['status']=='waiting'
+    saved=r['start_slit'].copy()
+    run.process_race(Fetch(),'20261025',v,{'rno':1,'deadline':'12:07'},Clock(2026,10,25,12,7,tzinfo=tz))
+    assert calls==['before','detail'] and r['start_slit']==saved

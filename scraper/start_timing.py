@@ -82,6 +82,14 @@ class StartIndex:
                 "meeting_start": start, "asof_exclusive": self.date,
                 "since": self.since, "source": "prior_day_actual_course_local"}
 
+    def averages(self, toban, venue, course, start=None):
+        n, total, _ = self.stats[(toban, "", course)]
+        local = [self.stats[(toban, venue, c)] for c in range(1, 7)]
+        ln = sum(x[0] for x in local)
+        xs = [v for d, v in self.recent[(toban, venue)] if start and start <= d < self.date]
+        return {'course': total / n if n else None, 'meeting': sum(xs) / len(xs) if xs else None,
+                'local': sum(x[1] for x in local) / ln if ln else None}
+
 
 @lru_cache(maxsize=1)
 def _load_index(date):
@@ -115,11 +123,13 @@ def capture(race, venue, now, index=None):
     idx = index or load_index(date)
     start = meeting_start(date, venue.get("day"))
     estimates = {}
+    averages = {}
     for b in boats:
         frame = b["frame"]
         c = entry.get(frame, frame)
+        averages[str(frame)] = idx.averages(b.get('toban', ''), race['jcd'], c, start)
         value = idx.estimate(b.get("toban", ""), race["jcd"], c, start)
         if value:
             estimates[str(frame)] = {**value, "entry_assumption": "exhibition" if valid else "frame", "toban": b.get("toban", "")}
     return {"version": VERSION, "fingerprint": FINGERPRINT, "data_fingerprint": idx.fingerprint,
-            "captured_at": now.isoformat(), "boats": estimates}
+            "captured_at": now.isoformat(), "boats": estimates, "averages": averages}

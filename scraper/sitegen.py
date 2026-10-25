@@ -656,9 +656,23 @@ class Site:
                f'<line x1="{SLIT + 3}" y1="{TOP - 5}" x2="{SLIT + 3}" y2="{H - 7}" stroke="#ffd978" stroke-opacity=".38" stroke-width="1"/></svg>')
         if result:
             return f"""<div class="slit" style="margin-top:10px"><h3 style="margin:0 0 6px;font-size:14px">本番のスタート <small class="sub">右ほど早い・黄色は決まり手</small></h3>{svg}</div>"""
-        return f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
+        static = f"""<section class="panel slit"><h2>スタート展示 <small>艇の位置＝スタートの早さ（右ほど早い）</small></h2>{svg}
 <p class="sub">黄色い線がスタートライン。展示（本番前のリハーサル）で線を越えるのが早かった艇ほど右にいます。赤字のFは展示でのフライング（本番ではありません）。</p>
 <p style="margin:0"><a href="{link}">本番STの目安・当地／今節の参考を見る →</a></p></section>"""
+        d, jcd, rno = race.get('date'), race.get('jcd'), race.get('rno')
+        if not d or jcd not in SLUG or not rno:
+            return static
+        page = Page(f'race/{d}/{SLUG[jcd]}-{rno}.html')
+        for f, (hull, ink) in self.BOAT.items():
+            self.bins[f'img/slit-boat-{f}.svg'] = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 70">'
+                + self.boat_svg(165, 35, hull, ink, f) + '</svg>').encode('utf-8')
+        deadline = f'{d[:4]}-{d[4:6]}-{d[6:]}T{race.get("deadline", "23:59")}:00+09:00'
+        animation = f'''<section class="panel slit-animation" data-source="{page.u(f'data/races/{d}/{jcd}{int(rno):02d}.json')}" data-boats-root="{page.u('img/')}" data-deadline="{deadline}">
+<h2>予想スリット動画 <small>目安ST＋行き足＋伸び</small></h2>
+<canvas width="1280" height="720" role="img" aria-label="展示タイム換算によるスタートから1マークまでの隊形予想"></canvas>
+<button type="button" class="btn" disabled>再生</button><p class="slit-status sub" role="status">表示すると、このレースの記録だけを読み込みます。</p>
+<div class="slit-chips"></div><p class="sub">実時間約7秒を5秒で再生。展示進入を仮定した直線換算で、1マークの攻防・実測距離ではありません。まわり足の独自補正は加えていません。</p></section>'''
+        return f'<div class="slit-pair">{static}{animation}</div><script src="{page.u("slit.js")}" defer></script>'
 
     # ------------------------------------------------------------ 1周1マークの展開イメージ（上から見た図）
     DEFAULT_MOVE = {2: "差し", 3: "まくり", 4: "まくり", 5: "まくり差し", 6: "展開待ち"}

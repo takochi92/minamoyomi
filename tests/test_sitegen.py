@@ -57,6 +57,10 @@ def test_st_page_uses_saved_local_estimate_and_separates_meeting(tmp_path):
     assert '0.15秒' in html and '0.13秒・12走' in html
     assert '0.12秒・3走（全コース・前日まで）' in html
     assert '今節平均は参考表示のみ' in html
+    race_html=s.files['race/20260925/kiryu-12.html']
+    assert 'slit-animation' in race_html and 'slit.js' in race_html
+    assert 'data/races/20260925/0112.json' in race_html
+    assert 'img/slit-boat-1.svg' in s.bins and 'img/slit-boat-6.svg' in s.bins
 
 
 def test_seo_basics(tmp_path):

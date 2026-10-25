@@ -213,12 +213,12 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             changed = True
 
     # 2) 直前情報（締切前のみ予想を更新＝締切後は固定）
-    if "racelist" in race and dl - timedelta(minutes=35) <= now < dl and not race.get("before_final"):
+    if "racelist" in race and dl - timedelta(minutes=35) <= now < dl:
         bi = parse.parse_beforeinfo(f.beforeinfo(jcd, rno, date))
         race["before"] = bi
         from .research_snapshot import mark_fetched
         mark_fetched(race, 'before', datetime.now(JST))
-        if bi["exhibition_done"] and not race.get("oriten"):
+        if bi["exhibition_done"]:
             try:
                 ot = parse.parse_oriten(f.oriten(jcd, rno, date)) if hasattr(f, "oriten") else None
             except Exception:
@@ -240,7 +240,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         changed = True
 
     # 本番STの参考値を締切前に固定。勝率・買い目のモデルとは独立。
-    if "racelist" in race and now < dl:
+    if "racelist" in race and now < dl and not (race.get('result') or {}).get('finished'):
         from .start_timing import capture as capture_start_timing
         timing = capture_start_timing(race, v, datetime.now(JST))
         completed_at = datetime.now(JST)
@@ -248,6 +248,14 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             timing['captured_at'] = completed_at.isoformat()
             race["start_timing"] = timing
             changed = True
+        if race.get('before'):
+            from .slit_model import build as build_slit
+            slit = build_slit(race)
+            completed_at = datetime.now(JST)
+            if completed_at < dl:
+                slit['captured_at'] = completed_at.isoformat()
+                race['start_slit'] = slit
+                changed = True
 
     # 2b) 締切35分前〜締切：オッズを毎回取り直して表示。3連単オッズ × AI で期待値判定（締切後は固定）
     if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl:
