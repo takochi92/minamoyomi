@@ -11,12 +11,12 @@ const self={location:{origin:'https://teilog.com'},addEventListener:(name,handle
 const BrowserRequest=class extends Request{constructor(url,options){super(new URL(url,'https://teilog.com'),options)}};
 // Run in an isolated context with browser-relative Request behavior.
 // All cache writes and response policies are checked; no real notes are used.
-vm.runInNewContext(fs.readFileSync('site/sw.js','utf8'),{self,URL,Request:BrowserRequest,Response,caches:{open:async()=>cache,keys:async()=>['unrelated-cache','teilog-pwa-offline-old','teilog-pwa-offline-v1'],delete:async key=>deleted.push(key)},
+vm.runInNewContext(fs.readFileSync('site/sw.js','utf8'),{self,URL,Request:BrowserRequest,Response,caches:{open:async()=>cache,keys:async()=>['unrelated-cache','teilog-pwa-offline-old','teilog-pwa-offline-v2'],delete:async key=>deleted.push(key)},
 fetch:async(request,options)=>{network.push({url:request.url,options});if(request.url.includes('offline-test'))throw Error('offline');return new Response('fresh race');}});
 async function navigation(path){let response;events.fetch({request:{url:'https://teilog.com'+path,method:'GET',mode:'navigate',headers:new Headers()},respondWith:r=>response=r});return response&&await response;}
 (async()=>{
   let promise;events.install({waitUntil:p=>promise=p});await promise;
-  assert.deepEqual(cached,['https://teilog.com/offline.html']);
+  assert.deepEqual(cached,['https://teilog.com/offline']);
   events.activate({waitUntil:p=>promise=p});await promise;
   assert.deepEqual(deleted,['teilog-pwa-offline-old']);
   assert.equal(await navigation('/mynote'),undefined);

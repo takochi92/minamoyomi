@@ -1,10 +1,10 @@
 /* Only the public offline explanation is cached. Never cache race pages,
    odds, notes, OAuth callbacks, API responses, or authenticated requests. */
 'use strict';
-const OFFLINE_CACHE = 'teilog-pwa-offline-v1';
+const OFFLINE_CACHE = 'teilog-pwa-offline-v2';
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(OFFLINE_CACHE).then(cache =>
-    cache.add(new Request('/offline.html', {cache:'reload'}))
+    cache.add(new Request('/offline', {cache:'reload'}))
   ).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
@@ -21,7 +21,7 @@ self.addEventListener('fetch', event => {
       request.headers.has('Authorization')) return;
   event.respondWith(fetch(request, {cache:'no-store'}).catch(async () => {
     const cache = await caches.open(OFFLINE_CACHE);
-    return await cache.match('/offline.html') || new Response(
+    return await cache.match('/offline') || new Response(
       '通信できません。接続を確認して再読み込みしてください。',
       {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}
     );
