@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from copy import deepcopy
 
 import pytest
 
@@ -130,3 +131,44 @@ def test_final_eight_minutes_refresh_before_and_partial_details(monkeypatch):
     saved=r['start_slit'].copy()
     run.process_race(Fetch(),'20261025',v,{'rno':1,'deadline':'12:07'},Clock(2026,10,25,12,7,tzinfo=tz))
     assert calls==['before','detail'] and r['start_slit']==saved
+
+
+@pytest.mark.parametrize('late_field',['before','odds'])
+def test_network_crossing_deadline_rolls_back_all_forecast_inputs(monkeypatch,late_field):
+    from scraper import run, start_timing, research_snapshot, primary_slip, slit_model
+    from scraper.predict import PRED_VERSION
+    tz=timezone(timedelta(hours=9));minute=[0]
+    class Clock(datetime):
+        @classmethod
+        def now(cls,zone=None):return cls(2026,10,25,12,minute[0],tzinfo=tz)
+    monkeypatch.setattr(run,'datetime',Clock)
+    r={'date':'20261025','jcd':'01','rno':1,'deadline':'12:01', 'racelist':{'boats':[]},
+       'before':{'exhibition_done':True,'old':True}, 'before_final':True,
+       'prediction':{'version':PRED_VERSION,'p3':[1/120]*120,'bets':{'main':[],'sub':[],'mode':'honmei'}},
+       'odds_pre':{'at':'11:55'},'start_slit':{'status':'ready','old':True}}
+    old=deepcopy(r)
+    monkeypatch.setattr(run,'_load',lambda p:r)
+    monkeypatch.setattr(run,'_save',lambda *args:None)
+    monkeypatch.setattr(run,'predict',lambda *args,**kwargs:deepcopy(old['prediction']))
+    monkeypatch.setattr(run,'load_model',lambda:{})
+    monkeypatch.setattr(primary_slip,'prepare',lambda *args:False)
+    monkeypatch.setattr(research_snapshot,'capture',lambda *args:False)
+    monkeypatch.setattr(start_timing,'capture',lambda *args:None)
+    monkeypatch.setattr(slit_model,'build',lambda *args:{'status':'waiting'})
+    monkeypatch.setattr(run.parse,'parse_beforeinfo',lambda text:{'exhibition_done':True})
+    monkeypatch.setattr(run.parse,'parse_oriten',lambda text:None)
+    monkeypatch.setattr(run.O,'parse_odds3t',lambda text:[10]*120)
+    monkeypatch.setattr(run.O,'parse_odds2t',lambda text:{})
+    monkeypatch.setattr(run.O,'value_bets',lambda *args:{})
+    monkeypatch.setattr(run.O,'recommend',lambda *args,**kwargs:{'verdict':'見送り'})
+    class Fetch:
+        def beforeinfo(self,*args):
+            if late_field=='before':minute[0]=2
+            return ''
+        def oriten(self,*args):return ''
+        def odds3t(self,*args):minute[0]=2;return ''
+        def odds2tf(self,*args):return ''
+    run.process_race(Fetch(),'20261025',{'jcd':'01','name':'桐生'}, {'rno':1,'deadline':'12:01'},Clock.now())
+    for key in ('before','before_final','prediction','odds_pre','start_slit'):
+        assert r[key]==old[key]
+    assert 'research_snapshot' not in r and 'research_fetched_at' not in r and 'oriten' not in r

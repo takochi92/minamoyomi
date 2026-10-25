@@ -19,6 +19,7 @@ import sys
 import time
 import traceback
 from datetime import datetime, timedelta, timezone
+from copy import deepcopy
 from pathlib import Path
 
 from . import parse
@@ -196,6 +197,12 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     path = race_path(date, jcd, rno)
     race = _load(path) or {"date": date, "jcd": jcd, "venue": v["name"], "rno": rno, "deadline": r["deadline"]}
     dl = _dl(date, r["deadline"])
+    # A worker may start before the deadline and finish after it. Keep the entire
+    # pre-race update atomic, including odds-based ticket filtering and snapshots.
+    locked_fields = ('racelist', 'race_name', 'before', 'oriten', 'before_final', 'prediction',
+                     'start_timing', 'start_slit', 'odds_pre', 'value', 'reco', 'honmei',
+                     'seme', 'tsuke', 'win_odds', 'primary_slip', 'research_snapshot', 'research_fetched_at')
+    prior = deepcopy({k: race[k] for k in locked_fields if k in race}) if now < dl else {}
     changed = False
     if race.get('deadline') != r['deadline']:
         race['deadline'] = r['deadline']
@@ -213,7 +220,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
             changed = True
 
     # 2) 直前情報（締切前のみ予想を更新＝締切後は固定）
-    if "racelist" in race and dl - timedelta(minutes=35) <= now < dl:
+    if "racelist" in race and dl - timedelta(minutes=35) <= now < dl and datetime.now(JST) < dl:
         bi = parse.parse_beforeinfo(f.beforeinfo(jcd, rno, date))
         race["before"] = bi
         from .research_snapshot import mark_fetched
@@ -232,7 +239,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
 
     from .predict import PRED_VERSION
     stale = (race.get("prediction") or {}).get("version") != PRED_VERSION
-    if "racelist" in race and now < dl and (changed or stale):
+    if "racelist" in race and now < dl and datetime.now(JST) < dl and (changed or stale):
         race["prediction"] = predict(jcd, race["racelist"], race.get("before"), race_date=date, oriten=race.get('oriten'))
         race["prediction"]["made_at"] = now.strftime("%H:%M")
         from .research_snapshot import mark_fetched
@@ -258,7 +265,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 changed = True
 
     # 2b) 締切35分前〜締切：オッズを毎回取り直して表示。3連単オッズ × AI で期待値判定（締切後は固定）
-    if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl:
+    if race.get("prediction") and dl - timedelta(minutes=35) <= now < dl and datetime.now(JST) < dl:
         ov = O.parse_odds3t(f.odds3t(jcd, rno, date))
         if ov:
             from .research_snapshot import mark_fetched
@@ -333,6 +340,13 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         changed = True
     if now < dl and capture(race, datetime.now(JST), dl):
         changed = True
+
+    if now < dl and datetime.now(JST) >= dl:
+        for key in locked_fields:
+            if key in prior:
+                race[key] = prior[key]
+            else:
+                race.pop(key, None)
 
     # 3) 結果
     if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:

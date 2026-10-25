@@ -1,6 +1,7 @@
 import json
 import sys
 from pathlib import Path
+from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -120,12 +121,23 @@ class FakeFetcher:
         return fx.RESULT if self.finished else "<main></main>"
 
 
+def simulate_run(monkeypatch, timestamp):
+    """Both the job clock and receipt clock belong to the simulated fixture day."""
+    fixed = datetime.fromisoformat(timestamp).replace(tzinfo=run.JST)
+    class Clock(datetime):
+        @classmethod
+        def now(cls, zone=None):
+            return fixed.astimezone(zone) if zone else fixed
+    monkeypatch.setattr(run, 'datetime', Clock)
+    run.main(['--now', timestamp])
+
+
 def test_run_cycle(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "DATA", tmp_path)
     fake = FakeFetcher()
     monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
     # 1R 締切 15:21 の 7 分前：直前予想が出る
-    run.main(["--now", "2026-09-25T15:14"])
+    simulate_run(monkeypatch, "2026-09-25T15:14")
     idx = json.loads((tmp_path / "index.json").read_text())
     r1 = idx["venues"][0]["races"][0]
     assert r1["stage"] == "直前" and r1["honmei"]
@@ -136,7 +148,7 @@ def test_run_cycle(tmp_path, monkeypatch):
     assert "verdict" in race["reco"] and race["reco"]["rule"]["min_comp"] == 5.0
     assert race["odds_pre"]["ex"]["1-2"] == 5.0 and race["odds_pre"]["ex"]["2-1"] == 6.0 and race["value"]["final"]
     # 締切 20 分後：結果取得・的中判定。予想は固定されている
-    run.main(["--now", "2026-09-25T15:41"])
+    simulate_run(monkeypatch, "2026-09-25T15:41")
     race = json.loads((tmp_path / "races/20260925/0101.json").read_text())
     assert race["result"]["trifecta"] == "1-5-4" and race["hit"] is not None
     assert race["prediction"]["made_at"] == "15:14"
@@ -150,19 +162,19 @@ def test_midnight_switch(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "DATA", tmp_path)
     fake = FakeFetcher()
     monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
-    run.main(["--now", "2026-09-25T15:14"])
+    simulate_run(monkeypatch, "2026-09-25T15:14")
     # 23時台：当日のまま
-    run.main(["--now", "2026-09-25T23:30"])
+    simulate_run(monkeypatch, "2026-09-25T23:30")
     assert json.loads((tmp_path / "index.json").read_text())["date"] == "20260925"
     # 0時：翌日の出走表が未公開なら前日を維持
     monkeypatch.setattr(run, "init_day", lambda f, d: {"date": d, "venues": [{"jcd": "01", "name": "桐生", "races": []}]})
-    run.main(["--now", "2026-09-26T00:05"])
+    simulate_run(monkeypatch, "2026-09-26T00:05")
     assert json.loads((tmp_path / "index.json").read_text())["date"] == "20260925"
     # 公開されたら一斉に切替、朝のうちに出走表と予想を作る
     monkeypatch.undo()
     monkeypatch.setattr(run, "DATA", tmp_path)
     monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
-    run.main(["--now", "2026-09-26T00:15"])
+    simulate_run(monkeypatch, "2026-09-26T00:15")
     idx = json.loads((tmp_path / "index.json").read_text())
     assert idx["date"] == "20260926"
     race = json.loads((tmp_path / "races/20260926/0101.json").read_text())
