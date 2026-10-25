@@ -113,7 +113,7 @@
         var x = byT[t] || {};
         return '<tr><td><button type="button" class="fav-btn sm" data-toban="' + esc(t) + '" data-name="' + esc(F[t].name) + '">★</button></td><td><a href="' + esc(t) + '.html"><b>' + esc(F[t].name) + '</b></a><span class="sub rk"> ' + esc(t) + "</span></td><td>" + esc(x.c || "") + "</td><td>" + esc(x.b || "") +
           '</td><td class="r num">' + (x.w >= 0 ? x.w.toFixed(2) : "-") + '</td><td class="tod">' + (Fav.chips(R[t]) || '<span class="sub">-</span>') + "</td></tr>";
-      }).join("") + "</tbody></table></div><p class=\"sub\">★を押すとお気に入りから外れます。お気に入りはこの端末だけに保存されます。<a href=\"" + ROOT + "mynote.html\">マイノート</a>のバックアップにも入ります。</p>";
+      }).join("") + "</tbody></table></div><p class=\"sub\">★を押すとお気に入りから外れます。保存先は<a href=\"" + ROOT + "mynote.html\">マイノート</a>のログイン状態で確認できます。ファイルへのバックアップも利用できます。</p>";
       Fav.bind(el);
     });
   }
