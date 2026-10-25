@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-25T01:07:52.399Z",
+  "updated": "2026-10-25T16:49:56.184Z",
   "posts": [
+    {
+      "id": "2026-10-25-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-25",
+      "slot": "evening",
+      "text": "【10/25（日）の結果】\nAI本線 167R中38的中\n最高配当 三国11R 3-5-6 4,870円\n\n今日のフライング 1人（F後はスタート控えめになりがち）\n・多摩川10R 川原 涼\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-10-25T16:49:56.184Z"
+    },
     {
       "id": "2026-10-25-teirogu-X-morning",
       "project": "teirogu",
@@ -260,36 +270,6 @@
       "text": "【10/13（火）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-10-12T21:23:54.038Z"
-    },
-    {
-      "id": "2026-10-12-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-12",
-      "slot": "morning",
-      "text": "【10/12（月）の艇ろぐ】\n今日は14場で開催\n🏆江戸川 G3\n\nAIの自信が高いレース\n・鳴門1R、唐津1R、徳山1R\n\n昨日のAI本線：155レース中 16的中\n最高配当 桐生12R 5-6-2 3,770円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-12T02:19:51.558Z"
-    },
-    {
-      "id": "2026-10-12-teirogu-X-feature",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-12",
-      "slot": "feature",
-      "text": "【新機能】荒れ注意レース🚤\nA級1号艇でも万舟が出やすい条件を、過去3年のデータで調べました。\n\n印のつくレースの万舟率は約22%（A級1号艇全体は約16%）。\n穴予想は的中約7%・回収約82%で、プラスではありません。\nhttps://teilog.pages.dev\n※20歳未満は購入できません",
-      "images": [],
-      "created_at": "2026-10-12T01:13:43.912Z"
-    },
-    {
-      "id": "2026-10-12-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-12",
-      "slot": "evening",
-      "text": "【10/12（月）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-11T17:46:27.521Z"
     }
   ]
 }
