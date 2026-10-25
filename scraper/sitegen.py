@@ -1948,7 +1948,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         vnames = {j: VENUES[j]["name"] for j in VENUES}
         held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
         opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
-        body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><p><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a></p>
+        body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><div class="sw-links"><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a><a class="btn" href="../database/season.html">期末A1・A2ボーダー／期初F確認 →</a></div>
 <p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（この端末だけに保存）。</p>
 <div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
 <section class="tabp sx" id="sx-r" data-tab="r">
@@ -2536,6 +2536,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                         stub["result"] = {"trifecta": r["result"], "trifecta_payout": r.get("payout"), "finished": True}
                     self.race_page(d, v["jcd"], stub)
 
+    def season_page(self):
+        from .database_sources import BASE, read_json
+        from .season_views import render
+        page = Page('database/season.html')
+        body = render(page, read_json(BASE / 'season_watch/summary.json.gz'))
+        self.put(page.path, page.render(f'期末A1・A2ボーダーと期初F確認｜{SITE_NAME}',
+                 'A1・A2の参考ボーダー、現在級と勝率の差、出走回数の条件。前期の本番F記録と今期の出走表F0を照合する確認候補。',
+                 body, [('racer/index.html', '選手・モーター'), ('', '期末ボーダー・期初F確認')]))
+
     def not_found(self):
         page = Page("404.html")
         body = f'<h1>ページが見つかりません</h1><p>URLが変わったか、まだ作られていないページです。</p><p><a href="{page.u("index.html")}">今日のレース一覧へ</a></p>'
@@ -2569,6 +2578,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.share_page()
         self.grade_page()
         self.weekly_page()
+        self.season_page()
         self.not_found()
         self.sitemap()
         return self.files

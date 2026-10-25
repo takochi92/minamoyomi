@@ -57,6 +57,9 @@ jobs:
           PY
       - name: 全選手の公開データを集計
         run: python -m scraper.database_build
+      - name: 期末ボーダー・期初F確認の参考データを更新
+        continue-on-error: true
+        run: python -m scraper.season_watch --refresh-calendars
       - name: テスト
         run: |
           pip install pytest

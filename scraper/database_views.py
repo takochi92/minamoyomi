@@ -79,7 +79,7 @@ def catalog_pages(site,Page,venues):
     def cards(items):return '<div class="db-cards">'+''.join(f'<a class="panel" href="{e(url)}"><b>{e(title)}</b><span>{e(note)}</span></a>' for url,title,note in items)+'</div>'
     stats=f'<div class="rd-summary db-summary"><div><span>掲載選手</span><strong>{len(roster):,}</strong><small>過去掲載選手を含む</small></div><div><span>公式期別</span><strong>{len(terms)}期</strong><small>公式公表ファイル</small></div><div><span>保存結果</span><strong>{catalog["races"]:,}</strong><small>レース</small></div><div><span>最終結果日</span><strong>{rd.date(catalog["through"])[5:]}</strong><small>{catalog["through"][:4]}年</small></div></div>'
     put('index.html','選手データバンク',f'<p>選手の得意コース、過去の期別成績、場の傾向を、出走数と期間を確かめながら比較できます。</p>{stats}'+cards([
-        ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
+        ('../racer/index.html','全選手を探す','名前・登録番号・支部・養成期で検索'),('season.html','期末ボーダー・期初F確認','A1・A2の参考ラインと、前期F歴・今期出走表F0の照合候補'),('periods.html','公式期別成績','級別・勝率・連対率・コース別着順・事故'),
         ('branches.html','支部別','各期の所属選手と実績'),('terms.html','養成期別','同期の選手と各期の成績'),('venues.html','場別データ','コース・決まり手・配当分布'),
         ('events.html','優勝戦・開催記録','確認できた優勝者と優出選手'),('championships.html','SG・PG1・G1公式記録集','歴代優勝者・決勝出走表・節間成績'),('rankings.html','コース別ランキング','直近90日・15走以上の実測1着率'),
         ('records.html','高配当・同着・スタート事故','保存結果の記録一覧'),('races.html','全保存レースを探す','月・場・万舟・F/L・同着で検索'),('../motor.html','モーター機歴','交換周期を考慮した機歴と乗り手'),

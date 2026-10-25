@@ -152,6 +152,7 @@ def parse_racelist(html: str) -> dict:
             "age": age,
             "weight": weight,
             "f": f_count,
+            "f_known": bool(fl and re.fullmatch(r"F\s*\d+", fl[0])),
             "l": l_count,
             "avg_st": avg_st,
             "nat_win": nat[0], "nat_2": nat[1], "nat_3": nat[2],
