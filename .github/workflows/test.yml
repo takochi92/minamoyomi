@@ -11,6 +11,8 @@ jobs:
       - run: pip install -r requirements.txt pytest
       - run: python -m pytest -q tests
       - run: node worker/test.mjs
+      - run: node tests/test_note_store.cjs
+      - run: node tests/test_note_account.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.pages.dev

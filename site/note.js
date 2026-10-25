@@ -1,20 +1,13 @@
-// マイノート：収支表・選手メモ・モーターメモ・お気に入り選手。この端末のブラウザの中だけに保存（サーバーには送らない）。
+// マイノート。登録なしは端末保存、設定済みのアカウントでは本人だけに同期。
 (function () {
-  var KEY = "teilog_note_v1";
   var ROOT = window.SITE_ROOT || "";
-
-  function load() {
-    var d = null;
-    try { d = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { d = null; }
-    d = d && typeof d === "object" ? d : {};
-    d.racer = d.racer || {}; d.motor = d.motor || {}; d.fav = d.fav || {}; d.bets = d.bets || []; d.budget = d.budget || 0;
-    return d;
-  }
-  var D = load(), okStore = true;
+  var Account = window.TeiNoteAccount, Model = window.TeiNoteModel;
+  var D = Account.data(), savedD = Model.copy(D), okStore = true, identityEpoch = 0;
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(D)); okStore = true; } catch (e) { okStore = false; }
+    try { D = Account.save(savedD, D); savedD = Model.copy(D); okStore = true; } catch (e) { okStore = false; }
     document.querySelectorAll("[data-store-warn]").forEach(function (el) { el.hidden = okStore; });
   }
+  function storageLabel() { return Account.state().user ? 'このアカウントに同期' : 'この端末だけに保存'; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function yen(n) { return (n < 0 ? "-" : "") + "¥" + Math.abs(Math.round(n)).toLocaleString("ja-JP"); }
   function num(v) { var n = parseInt(String(v || "").replace(/[^\d]/g, ""), 10); return isNaN(n) ? 0 : n; }
@@ -29,13 +22,13 @@
   }
   function bindMemos(root) {
     root.querySelectorAll("textarea[data-kind]").forEach(function (ta) {
-      ta.addEventListener("input", debounce(function () {
+      ta.addEventListener("input", function () {
         var kind = ta.dataset.kind, key = ta.dataset.key, ex = {};
         try { ex = JSON.parse(ta.dataset.extra || "{}"); } catch (e) { }
         var box = kind === "racer" ? D.racer : D.motor, v = ta.value.trim();
         if (v) { box[key] = Object.assign({}, box[key] || {}, ex, { text: v, t: today() }); } else { delete box[key]; }
         save(); marks();
-      }, 400));
+      });
     });
   }
 
@@ -81,7 +74,7 @@
           memoBox("racer", b.toban, "選手メモ（" + b.name + "）", { name: b.name }) +
           ((D.motor[b.motor] || {}).text ? '<p class="sub nb-mref">' + esc(mno) + "号機のメモ：" + esc(D.motor[b.motor].text) + "</p>" : "") + "</details>";
       }).join("");
-      el.innerHTML = '<h2>選手メモ <small>この端末だけに保存・<a href="' + ROOT + 'mynote.html">マイノートへ</a></small></h2>' + warn +
+      el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote.html">マイノートへ</a></small></h2>' + warn +
         (memo ? memo + '<p class="sub" style="margin:0">モーターのメモは<a href="' + ROOT + 'motor.html">モーター一覧</a>で書けます。</p>' : "");
       bindMemos(el); marks();
     }
@@ -90,7 +83,7 @@
 
   // ---- 選手ページ
   function racerPanel(el) {
-    el.innerHTML = '<h2>選手メモ <small>この端末だけに保存・<a href="' + ROOT + 'mynote.html">一覧へ</a></small></h2>' + warn + memoBox("racer", el.dataset.toban, "", { name: el.dataset.name });
+    el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote.html">一覧へ</a></small></h2>' + warn + memoBox("racer", el.dataset.toban, "", { name: el.dataset.name });
     el.hidden = false; bindMemos(el);
   }
 
@@ -102,7 +95,7 @@
     function tiles(s, label) {
       return '<div class="nb-tiles"><div><small>' + label + '購入</small><b class="num">' + yen(s.inv) + '</b></div><div><small>払戻</small><b class="num">' + yen(s.ret) + '</b></div><div><small>収支</small><b class="num ' + (s.pl > 0 ? "plus" : s.pl < 0 ? "minus" : "") + '">' + yen(s.pl) + '</b></div><div><small>回収率</small><b class="num">' + (s.roi == null ? "-" : Math.round(s.roi * 100) + "%") + "</b></div></div>";
     }
-    var curYm = today().slice(0, 6), sel = "";
+    var curYm = el.dataset.viewMonth || today().slice(0, 6), sel = el.dataset.viewDay || "";
     var slugs = {};
     try { slugs = JSON.parse(el.dataset.slugs || "{}"); } catch (e) { }
     function shiftYm(ym, k) { var y = +ym.slice(0, 4), m = +ym.slice(4) - 1 + k; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + ("0" + (m + 1)).slice(-2); }
@@ -122,6 +115,7 @@
       return '<div class="cal">' + h + "</div>";
     }
     function draw() {
+      el.dataset.viewMonth = curYm; el.dataset.viewDay = sel;
       var ym = curYm, thisYm = today().slice(0, 6);
       var bets = D.bets.slice().sort(function (a, b) { return (b.date + ("0" + (b.rno || 0)).slice(-2)).localeCompare(a.date + ("0" + (a.rno || 0)).slice(-2)); });
       var month = bets.filter(function (b) { return (b.date || "").slice(0, 6) === ym; });
@@ -151,7 +145,7 @@
         '<section class="panel"><h2>お気に入り選手 <small>' + favN() + '人・<a href="' + ROOT + 'racer/index.html#fav">選手検索へ</a></small></h2>' + (favN() ? '<div class="racer-list">' + Object.keys(D.fav).map(function (t) { return '<a href="' + ROOT + "racer/" + esc(t) + '.html">★ ' + esc(D.fav[t].name) + "</a>"; }).join("") + "</div>" : '<p class="sub">選手のページや<a href="' + ROOT + 'racer/index.html">選手検索</a>で☆を押すと入ります。</p>') + "</section>" +
         '<section class="panel"><h2>選手メモ <small>' + Object.keys(D.racer).length + "人</small></h2>" + (rm ? '<ul class="comments">' + rm + "</ul>" : '<p class="sub">各選手のページ、またはレースページの「マイノート」から書けます。</p>') + "</section>" +
         '<section class="panel"><h2>モーターメモ <small>' + Object.keys(D.motor).length + '基・<a href="' + ROOT + 'motor.html">モーター一覧へ</a></small></h2>' + (mm ? '<ul class="comments">' + mm + "</ul>" : '<p class="sub"><a href="' + ROOT + 'motor.html">モーター一覧</a>で場を選んで、各モーターの欄に書けます。モーターは入れ替わると別物なので、古いメモは消してください。</p>') + "</section>" +
-        '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">収支・メモ・お気に入りはこの端末のブラウザの中だけにあります。機種変更やブラウザのデータ削除で消えるので、ときどきファイルに保存してください。別の端末へは、保存したファイルを読み込むと移せます。</p>' +
+        '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">' + (Account.state().user ? '表示中のアカウントの記録をファイルに保存できます。読み込みでは異なる記録を勝手に上書きしません。' : '登録せずに使う記録は、この端末のブラウザに保存します。機種変更の前などにファイルへ保存してください。') + '</p><p class="sub nb-import-status" role="status"></p>' +
         '<div class="nb-add"><button type="button" class="nb-exp">ファイルに保存</button><label class="nb-imp-l">ファイルから読み込む<input type="file" class="nb-imp" accept="application/json,.json" hidden></label></div></section>';
 
       el.querySelector(".nb-go").addEventListener("click", function () {
@@ -172,15 +166,13 @@
       });
       el.querySelector(".nb-imp").addEventListener("change", function (ev) {
         var f = ev.target.files && ev.target.files[0]; if (!f) return;
+        var startedEpoch = identityEpoch;
         f.text().then(function (t) {
+          if (startedEpoch !== identityEpoch) throw new Error('ログイン状態が変わりました。もう一度ファイルを選んでください。');
           var x = JSON.parse(t);
-          if (!x || typeof x !== "object") return;
-          var ids = {}; D.bets.forEach(function (b) { ids[b.id] = 1; });
-          (x.bets || []).forEach(function (b) { if (b && !ids[b.id]) D.bets.push(b); });
-          Object.assign(D.racer, x.racer || {}); Object.assign(D.motor, x.motor || {}); Object.assign(D.fav, x.fav || {});
-          if (x.budget && !D.budget) D.budget = x.budget;
-          save(); draw();
-        }).catch(function () { });
+          Account.importData(x); D = Account.data(); savedD = Model.copy(D); draw();
+          el.querySelector('.nb-import-status').textContent = 'ファイルを読み込みました。';
+        }).catch(function (error) { el.querySelector('.nb-import-status').textContent = error.message || '読み込めませんでした。元の記録は残っています。'; });
       });
       bindBetRows(el, draw);
     }
@@ -262,6 +254,27 @@
     document.querySelectorAll("#racer-memo").forEach(racerPanel);
     document.querySelectorAll("#note-app").forEach(notePage);
     marks();
+    lockFields();
   }
+  function lockFields() {
+    var busy = !Account.state().ready;
+    document.querySelectorAll('#note-app input, #note-app button, #mynote textarea, #racer-memo textarea, .nb-slot textarea, .fav-btn').forEach(function (el) { el.disabled = busy; });
+  }
+  function refresh(reason) {
+    if (reason === 'status' || reason === 'saved') { lockFields(); return; }
+    if (reason === 'identity') identityEpoch++;
+    var active = document.activeElement;
+    if (reason !== 'identity' && active && active.matches('#note-app input, #mynote textarea, #racer-memo textarea, .nb-slot textarea')) {
+      active.addEventListener('blur', function () { refresh('data'); }, {once:true}); return;
+    }
+    D = Account.data(); savedD = Model.copy(D);
+    slots(); motorMarks(); favBtns();
+    document.querySelectorAll('#mynote[data-rno]').forEach(racePanel);
+    document.querySelectorAll('#racer-memo').forEach(racerPanel);
+    document.querySelectorAll('#note-app').forEach(notePage);
+    document.querySelectorAll('#fav-today').forEach(favToday);
+    marks(); favCbs.forEach(function (f) { try { f(); } catch (_) {} }); lockFields();
+  }
+  Account.subscribe(refresh);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

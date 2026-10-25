@@ -170,6 +170,8 @@ class Page:
 <script>window.SITE_ROOT = "{self.u('')}";</script>
 <script src="{self.u('config.js')}"></script>
 <script src="{self.u('clock.js')}" defer></script>
+<script src="{self.u('note-store.js')}" defer></script>
+<script src="{self.u('note-account.js')}" defer></script>
 <script src="{self.u('note.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
@@ -1953,7 +1955,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
         opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
         body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><div class="sw-links"><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a><a class="btn" href="../database/season.html">期末A1・A2ボーダー →</a></div>
-<p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（この端末だけに保存）。</p>
+<p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（登録せずに使う場合はこの端末に保存）。</p>
 <div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
 <section class="tabp sx" id="sx-r" data-tab="r">
 <div class="sx-form panel">
@@ -2100,7 +2102,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             cards.append(f'<a class="vt on{"" if jcd in held else " off"}" href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}"><b>{e(VENUES[jcd]["name"])}</b>'
                          f'<span>{"本日開催" if jcd in held else "&nbsp;"}</span><span class="st" style="font-size:12px">{sub}</span>{top}</a>')
         body = f"""<h1>モーター一覧</h1>
-<p class="sub">場を選ぶと、各モーターの2連対率・3連対率と、保存されている全使用履歴が見られます。公式確認済みの場以外は交換日を推定しています。使用者ごとに期間と着順をまとめ、古い履歴は折りたたんでいます。メモはこの端末だけに保存されます。</p>
+<p class="sub">場を選ぶと、各モーターの2連対率・3連対率と、保存されている全使用履歴が見られます。公式確認済みの場以外は交換日を推定しています。使用者ごとに期間と着順をまとめ、古い履歴は折りたたんでいます。登録せずに使うメモはこの端末に保存します。</p>
 <div class="vtiles">{''.join(cards)}</div>"""
         self.put(page.path, page.render(f"ボートレース全24場のモーター一覧（2連対率・前節の使用者）｜{SITE_NAME}",
                                         "全24場のモーターを場ごとに一覧。2連対率・3連対率と、保存済みの全使用者・期間・レースごとの着順。", body, [("", "モーター一覧")]))
@@ -2175,7 +2177,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             boundary_note = (f'現モーターの使用開始は{sh}（公式確認済み）。' if official else
                              f'交換推定日は{sh}。番組表の2連率0％から判定しており、公式の初卸日とは未照合です。' if sh else '交換日は未確認です。')
             body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
-<p class="sub">2連対率の高い順。号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}メモはこの端末だけに保存されます。</p>
+<p class="sub">2連対率の高い順。号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}登録せずに使うメモはこの端末に保存します。</p>
 <div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から独自集計。一覧の出走回数・連対率は選手責任外の失格・欠場（S0・L0・K0）を除外します。全使用履歴の記録件数にはこれらも含めます。取得期間や欠落により公式表示と異なる場合があります。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
@@ -2442,10 +2444,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         page = Page("mynote.html")
         vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
         body = f"""<h1>マイノート</h1>
-<p class="sub">収支表・選手メモ・モーターメモ。登録はいりません。記録はこの端末のブラウザの中だけに保存され、サーバーには送られません。</p>
+<p class="sub">収支表・選手メモ・モーターメモ。登録せずにも使えます。保存先は、下のログイン状態と案内を確認してください。</p>
 <div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
-        self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録不要で、記録はこの端末だけに保存。", body, [("", "マイノート")], noindex=True))
+        self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
         page = Page("tools/composite.html")
         body = """<h1>合成オッズ計算ツール</h1>
 <p>複数の買い目のオッズを入れると、合成オッズと「どれが当たっても払戻がほぼ同じになる配分（100円単位）」を計算します。</p>
