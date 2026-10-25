@@ -38,8 +38,9 @@ jobs:
             site/sw.js
             site/manifest.webmanifest
             site/offline.html
-            site/img/pwa-180-v1.png
-            site/img/pwa-192-v1.png
-            site/img/pwa-512-v1.png
+            site/img/pwa-180-v2.png
+            site/img/pwa-192-v2.png
+            site/img/pwa-512-v2.png
+            site/img/pwa-512-maskable-v2.png
             site/img/boat-v2.webp
             site/race/20261009/tokoname-4.html

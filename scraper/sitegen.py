@@ -182,7 +182,7 @@ class Page:
 <meta property="og:image" content="{SITE_URL}/{og or 'img/og.jpg'}"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
 <meta name="theme-color" content="#0B1116">
 <link rel="manifest" href="{self.asset('manifest.webmanifest')}">
-<link rel="apple-touch-icon" sizes="180x180" href="{self.u('img/pwa-180-v1.png')}">
+<link rel="apple-touch-icon" sizes="180x180" href="{self.u('img/pwa-180-v2.png')}">
 <meta name="apple-mobile-web-app-title" content="艇ろぐ">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
