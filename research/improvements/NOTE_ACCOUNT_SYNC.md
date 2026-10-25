@@ -2,7 +2,7 @@
 
 ## 状態
 
-- 専用Supabase、権限SQL、Google OAuthの設定が完了。本番URLでGoogleログイン、実保存・再取得・再読み込み、ログアウトを確認。`site/config.js` は公開用キーのみを使い `verificationOnly: false` へ切替。一般表示への公開処理の完了確認は下記に追記する。
+- 専用Supabase、権限SQL、Google OAuthの設定が完了。本番URLでGoogleログイン、実保存・再取得・再読み込み、ログアウトを確認。`site/config.js` は公開用キーのみを使い `verificationOnly: false` へ切替。通常URLのログイン欄の表示・操作可能を確認し、一般公開済み。
 - 接続確認は一時的に `verificationOnly: true` と `https://teilog.com/mynote?note-sync-check=1` を使用した。明示的に開いたタブのsessionStorageで確認モードを保持し、OAuthの戻り先は既定の `/mynote` のまま。これは画面表示の段階的公開用で、アクセス制御ではない。RLSは別に適用。
 - Cloudflare独自ドメインは https://teilog.com/ 。旧URLのノートと必要な静的ファイルを転送除外している。新しい note-store.js / note-account.js も転送除外へ追加・保存し、再表示で確認済み。
 
@@ -71,8 +71,11 @@ Nodeテストはモデル・ブラウザ状態の検査であり、実Supabase�
 - 実公開後、JSに `Cache-Control: public, max-age=14400, must-revalidate` が付くことを確認。既にサイトを見ているブラウザでは、古い設定や旧端末保存の処理が4時間残り得る。HTMLはmax-age=0。
 - Page.assetで設定・共通ノートJS・時計・共通CSS・検索JSに内容のSHA256先頭12桁をクエリとして付ける。更新されたファイルだけURLが変わり、古いキャッシュを避ける。未変更ファイルのURLは安定させる。
 - ファイル読込の指紋はパス・更新時刻・サイズ単位でメモ化し、全ページ生成での重複読込を避ける。入れ子ページでも相対パスを保持。
-- 既存キャッシュを持つ実ブラウザで、通常URLのログイン欄を再確認してから完了とする。
+- 古い設定が残ってログイン欄が出なかった実ブラウザで、通常URLを再読み込みし、ログイン欄の表示・ボタン操作可能・画面エラーなしを確認済み。
 - 対策後のPython全体テスト174件成功（272.27秒）、worker・Node2種・指紋付きURLでの合成ブラウザテストも成功。
+- 新旧両ドメインの公開ノートHTMLと全共通アセットをHTTPで再取得し、指紋と配信内容が一致することを確認。旧ノート・必要なファイルが旧ドメインに保持されることも確認。
+- Cloudflare公開処理成功: https://github.com/takochi92/minamoyomi/actions/runs/40234266805 （機能コード `cd86a752a3`）。
+- 同じ機能コードのGitHubテスト・全ページ生成も成功: https://github.com/takochi92/minamoyomi/actions/runs/40234266627 。
 
 ## 変更対象外
 
