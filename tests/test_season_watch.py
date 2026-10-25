@@ -105,7 +105,11 @@ def test_display_keeps_provisional_and_unserved_leave_limits_explicit():
     p['players'][0]['name'] = '</script><script>alert(1)</script>'
     text = render(Page('database/season.html'), p)
     assert '公式確定ではありません' in text
-    assert 'F休みを既に消化' in text and '未消化日数は未照合' in text
+    assert 'sw-sort' in text and '勝率の高い順' in text
+    assert 'f-check' not in text and 'f_players' not in text and 'fl_leave' not in text
+    import re, json
+    payload = json.loads(re.search(r'<script id="sw-data" type="application/json">(.*?)</script>', text).group(1))
+    assert not any('f' in row for row in payload['players'])
     assert '</script><script>alert(1)</script>' not in text
     assert '\\u003c/script>' in text
 
