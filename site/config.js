@@ -2,8 +2,8 @@
 // 空文字の枠は表示されません。
 window.SITE_CONFIG = {
   // Public client settings only. Never put service_role or secret keys here.
-  // Keep empty until the database policies and real two-account checks pass.
-  account: { url: "", publishableKey: "" },
+  // Verification rollout stays hidden until live Google login and sync pass.
+  account: { url: "https://xkibgkdniwlfocwpmuzy.supabase.co", publishableKey: "sb_publishable_g3Xf_bVA_fLJfzfZ2lQpIw_J0v4yaDS", verificationOnly: true },
   // ライブオッズの Worker のURL（例 "https://teilog-live.あなた.workers.dev"）。空ならライブ欄は出ません
   liveApi: "",
   ads: {

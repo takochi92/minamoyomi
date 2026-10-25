@@ -4,7 +4,7 @@ const M=require('../site/note-store.js');
 const source=fs.readFileSync(require.resolve('../site/note-account.js'),'utf8');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(f){for(let i=0;i<250;i++){if(f())return;await sleep(4)}throw Error('State transition timed out');}
-function harness({account=true,uid='A',guest=M.empty()}={}) {
+function harness({account=true,uid='A',guest=M.empty(),verificationOnly=false,checkQuery=false,checkSession=false}={}) {
   const backing=new Map([['teilog_note_v1',JSON.stringify(guest)]]),cloud=new Map(),events={},docEvents={},writes=[];
   let current=uid,callback,offline=false,delayed=null,writeDelay=null,writeStarted=false;
   const storage={get length(){return backing.size},key:i=>[...backing.keys()][i],getItem:k=>backing.get(k)||null,setItem:(k,v)=>backing.set(k,String(v)),removeItem:k=>backing.delete(k)};
@@ -18,9 +18,11 @@ function harness({account=true,uid='A',guest=M.empty()}={}) {
       if(args.expected_revision!==rev)return {error:{code:'40001'}};
       cloud.set(current,{revision:rev+1,data:M.copy(args.note_data)});writes.push(current);return {data:rev+1};}
   };
-  const window={SITE_CONFIG:{account:account?{url:'https://test.supabase.co',publishableKey:'sb_publishable_test'}:{}},TeiNoteModel:M,supabase:{createClient:()=>client},addEventListener:(n,f)=>{events[n]=f}};
+  const window={SITE_CONFIG:{account:account?{url:'https://test.supabase.co',publishableKey:'sb_publishable_test',verificationOnly}:{}},TeiNoteModel:M,supabase:{createClient:()=>client},addEventListener:(n,f)=>{events[n]=f}};
   const document={readyState:'loading',hidden:false,getElementById:()=>null,addEventListener:(n,f)=>{docEvents[n]=f}};
-  const context={window,document,location:{origin:'https://teilog.com'},localStorage:storage,crypto,URL,Blob,TextEncoder,atob,setTimeout:(f,ms)=>setTimeout(f,ms===900?5:ms),clearTimeout,setInterval:()=>0,confirm:()=>false};
+  const sessionBacking=new Map(checkSession?[['teilog_note_check_v1','1']]:[]);
+  const sessionStorage={getItem:k=>sessionBacking.get(k)||null,setItem:(k,v)=>sessionBacking.set(k,String(v))};
+  const context={window,document,location:{origin:'https://teilog.com',href:'https://teilog.com/mynote'+(checkQuery?'?note-sync-check=1':'')},sessionStorage,localStorage:storage,crypto,URL,Blob,TextEncoder,atob,setTimeout:(f,ms)=>setTimeout(f,ms===900?5:ms),clearTimeout,setInterval:()=>0,confirm:()=>false};
   vm.runInNewContext(source,context);
   return {api:window.TeiNoteAccount,cloud,backing,writes,async init(){await docEvents.DOMContentLoaded()},switch(id){current=id;callback('SIGNED_IN',id?{user:{id,email:id+'@example.test'}}:null)},offline(v){offline=v},delay(p){delayed=p},delayWrite(p){writeDelay=p},writeStarted:()=>writeStarted,events};
 }
@@ -30,6 +32,12 @@ function harness({account=true,uid='A',guest=M.empty()}={}) {
   let next=h.api.data();next.budget=10000;h.api.save(h.api.data(),next);
   assert.equal(JSON.parse(h.backing.get('teilog_note_v1')).budget,10000);
   assert.equal(h.writes.length,0);
+
+  // Live verification stays hidden on ordinary visits and survives the OAuth
+  // redirect only in a tab where the owner explicitly opened the check link.
+  h=harness({verificationOnly:true});await h.init();assert.equal(h.api.state().configured,false);
+  h=harness({verificationOnly:true,checkQuery:true});await h.init();await until(()=>h.api.state().ready);assert.equal(h.api.state().configured,true);
+  h=harness({verificationOnly:true,checkSession:true});await h.init();await until(()=>h.api.state().ready);assert.equal(h.api.state().configured,true);
 
   // Logging in never uploads guest data automatically.
   h=harness({guest});await h.init();await until(()=>h.api.state().ready);

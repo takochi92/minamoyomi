@@ -2,9 +2,10 @@
 
 ## 状態
 
-- 実装・検証中。SupabaseプロジェクトとGoogle認証はまだ未接続。`site/config.js` の account は空のまま。設定前はログイン欄・SDK読込を出さず、登録不要の端末保存を維持。
-- 未接続の状態を「同期できる」「公開済み」と案内しない。実データベースで権限テスト、実Googleログイン、2ブラウザ同期が通るまで公開設定を有効にしない。
-- Cloudflare独自ドメインは https://teilog.com/ 。旧URLのノートと必要な静的ファイルを転送除外している。新しい note-store.js / note-account.js も公開前に転送除外へ追加する。
+- 実装・検証中。専用Supabaseの作成・権限SQL検証、Google OAuthクライアントの作成・登録は完了。画面の実ログインは未完了。`site/config.js` に公開用キーと `verificationOnly: true` を設定。通常訪問はログイン欄・SDK読込を出さず、登録不要の端末保存を維持。
+- 未検証の状態を「同期できる」「一般公開済み」と案内しない。実Googleログイン、実通信での同期確認まで一般公開へ切り替えない。
+- 実ログイン確認は `https://teilog.com/mynote?note-sync-check=1`。明示的に開いたタブのsessionStorageで確認モードを保ち、OAuthの戻り先は既定の `/mynote` のまま。これは画面表示の段階的公開用で、アクセス制御ではない。Googleテストユーザー制限とRLSは別に適用。
+- Cloudflare独自ドメインは https://teilog.com/ 。旧URLのノートと必要な静的ファイルを転送除外している。新しい note-store.js / note-account.js も転送除外へ追加・保存し、再表示で確認済み。
 
 ## 構成
 
@@ -16,7 +17,7 @@
 - 非表示中は定期取得を止め、表示中は90秒ごとに小さなrevisionだけ確認。変更時のみ本体を取得。編集は約900msまとめて送る。常時Realtimeは使わない。
 - リクエスト準備中にアカウントが切り替わっても、JWTの本人と `expected_user_id` が違えばRPCが拒否。ブラウザ側も世代番号の違う遅延応答を破棄。
 
-## セットアップ（未実施）
+## セットアップ手順
 
 1. 所有者がSupabaseの規約・登録とパスワード設定を行う。専用の無料プロジェクトを作り、近い地域を選ぶ。既存の他プロジェクトへ適用しない。
 2. SQL editorで `supabase/migrations/20261025_private_notes.sql` を適用。匿名不可、本人だけSELECT。直接書込は禁止。RPCはJWTから本人を決める。管理キーをブラウザや公開ファイルに入れない。
@@ -43,7 +44,19 @@ Nodeテストはモデル・ブラウザ状態の検査であり、実Supabase�
 - Python 173件成功（298.30秒）、workerテスト成功。
 - Nodeモデルテストとアカウント状態テスト成功。ログイン時のゲスト自動取込なし、ログアウト・別アカウントへの非表示、通信失敗後の再送、読み書き要求中のアカウント切替を確認。
 - サンプルの通信先を使う実ブラウザで、2ブラウザのノート・予算共有、競合時の両方の表示と選択、ログアウト、設定なしの端末保存を確認。320/360/390/430/768/1440pxで横はみ出しなし。
-- 確認画面の記録は合成データ。実Supabaseの権限SQL・Google OAuth・実接続は未確認。X紹介用の本番実装済み原稿はまだ作成・送信しない。
+- 確認画面の記録は合成データ。Google OAuth・画面の実接続は未確認。X紹介用の本番実装済み原稿はまだ作成・送信しない。
+
+### 外部サービスの準備状況
+
+- Supabase無料組織「艇ろぐ」、専用プロジェクト `teilog-notes`（ref: `xkibgkdniwlfocwpmuzy`、東京）を作成。正常稼働を確認。
+- マイグレーション適用成功。実DBで `supabase/tests/private_notes.sql` がPASS。匿名拒否、所有者のみの参照、直接書込拒否、CAS、アカウント切替ガード、本人削除のcascadeを確認。テスト用レコードはrollback済み。
+- AuthのSite URLは `https://teilog.com`、許可する戻り先は `https://teilog.com/mynote` のみ。
+- 所有者がGoogleの2段階認証を有効化。専用Google Cloudプロジェクト `Teilog Notes`（ID: `fluted-century-512714-r5`）を作成。
+- 本人の明示同意でGoogleユーザーデータポリシーに同意し、アプリ「艇ろぐ」を保存。別途の明示承認でWeb OAuthクライアントを作成し、専用Supabaseへ登録、GoogleプロバイダーのENABLEDを確認。秘密情報は公開コード・文書へ保存していない。
+- Googleホームページ `https://teilog.com/`、プライバシー `https://teilog.com/about`、承認ドメイン `teilog.com` を保存。scopeはopenid・email・profileの3種類だけ。Gmail/Drive権限なし。
+- Googleはテスト状態で、所有者の運営用Googleアカウント1件のみ登録済み。実ログイン検証後に本番公開へ変更する。
+- Google側へ登録する戻り先は、Supabase画面で確認した `https://xkibgkdniwlfocwpmuzy.supabase.co/auth/v1/callback`。
+- 公開用publishable keyだけをサイトへ設定し、確認モードに限定。一般向けログイン・同期は未公開。
 
 ## 変更対象外
 

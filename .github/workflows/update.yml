@@ -43,6 +43,12 @@ on:
       - 'tools/forward_ana_review.py'
       - 'site/style.css'
       - 'site/app.js'
+      - 'site/config.js'
+      - 'site/note.js'
+      - 'site/note-store.js'
+      - 'site/note-account.js'
+      - 'site/vendor/**'
+      - 'site/about_body.html'
       - 'site/img/**'
   schedule:
     # GitHub の cron は UTC。

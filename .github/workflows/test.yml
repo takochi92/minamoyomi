@@ -15,7 +15,7 @@ jobs:
       - run: node tests/test_note_account.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
-          SITE_URL: https://teilog.pages.dev
+          SITE_URL: https://teilog.com
         run: python -m scraper.sitegen
       - name: 表示確認用ページを保存
         uses: actions/upload-artifact@v4
@@ -28,5 +28,9 @@ jobs:
             site/config.js
             site/clock.js
             site/note.js
+            site/note-store.js
+            site/note-account.js
+            site/vendor/
+            site/mynote.html
             site/img/boat-v2.webp
             site/race/20261009/tokoname-4.html

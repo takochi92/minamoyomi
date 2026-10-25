@@ -3,7 +3,16 @@
   'use strict';
   var M = window.TeiNoteModel, GUEST = 'teilog_note_v1', OPS = 'teilog_note_pending_v1:';
   var cfg = (window.SITE_CONFIG || {}).account || {};
-  var configured = !!(cfg.url && cfg.publishableKey && location.origin === 'https://teilog.com');
+  // Rollout gate for live OAuth checks. This controls visibility, not data access;
+  // Google test-user restrictions and database RLS enforce access separately.
+  var rolloutReady = !cfg.verificationOnly;
+  if (cfg.verificationOnly) {
+    try {
+      if (new URL(location.href).searchParams.get('note-sync-check') === '1') sessionStorage.setItem('teilog_note_check_v1', '1');
+      rolloutReady = sessionStorage.getItem('teilog_note_check_v1') === '1';
+    } catch (_) { rolloutReady = false; }
+  }
+  var configured = !!(cfg.url && cfg.publishableKey && location.origin === 'https://teilog.com' && rolloutReady);
   var client = null, user = null, generation = 0, cloud = M.empty(), revision = 0;
   var data = M.empty(), callbacks = [], timer, flight = null, panel, counter = 0, guestBroken = false;
   var state = { configured: configured, ready: !configured, mode: 'guest', message: '', conflicts: [] };
