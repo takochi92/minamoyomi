@@ -24,17 +24,17 @@
     const list=by('sw-list');list.replaceChildren();
     for(const p of rows.slice(0,limit)){
       const card=el('article',undefined,'sw-card'),head=el('div',undefined,'sw-card-head');
-      head.append(who(p),el('span',`現在 ${p.class||'未確認'} ／ ${p.branch||'支部未確認'}`,'sub'));
-      const diff=Math.abs(p.diff)<.005?'目標と同値':`目標より${p.diff>0?'+':''}${p.diff.toFixed(2)}`;
-      const stat=el('div',undefined,'sw-score');stat.append(el('strong',p.win.toFixed(2)),el('span',`参考勝率 ／ ${diff}`,p.diff>=-.005?'dgood':'sub'));
+      head.append(who(p),el('span',`${p.class||'級未確認'} · ${p.branch||'支部未確認'}`,'sub'));
+      const stat=el('div',undefined,'sw-score');stat.setAttribute('aria-label','参考勝率と目標との差');stat.append(el('strong',p.win.toFixed(2)),el('span',`目標差 ${Math.abs(p.diff)<.005?'±0.00':(p.diff>0?'+':'')+p.diff.toFixed(2)}`,p.diff>=-.005?'dgood':'sub'));
       const nums=el('div',undefined,'sw-metrics');
       nums.append(el('span',`出走 ${p.n}回`),el('span',`2連対 ${(p.top2/p.n*100).toFixed(1)}%`),el('span',`3連対 ${(p.top3/p.n*100).toFixed(1)}%`));
       const issues=[];if(p.n<minimum)issues.push(`${tier}の出走条件まであと${minimum-p.n}回`);
       if(p.top2/p.n<.30||p.top3/p.n<.40)issues.push('連対率条件に未達');
       if(p.accident_min/p.n>.70)issues.push('確認済み事故点だけで事故率0.70超');
       if(p.unknown)issues.push(`計算条件未確認 ${p.unknown}走`);
-      const note=el('p',issues.join(' ／ ')||'参考値・級別は未確定','sw-card-note');
-      card.append(head,stat,nums,note);list.append(card);
+      card.append(head,stat,nums);
+      if(issues.length)card.append(el('p',issues.join(' ／ '),'sw-card-note'));
+      list.append(card);
     }
     by('sw-count').textContent=`${rows.length.toLocaleString()}人 ／ ${Math.min(limit,rows.length)}人を表示・参考値です`;
     by('sw-more').hidden=limit>=rows.length;
@@ -46,12 +46,12 @@
     const rows=data.f_players.filter(p=>hit(p,by('sw-f-q').value)&&(scope==='all'||(scope==='f0'?p.f0:p.last_f>=since)));
     const list=by('sw-f-list');list.replaceChildren();
     for(const p of rows.slice(0,fLimit)){
-      const card=el('article',undefined,'sw-card'),head=el('div',undefined,'sw-card-head');head.append(who(p),el('span',`${p.class||'級未確認'} ／ ${p.branch||'支部未確認'}`,'sub'));
-      const title=el('strong',`対象期間の本番F ${p.events.length}回`,'sw-f-title');
+      const card=el('article',undefined,'sw-card sw-f-row'),head=el('div',undefined,'sw-card-head');head.append(who(p),el('span',`${p.class||'級未確認'} ／ ${p.branch||'支部未確認'}`,'sub'));
+      const title=el('strong',`本番F ${p.events.length}回`,'sw-f-title');
       const observed=p.programme?`出走表F${p.programme.f}（${fmt(p.programme.date)} ${p.programme.rno}R時点）`:`${fmt(data.new_start)}以降の出走表待ち`;
-      card.append(head,title,el('p',observed),el('p','休みの消化状況は未確認','sw-card-note'));
+      card.append(head,title,el('p',observed,'sw-f-observed'));
       if(p.current_f_known)card.append(el('p','今期のF発生記録もあります。最新の出走表を確認してください。','sw-card-note'));
-      const details=el('details'),summary=el('summary',`F発生日を見る ／ 最新 ${fmt(p.last_f)}`);details.append(summary);
+      const details=el('details'),summary=el('summary',`最新F ${fmt(p.last_f)} · 履歴`);details.append(summary);
       for(const f of p.events){const a=el('a',`${fmt(f.date)} ${f.rno}R${f.final?'（優勝戦）':''}`,'sw-proof');a.href=`https://www.boatrace.jp/owpc/pc/race/raceresult?hd=${f.date}&jcd=${f.jcd}&rno=${f.rno}`;a.target='_blank';a.rel='noopener';details.append(a);}
       if(p.programme){const r=p.programme,a=el('a','F表記を公式出走表で確認 →','sw-proof');a.href=`https://www.boatrace.jp/owpc/pc/race/racelist?hd=${r.date}&jcd=${r.jcd}&rno=${r.rno}`;a.target='_blank';a.rel='noopener';details.append(a);}
       card.append(details);list.append(card);

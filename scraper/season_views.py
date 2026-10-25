@@ -45,6 +45,7 @@ def render(page, report):
 <div class="sw-controls"><label>見る級<select id="sw-tier"><option>A1</option><option>A2</option></select></label><label>目標勝率<input id="sw-target" type="number" min="0" max="12" step="0.01" value="{report['borders']['A1']['win'] or report['borders']['A1']['previous_official'] or 6.3:.2f}"></label>
 <label>絞り込み<select id="sw-scope"><option value="near">ライン±0.30</option><option value="up">上の級を目指す目安</option><option value="keep">現在同級のライン付近</option><option value="below">現在級の目安割れ</option><option value="short">出走回数が不足</option><option value="all">全選手</option></select></label></div>
 <input class="sw-search" id="sw-q" type="search" aria-label="選手名・登録番号・支部で検索" placeholder="選手名・登録番号・支部で検索">
+<p class="sub">一覧の勝率は参考値です。級別は未確定。数値の下に目標との差を表示します。</p>
 <p class="sub" id="sw-count" aria-live="polite"></p><div class="sw-list" id="sw-list"></div><button class="btn" id="sw-more" type="button" hidden>もっと見る</button>
 <noscript><p>絞り込み一覧にはJavaScriptが必要です。上のボーダーと出典はそのまま確認できます。</p></noscript></section>
 <section class="panel" id="f-check"><h2>{f_title}</h2><p>{f_note}</p>
