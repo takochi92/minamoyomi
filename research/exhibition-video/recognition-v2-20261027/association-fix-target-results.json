@@ -1,0 +1,271 @@
+{
+  "scope": "association and failure handling after the first 5R trial; not heldout accuracy",
+  "targets": [
+    {
+      "race": 5,
+      "boat": 1,
+      "scope": "development target only; no full-six validation",
+      "settings_record": "association-boundary-settings.json",
+      "track_report_sha256": "d646e9016d1937b7fe30d42c5378a0bba3368662cd7d18b75018fea4a9416017",
+      "timing_report_sha256": "aef06368c2b98e57ef5a71168c78661c52e1ffc9d06f4a5cda4547f137dde5f7",
+      "frame_binding": {
+        "frame_export_sha256": "e8a94a1e97e3c8b26fb646e7f6cd07b2f0ff41bdb4ba7820dd40953b44ecbc91",
+        "source_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+        "time_base": [
+          1,
+          90000
+        ],
+        "first_pts": 5705520347,
+        "frame_count": 1080
+      },
+      "tracking": {
+        "boat": 1,
+        "state": "provisional_actor_track",
+        "seed_frame": 164,
+        "duration_video_seconds": 1.7333333333333334,
+        "seed_attempts": 5,
+        "seed_track_agreement": [
+          {
+            "seed_frame": 310,
+            "shared_frames": 0,
+            "median_box_overlap": 0
+          },
+          {
+            "seed_frame": 231,
+            "shared_frames": 0,
+            "median_box_overlap": 0
+          },
+          {
+            "seed_frame": 307,
+            "shared_frames": 0,
+            "median_box_overlap": 0
+          },
+          {
+            "seed_frame": 358,
+            "shared_frames": 0,
+            "median_box_overlap": 0
+          }
+        ],
+        "entry_connected_seed_count": 1,
+        "excluded_disconnected_seeds": 4,
+        "entry_identity_required": true,
+        "seed_stop_diagnostics": [
+          {
+            "seed_frame": 164,
+            "gate": "A",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 152,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 204,
+                "stop_reason": "no_nearby_detection_after_flow_loss",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 310,
+            "gate": "B",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 227,
+                "stop_reason": "periodic_detector_missing",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 400,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 231,
+            "gate": "B",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 205,
+                "stop_reason": "no_nearby_detection_after_flow_loss",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 337,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 307,
+            "gate": "C",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 205,
+                "stop_reason": "hull_detection_required_for_recovery",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 337,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 358,
+            "gate": "C",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 227,
+                "stop_reason": "periodic_detector_missing",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 400,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          }
+        ],
+        "identity_independently_verified": false,
+        "bow_measurement": false
+      },
+      "measurement": [
+        {
+          "boat": 1,
+          "status": "rejected",
+          "reasons": [
+            "missing_B",
+            "missing_C"
+          ],
+          "entry_video_seconds": null,
+          "exit_video_seconds": null
+        }
+      ]
+    },
+    {
+      "race": 3,
+      "boat": 3,
+      "scope": "development target only; no full-six validation",
+      "settings_record": "association-fix-settings.json",
+      "track_report_sha256": "b34d9855f4e54c327c48b7737da053f69f876a7375d8cf853b4e8070322a642f",
+      "timing_report_sha256": "0a00162e83e6bbcfcd9d93a2a58797421cbc328787f3286cc52fb1675c6e9c98",
+      "frame_binding": {
+        "frame_export_sha256": "c0cacdd68d95988abceb6950b99d306cc549d731cba99915122d753a4f7d2f9a",
+        "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+        "time_base": [
+          1,
+          90000
+        ],
+        "first_pts": 5402310347,
+        "frame_count": 1230
+      },
+      "tracking": {
+        "boat": 3,
+        "state": "provisional_actor_track",
+        "seed_frame": 602,
+        "duration_video_seconds": 6.3,
+        "seed_attempts": 3,
+        "seed_track_agreement": [
+          {
+            "seed_frame": 568,
+            "shared_frames": 188,
+            "median_box_overlap": 0.8474857319250224
+          },
+          {
+            "seed_frame": 674,
+            "shared_frames": 190,
+            "median_box_overlap": 0.9127371381388274
+          }
+        ],
+        "entry_connected_seed_count": 3,
+        "excluded_disconnected_seeds": 0,
+        "entry_identity_required": true,
+        "seed_stop_diagnostics": [
+          {
+            "seed_frame": 568,
+            "gate": "A",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 541,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 728,
+                "stop_reason": "step_limit",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 602,
+            "gate": "B",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 540,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 729,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          },
+          {
+            "seed_frame": 674,
+            "gate": "C",
+            "directions": [
+              {
+                "direction": -1,
+                "last_verified_frame": 540,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              },
+              {
+                "direction": 1,
+                "last_verified_frame": 729,
+                "stop_reason": "frame_edge",
+                "detector_recovery_frames": 0
+              }
+            ]
+          }
+        ],
+        "identity_independently_verified": false,
+        "bow_measurement": false
+      },
+      "measurement": [
+        {
+          "boat": 3,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 1.7876705874950858,
+          "exit_video_seconds": 2.01343824272044
+        }
+      ]
+    }
+  ],
+  "publication_ready": false,
+  "prediction_used": false,
+  "automatic_daily_analysis_enabled": false
+}
