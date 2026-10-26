@@ -1,0 +1,5 @@
+# Optional isolated video-research runner. Ordinary race updates do not install this.
+playwright>=1.55,<2
+opencv-python-headless==4.12.0.88
+numpy>=2,<2.3
+scipy>=1.14,<2

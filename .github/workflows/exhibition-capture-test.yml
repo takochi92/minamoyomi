@@ -1,0 +1,62 @@
+name: exhibition-capture-research-test
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '取得を確認する日付（YYYYMMDD）'
+        default: '20261026'
+      race:
+        description: '平和島のR番号'
+        default: '2'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/capture_exhibition.py'
+      - '.github/workflows/exhibition-capture-test.yml'
+permissions:
+  contents: read
+concurrency:
+  group: exhibition-capture-research-test
+  cancel-in-progress: false
+jobs:
+  normal-player:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      REQUESTED_DATE: ${{ inputs.date || '20261026' }}
+      REQUESTED_RACE: ${{ inputs.race || '2' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/capture_exhibition.py
+            /tools/update_exhibition.py
+            /scraper/__init__.py
+            /scraper/exhibition_views.py
+            /requirements-exhibition.txt
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-exhibition.txt
+      - run: pip install -r requirements-exhibition.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: ローカル復号の実行環境を確認
+        run: |
+          if ! command -v ffmpeg; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+      - name: 公式プレイヤーの通常再生から取得（研究用）
+        run: python -m tools.capture_exhibition --date "$REQUESTED_DATE" --race "$REQUESTED_RACE" --private-output .cache/private-capture
+      - name: 数値の取得記録だけを残す
+        run: |
+          mkdir -p capture-receipt
+          cp .cache/private-capture/summary.json capture-receipt/summary.json
+          echo '通常プレイヤー経由の取得確認です。タイム解析や本番掲載の合格ではありません。動画・配信先・キーは公開しません。' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exhibition-capture-numeric-receipt
+          path: capture-receipt/summary.json
+          retention-days: 7
