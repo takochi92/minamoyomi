@@ -29,15 +29,45 @@ def media_url(value):
         return False
 
 
+def denial_summary(payload):
+    """Keep only known error enums; never retain messages, URLs or credentials."""
+    known={'REQUEST_FAILED','ACCESS_DENIED','FORBIDDEN','UNAUTHORIZED','CLIENT_GEO','CLIENT_IP',
+           'DOMAIN','INVALID_POLICY_KEY','VIDEO_NOT_PLAYABLE','VIDEO_NOT_FOUND','POLICY_ERROR'}
+    result={'json_error':isinstance(payload,(dict,list))};codes=set();ids=set()
+    def visit(value,depth=0):
+        if depth>3:return
+        if isinstance(value,dict):
+            for key in ('code','error_code','error_subcode'):
+                if isinstance(value.get(key),str) and value[key] in known:codes.add(value[key])
+            if type(value.get('id')) is int and 0<=value['id']<=9999:ids.add(value['id'])
+            for key in ('error','errors'):
+                visit(value.get(key),depth+1)
+        elif isinstance(value,list):
+            for item in value[:8]:visit(item,depth+1)
+    visit(payload)
+    result.update(codes=sorted(codes),error_ids=sorted(ids))
+    return result
+
+
 def discover_master(day, race):
     # Imported only in the dedicated browser/media job, not ordinary predictions.
     from playwright.sync_api import sync_playwright
-    observed=[];statuses={}
+    observed=[];statuses={};denials=[]
     def response_seen(response):
         url=response.url
         if media_url(url):
             host=urlsplit(url).hostname
             statuses.setdefault(host,set()).add(response.status)
+            if host=='playback.api.streaks.jp' and response.status in (401,403) and len(denials)<3:
+                # Inspect the server's denial only. No retry, header changes or raw body logging.
+                try:
+                    headers=response.headers
+                    length=headers.get('content-length')
+                    if 'json' in headers.get('content-type','') and (length is None or int(length)<=65536):
+                        body=response.body()
+                        if len(body)<=65536:denials.append(denial_summary(json.loads(body)))
+                except Exception:
+                    denials.append({'json_error':False,'body_inspection_failed':True})
         if response.status==200 and media_url(url) and urlsplit(url).hostname=='manifest.streaks.jp' and '.m3u8' in urlsplit(url).path:
             if url not in observed:observed.append(url)
     with sync_playwright() as playwright:
@@ -53,7 +83,8 @@ def discover_master(day, race):
             while not observed and time.monotonic()<deadline:page.wait_for_timeout(250)
             if len(observed)!=1:
                 error=ValueError('official_master_not_observed')
-                error.safe_diagnostics={'master_count':len(observed),'http_statuses':{h:sorted(s) for h,s in statuses.items()}}
+                error.safe_diagnostics={'master_count':len(observed),'http_statuses':{h:sorted(s) for h,s in statuses.items()},
+                                        'denials':denials}
                 raise error
             return observed[0]
         finally:
@@ -159,12 +190,18 @@ def main():
     parser.add_argument('--private-output',type=Path,required=True)
     parser.add_argument('--window-start',type=float)
     parser.add_argument('--window-end',type=float)
+    parser.add_argument('--diagnose-only',action='store_true',help='Observe normal playback; do not download or save media')
     args=parser.parse_args()
     # Validate before opening a browser or creating any files.
     official_player(args.date,args.race)
     if (args.window_start is None)!=(args.window_end is None):parser.error('Both window bounds are required')
     window=None if args.window_start is None else (args.window_start,args.window_end)
     try:
+        if args.diagnose_only:
+            discover_master(args.date,args.race)
+            print(json.dumps({'date':args.date,'rno':args.race,'normal_playback_master_observed':True,
+                              'media_downloaded':False,'publication_ready':False}))
+            return
         _,summary=capture(args.date,args.race,args.private_output,preferred_window=window)
         print(json.dumps(summary))
     except Exception as error:

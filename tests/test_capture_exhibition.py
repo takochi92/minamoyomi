@@ -1,5 +1,15 @@
 import pytest
-from tools.capture_exhibition import media_url,choose_variant,selected_segments,fetch
+from tools.capture_exhibition import media_url,choose_variant,selected_segments,fetch,denial_summary
+
+
+def test_denial_diagnostics_keep_only_known_enums_and_numeric_ids():
+    payload={'errors':[{'id':126,'code':'REQUEST_FAILED','message':'private URL https://secret.test',
+                        'token':'secret','error_subcode':'CLIENT_GEO'},
+                       {'code':'secret-key','id':'secret','request_url':'https://secret.test'}]}
+    result=denial_summary(payload)
+    assert result=={'json_error':True,'codes':['CLIENT_GEO','REQUEST_FAILED'],'error_ids':[126]}
+    assert 'secret' not in str(result)
+    assert denial_summary('untrusted body')=={'json_error':False,'codes':[],'error_ids':[]}
 
 
 def test_capture_accepts_only_observed_service_https_hosts():

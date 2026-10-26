@@ -8,6 +8,10 @@ on:
       race:
         description: '平和島のR番号'
         default: '2'
+      diagnose_only:
+        description: '通常再生の成否とエラーコードだけを確認（動画は取得しない）'
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -20,6 +24,7 @@ jobs:
     env:
       REQUESTED_DATE: ${{ inputs.date || '20261026' }}
       REQUESTED_RACE: ${{ inputs.race || '2' }}
+      DIAGNOSE_ONLY: ${{ inputs.diagnose_only }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,19 +44,27 @@ jobs:
       - name: 実行環境に用意済みのChromeを利用
         run: google-chrome --version
       - name: ローカル復号の実行環境を確認
+        if: inputs.diagnose_only == false
         run: |
           if ! command -v ffmpeg; then
             sudo apt-get update
             sudo apt-get install -y ffmpeg
           fi
       - name: 公式プレイヤーの通常再生から取得（研究用）
-        run: python -m tools.capture_exhibition --date "$REQUESTED_DATE" --race "$REQUESTED_RACE" --private-output .cache/private-capture
+        run: |
+          if [ "$DIAGNOSE_ONLY" = "true" ]; then
+            python -m tools.capture_exhibition --date "$REQUESTED_DATE" --race "$REQUESTED_RACE" --private-output .cache/private-capture --diagnose-only
+          else
+            python -m tools.capture_exhibition --date "$REQUESTED_DATE" --race "$REQUESTED_RACE" --private-output .cache/private-capture
+          fi
       - name: 数値の取得記録だけを残す
+        if: inputs.diagnose_only == false
         run: |
           mkdir -p capture-receipt
           cp .cache/private-capture/summary.json capture-receipt/summary.json
           echo '通常プレイヤー経由の取得確認です。タイム解析や本番掲載の合格ではありません。動画・配信先・キーは公開しません。' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: inputs.diagnose_only == false
         with:
           name: exhibition-capture-numeric-receipt
           path: capture-receipt/summary.json
