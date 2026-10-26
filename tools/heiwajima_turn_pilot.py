@@ -51,17 +51,6 @@ def evaluate_track(points, gates, *, max_gap=0.2, excluded_regions=()):
         return x1 <= p["x"] <= x2 and y1 <= p["y"] <= y2
     if any(overlaps(p, region) for p in points for region in excluded_regions):
         reasons.append("player_overlay_or_obstruction")
-    # A stationary UI control can still return CSRT ok=True indefinitely.
-    for i, p in enumerate(points):
-        window = []
-        for q in points[i:]:
-            if q["time"] - p["time"] > 0.6:
-                break
-            window.append(q)
-        if window and window[-1]["time"] - p["time"] >= 0.5:
-            if max(math.hypot(q["x"] - p["x"], q["y"] - p["y"]) for q in window) < 3:
-                reasons.append("stationary_track")
-                break
     events = {}
     for name, gate in gates.items():
         hits = [t for a, b in zip(points, points[1:])
@@ -70,6 +59,21 @@ def evaluate_track(points, gates, *, max_gap=0.2, excluded_regions=()):
             events[name] = hits[0]
         else:
             reasons.append("missing_or_repeated_gate_" + name)
+    # Ignore stopping after the exit: it cannot affect a completed interval.
+    # A stationary UI control BEFORE the exit still invalidates the track.
+    exit_time = events.get("C", float("inf"))
+    for i, p in enumerate(points):
+        if p["time"] > exit_time:
+            break
+        window = []
+        for q in points[i:]:
+            if q["time"] - p["time"] > 0.6 or q["time"] > exit_time:
+                break
+            window.append(q)
+        if window and window[-1]["time"] - p["time"] >= 0.5:
+            if max(math.hypot(q["x"] - p["x"], q["y"] - p["y"]) for q in window) < 3:
+                reasons.append("stationary_track")
+                break
     if len(events) == 3 and not events["A"] < events["B"] < events["C"]:
         reasons.append("invalid_gate_order")
     result = {"status": "rejected" if reasons else "needs_manual_review",

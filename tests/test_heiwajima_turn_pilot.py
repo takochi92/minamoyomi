@@ -53,8 +53,13 @@ def test_success_flag_cannot_override_player_overlay():
 
 
 def test_stationary_ui_lock_is_rejected_even_when_tracker_says_ok():
-    p = points() + [{"time": .6 + i / 10, "x": 1, "y": 1, "ok": True} for i in range(8)]
+    p = points()[:3] + [{"time": .3 + i / 10, "x": 5, "y": 4, "ok": True} for i in range(8)]
     assert "stationary_track" in evaluate_track(p, GATES)["reasons"]
+
+
+def test_stop_after_completed_exit_does_not_invalidate_measured_interval():
+    p = points() + [{"time": .6 + i / 10, "x": 1, "y": 1, "ok": True} for i in range(8)]
+    assert evaluate_track(p, GATES)["status"] == "needs_manual_review"
 
 
 def test_repeated_crossing_is_not_silently_cherry_picked():

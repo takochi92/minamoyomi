@@ -1,0 +1,18 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>艇ろぐ｜１マーク測定の確認</title><style>__CSS__</style>
+<main><h1>１マーク測定の確認</h1><p>平和島 __RACE_LABEL__／確認担当者向け</p>
+<p class="notice">本番未公開。艇首・艇尾を指定して、追跡点のずれを確認する画面です。今回の映像時刻は参考値のため、この画面から公開はできません。</p>
+<div class="grid"><section><div class="choices" id="boats" aria-label="艇を選ぶ"></div><div class="choices" id="gates" aria-label="区間を選ぶ"></div>
+<div class="stage"><canvas id="canvas" width="1280" height="720" aria-label="艇首と艇尾を指定する映像" tabindex="0"></canvas></div>
+<p class="legend">水色：艇首と艇尾の中点　黄・緑・青：全艇共通の固定線</p>
+<div class="timeline"><button id="prev" aria-label="１コマ前へ">←１コマ</button><input id="seek" type="range" min="0" value="0" aria-label="確認コマ"><button id="next" aria-label="１コマ後へ">１コマ→</button></div>
+<p id="clock" class="legend"></p><div class="toolbar"><button data-point="bow">艇首を指定</button><button data-point="stern">艇尾を指定</button><button id="clear">この艇・コマを消す</button></div>
+<div class="toolbar"><button data-side="before">通過前に指定</button><button data-side="after">通過後に指定</button><button id="zoom">４倍に拡大</button><button id="proposal">元の追跡点を表示</button></div>
+<p id="status" class="status" role="status"></p></section>
+<aside><h2>確認状況</h2><p id="progress"></p><label>確認担当者 <input id="reviewer" type="text" maxlength="80" placeholder="担当者名・識別名"></label>
+<p><label><input id="trajectory" type="checkbox">艇番号・１マーク・途中の追跡入れ替わりを映像全体で確認した</label></p>
+<div class="toolbar"><button id="export">確認データを書き出す</button><label>下書きを読み込む<input id="file" type="file" accept="application/json,.json"></label></div>
+<p class="legend">書き出すのは確認用の下書きです。別担当者の照合・映像本体の正確な時刻・カメラ確認が揃うまで公開データにはなりません。外部への送信はありません。</p>
+<details><summary>確認の順番</summary><p>①艇と線を選ぶ ②線を越える前後のコマを探す ③艇首と艇尾をクリック・タップ ④通過前／後を指定。追跡点の表示は初期状態で隠し、元の枠に引きずられず確認します。コマの幅・隠れ・線の位置は後段でも検査します。</p></details>
+<h2>スマホでの掲載枠</h2><p class="legend">現在の状態を反映した見本。計測値は捏造せず空欄にしています。</p><div class="mobile">__PANEL__</div>
+</aside></div><p class="legend">出典：BOATCAST 平和島展示。ローカル確認用／本番予想・的中実績には不使用。</p></main>
+<script type="application/json" id="bundle">__BUNDLE__</script><script>__JS__</script></html>
