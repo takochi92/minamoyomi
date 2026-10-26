@@ -63,7 +63,55 @@
       "rno": 2,
       "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261026&raceNumber=02&autoplay=0&bitrate=low",
       "source_state": "registered",
-      "analysis_state": "not_measured"
+      "analysis_state": "reviewed_video_reference",
+      "reference": {
+        "method": "heiwajima-bow-gates-v2",
+        "time_basis": "decoded_pts_video_seconds",
+        "review_count": 2,
+        "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+        "max_review_difference_seconds": 0.0170370370396995,
+        "publication_ready": false,
+        "prediction_used": false,
+        "predeadline_verified": false,
+        "boats": [
+          {
+            "boat": 1,
+            "name": "垂水 悠",
+            "entry": 1.6,
+            "exit": 2.6
+          },
+          {
+            "boat": 2,
+            "name": "谷口 知優",
+            "entry": 2.2,
+            "exit": 1.9
+          },
+          {
+            "boat": 3,
+            "name": "佐藤 右京",
+            "entry": 2.0,
+            "exit": 1.8
+          },
+          {
+            "boat": 4,
+            "name": "田川 大貴",
+            "entry": 2.1,
+            "exit": 1.7
+          },
+          {
+            "boat": 5,
+            "name": "田中 駿兵",
+            "entry": 1.8,
+            "exit": 1.9
+          },
+          {
+            "boat": 6,
+            "name": "大塚 雅治",
+            "entry": 2.2,
+            "exit": 1.6
+          }
+        ]
+      }
     },
     {
       "date": "20261026",
@@ -71,7 +119,55 @@
       "rno": 3,
       "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261026&raceNumber=03&autoplay=0&bitrate=low",
       "source_state": "registered",
-      "analysis_state": "not_measured"
+      "analysis_state": "reviewed_video_reference",
+      "reference": {
+        "method": "heiwajima-bow-gates-v2",
+        "time_basis": "decoded_pts_video_seconds",
+        "review_count": 2,
+        "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+        "max_review_difference_seconds": 0.040000000000873115,
+        "publication_ready": false,
+        "prediction_used": false,
+        "predeadline_verified": false,
+        "boats": [
+          {
+            "boat": 1,
+            "name": "相馬 翔",
+            "entry": 1.7,
+            "exit": 2.0
+          },
+          {
+            "boat": 2,
+            "name": "森 雄利",
+            "entry": 1.8,
+            "exit": 2.1
+          },
+          {
+            "boat": 3,
+            "name": "竹下 大樹",
+            "entry": 1.8,
+            "exit": 2.0
+          },
+          {
+            "boat": 4,
+            "name": "堀本 裕也",
+            "entry": 2.3,
+            "exit": 1.6
+          },
+          {
+            "boat": 5,
+            "name": "廣中 良一",
+            "entry": 2.4,
+            "exit": 1.5
+          },
+          {
+            "boat": 6,
+            "name": "数原 魁",
+            "entry": 2.5,
+            "exit": 1.5
+          }
+        ]
+      }
     },
     {
       "date": "20261026",

@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "method": "heiwajima-auto-template-v1",
+  "image_size": [
+    1920,
+    1080
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": 1,
+      "segment": [
+        705.0,
+        945.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 540.0,
+      "direction": -1,
+      "segment": [
+        1110.0,
+        1470.0
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": -1,
+      "segment": [
+        255.0,
+        465.0
+      ]
+    }
+  },
+  "templates_sha256": "02a0b968c6e9d2639dfe761a7cad266e8f6c4fa435fce26dcf14fd8275d8d4bc",
+  "training_races": [
+    "20261026-04-1"
+  ],
+  "calibration_races": [
+    "20261026-04-2"
+  ],
+  "heldout_races_not_used_for_settings": [
+    "20261026-04-3"
+  ],
+  "seed_source_sha256": "3a2a8717efb1cb03d35da0aff1746fbbce6c96f3f5d80ed1acb798f48f7cc2fa",
+  "min_caption_cosine": 0.7,
+  "caption_roi": [
+    1040,
+    910,
+    820,
+    130
+  ],
+  "min_match_score": 0.65,
+  "peak_height": 0.46,
+  "peak_prominence": 0.1,
+  "min_peak_separation_seconds": 1.8,
+  "max_pair_gap_seconds": 0.12,
+  "max_point_velocity_pixels_per_second": 1500,
+  "max_candidate_time_span_seconds": 0.12,
+  "helmet_rois": {
+    "A": [
+      -55,
+      -15,
+      28,
+      28
+    ],
+    "B": [
+      54,
+      -15,
+      26,
+      26
+    ],
+    "C": [
+      65,
+      -13,
+      22,
+      20
+    ]
+  },
+  "implementation_sha256": "58c8f5770ccfa99e7fcd2ca8291a66efae86ffef834bf7b88adfacb1f45c24af",
+  "automatic_publication_enabled": false,
+  "prediction_used": false,
+  "real_time_scale_verified": false,
+  "model_fingerprint": "db89720f18a09915ed4c87b28a47457133a5617c7bdea7beed1e7d51ebc21a2d"
+}

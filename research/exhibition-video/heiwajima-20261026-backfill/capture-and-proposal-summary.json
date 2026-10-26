@@ -1,0 +1,237 @@
+{
+  "date": "20261026",
+  "races": [
+    {
+      "race": 2,
+      "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 51,
+          "end_relative_seconds": 81
+        }
+      ],
+      "selected_start_in_full_video_seconds": 198.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 3,
+      "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 27,
+          "end_relative_seconds": 60
+        }
+      ],
+      "selected_start_in_full_video_seconds": 216.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 4,
+      "source_sha256": "22f3a3c1a7452c146e8fde6c1931c8388eb4f81ab0bcdcbfdda46ef786d82576",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 40,
+          "end_relative_seconds": 70
+        }
+      ],
+      "selected_start_in_full_video_seconds": 210.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 5,
+      "source_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 50,
+          "end_relative_seconds": 82
+        }
+      ],
+      "selected_start_in_full_video_seconds": 192.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 6,
+      "source_sha256": "5cec3399d54162db96e0be865bb700bab3a9b1ea473099e37bbaac1c23bd3192",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 48,
+          "end_relative_seconds": 82
+        }
+      ],
+      "selected_start_in_full_video_seconds": 204.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 7,
+      "source_sha256": "7ceb7803be4e95322b51fee32f3ad7ae94b2503e78e0c3166888b1a6687c80cc",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 37,
+          "end_relative_seconds": 69
+        }
+      ],
+      "selected_start_in_full_video_seconds": 210.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 8,
+      "source_sha256": "0d3c55274c5d3dbf8c3bfaebeb4de027424f4b3bd35d0dfa8c1629fbbb87a9b2",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 45,
+          "end_relative_seconds": 78
+        }
+      ],
+      "selected_start_in_full_video_seconds": 204.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 9,
+      "source_sha256": "20bc276984df038dd59f5c1e3a72624d96d7d6b322e36c31e45d9800e447607e",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 50,
+          "end_relative_seconds": 82
+        }
+      ],
+      "selected_start_in_full_video_seconds": 198.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 10,
+      "source_sha256": "daffd35cb55c5173032e0a9f042725e8d284094fc8d6220e8839a8f58f450842",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 21,
+          "end_relative_seconds": 57
+        }
+      ],
+      "selected_start_in_full_video_seconds": 228.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 11,
+      "source_sha256": "61153abed6c60b767d9844f9fe01ffe68d13c8b3c3ae2ff9f5597cf9d071db5d",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 15,
+          "end_relative_seconds": 51
+        }
+      ],
+      "selected_start_in_full_video_seconds": 234.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    },
+    {
+      "race": 12,
+      "source_sha256": "8aa43df8b29c9d05fde2331b42c8f32997049e992db8e3a4174490edc1207852",
+      "height": 1080,
+      "video_registered_and_captured": true,
+      "scene_candidates": [
+        {
+          "start_relative_seconds": 34,
+          "end_relative_seconds": 62
+        }
+      ],
+      "selected_start_in_full_video_seconds": 216.0,
+      "gate_peak_counts": {
+        "A": 6,
+        "B": 6,
+        "C": 6
+      },
+      "source": "normal_official_player_observed_master",
+      "automatic_identity_verified": false,
+      "publication_ready": false
+    }
+  ],
+  "prediction_used": false
+}

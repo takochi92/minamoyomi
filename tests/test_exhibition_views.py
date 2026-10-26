@@ -60,9 +60,9 @@ def test_registry_json_cannot_break_out_of_page_script():
 def test_public_research_is_explicitly_distinct_from_approved_media():
     from pathlib import Path
     raw=json.loads((Path(__file__).resolve().parents[1]/'site/data/exhibition/research.json').read_text(encoding='utf-8'))
-    rows=research_catalog(raw)
+    rows=[r for r in research_catalog(raw) if r['date']=='20261026' and r['jcd']=='04']
     assert len(rows)==12 and [r['rno'] for r in rows]==list(range(1,13))
-    assert sum('reference' in r for r in rows)==1
+    assert [r['rno'] for r in rows if 'reference' in r]==[1,2,3]
     assert len(rows[0]['reference']['boats'])==6
     assert catalog(raw)==[]  # Public numeric samples never approve source media.
     bad={**raw['records'][0], 'official_url':raw['records'][1]['official_url']}

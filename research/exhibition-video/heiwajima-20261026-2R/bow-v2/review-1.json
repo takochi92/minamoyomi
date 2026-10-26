@@ -1,0 +1,308 @@
+{
+  "reviewer": "heiwa-2r-blind-ai-a",
+  "method": "heiwajima-bow-gates-v2",
+  "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+  "size": [
+    1920,
+    1080
+  ],
+  "labels": {
+    "1:216": {
+      "bow": [
+        732,
+        765
+      ]
+    },
+    "1:218": {
+      "bow": [
+        769,
+        757
+      ]
+    },
+    "2:339": {
+      "bow": [
+        744,
+        796
+      ]
+    },
+    "2:340": {
+      "bow": [
+        761,
+        790
+      ]
+    },
+    "3:464": {
+      "bow": [
+        741,
+        814
+      ]
+    },
+    "3:465": {
+      "bow": [
+        758,
+        808
+      ]
+    },
+    "4:554": {
+      "bow": [
+        748,
+        818
+      ]
+    },
+    "4:555": {
+      "bow": [
+        764,
+        812
+      ]
+    },
+    "5:720": {
+      "bow": [
+        744,
+        797
+      ]
+    },
+    "5:721": {
+      "bow": [
+        761,
+        791
+      ]
+    },
+    "6:836": {
+      "bow": [
+        748,
+        836
+      ]
+    },
+    "6:837": {
+      "bow": [
+        765,
+        831
+      ]
+    },
+    "1:264": {
+      "bow": [
+        1207,
+        550
+      ]
+    },
+    "1:267": {
+      "bow": [
+        1213,
+        537
+      ]
+    },
+    "2:402": {
+      "bow": [
+        1203,
+        551
+      ]
+    },
+    "2:405": {
+      "bow": [
+        1197,
+        537
+      ]
+    },
+    "3:521": {
+      "bow": [
+        1155,
+        550
+      ]
+    },
+    "3:524": {
+      "bow": [
+        1151,
+        537
+      ]
+    },
+    "4:615": {
+      "bow": [
+        1138,
+        550
+      ]
+    },
+    "4:618": {
+      "bow": [
+        1131,
+        533
+      ]
+    },
+    "5:773": {
+      "bow": [
+        1141,
+        545
+      ]
+    },
+    "5:775": {
+      "bow": [
+        1140,
+        536
+      ]
+    },
+    "6:901": {
+      "bow": [
+        1163,
+        550
+      ]
+    },
+    "6:904": {
+      "bow": [
+        1150,
+        535
+      ]
+    },
+    "1:342": {
+      "bow": [
+        758,
+        330
+      ]
+    },
+    "1:344": {
+      "bow": [
+        735,
+        328
+      ]
+    },
+    "2:461": {
+      "bow": [
+        759,
+        379
+      ]
+    },
+    "2:463": {
+      "bow": [
+        736,
+        375
+      ]
+    },
+    "3:578": {
+      "bow": [
+        757,
+        368
+      ]
+    },
+    "3:580": {
+      "bow": [
+        735,
+        363
+      ]
+    },
+    "4:666": {
+      "bow": [
+        759,
+        393
+      ]
+    },
+    "4:668": {
+      "bow": [
+        737,
+        388
+      ]
+    },
+    "5:830": {
+      "bow": [
+        764,
+        375
+      ]
+    },
+    "5:832": {
+      "bow": [
+        742,
+        373
+      ]
+    },
+    "6:950": {
+      "bow": [
+        757,
+        398
+      ]
+    },
+    "6:952": {
+      "bow": [
+        735,
+        396
+      ]
+    }
+  },
+  "pairs": {
+    "1:A": {
+      "before": 216,
+      "after": 218
+    },
+    "2:A": {
+      "before": 339,
+      "after": 340
+    },
+    "3:A": {
+      "before": 464,
+      "after": 465
+    },
+    "4:A": {
+      "before": 554,
+      "after": 555
+    },
+    "5:A": {
+      "before": 720,
+      "after": 721
+    },
+    "6:A": {
+      "before": 836,
+      "after": 837
+    },
+    "1:B": {
+      "before": 264,
+      "after": 267
+    },
+    "2:B": {
+      "before": 402,
+      "after": 405
+    },
+    "3:B": {
+      "before": 521,
+      "after": 524
+    },
+    "4:B": {
+      "before": 615,
+      "after": 618
+    },
+    "5:B": {
+      "before": 773,
+      "after": 775
+    },
+    "6:B": {
+      "before": 901,
+      "after": 904
+    },
+    "1:C": {
+      "before": 342,
+      "after": 344
+    },
+    "2:C": {
+      "before": 461,
+      "after": 463
+    },
+    "3:C": {
+      "before": 578,
+      "after": 580
+    },
+    "4:C": {
+      "before": 666,
+      "after": 668
+    },
+    "5:C": {
+      "before": 830,
+      "after": 832
+    },
+    "6:C": {
+      "before": 950,
+      "after": 952
+    }
+  },
+  "unknown": [],
+  "notes": [
+    "Independent visual review used only blind-manifest.json, config.json, rois.json, provided windows, and original JPEG frames. No other labels, scores or results read.",
+    "Coordinates are manually selected visible hull bow points from native-resolution crops of original 1920x1080 JPEG frames; integer pixel placement is approximate (roughly several pixels). Boat identity checked from visible suit colors and hull number markings, not order alone.",
+    "C windows for boats 1 and 6 began after visible bow crossing. On explicit authorization, original frames immediately before those windows were reviewed to bracket the crossing.",
+    "Reference values under validation only; no formal publication or prediction use. No crossing time or aggregate calculated."
+  ]
+}

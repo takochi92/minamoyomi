@@ -23,6 +23,16 @@ def test_only_bounded_late_video_interval_is_selected():
     assert sum(s[2] for s in segments)==120
 
 
+def test_time_prior_only_narrows_download_and_does_not_assign_boats_or_times():
+    text='#EXTM3U\n#EXT-X-MEDIA-SEQUENCE:100\n'+''.join(f'#EXTINF:6,\nsegment-{i}.ts\n' for i in range(58))
+    duration,segments=selected_segments('https://variants.streaks.jp/v/index.m3u8',text,(225,310))
+    assert duration==348 and segments[0][0]==137 and segments[0][1]==222
+    assert sum(s[2] for s in segments)==90
+    for window in [(0,200),(310,225),(225,float('nan')),(225,400)]:
+        with pytest.raises(ValueError,match='preferred_time_window'):
+            selected_segments('https://variants.streaks.jp/v/index.m3u8',text,window)
+
+
 @pytest.mark.parametrize('line',['#EXT-X-KEY:METHOD=SAMPLE-AES,URI="key"',
                                '#EXT-X-KEY:METHOD=AES-128,KEYFORMAT="com.widevine",URI="key"',
                                '#EXT-X-MAP:URI="init.mp4"','#EXT-X-BYTERANGE:100@0'])

@@ -8,11 +8,6 @@ on:
       race:
         description: '平和島のR番号'
         default: '2'
-  push:
-    branches: [main]
-    paths:
-      - 'tools/capture_exhibition.py'
-      - '.github/workflows/exhibition-capture-test.yml'
 permissions:
   contents: read
 concurrency:

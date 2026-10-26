@@ -1,0 +1,1021 @@
+{
+  "schema": 1,
+  "method": "heiwajima-bow-gates-v2",
+  "time_basis": "decoded_pts_video_seconds",
+  "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+  "image_size": [
+    1920,
+    1080
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": 1,
+      "segment": [
+        705.0,
+        945.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 540.0,
+      "direction": -1,
+      "segment": [
+        1110.0,
+        1470.0
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": -1,
+      "segment": [
+        255.0,
+        465.0
+      ]
+    }
+  },
+  "reviews": [
+    {
+      "reviewer": "heiwa-2r-blind-ai-a",
+      "digest": "8a47f23dfb11973208744bf61548acbfcae3825cb0c4e65ae71de46ec750f430"
+    },
+    {
+      "reviewer": "heiwa-2r-blind-ai-b",
+      "digest": "c1cf1c6974bc9d52dcff1c6285da5e345a28f669a533fcf00da1a107051849eb"
+    }
+  ],
+  "results": [
+    {
+      "boat": 1,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58346.90295465465,
+              "frames": [
+                {
+                  "index": 216,
+                  "pts": 5251218347,
+                  "bow": [
+                    732,
+                    765
+                  ]
+                },
+                {
+                  "index": 218,
+                  "pts": 5251224347,
+                  "bow": [
+                    769,
+                    757
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58346.9020037037,
+              "frames": [
+                {
+                  "index": 216,
+                  "pts": 5251218347,
+                  "bow": [
+                    733,
+                    760
+                  ]
+                },
+                {
+                  "index": 218,
+                  "pts": 5251224347,
+                  "bow": [
+                    769,
+                    748
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58346.902479179174,
+          "difference_seconds": 0.0009509509545750916
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58348.54744529915,
+              "frames": [
+                {
+                  "index": 264,
+                  "pts": 5251362347,
+                  "bow": [
+                    1207,
+                    550
+                  ]
+                },
+                {
+                  "index": 267,
+                  "pts": 5251371347,
+                  "bow": [
+                    1213,
+                    537
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58348.53052222222,
+              "frames": [
+                {
+                  "index": 265,
+                  "pts": 5251365347,
+                  "bow": [
+                    1209,
+                    544
+                  ]
+                },
+                {
+                  "index": 267,
+                  "pts": 5251371347,
+                  "bow": [
+                    1213,
+                    534
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58348.538983760685,
+          "difference_seconds": 0.01692307692428585
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58351.09371062802,
+              "frames": [
+                {
+                  "index": 342,
+                  "pts": 5251596347,
+                  "bow": [
+                    758,
+                    330
+                  ]
+                },
+                {
+                  "index": 344,
+                  "pts": 5251602347,
+                  "bow": [
+                    735,
+                    328
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58351.09660917875,
+              "frames": [
+                {
+                  "index": 342,
+                  "pts": 5251596347,
+                  "bow": [
+                    759,
+                    331
+                  ]
+                },
+                {
+                  "index": 344,
+                  "pts": 5251602347,
+                  "bow": [
+                    736,
+                    329
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58351.09515990339,
+          "difference_seconds": 0.0028985507306060754
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 1.6,
+      "exit_video_seconds": 2.6,
+      "max_review_time_difference_seconds": 0.01692307692428585
+    },
+    {
+      "boat": 2,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58350.982286928105,
+              "frames": [
+                {
+                  "index": 339,
+                  "pts": 5251587347,
+                  "bow": [
+                    744,
+                    796
+                  ]
+                },
+                {
+                  "index": 340,
+                  "pts": 5251590347,
+                  "bow": [
+                    761,
+                    790
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58350.98280292398,
+              "frames": [
+                {
+                  "index": 339,
+                  "pts": 5251587347,
+                  "bow": [
+                    743,
+                    790
+                  ]
+                },
+                {
+                  "index": 340,
+                  "pts": 5251590347,
+                  "bow": [
+                    762,
+                    787
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58350.98254492604,
+          "difference_seconds": 0.0005159958745935
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58353.14909365079,
+              "frames": [
+                {
+                  "index": 402,
+                  "pts": 5251776347,
+                  "bow": [
+                    1203,
+                    551
+                  ]
+                },
+                {
+                  "index": 405,
+                  "pts": 5251785347,
+                  "bow": [
+                    1197,
+                    537
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58353.14195079365,
+              "frames": [
+                {
+                  "index": 403,
+                  "pts": 5251779347,
+                  "bow": [
+                    1201,
+                    544
+                  ]
+                },
+                {
+                  "index": 405,
+                  "pts": 5251785347,
+                  "bow": [
+                    1197,
+                    537
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58353.14552222222,
+          "difference_seconds": 0.007142857139115222
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58355.063275845416,
+              "frames": [
+                {
+                  "index": 461,
+                  "pts": 5251953347,
+                  "bow": [
+                    759,
+                    379
+                  ]
+                },
+                {
+                  "index": 463,
+                  "pts": 5251959347,
+                  "bow": [
+                    736,
+                    375
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58355.063275845416,
+              "frames": [
+                {
+                  "index": 461,
+                  "pts": 5251953347,
+                  "bow": [
+                    759,
+                    380
+                  ]
+                },
+                {
+                  "index": 463,
+                  "pts": 5251959347,
+                  "bow": [
+                    736,
+                    376
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58355.063275845416,
+          "difference_seconds": 0.0
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.2,
+      "exit_video_seconds": 1.9,
+      "max_review_time_difference_seconds": 0.007142857139115222
+    },
+    {
+      "boat": 3,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58355.15483594772,
+              "frames": [
+                {
+                  "index": 464,
+                  "pts": 5251962347,
+                  "bow": [
+                    741,
+                    814
+                  ]
+                },
+                {
+                  "index": 465,
+                  "pts": 5251965347,
+                  "bow": [
+                    758,
+                    808
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58355.15483594772,
+              "frames": [
+                {
+                  "index": 464,
+                  "pts": 5251962347,
+                  "bow": [
+                    741,
+                    805
+                  ]
+                },
+                {
+                  "index": 465,
+                  "pts": 5251965347,
+                  "bow": [
+                    758,
+                    801
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58355.15483594772,
+          "difference_seconds": 0.0
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58357.11411196581,
+              "frames": [
+                {
+                  "index": 521,
+                  "pts": 5252133347,
+                  "bow": [
+                    1155,
+                    550
+                  ]
+                },
+                {
+                  "index": 524,
+                  "pts": 5252142347,
+                  "bow": [
+                    1151,
+                    537
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58357.10385555556,
+              "frames": [
+                {
+                  "index": 521,
+                  "pts": 5252133347,
+                  "bow": [
+                    1154,
+                    548
+                  ]
+                },
+                {
+                  "index": 524,
+                  "pts": 5252142347,
+                  "bow": [
+                    1150,
+                    536
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58357.108983760685,
+          "difference_seconds": 0.010256410256261006
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58358.9584010101,
+              "frames": [
+                {
+                  "index": 578,
+                  "pts": 5252304347,
+                  "bow": [
+                    757,
+                    368
+                  ]
+                },
+                {
+                  "index": 580,
+                  "pts": 5252310347,
+                  "bow": [
+                    735,
+                    363
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58358.95537070707,
+              "frames": [
+                {
+                  "index": 578,
+                  "pts": 5252304347,
+                  "bow": [
+                    756,
+                    367
+                  ]
+                },
+                {
+                  "index": 579,
+                  "pts": 5252307347,
+                  "bow": [
+                    745,
+                    364
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58358.956885858584,
+          "difference_seconds": 0.003030303028936032
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.0,
+      "exit_video_seconds": 1.8,
+      "max_review_time_difference_seconds": 0.010256410256261006
+    },
+    {
+      "boat": 4,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58358.141355555555,
+              "frames": [
+                {
+                  "index": 554,
+                  "pts": 5252232347,
+                  "bow": [
+                    748,
+                    818
+                  ]
+                },
+                {
+                  "index": 555,
+                  "pts": 5252235347,
+                  "bow": [
+                    764,
+                    812
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58358.141355555555,
+              "frames": [
+                {
+                  "index": 554,
+                  "pts": 5252232347,
+                  "bow": [
+                    748,
+                    806
+                  ]
+                },
+                {
+                  "index": 555,
+                  "pts": 5252235347,
+                  "bow": [
+                    764,
+                    801
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58358.141355555555,
+          "difference_seconds": 0.0
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58360.229345751635,
+              "frames": [
+                {
+                  "index": 615,
+                  "pts": 5252415347,
+                  "bow": [
+                    1138,
+                    550
+                  ]
+                },
+                {
+                  "index": 618,
+                  "pts": 5252424347,
+                  "bow": [
+                    1131,
+                    533
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58360.21900707071,
+              "frames": [
+                {
+                  "index": 615,
+                  "pts": 5252415347,
+                  "bow": [
+                    1137,
+                    548
+                  ]
+                },
+                {
+                  "index": 617,
+                  "pts": 5252421347,
+                  "bow": [
+                    1131,
+                    537
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58360.22417641117,
+          "difference_seconds": 0.010338680927816313
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58361.897794949495,
+              "frames": [
+                {
+                  "index": 666,
+                  "pts": 5252568347,
+                  "bow": [
+                    759,
+                    393
+                  ]
+                },
+                {
+                  "index": 668,
+                  "pts": 5252574347,
+                  "bow": [
+                    737,
+                    388
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58361.897794949495,
+              "frames": [
+                {
+                  "index": 666,
+                  "pts": 5252568347,
+                  "bow": [
+                    759,
+                    394
+                  ]
+                },
+                {
+                  "index": 668,
+                  "pts": 5252574347,
+                  "bow": [
+                    737,
+                    387
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58361.897794949495,
+          "difference_seconds": 0.0
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.1,
+      "exit_video_seconds": 1.7,
+      "max_review_time_difference_seconds": 0.010338680927816313
+    },
+    {
+      "boat": 5,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58363.6822869281,
+              "frames": [
+                {
+                  "index": 720,
+                  "pts": 5252730347,
+                  "bow": [
+                    744,
+                    797
+                  ]
+                },
+                {
+                  "index": 721,
+                  "pts": 5252733347,
+                  "bow": [
+                    761,
+                    791
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58363.68280292398,
+              "frames": [
+                {
+                  "index": 720,
+                  "pts": 5252730347,
+                  "bow": [
+                    743,
+                    790
+                  ]
+                },
+                {
+                  "index": 721,
+                  "pts": 5252733347,
+                  "bow": [
+                    762,
+                    788
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58363.682544926036,
+          "difference_seconds": 0.0005159958745935
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58365.47422592593,
+              "frames": [
+                {
+                  "index": 773,
+                  "pts": 5252889347,
+                  "bow": [
+                    1141,
+                    545
+                  ]
+                },
+                {
+                  "index": 775,
+                  "pts": 5252895347,
+                  "bow": [
+                    1140,
+                    536
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58365.45718888889,
+              "frames": [
+                {
+                  "index": 772,
+                  "pts": 5252886347,
+                  "bow": [
+                    1140,
+                    548
+                  ]
+                },
+                {
+                  "index": 774,
+                  "pts": 5252892347,
+                  "bow": [
+                    1139,
+                    538
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58365.465707407406,
+          "difference_seconds": 0.0170370370396995
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58367.379613131314,
+              "frames": [
+                {
+                  "index": 830,
+                  "pts": 5253060347,
+                  "bow": [
+                    764,
+                    375
+                  ]
+                },
+                {
+                  "index": 832,
+                  "pts": 5253066347,
+                  "bow": [
+                    742,
+                    373
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58367.38163333333,
+              "frames": [
+                {
+                  "index": 831,
+                  "pts": 5253063347,
+                  "bow": [
+                    754,
+                    374
+                  ]
+                },
+                {
+                  "index": 832,
+                  "pts": 5253066347,
+                  "bow": [
+                    742,
+                    371
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58367.380623232326,
+          "difference_seconds": 0.002020202016865369
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 1.8,
+      "exit_video_seconds": 1.9,
+      "max_review_time_difference_seconds": 0.0170370370396995
+    },
+    {
+      "boat": 6,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58367.54111045752,
+              "frames": [
+                {
+                  "index": 836,
+                  "pts": 5253078347,
+                  "bow": [
+                    748,
+                    836
+                  ]
+                },
+                {
+                  "index": 837,
+                  "pts": 5253081347,
+                  "bow": [
+                    765,
+                    831
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58367.54111045752,
+              "frames": [
+                {
+                  "index": 836,
+                  "pts": 5253078347,
+                  "bow": [
+                    748,
+                    829
+                  ]
+                },
+                {
+                  "index": 837,
+                  "pts": 5253081347,
+                  "bow": [
+                    765,
+                    823
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58367.54111045752,
+          "difference_seconds": 0.0
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58369.77052222222,
+              "frames": [
+                {
+                  "index": 901,
+                  "pts": 5253273347,
+                  "bow": [
+                    1163,
+                    550
+                  ]
+                },
+                {
+                  "index": 904,
+                  "pts": 5253282347,
+                  "bow": [
+                    1150,
+                    535
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58369.77528412698,
+              "frames": [
+                {
+                  "index": 902,
+                  "pts": 5253276347,
+                  "bow": [
+                    1158,
+                    544
+                  ]
+                },
+                {
+                  "index": 904,
+                  "pts": 5253282347,
+                  "bow": [
+                    1151,
+                    537
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58369.7729031746,
+          "difference_seconds": 0.004761904761835467
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "heiwa-2r-blind-ai-a",
+              "time": 58371.3584010101,
+              "frames": [
+                {
+                  "index": 950,
+                  "pts": 5253420347,
+                  "bow": [
+                    757,
+                    398
+                  ]
+                },
+                {
+                  "index": 952,
+                  "pts": 5253426347,
+                  "bow": [
+                    735,
+                    396
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "heiwa-2r-blind-ai-b",
+              "time": 58371.36037729468,
+              "frames": [
+                {
+                  "index": 950,
+                  "pts": 5253420347,
+                  "bow": [
+                    758,
+                    398
+                  ]
+                },
+                {
+                  "index": 952,
+                  "pts": 5253426347,
+                  "bow": [
+                    735,
+                    395
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 58371.35938915239,
+          "difference_seconds": 0.0019762845840887167
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.2,
+      "exit_video_seconds": 1.6,
+      "max_review_time_difference_seconds": 0.004761904761835467
+    }
+  ],
+  "paired_gate_count": 18,
+  "valid_gate_pairs": 18,
+  "max_review_time_difference_seconds": 0.0170370370396995,
+  "review_tolerance_seconds": 0.1,
+  "images_fingerprint_verified": true,
+  "publication_ready": false,
+  "real_time_scale_verified": false,
+  "predeadline_verified": false,
+  "prediction_used": false,
+  "note": "同一レース内の独立AI間一致。実測の正確さ・別レース精度の証明ではない。"
+}

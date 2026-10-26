@@ -1,0 +1,42 @@
+{
+  "venue": "heiwajima",
+  "turn": "1-mark",
+  "date": "2026-10-26",
+  "race": 2,
+  "source": "https://race.boatcast.jp/replay?jo=04&md=T",
+  "image_size": [
+    1920,
+    1080
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": 1,
+      "segment": [
+        705.0,
+        945.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 540.0,
+      "direction": -1,
+      "segment": [
+        1110.0,
+        1470.0
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": -1,
+      "segment": [
+        255.0,
+        465.0
+      ]
+    }
+  },
+  "excluded_regions": [],
+  "method": "heiwajima-bow-gates-v2"
+}

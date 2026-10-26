@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -83,7 +84,7 @@ def choose_variant(master, text):
     return max(variants)
 
 
-def selected_segments(base,text):
+def selected_segments(base,text,preferred_window=None):
     if not text.startswith('#EXTM3U') or any(t in text for t in ('#EXT-X-MAP:','#EXT-X-BYTERANGE:')):
         raise ValueError('unsupported_media_container')
     sequence=0;elapsed=0;duration=None;tag=None;segments=[]
@@ -101,18 +102,23 @@ def selected_segments(base,text):
             segments.append((sequence,elapsed,duration,url,tag));elapsed+=duration;sequence+=1;duration=None
     if not 120<=elapsed<=900:raise ValueError('unexpected_exhibition_duration')
     start,end=max(0,elapsed-150),elapsed-35
+    if preferred_window is not None:
+        if (len(preferred_window)!=2 or any(type(v) not in (int,float) or not math.isfinite(v) for v in preferred_window)
+                or not 0<=preferred_window[0]<preferred_window[1]<=elapsed or preferred_window[1]-preferred_window[0]>120):
+            raise ValueError('invalid_preferred_time_window')
+        start,end=preferred_window
     chosen=[s for s in segments if s[1]+s[2]>start and s[1]<end]
     if not 1<=len(chosen)<=32 or sum(s[2] for s in chosen)>135:raise ValueError('segment_count_or_duration_limit')
     return elapsed,chosen
 
 
-def capture(day,race,directory,*,discover=discover_master,reader=fetch):
+def capture(day,race,directory,*,discover=discover_master,reader=fetch,preferred_window=None):
     start=time.monotonic();directory=Path(directory)
     # Only a newly created directory is accepted; never overwrite a prior import.
     directory.mkdir(parents=True,exist_ok=False)
     master=discover(day,race)
     height,variant=choose_variant(master,reader(master,512_000).decode('utf-8'))
-    duration,segments=selected_segments(variant,reader(variant,512_000).decode('utf-8'))
+    duration,segments=selected_segments(variant,reader(variant,512_000).decode('utf-8'),preferred_window)
     playlist=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-TARGETDURATION:20',f'#EXT-X-MEDIA-SEQUENCE:{segments[0][0]}']
     keys={};total=0
     for i,(sequence,when,length,url,tag) in enumerate(segments):
@@ -141,6 +147,7 @@ def capture(day,race,directory,*,discover=discover_master,reader=fetch):
     summary={'date':day,'jcd':'04','rno':race,'height':height,'full_duration_seconds':duration,
         'selected_start_seconds':segments[0][1],'selected_duration_seconds':sum(s[2] for s in segments),
         'source_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'elapsed_seconds':round(time.monotonic()-start,2),
+        'window_strategy':'preferred_clock_window' if preferred_window is not None else 'bounded_late_window',
         'publication_ready':False,'prediction_used':False}
     (directory/'summary.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
     return target,summary
@@ -150,11 +157,15 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--date',required=True);parser.add_argument('--race',type=int,required=True)
     parser.add_argument('--private-output',type=Path,required=True)
+    parser.add_argument('--window-start',type=float)
+    parser.add_argument('--window-end',type=float)
     args=parser.parse_args()
     # Validate before opening a browser or creating any files.
     official_player(args.date,args.race)
+    if (args.window_start is None)!=(args.window_end is None):parser.error('Both window bounds are required')
+    window=None if args.window_start is None else (args.window_start,args.window_end)
     try:
-        _,summary=capture(args.date,args.race,args.private_output)
+        _,summary=capture(args.date,args.race,args.private_output,preferred_window=window)
         print(json.dumps(summary))
     except Exception as error:
         # Do not print exceptions containing signed network URLs or transport keys.

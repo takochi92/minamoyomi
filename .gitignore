@@ -32,3 +32,5 @@ site/grade.html
 site/database/
 site/data/players/
 site/data/database/
+# Source-image-derived research templates stay local pending usage confirmation.
+scraper/exhibition_model/*.npz

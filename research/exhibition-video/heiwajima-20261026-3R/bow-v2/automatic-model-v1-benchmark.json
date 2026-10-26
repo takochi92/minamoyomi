@@ -1,0 +1,18 @@
+{
+  "model_fingerprint": "db89720f18a09915ed4c87b28a47457133a5617c7bdea7beed1e7d51ebc21a2d",
+  "race": 3,
+  "scope": "heldout_after_freeze",
+  "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+  "accepted_boats": [
+    {
+      "boat": 5,
+      "gate_time_differences_seconds": {
+        "A": -0.012938596490130294,
+        "B": -0.02777777777373558,
+        "C": -0.0044999999954598024
+      },
+      "max_abs_gate_difference_seconds": 0.02777777777373558
+    }
+  ],
+  "publication_ready": false
+}

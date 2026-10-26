@@ -1,0 +1,363 @@
+{
+  "results": [
+    {
+      "boat": 1,
+      "status": "rejected",
+      "reasons": [
+        "ambiguous_C"
+      ],
+      "events": {
+        "A": {
+          "time": 58346.90385555555,
+          "score": 0.8642793893814087,
+          "frames": [
+            1626,
+            1627
+          ],
+          "points": [
+            [
+              734,
+              757
+            ],
+            [
+              750,
+              757
+            ]
+          ],
+          "boat": 1
+        },
+        "B": {
+          "time": 58348.52766507937,
+          "score": 0.8043240904808044,
+          "frames": [
+            1675,
+            1676
+          ],
+          "points": [
+            [
+              1208,
+              545
+            ],
+            [
+              1207,
+              538
+            ]
+          ],
+          "boat": 1
+        }
+      }
+    },
+    {
+      "boat": 2,
+      "status": "rejected",
+      "reasons": [
+        "missing_A",
+        "missing_B"
+      ],
+      "events": {
+        "C": {
+          "time": 58355.057701709404,
+          "score": 0.8134280443191528,
+          "frames": [
+            1871,
+            1872
+          ],
+          "points": [
+            [
+              758,
+              378
+            ],
+            [
+              745,
+              379
+            ]
+          ],
+          "boat": 2
+        }
+      }
+    },
+    {
+      "boat": 3,
+      "status": "automatic_candidate",
+      "reasons": [],
+      "events": {
+        "A": {
+          "time": 58355.15679673203,
+          "score": 0.8882765173912048,
+          "frames": [
+            1874,
+            1875
+          ],
+          "points": [
+            [
+              740,
+              806
+            ],
+            [
+              757,
+              803
+            ]
+          ],
+          "boat": 3
+        },
+        "B": {
+          "time": 58357.093855555555,
+          "score": 0.720446765422821,
+          "frames": [
+            1932,
+            1933
+          ],
+          "points": [
+            [
+              1160,
+              547
+            ],
+            [
+              1153,
+              537
+            ]
+          ],
+          "boat": 3
+        },
+        "C": {
+          "time": 58358.94718888889,
+          "score": 0.8718603253364563,
+          "frames": [
+            1988,
+            1989
+          ],
+          "points": [
+            [
+              753,
+              364
+            ],
+            [
+              743,
+              362
+            ]
+          ],
+          "boat": 3
+        }
+      },
+      "entry_video_seconds": 1.9,
+      "exit_video_seconds": 1.9
+    },
+    {
+      "boat": 4,
+      "status": "rejected",
+      "reasons": [
+        "missing_B"
+      ],
+      "events": {
+        "A": {
+          "time": 58358.15385555556,
+          "score": 0.8873430490493774,
+          "frames": [
+            1964,
+            1965
+          ],
+          "points": [
+            [
+              736,
+              813
+            ],
+            [
+              764,
+              803
+            ]
+          ],
+          "boat": 4
+        },
+        "C": {
+          "time": 58361.89173434343,
+          "score": 0.7895430326461792,
+          "frames": [
+            2076,
+            2077
+          ],
+          "points": [
+            [
+              757,
+              391
+            ],
+            [
+              746,
+              389
+            ]
+          ],
+          "boat": 4
+        }
+      }
+    },
+    {
+      "boat": 5,
+      "status": "automatic_candidate",
+      "reasons": [],
+      "events": {
+        "A": {
+          "time": 58363.68163333333,
+          "score": 0.9089606404304504,
+          "frames": [
+            2130,
+            2131
+          ],
+          "points": [
+            [
+              744,
+              788
+            ],
+            [
+              762,
+              783
+            ]
+          ],
+          "boat": 5
+        },
+        "B": {
+          "time": 58365.465760317464,
+          "score": 0.7181003093719482,
+          "frames": [
+            2183,
+            2184
+          ],
+          "points": [
+            [
+              1143,
+              546
+            ],
+            [
+              1140,
+              539
+            ]
+          ],
+          "boat": 5
+        },
+        "C": {
+          "time": 58367.37052222222,
+          "score": 0.8928685188293457,
+          "frames": [
+            2240,
+            2241
+          ],
+          "points": [
+            [
+              761,
+              375
+            ],
+            [
+              750,
+              373
+            ]
+          ],
+          "boat": 5
+        }
+      },
+      "entry_video_seconds": 1.8,
+      "exit_video_seconds": 1.9
+    },
+    {
+      "boat": 6,
+      "status": "rejected",
+      "reasons": [
+        "missing_C"
+      ],
+      "events": {
+        "A": {
+          "time": 58367.540892592595,
+          "score": 0.9212381839752197,
+          "frames": [
+            2246,
+            2247
+          ],
+          "points": [
+            [
+              748,
+              827
+            ],
+            [
+              766,
+              823
+            ]
+          ],
+          "boat": 6
+        },
+        "B": {
+          "time": 58369.74385555556,
+          "score": 0.779071569442749,
+          "frames": [
+            2312,
+            2313
+          ],
+          "points": [
+            [
+              1159,
+              541
+            ],
+            [
+              1155,
+              536
+            ]
+          ],
+          "boat": 6
+        }
+      }
+    }
+  ],
+  "gate_peak_counts": {
+    "A": 8,
+    "B": 9,
+    "C": 9
+  },
+  "publication_ready": false,
+  "prediction_used": false,
+  "identity_assumed_from_passage_order": false,
+  "schema": 1,
+  "method": "heiwajima-auto-template-v1",
+  "model_fingerprint": "db89720f18a09915ed4c87b28a47457133a5617c7bdea7beed1e7d51ebc21a2d",
+  "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+  "source_clock": "decoded_pts",
+  "time_base": [
+    1,
+    90000
+  ],
+  "scene_start_relative_seconds": 48.0,
+  "scene_end_relative_seconds": 85.0,
+  "image_size": [
+    1920,
+    1080
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": 1,
+      "segment": [
+        705.0,
+        945.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 540.0,
+      "direction": -1,
+      "segment": [
+        1110.0,
+        1470.0
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": -1,
+      "segment": [
+        255.0,
+        465.0
+      ]
+    }
+  },
+  "elapsed_seconds": 92.5,
+  "camera_calibrated": false,
+  "real_time_scale_verified": false,
+  "reference_only": true,
+  "predeadline_verified": false
+}
