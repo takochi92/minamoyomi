@@ -17,32 +17,28 @@ on:
 permissions:
   contents: write
 concurrency:
-  # Prevent an older full-site deployment racing the ordinary update job.
-  group: update-races
+  # This job only writes source metadata. It cannot cancel pending race updates
+  # or deploy an old snapshot of the whole site over newer predictions.
+  group: exhibition-source-update
   cancel-in-progress: false
 jobs:
   source:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 3
     env:
-      SITE_URL: ${{ vars.SITE_URL }}
-      SITEGEN_SPARSE: '1'
-      HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
       REQUESTED_DATE: ${{ inputs.date }}
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
-            /*
-            !/scraper/database/player_history/
-            !/scraper/database/races/
-            !/research/
+            /tools/update_exhibition.py
+            /scraper/__init__.py
+            /scraper/exhibition_views.py
+            /site/data/exhibition/
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-      - run: pip install -r requirements.txt
       - name: 公開映像の登録を確認（未解析の数値は作らない）
         run: |
           if [ -n "$REQUESTED_DATE" ]; then
@@ -60,17 +56,5 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
-      - uses: actions/cache/restore@v4
-        with:
-          path: .cache/sitegen
-          key: public-site-v1-${{ github.run_id }}
-          restore-keys: public-site-v1-
-      - name: 既存の予想を変更せずページを生成
-        run: python -m scraper.sitegen --cache-dir .cache/sitegen
-      - name: サイトを公開
-        if: env.HAS_CF == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site --project-name=${{ vars.CF_PROJECT_NAME }} --branch=main --commit-dirty=true
+      - name: 反映経路を記録
+        run: echo '登録情報を保存しました。サイトへの反映は次の通常更新で行います。無人タイム解析は未実装です。' >> "$GITHUB_STEP_SUMMARY"
