@@ -16,7 +16,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from scraper.turn_measurement import digest, render_panel
+from scraper.turn_measurement import digest, render_panel, METHOD, BOW_METHOD
 
 ASSETS = Path(__file__).with_name("turn_review")
 NAMES = {1: "鈴木 唯央", 2: "生方 靖亜", 3: "柳瀬 幹太", 4: "杉江 浩明", 5: "花田 凱成", 6: "一瀬 明"}
@@ -27,6 +27,9 @@ def build(frames_dir, config, tracks, report):
         raise ValueError("Heiwajima first-mark only")
     if (report.get("date"), report.get("race"), report.get("venue")) != (config["date"], config["race"], config["venue"]):
         raise ValueError("Report belongs to a different race")
+    method = config.get('method', METHOD)
+    if method not in (METHOD, BOW_METHOD):
+        raise ValueError('Unsupported measurement method')
     frames_dir = Path(frames_dir).resolve()
     raw_manifest = json.loads((frames_dir / "frames.json").read_text(encoding="utf-8"))
     source_details = None
@@ -88,6 +91,8 @@ def build(frames_dir, config, tracks, report):
                 "source_clock": source_clock, "source": config["source"]}
     if source_details:
         evidence['source_details'] = source_details
+    if 'method' in config:
+        evidence['method'] = method
     # This exact digest identifies the previous windows-only evidence. Accept
     # its drafts only when that unchanged subset is present in this new bundle.
     legacy_digest = digest(evidence)
@@ -106,8 +111,12 @@ def build(frames_dir, config, tracks, report):
     names = {int(k): str(v) for k, v in config.get("names", {}).items()}
     if not names and (config["date"], config["race"]) == ("2026-10-26", 1):
         names = NAMES
-    panel = render_panel({"rows": [{"boat": i, "status": "remeasure"} for i in range(1, 7)]}, names, preview=True)
+    panel = render_panel({"method": method, "rows": [{"boat": i, "status": "remeasure"} for i in range(1, 7)]}, names, preview=True)
     template = (ASSETS / "review.html").read_text(encoding="utf-8")
+    if method == BOW_METHOD:
+        template = (template.replace('艇首と艇尾', '艇首の先端').replace('艇首・艇尾', '艇首')
+                    .replace('水色：艇首の先端の中点', '水色：測定する艇首の先端')
+                    .replace('<button data-point="stern">艇尾を指定</button>', '<button data-point="stern" hidden>艇尾を指定</button>'))
     payload = json.dumps(bundle, ensure_ascii=False, allow_nan=False).replace("<", "\\u003c")
     race_label = date.fromisoformat(config["date"]).strftime("%Y/%m/%d") + "・" + str(config["race"]) + "R"
     return (template.replace("__RACE_LABEL__", html.escape(race_label))

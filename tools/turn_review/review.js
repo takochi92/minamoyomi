@@ -8,6 +8,9 @@ function canvasPoint(x, y, rect, width, height) {
     Math.max(0, Math.min(height - 1, (y - rect.top) * height / rect.height))];
 }
 function sourcePoint(p, zoom, offset) { return [(p[0] - offset[0]) / zoom, (p[1] - offset[1]) / zoom]; }
+function measurementPoint(label, method) {
+  return method === 'heiwajima-bow-gates-v2' ? (label && label.bow ? label.bow : null) : hullMidpoint(label);
+}
 function frameDelay(a, b, speed) {
   const gap = b.time - a.time;
   if (![0.25, 0.5, 1].includes(speed) || !Number.isFinite(gap) || gap <= 0 || gap > 0.2) return null;
@@ -23,8 +26,9 @@ function previewIntervals(bundle, boat, pairs, labels) {
     const a = frames.find(f => f.index === pair.before), b = frames.find(f => f.index === pair.after);
     if (!a || !b || !(b.time > a.time && b.time - a.time <= .12)) continue;
     const la = labels[boat + ':' + a.index], lb = labels[boat + ':' + b.index];
-    const ca = hullMidpoint(la), cb = hullMidpoint(lb);
-    if (!ca || !cb || [la, lb].some(l => Math.hypot(l.bow[0] - l.stern[0], l.bow[1] - l.stern[1]) < 8)) continue;
+    const ca = measurementPoint(la, bundle.method), cb = measurementPoint(lb, bundle.method);
+    if (!ca || !cb) continue;
+    if (bundle.method !== 'heiwajima-bow-gates-v2' && [la, lb].some(l => Math.hypot(l.bow[0] - l.stern[0], l.bow[1] - l.stern[1]) < 8)) continue;
     const axis = gate.axis === 'x' ? 0 : 1, other = 1 - axis;
     if (!(gate.direction === 1 ? ca[axis] < gate.value && cb[axis] >= gate.value : ca[axis] > gate.value && cb[axis] <= gate.value)) continue;
     const ratio = (gate.value - ca[axis]) / (cb[axis] - ca[axis]);
@@ -39,10 +43,12 @@ function previewIntervals(bundle, boat, pairs, labels) {
 function acceptDraft(value, bundle) {
   const compatible = value.bundle_digest === bundle.digest || (bundle.compatible_digests || []).includes(value.bundle_digest);
   if (value.kind !== 'turn-review-draft-v1' || !compatible) throw Error('違う映像・設定の下書きです');
+  if ((value.method || 'heiwajima-hull-gates-v1') !== (bundle.method || 'heiwajima-hull-gates-v1')) throw Error('測定基準が異なる下書きです');
   if (!value.labels || typeof value.labels !== 'object' || Array.isArray(value.labels)) throw Error('下書きの形式を確認してください');
   const keys = new Set([...bundle.events, ...(bundle.clips || [])].flatMap(e => e.frames.map(f => e.boat + ':' + f.index)));
   for (const [key, label] of Object.entries(value.labels)) {
     if (!keys.has(key) || !label || typeof label !== 'object' || Array.isArray(label)) throw Error('不明なコマです');
+    if (bundle.method === 'heiwajima-bow-gates-v2' && label.stern !== undefined) throw Error('艇首方式では艇尾の指定は使用しません');
     for (const name of ['bow', 'stern']) {
       if (label[name] && (!Array.isArray(label[name]) || label[name].length !== 2 ||
         label[name].some((v, i) => !Number.isFinite(v) || v < 0 || v >= bundle.size[i]))) throw Error('測定点の位置が不正です');
@@ -57,14 +63,20 @@ function acceptDraft(value, bundle) {
   }
   return value;
 }
-if (typeof module !== 'undefined') module.exports = { hullMidpoint, canvasPoint, sourcePoint, frameDelay, previewIntervals, acceptDraft };
+if (typeof module !== 'undefined') module.exports = { hullMidpoint, measurementPoint, canvasPoint, sourcePoint, frameDelay, previewIntervals, acceptDraft };
 if (typeof document !== 'undefined') {
   const bundle = JSON.parse(document.getElementById('bundle').textContent);
   const $ = id => document.getElementById(id), canvas = $('canvas'), ctx = canvas.getContext('2d');
   let boat = 1, gate = 'A', pos = 12, point = 'bow', showProposal = false, labels = {}, pairs = {};
   let imageToken = 0, readyFrame = null, zoom = 1, offset = [0, 0], scene = 'turn';
   let playing = false, speed = 0.5, timer = null, runVersion = 0;
+  if (bundle.initial_review) {
+    const draft = acceptDraft(bundle.initial_review, bundle);
+    labels = draft.labels; pairs = draft.pairs;
+    $('reviewer').value = draft.reviewer || '';
+  }
   const imageCache = new Map();
+  const bowOnly = bundle.method === 'heiwajima-bow-gates-v2';
   const width = bundle.size[0], height = bundle.size[1]; canvas.width = width; canvas.height = height;
   const watchMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'watch';
   if (watchMode) { document.body.classList.add('watch'); document.querySelector('h1').textContent = '１マークの展示映像'; }
@@ -126,7 +138,7 @@ if (typeof document !== 'undefined') {
     document.querySelectorAll('[data-point]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.point === point)));
     $('proposal').setAttribute('aria-pressed', String(showProposal));
     const completed = Object.values(pairs).filter(p => p.before !== undefined && p.after !== undefined).length;
-    $('progress').textContent = '前後コマの指定 ' + completed + ' / 18区間 ／ 艇首・艇尾の指定 ' + Object.values(labels).filter(hullMidpoint).length + 'コマ';
+    $('progress').textContent = '前後コマの指定 ' + completed + ' / 18区間 ／ ' + (bowOnly ? '艇首' : '艇首・艇尾') + 'の指定 ' + Object.values(labels).filter(l => measurementPoint(l, bundle.method)).length + 'コマ';
     const pair = pairs[boat + ':' + gate] || {};
     const times = previewIntervals(bundle, boat, pairs, labels);
     $('timing').textContent = boat + '号艇の参考タイム　入り ' + (times.entry === null ? '—' : times.entry.toFixed(1) + '秒') +
@@ -157,9 +169,12 @@ if (typeof document !== 'undefined') {
       const label = labels[labelKey()];
       if (label) {
         if (label.bow) dot(label.bow, '#6ee7d1', 6);
-        if (label.stern) dot(label.stern, '#6ee7d1', 6);
-        const mid = hullMidpoint(label);
-        if (mid) { ctx.strokeStyle = '#6ee7d1'; ctx.beginPath(); ctx.moveTo(...label.bow); ctx.lineTo(...label.stern); ctx.stroke(); dot(mid, '#fff', 5); }
+        if (!bowOnly && label.stern) dot(label.stern, '#6ee7d1', 6);
+        const mid = measurementPoint(label, bundle.method);
+        if (mid) {
+          if (!bowOnly) { ctx.strokeStyle = '#6ee7d1'; ctx.beginPath(); ctx.moveTo(...label.bow); ctx.lineTo(...label.stern); ctx.stroke(); }
+          dot(mid, '#fff', 5);
+        }
       }
       queueNext();
     }
@@ -185,14 +200,14 @@ if (typeof document !== 'undefined') {
   $('prev').onclick = () => { stopPlayback(); pos = Math.max(0, pos - 1); update(); };
   $('next').onclick = () => { stopPlayback(); pos = Math.min(current().frames.length - 1, pos + 1); update(); };
   canvas.onclick = e => {
-    if (playing) { stopPlayback(watchMode ? '一時停止しました。' : '一時停止しました。艇首・艇尾を指定できます。'); return; }
+    if (playing) { stopPlayback(watchMode ? '一時停止しました。' : '一時停止しました。' + (bowOnly ? '艇首' : '艇首・艇尾') + 'を指定できます。'); return; }
     if (watchMode) return;
     if (readyFrame !== frame().index) { $('status').textContent = '画像の読込完了を待ってください'; return; }
     const xy = sourcePoint(canvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), width, height), zoom, offset);
     if (xy[0] < 0 || xy[1] < 0 || xy[0] >= width || xy[1] >= height) return;
-    const key = labelKey(); labels[key] = { ...(labels[key] || {}), [point]: xy }; point = point === 'bow' ? 'stern' : 'bow'; update();
+    const key = labelKey(); labels[key] = { ...(labels[key] || {}), [point]: xy }; point = !bowOnly && point === 'bow' ? 'stern' : 'bow'; update();
   };
-  document.querySelectorAll('[data-point]').forEach(b => b.onclick = () => { stopPlayback(); point = b.dataset.point; update(); });
+  document.querySelectorAll('[data-point]').forEach(b => b.onclick = () => { stopPlayback(); point = bowOnly ? 'bow' : b.dataset.point; update(); });
   document.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { stopPlayback(); const key = boat + ':' + gate; pairs[key] = { ...(pairs[key] || {}), [b.dataset.side]: frame().index }; update(); });
   $('clear').onclick = () => { stopPlayback(); delete labels[labelKey()]; update(); };
   $('proposal').onclick = () => { stopPlayback(); showProposal = !showProposal; update(); };
@@ -200,7 +215,7 @@ if (typeof document !== 'undefined') {
   $('export').onclick = () => {
     stopPlayback(); const reviewer = $('reviewer').value.trim();
     if (!reviewer) { $('status').textContent = '確認担当者を入力してください'; return; }
-    const draft = { kind: 'turn-review-draft-v1', bundle_digest: bundle.digest, reviewer, reviewed_at: new Date().toISOString(), trajectory_checked: $('trajectory').checked, labels, pairs, publication_ready: false, source_clock: bundle.source_clock };
+    const draft = { kind: 'turn-review-draft-v1', method: bundle.method || 'heiwajima-hull-gates-v1', bundle_digest: bundle.digest, reviewer, reviewed_at: new Date().toISOString(), trajectory_checked: $('trajectory').checked, labels, pairs, publication_ready: false, source_clock: bundle.source_clock };
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = 'heiwajima-review-' + Date.now() + '.json'; a.click(); URL.revokeObjectURL(url);
   };

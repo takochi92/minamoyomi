@@ -1,0 +1,1021 @@
+{
+  "schema": 1,
+  "method": "heiwajima-bow-gates-v2",
+  "time_basis": "decoded_pts_video_seconds",
+  "source_sha256": "3a2a8717efb1cb03d35da0aff1746fbbce6c96f3f5d80ed1acb798f48f7cc2fa",
+  "image_size": [
+    1920,
+    1080
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": 1,
+      "segment": [
+        705.0,
+        945.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 540.0,
+      "direction": -1,
+      "segment": [
+        1110.0,
+        1470.0
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 750.0,
+      "direction": -1,
+      "segment": [
+        255.0,
+        465.0
+      ]
+    }
+  },
+  "reviews": [
+    {
+      "reviewer": "bow-v2-independent-ai",
+      "digest": "bafc0dcd38fb610c47928e524e35a226fa1510640cf4be05f0f688b120140f4f"
+    },
+    {
+      "reviewer": "bow-v2-second-independent-ai",
+      "digest": "3f2e0732d308de0ca26fa0975966a0a06eb8df40fdc8e73b8d97f924b145ca07"
+    }
+  ],
+  "results": [
+    {
+      "boat": 1,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56674.50466856369,
+              "frames": [
+                {
+                  "index": 84,
+                  "pts": 5100702347,
+                  "bow": [
+                    729,
+                    815
+                  ]
+                },
+                {
+                  "index": 86,
+                  "pts": 5100708347,
+                  "bow": [
+                    770,
+                    813
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56674.503042547425,
+              "frames": [
+                {
+                  "index": 84,
+                  "pts": 5100702347,
+                  "bow": [
+                    730,
+                    823
+                  ]
+                },
+                {
+                  "index": 86,
+                  "pts": 5100708347,
+                  "bow": [
+                    771,
+                    816
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56674.50385555556,
+          "difference_seconds": 0.0016260162665275857
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56676.331633333335,
+              "frames": [
+                {
+                  "index": 139,
+                  "pts": 5100867347,
+                  "bow": [
+                    1162,
+                    545
+                  ]
+                },
+                {
+                  "index": 140,
+                  "pts": 5100870347,
+                  "bow": [
+                    1161,
+                    539
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56676.33052222222,
+              "frames": [
+                {
+                  "index": 139,
+                  "pts": 5100867347,
+                  "bow": [
+                    1162,
+                    544
+                  ]
+                },
+                {
+                  "index": 140,
+                  "pts": 5100870347,
+                  "bow": [
+                    1160,
+                    539
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56676.33107777778,
+          "difference_seconds": 0.0011111111161881126
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56678.10082525253,
+              "frames": [
+                {
+                  "index": 192,
+                  "pts": 5101026347,
+                  "bow": [
+                    760,
+                    384
+                  ]
+                },
+                {
+                  "index": 194,
+                  "pts": 5101032347,
+                  "bow": [
+                    738,
+                    380
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56678.10385555556,
+              "frames": [
+                {
+                  "index": 192,
+                  "pts": 5101026347,
+                  "bow": [
+                    762,
+                    384
+                  ]
+                },
+                {
+                  "index": 194,
+                  "pts": 5101032347,
+                  "bow": [
+                    738,
+                    389
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56678.102340404046,
+          "difference_seconds": 0.003030303028936032
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 1.8,
+      "exit_video_seconds": 1.8,
+      "max_review_time_difference_seconds": 0.003030303028936032
+    },
+    {
+      "boat": 2,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56677.04885555556,
+              "frames": [
+                {
+                  "index": 161,
+                  "pts": 5100933347,
+                  "bow": [
+                    743,
+                    820
+                  ]
+                },
+                {
+                  "index": 162,
+                  "pts": 5100936347,
+                  "bow": [
+                    763,
+                    814
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56677.04420643275,
+              "frames": [
+                {
+                  "index": 161,
+                  "pts": 5100933347,
+                  "bow": [
+                    746,
+                    831
+                  ]
+                },
+                {
+                  "index": 162,
+                  "pts": 5100936347,
+                  "bow": [
+                    765,
+                    825
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56677.04653099415,
+          "difference_seconds": 0.004649122805858497
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56679.14671269841,
+              "frames": [
+                {
+                  "index": 224,
+                  "pts": 5101122347,
+                  "bow": [
+                    1169,
+                    542
+                  ]
+                },
+                {
+                  "index": 225,
+                  "pts": 5101125347,
+                  "bow": [
+                    1166,
+                    535
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56679.12607777778,
+              "frames": [
+                {
+                  "index": 223,
+                  "pts": 5101119347,
+                  "bow": [
+                    1172,
+                    544
+                  ]
+                },
+                {
+                  "index": 224,
+                  "pts": 5101122347,
+                  "bow": [
+                    1168,
+                    538
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56679.13639523809,
+          "difference_seconds": 0.020634920634620357
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56680.85385555556,
+              "frames": [
+                {
+                  "index": 275,
+                  "pts": 5101275347,
+                  "bow": [
+                    756,
+                    383
+                  ]
+                },
+                {
+                  "index": 276,
+                  "pts": 5101278347,
+                  "bow": [
+                    744,
+                    383
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56680.85385555556,
+              "frames": [
+                {
+                  "index": 275,
+                  "pts": 5101275347,
+                  "bow": [
+                    756,
+                    385
+                  ]
+                },
+                {
+                  "index": 276,
+                  "pts": 5101278347,
+                  "bow": [
+                    744,
+                    391
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56680.85385555556,
+          "difference_seconds": 0.0
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.1,
+      "exit_video_seconds": 1.7,
+      "max_review_time_difference_seconds": 0.020634920634620357
+    },
+    {
+      "boat": 3,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56681.639752991454,
+              "frames": [
+                {
+                  "index": 298,
+                  "pts": 5101344347,
+                  "bow": [
+                    729,
+                    817
+                  ]
+                },
+                {
+                  "index": 300,
+                  "pts": 5101350347,
+                  "bow": [
+                    768,
+                    808
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56681.640522222224,
+              "frames": [
+                {
+                  "index": 299,
+                  "pts": 5101347347,
+                  "bow": [
+                    748,
+                    821
+                  ]
+                },
+                {
+                  "index": 300,
+                  "pts": 5101350347,
+                  "bow": [
+                    768,
+                    815
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56681.64013760684,
+          "difference_seconds": 0.0007692307699471712
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56683.38718888888,
+              "frames": [
+                {
+                  "index": 351,
+                  "pts": 5101503347,
+                  "bow": [
+                    1178,
+                    543
+                  ]
+                },
+                {
+                  "index": 352,
+                  "pts": 5101506347,
+                  "bow": [
+                    1177,
+                    537
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56683.39433174603,
+              "frames": [
+                {
+                  "index": 351,
+                  "pts": 5101503347,
+                  "bow": [
+                    1177,
+                    545
+                  ]
+                },
+                {
+                  "index": 352,
+                  "pts": 5101506347,
+                  "bow": [
+                    1178,
+                    538
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56683.39076031746,
+          "difference_seconds": 0.007142857146391179
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56685.4328410628,
+              "frames": [
+                {
+                  "index": 412,
+                  "pts": 5101686347,
+                  "bow": [
+                    760,
+                    361
+                  ]
+                },
+                {
+                  "index": 414,
+                  "pts": 5101692347,
+                  "bow": [
+                    737,
+                    358
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56685.437188888885,
+              "frames": [
+                {
+                  "index": 412,
+                  "pts": 5101686347,
+                  "bow": [
+                    762,
+                    364
+                  ]
+                },
+                {
+                  "index": 414,
+                  "pts": 5101692347,
+                  "bow": [
+                    738,
+                    362
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56685.43501497584,
+          "difference_seconds": 0.004347826084995177
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 1.8,
+      "exit_video_seconds": 2.0,
+      "max_review_time_difference_seconds": 0.007142857146391179
+    },
+    {
+      "boat": 4,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56685.50466856369,
+              "frames": [
+                {
+                  "index": 414,
+                  "pts": 5101692347,
+                  "bow": [
+                    729,
+                    842
+                  ]
+                },
+                {
+                  "index": 416,
+                  "pts": 5101698347,
+                  "bow": [
+                    770,
+                    832
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56685.49644814815,
+              "frames": [
+                {
+                  "index": 414,
+                  "pts": 5101692347,
+                  "bow": [
+                    736,
+                    846
+                  ]
+                },
+                {
+                  "index": 416,
+                  "pts": 5101698347,
+                  "bow": [
+                    772,
+                    839
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56685.500558355925,
+          "difference_seconds": 0.008220415540563408
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56687.56496666667,
+              "frames": [
+                {
+                  "index": 476,
+                  "pts": 5101878347,
+                  "bow": [
+                    1151,
+                    545
+                  ]
+                },
+                {
+                  "index": 477,
+                  "pts": 5101881347,
+                  "bow": [
+                    1148,
+                    539
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56687.578855555555,
+              "frames": [
+                {
+                  "index": 476,
+                  "pts": 5101878347,
+                  "bow": [
+                    1151,
+                    545
+                  ]
+                },
+                {
+                  "index": 478,
+                  "pts": 5101884347,
+                  "bow": [
+                    1144,
+                    537
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56687.57191111111,
+          "difference_seconds": 0.01388888888322981
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56689.21597676768,
+              "frames": [
+                {
+                  "index": 526,
+                  "pts": 5102028347,
+                  "bow": [
+                    754,
+                    395
+                  ]
+                },
+                {
+                  "index": 527,
+                  "pts": 5102031347,
+                  "bow": [
+                    743,
+                    394
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56689.21597676768,
+              "frames": [
+                {
+                  "index": 526,
+                  "pts": 5102028347,
+                  "bow": [
+                    754,
+                    398
+                  ]
+                },
+                {
+                  "index": 527,
+                  "pts": 5102031347,
+                  "bow": [
+                    743,
+                    395
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56689.21597676768,
+          "difference_seconds": 0.0
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.1,
+      "exit_video_seconds": 1.6,
+      "max_review_time_difference_seconds": 0.01388888888322981
+    },
+    {
+      "boat": 5,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56688.28242698412,
+              "frames": [
+                {
+                  "index": 498,
+                  "pts": 5101944347,
+                  "bow": [
+                    740,
+                    828
+                  ]
+                },
+                {
+                  "index": 499,
+                  "pts": 5101947347,
+                  "bow": [
+                    768,
+                    821
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56688.26701345029,
+              "frames": [
+                {
+                  "index": 497,
+                  "pts": 5101941347,
+                  "bow": [
+                    733,
+                    833
+                  ]
+                },
+                {
+                  "index": 499,
+                  "pts": 5101947347,
+                  "bow": [
+                    771,
+                    826
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56688.2747202172,
+          "difference_seconds": 0.015413533830724191
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56690.25385555555,
+              "frames": [
+                {
+                  "index": 557,
+                  "pts": 5102121347,
+                  "bow": [
+                    1192,
+                    542
+                  ]
+                },
+                {
+                  "index": 559,
+                  "pts": 5102127347,
+                  "bow": [
+                    1190,
+                    534
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56690.26576031746,
+              "frames": [
+                {
+                  "index": 557,
+                  "pts": 5102121347,
+                  "bow": [
+                    1192,
+                    543
+                  ]
+                },
+                {
+                  "index": 559,
+                  "pts": 5102127347,
+                  "bow": [
+                    1191,
+                    536
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56690.259807936505,
+          "difference_seconds": 0.011904761908226646
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56692.18385555556,
+              "frames": [
+                {
+                  "index": 615,
+                  "pts": 5102295347,
+                  "bow": [
+                    754,
+                    377
+                  ]
+                },
+                {
+                  "index": 616,
+                  "pts": 5102298347,
+                  "bow": [
+                    744,
+                    377
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56692.18385555556,
+              "frames": [
+                {
+                  "index": 615,
+                  "pts": 5102295347,
+                  "bow": [
+                    754,
+                    377
+                  ]
+                },
+                {
+                  "index": 616,
+                  "pts": 5102298347,
+                  "bow": [
+                    744,
+                    384
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56692.18385555556,
+          "difference_seconds": 0.0
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.0,
+      "exit_video_seconds": 1.9,
+      "max_review_time_difference_seconds": 0.015413533830724191
+    },
+    {
+      "boat": 6,
+      "events": {
+        "A": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56691.26052222222,
+              "frames": [
+                {
+                  "index": 587,
+                  "pts": 5102211347,
+                  "bow": [
+                    736,
+                    857
+                  ]
+                },
+                {
+                  "index": 588,
+                  "pts": 5102214347,
+                  "bow": [
+                    756,
+                    850
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56691.2617502924,
+              "frames": [
+                {
+                  "index": 587,
+                  "pts": 5102211347,
+                  "bow": [
+                    736,
+                    857
+                  ]
+                },
+                {
+                  "index": 589,
+                  "pts": 5102217347,
+                  "bow": [
+                    774,
+                    850
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56691.26113625731,
+          "difference_seconds": 0.001228070177603513
+        },
+        "B": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56693.37052222222,
+              "frames": [
+                {
+                  "index": 650,
+                  "pts": 5102400347,
+                  "bow": [
+                    1162,
+                    545
+                  ]
+                },
+                {
+                  "index": 652,
+                  "pts": 5102406347,
+                  "bow": [
+                    1154,
+                    535
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56693.38163333333,
+              "frames": [
+                {
+                  "index": 650,
+                  "pts": 5102400347,
+                  "bow": [
+                    1161,
+                    546
+                  ]
+                },
+                {
+                  "index": 652,
+                  "pts": 5102406347,
+                  "bow": [
+                    1154,
+                    537
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56693.37607777778,
+          "difference_seconds": 0.011111111110949423
+        },
+        "C": {
+          "reviews": [
+            {
+              "reviewer": "bow-v2-independent-ai",
+              "time": 56695.03718888889,
+              "frames": [
+                {
+                  "index": 700,
+                  "pts": 5102550347,
+                  "bow": [
+                    761,
+                    398
+                  ]
+                },
+                {
+                  "index": 702,
+                  "pts": 5102556347,
+                  "bow": [
+                    739,
+                    395
+                  ]
+                }
+              ]
+            },
+            {
+              "reviewer": "bow-v2-second-independent-ai",
+              "time": 56695.03585555556,
+              "frames": [
+                {
+                  "index": 700,
+                  "pts": 5102550347,
+                  "bow": [
+                    762,
+                    399
+                  ]
+                },
+                {
+                  "index": 702,
+                  "pts": 5102556347,
+                  "bow": [
+                    737,
+                    400
+                  ]
+                }
+              ]
+            }
+          ],
+          "mean_time": 56695.036522222224,
+          "difference_seconds": 0.001333333333604969
+        }
+      },
+      "reasons": [],
+      "status": "repeated_ai_video_measurement",
+      "entry_video_seconds": 2.1,
+      "exit_video_seconds": 1.7,
+      "max_review_time_difference_seconds": 0.011111111110949423
+    }
+  ],
+  "paired_gate_count": 18,
+  "valid_gate_pairs": 18,
+  "max_review_time_difference_seconds": 0.020634920634620357,
+  "review_tolerance_seconds": 0.1,
+  "images_fingerprint_verified": true,
+  "publication_ready": false,
+  "real_time_scale_verified": false,
+  "predeadline_verified": false,
+  "prediction_used": false,
+  "note": "同一レース内の独立AI間一致。実測の正確さ・別レース精度の証明ではない。"
+}

@@ -68,3 +68,15 @@ def test_decoded_pts_stay_exact_and_tampered_image_is_rejected(tmp_path):
     (tmp_path/'frame.png').write_bytes(b'changed')
     with pytest.raises(ValueError, match='fingerprint changed'):
         build(tmp_path, config, tracks, report)
+
+
+def test_bow_page_has_a_separate_fingerprint_and_drops_stern_controls(tmp_path):
+    _, config, tracks, report = source(tmp_path)
+    _, midpoint = build(tmp_path, config, tracks, report)
+    page, bow = build(tmp_path, {**config, 'method': 'heiwajima-bow-gates-v2'}, tracks, report)
+    assert bow['method'] == 'heiwajima-bow-gates-v2'
+    assert bow['digest'] != midpoint['digest']
+    assert midpoint['digest'] not in bow['compatible_digests']
+    assert '<button data-point="stern" hidden>' in page
+    assert '水色：測定する艇首の先端' in page
+    assert '艇首の先端で、進入線' in page

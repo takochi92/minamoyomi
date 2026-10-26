@@ -27,6 +27,14 @@ const timingLabels=Object.fromEntries([[490,550],[510,550],[800,370],[800,350],[
 assert.deepEqual(previewIntervals(timingBundle,1,timingPairs,timingLabels),{entry:1,exit:1,publication_ready:false});
 assert.equal(previewIntervals(timingBundle,1,{...timingPairs,'1:A':{before:1,after:0}},timingLabels).entry,null);
 assert.equal(previewIntervals(timingBundle,1,timingPairs,{}).entry,null);
+const bowBundle={...timingBundle,method:'heiwajima-bow-gates-v2'};
+const bowLabels=Object.fromEntries(Object.entries(timingLabels).map(([key,label])=>[key,{bow:hullMidpoint(label)}]));
+assert.deepEqual(previewIntervals(bowBundle,1,timingPairs,bowLabels),{entry:1,exit:1,publication_ready:false});
+assert.equal(previewIntervals(timingBundle,1,timingPairs,bowLabels).entry,null);
+assert.throws(()=>acceptDraft({...draft,method:'heiwajima-bow-gates-v2'},bundle));
+const bowDraft={...draft,method:'heiwajima-bow-gates-v2',labels:{'1:10':{bow:[50,60]}}};
+assert.deepEqual(acceptDraft(bowDraft,{...bundle,method:'heiwajima-bow-gates-v2'}),bowDraft);
+assert.throws(()=>acceptDraft({...draft,method:'heiwajima-bow-gates-v2'},{...bundle,method:'heiwajima-bow-gates-v2'}));
 const snapshot=JSON.stringify(timingBundle);
 frameDelay({time:1},{time:1.05},.25);frameDelay({time:1},{time:1.05},1);
 assert.equal(JSON.stringify(timingBundle),snapshot); // Viewing speed must not rewrite evidence.

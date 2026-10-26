@@ -1,6 +1,6 @@
 // Event-flow checks with a small DOM/canvas double. Not a browser layout test.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function boot(pending=false,size=[1280,720]){
+function boot(pending=false,size=[1280,720],method,initialReview){
  const nodes=new Map(),all=[],blobs=[],images=[],timers=new Map();let timerId=0;
  class Element{
   constructor(){this.dataset={};this.children=[];this.value='';this.checked=false;this.textContent='';this.attrs={};this.files=[];all.push(this);}
@@ -14,6 +14,8 @@ function boot(pending=false,size=[1280,720]){
  const bundle={digest:'fixture',size,source_clock:'browser_capture_clock_unverified',gates:{A:{axis:'x',value:500,segment:[400,600]}},
   clips:Array.from({length:6},(_,i)=>({boat:i+1,frames})),
   events:Array.from({length:6},(_,i)=>['A','B','C'].map(g=>({boat:i+1,gate:g,frames}))).flat(),images:Object.fromEntries(frames.map(f=>[f.index,'test-image']))};
+ if(method)bundle.method=method;
+ if(initialReview)bundle.initial_review=initialReview;
  document.getElementById('bundle').textContent=JSON.stringify(bundle);
  for(const p of ['bow','stern']){const e=new Element();e.dataset.point=p;}
  for(const p of ['before','after']){const e=new Element();e.dataset.side=p;}
@@ -66,5 +68,17 @@ function boot(pending=false,size=[1280,720]){
  const native=boot(false,[854,480]);native.document.getElementById('canvas').onclick({clientX:160,clientY:90});
  native.document.getElementById('reviewer').value='reviewer';native.document.getElementById('export').click();
  assert.deepEqual(JSON.parse(await native.blobs.at(-1).text()).labels['1:12'].bow,[427,240]);
+ const bow=boot(false,[1920,1080],'heiwajima-bow-gates-v2'),v=id=>bow.document.getElementById(id);
+ v('canvas').onclick({clientX:100,clientY:100});v('canvas').onclick({clientX:110,clientY:100});
+ v('reviewer').value='bow-reviewer';v('export').click();
+ const exportedBow=JSON.parse(await bow.blobs.at(-1).text());
+ assert.deepEqual(exportedBow.labels['1:12'],{bow:[660,600]});
+ assert.equal(exportedBow.method,'heiwajima-bow-gates-v2');
+ const loaded=boot(false,[1920,1080],'heiwajima-bow-gates-v2',{
+  kind:'turn-review-draft-v1',method:'heiwajima-bow-gates-v2',bundle_digest:'fixture',
+  reviewer:'independent-ai',labels:{'1:12':{bow:[700,600]}},pairs:{'1:A':{before:12,after:13}}});
+ assert.equal(loaded.document.getElementById('reviewer').value,'independent-ai');
+ loaded.document.getElementById('export').click();
+ assert.deepEqual(JSON.parse(await loaded.blobs.at(-1).text()).labels,{'1:12':{bow:[700,600]}});
  console.log('turn review click/zoom/frame/export/loading checks ok (DOM double; browser layout unverified)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,0 +1,308 @@
+{
+  "reviewer": "bow-v2-independent-ai",
+  "method": "heiwajima-bow-gates-v2",
+  "source_sha256": "3a2a8717efb1cb03d35da0aff1746fbbce6c96f3f5d80ed1acb798f48f7cc2fa",
+  "size": [
+    1920,
+    1080
+  ],
+  "labels": {
+    "1:84": {
+      "bow": [
+        729,
+        815
+      ]
+    },
+    "1:86": {
+      "bow": [
+        770,
+        813
+      ]
+    },
+    "1:139": {
+      "bow": [
+        1162,
+        545
+      ]
+    },
+    "1:140": {
+      "bow": [
+        1161,
+        539
+      ]
+    },
+    "1:192": {
+      "bow": [
+        760,
+        384
+      ]
+    },
+    "1:194": {
+      "bow": [
+        738,
+        380
+      ]
+    },
+    "2:161": {
+      "bow": [
+        743,
+        820
+      ]
+    },
+    "2:162": {
+      "bow": [
+        763,
+        814
+      ]
+    },
+    "2:224": {
+      "bow": [
+        1169,
+        542
+      ]
+    },
+    "2:225": {
+      "bow": [
+        1166,
+        535
+      ]
+    },
+    "2:275": {
+      "bow": [
+        756,
+        383
+      ]
+    },
+    "2:276": {
+      "bow": [
+        744,
+        383
+      ]
+    },
+    "3:298": {
+      "bow": [
+        729,
+        817
+      ]
+    },
+    "3:300": {
+      "bow": [
+        768,
+        808
+      ]
+    },
+    "3:351": {
+      "bow": [
+        1178,
+        543
+      ]
+    },
+    "3:352": {
+      "bow": [
+        1177,
+        537
+      ]
+    },
+    "3:412": {
+      "bow": [
+        760,
+        361
+      ]
+    },
+    "3:414": {
+      "bow": [
+        737,
+        358
+      ]
+    },
+    "4:414": {
+      "bow": [
+        729,
+        842
+      ]
+    },
+    "4:416": {
+      "bow": [
+        770,
+        832
+      ]
+    },
+    "4:476": {
+      "bow": [
+        1151,
+        545
+      ]
+    },
+    "4:477": {
+      "bow": [
+        1148,
+        539
+      ]
+    },
+    "4:526": {
+      "bow": [
+        754,
+        395
+      ]
+    },
+    "4:527": {
+      "bow": [
+        743,
+        394
+      ]
+    },
+    "5:498": {
+      "bow": [
+        740,
+        828
+      ]
+    },
+    "5:499": {
+      "bow": [
+        768,
+        821
+      ]
+    },
+    "5:557": {
+      "bow": [
+        1192,
+        542
+      ]
+    },
+    "5:559": {
+      "bow": [
+        1190,
+        534
+      ]
+    },
+    "5:615": {
+      "bow": [
+        754,
+        377
+      ]
+    },
+    "5:616": {
+      "bow": [
+        744,
+        377
+      ]
+    },
+    "6:587": {
+      "bow": [
+        736,
+        857
+      ]
+    },
+    "6:588": {
+      "bow": [
+        756,
+        850
+      ]
+    },
+    "6:650": {
+      "bow": [
+        1162,
+        545
+      ]
+    },
+    "6:652": {
+      "bow": [
+        1154,
+        535
+      ]
+    },
+    "6:700": {
+      "bow": [
+        761,
+        398
+      ]
+    },
+    "6:702": {
+      "bow": [
+        739,
+        395
+      ]
+    }
+  },
+  "pairs": {
+    "1:A": {
+      "before": 84,
+      "after": 86
+    },
+    "1:B": {
+      "before": 139,
+      "after": 140
+    },
+    "1:C": {
+      "before": 192,
+      "after": 194
+    },
+    "2:A": {
+      "before": 161,
+      "after": 162
+    },
+    "2:B": {
+      "before": 224,
+      "after": 225
+    },
+    "2:C": {
+      "before": 275,
+      "after": 276
+    },
+    "3:A": {
+      "before": 298,
+      "after": 300
+    },
+    "3:B": {
+      "before": 351,
+      "after": 352
+    },
+    "3:C": {
+      "before": 412,
+      "after": 414
+    },
+    "4:A": {
+      "before": 414,
+      "after": 416
+    },
+    "4:B": {
+      "before": 476,
+      "after": 477
+    },
+    "4:C": {
+      "before": 526,
+      "after": 527
+    },
+    "5:A": {
+      "before": 498,
+      "after": 499
+    },
+    "5:B": {
+      "before": 557,
+      "after": 559
+    },
+    "5:C": {
+      "before": 615,
+      "after": 616
+    },
+    "6:A": {
+      "before": 587,
+      "after": 588
+    },
+    "6:B": {
+      "before": 650,
+      "after": 652
+    },
+    "6:C": {
+      "before": 700,
+      "after": 702
+    }
+  },
+  "unknown": [],
+  "notes": [
+    "Independent visual measurement from original PNG frames; only manifest.json and config.json supplied metadata were read. No other reviewer labels, draft times, audits, or examples were consulted.",
+    "Coordinates refer to the visible rounded hull nose boundary at the advancing bow, excluding flag, driver and spray. Coordinates are visual pixel estimates, with several-pixel uncertainty from blur.",
+    "Adjacent frames were preferred; a two-frame bracket was selected where the middle-frame nose nearly coincides with the gate. Every bracket is at most 2 decoded frames, 0.066667 seconds.",
+    "Contact sheets used the original PNGs with crops and enlargement; coordinate grid overlays were used for localization. All 18 gates visibly bracketed, so unknown is empty."
+  ]
+}
