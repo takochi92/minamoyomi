@@ -20,6 +20,7 @@ jobs:
       - run: node tests/test_stats_logic_flow.cjs
       - run: node tests/test_turn_review.cjs
       - run: node tests/test_turn_review_flow.cjs
+      - run: node --test tests/test_turn_watch.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.com

@@ -64,7 +64,8 @@ if (typeof document !== 'undefined') {
       ($('ev-reference').hidden ? '参考タイムは未測定です。公式展示映像を別タブで確認できます。' : '艇首方式の測定サンプルです。正式タイムではありません。') :
       'このレースは未収録です。現在は平和島で検証しています。';
     else {
-      lastAsset = row.asset; const url = row.asset + '?mode=watch';
+      lastAsset = exhibitionAsset(row.watch_asset) ? row.watch_asset : row.asset;
+      const url = lastAsset + '?mode=watch';
       $('ev-frame').src = url; $('ev-open').href = url; $('ev-view').hidden = false;
       if ($('ev-review')) { $('ev-review').href = row.asset; $('ev-review').hidden = false; }
       $('ev-status').textContent = config.preview ? '確認用の映像です。計測結果は照合中のため、正式タイムは未掲載です。' : '収録した映像を表示しています。';
@@ -86,6 +87,6 @@ if (typeof document !== 'undefined') {
   window.addEventListener('message', event => {
     if (!lastAsset || event.source !== $('ev-frame').contentWindow || event.data?.kind !== 'teilog-exhibition-height') return;
     const height = event.data.height;
-    if (Number.isFinite(height) && height >= 300 && height <= 1600) $('ev-frame').style.height = Math.ceil(height) + 'px';
+    if (Number.isFinite(height) && height >= 300 && height <= 10000) $('ev-frame').style.height = Math.ceil(height) + 'px';
   });
 }

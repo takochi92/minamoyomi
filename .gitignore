@@ -36,3 +36,5 @@ site/data/database/
 scraper/exhibition_model/*.npz
 scraper/exhibition_model/*.pt
 scraper/exhibition_model/*.onnx
+# Private local media, previews, model diagnostics and rendered QA.
+private/

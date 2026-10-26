@@ -176,7 +176,7 @@ def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scen
     import cv2,numpy as np
     from tools.automatic_turn import caption_score,scene_intervals
     from tools.extract_turn_frames import extract
-    cv2.setNumThreads(1);started=time.monotonic();video=Path(video).resolve();parent=Path(private_parent).resolve()
+    cv2.setNumThreads(1);started=time.monotonic();stage_started=started;stage_seconds={};video=Path(video).resolve();parent=Path(private_parent).resolve()
     public=Path(__file__).resolve().parents[1]/'site'
     if parent==public or public in parent.parents:raise ValueError('private_storage_required')
     if not video.is_file() or video.suffix.lower() not in ('.ts','.mp4','.mkv'):raise ValueError('local_video_required')
@@ -206,13 +206,18 @@ def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scen
     if len(scenes)!=1:raise ValueError('first_mark_scene_not_unique')
     start=max(0,scenes[0][0]-4);end=min(times[-1]-origin,scenes[0][1]+4)
     if not 0<end-start<=45:raise ValueError('scene_duration_limit')
+    stage_seconds['scene_selection']=round(time.monotonic()-stage_started,3)
     parent.mkdir(parents=True,exist_ok=True)
     # A new, verified subdirectory only; cleanup never targets a supplied existing folder.
     with tempfile.TemporaryDirectory(prefix='boat-v2-',dir=parent) as temporary:
         temporary=Path(temporary).resolve()
         if parent not in temporary.parents:raise ValueError('invalid_temporary_storage')
+        stage_started=time.monotonic()
         folder=temporary/'frames';extract(video,folder,origin+start,origin+end)
+        stage_seconds['frame_export']=round(time.monotonic()-stage_started,3)
+        stage_started=time.monotonic()
         result=analyze_frames(folder,detector_path,colour_model,bow_model)
+        stage_seconds['detection_and_colour']=round(time.monotonic()-stage_started,3)
         if keypoint_weights is not None:
             # Work in the SAME decoded export before cleanup. Frame indices from
             # another crop of the same container are deliberately not accepted.
@@ -220,15 +225,20 @@ def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scen
             from tools.measure_tracked_bows import measure
             local_observations=temporary/'observations.json'
             local_observations.write_text(json.dumps(result),encoding='utf-8')
+            stage_started=time.monotonic()
             actor_tracks=make_tracks(folder,local_observations,detector_path)
+            stage_seconds['tracking']=round(time.monotonic()-stage_started,3)
             local_tracks=temporary/'tracks.json'
             local_tracks.write_text(json.dumps(actor_tracks),encoding='utf-8')
             result['continuous_actor_review']=actor_tracks
+            stage_started=time.monotonic()
             result['learned_bow_review']=measure(folder,local_tracks,keypoint_weights)
+            stage_seconds['bow_estimation']=round(time.monotonic()-stage_started,3)
     result.update(source_container_sha256=hashlib.sha256(video.read_bytes()).hexdigest(),
                   scene_start_relative_seconds=start,scene_end_relative_seconds=end,
                   total_elapsed_seconds=round(time.monotonic()-started,2),
-                  original_video_entrypoint=True,camera_calibrated=False,automatic_publication_enabled=False)
+                  original_video_entrypoint=True,camera_calibrated=False,automatic_publication_enabled=False,
+                  stage_elapsed_seconds=stage_seconds)
     return result
 
 

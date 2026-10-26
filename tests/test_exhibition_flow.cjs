@@ -11,6 +11,12 @@ function boot(query='',overrides={}){
  vm.runInNewContext(fs.readFileSync(require.resolve('../site/exhibition.js'),'utf8'),context);
  return{node,messages,get url(){return changedUrl;},submit(){node('ev-select').onsubmit({preventDefault(){}});}};
 }
+const watch=boot('',{records:[{date:'20261026',jcd:'04',rno:1,asset:'data/exhibition/review.html',watch_asset:'data/exhibition/watch/index.html'}]});
+assert.equal(watch.node('ev-frame').src,'data/exhibition/watch/index.html?mode=watch');
+assert.equal(watch.node('ev-review').href,'data/exhibition/review.html');
+watch.messages.message({source:watch.node('ev-frame').contentWindow,data:{kind:'teilog-exhibition-height',height:4200}});
+assert.equal(watch.node('ev-frame').style.height,'4200px');
+watch.node('chip2').onclick();assert.equal(watch.node('ev-frame').src,undefined);
 const ui=boot(),get=ui.node;
 assert.equal(get('ev-frame').src,'data/exhibition/20261026/04-1.html?mode=watch');
 assert.match(get('ev-back').href,/heiwajima-1\.html#tenji$/);

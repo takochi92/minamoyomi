@@ -68,8 +68,13 @@ def catalog(raw, *, preview=False):
         if not preview and (row.get('publish') is not True or row.get('rights_verified') is not True):
             continue
         seen.add(key)
-        rows.append({'date': key[0], 'jcd': key[1], 'rno': key[2], 'asset': asset,
-                     'status': '公開' if row.get('publish') is True else '確認用'})
+        item = {'date': key[0], 'jcd': key[1], 'rno': key[2], 'asset': asset,
+                'status': '公開' if row.get('publish') is True else '確認用'}
+        watch = row.get('watch_asset')
+        if (isinstance(watch, str) and re.fullmatch(r'data/exhibition/[A-Za-z0-9_/-]+\.html', watch)
+                and '..' not in watch and '//' not in watch):
+            item['watch_asset'] = watch
+        rows.append(item)
     return rows
 
 

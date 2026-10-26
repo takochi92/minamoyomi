@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>艇ろぐ｜展示映像を見比べる</title><link rel="stylesheet" href="watch.css"></head>
+<body><main>
+<header><p class="eyebrow">艇ろぐ / 展示映像</p><h1>向きと膨らみを見比べる</h1><p>__LABEL__</p></header>
+<p class="notice">非公開の確認用映像です。固定線の通過をそろえて表示します。実走速度や機力の順位を示すものではありません。</p>
+<fieldset><legend>見る艇を選ぶ <span>１〜６艇</span></legend><div id="boats" class="choices"></div><button id="all">６艇すべて</button><button id="single">１艇で見る</button></fieldset>
+<div class="controls"><label>場面 <select id="scene"><option value="turn">ターン全体</option><option value="A">入口</option><option value="B">旋回</option><option value="C">出口</option></select></label>
+<label>速さ <select id="speed"><option value="0.25">0.25倍</option><option value="0.5" selected>0.5倍</option><option value="1">1倍</option></select></label>
+<button id="play" aria-pressed="false">▶ 再生</button><button id="restart">頭出し</button><button id="prev">←１コマ</button><button id="next">１コマ→</button><button id="retry">画像を再読込</button></div>
+<div class="seek"><input id="seek" type="range" min="0" max="0" value="0" aria-label="再生位置"><output id="position"></output></div>
+<p id="status" role="status" aria-live="polite"></p>
+<div id="grid" class="grid"></div>
+<details><summary>映像の見方・出典</summary><p>入口はA線、旋回はB線、出口はC線の確認済み通過時刻を基準にします。ターン全体はA線が基準です。複数艇では共通して収録された範囲を表示します。１コマ操作は選択艇の原PTSを合わせた順序で移動し、各映像には直前の実コマを表示します。</p><p>同期未確認の艇は単独で閲覧できます。拡大後は映像をクリック・タップして中心を動かせます。再生速度の変更は表示だけに適用します。</p><p>出典：BOATCAST 平和島展示。同期は既存の２担当AIによる照合であり、人間の正解や実時間尺度の校正ではありません。本番予想・的中実績には使用しません。</p></details>
+</main><script type="application/json" id="watch-bundle">__BUNDLE__</script><script src="watch.js"></script></body></html>

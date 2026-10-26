@@ -1,0 +1,345 @@
+{
+  "scope": "development_original_video_recheck_not_ground_truth_or_holdout_accuracy",
+  "models_sha256": {
+    "detector_path": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",
+    "colour_model": "0b7fa63f42e4d66198a814042f9edc4a864face8536459a01749a7ae43b6fc2f",
+    "bow_model": "18cb050d476a8c07c54336e1573ceb057d3e2d53806313a27bb59eda5f7e161c",
+    "scene_model": "02a0b968c6e9d2639dfe761a7cad266e8f6c4fa435fce26dcf14fd8275d8d4bc",
+    "keypoint_weights": "dcd481a5ce4c09d8aeaf63258670368a7ff2b18a7220b951e4c9cf3eba0916d0"
+  },
+  "frozen_code_sha256": {
+    "tools/actor_track_review.py": "9cbed0d9e5eabab296be3e814b006963dfd244b6abf3fba202bcda7f35add70b",
+    "tools/automatic_turn_v2.py": "10ad33cf8afb2efcb6c839980bda76a985e1ebb217d6f7d6a9892b149e5e6e3e",
+    "tools/boat_tracking.py": "8fbcf376cda256ca4ad7a1d210ba995b12609b16b8a9e7de7cb2c5fb0772690e",
+    "tools/extract_turn_frames.py": "5c99dfb0ee20674ec1868f68067023adc1d184a366e585ea5e182b5fa4812393",
+    "tools/measure_tracked_bows.py": "2d9e574b9cc8c82b36838ddfd4cc6a7bdd83ad5990edc3babae7ef9f76f34d86",
+    "scraper/exhibition_model/pilot-v1.json": "87ad63af9b1eace3b4ce4d9546cfb98efa153fe69422592315e41f2850f8e930",
+    "scraper/turn_measurement.py": "d6a0e070a3f0ad950e5ba0c7e9d1f373d41b3826ee7f192c29c8cd16eee57767"
+  },
+  "timing_caveat": "Other verification tasks ran concurrently; not an isolated speed benchmark.",
+  "trials": [
+    {
+      "source_container_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+      "frame_binding": {
+        "frame_export_sha256": "68e37f3834c97c38c18150c9cc81e6de975d41c4104f0645490f421f93e36d3b",
+        "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+        "time_base": [
+          1,
+          90000
+        ],
+        "first_pts": 5402670347,
+        "frame_count": 1140
+      },
+      "total_elapsed_seconds": 1180.33,
+      "stage_elapsed_seconds": {
+        "scene_selection": 42.922,
+        "frame_export": 127.453,
+        "detection_and_colour": 285.265,
+        "tracking": 685.547,
+        "bow_estimation": 30.297
+      },
+      "coarse_candidates": 2,
+      "learned_results": [
+        {
+          "boat": 1,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 1.7418649866012856,
+          "exit_video_seconds": 2.045106618606951
+        },
+        {
+          "boat": 2,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 1.8645779695434612,
+          "exit_video_seconds": 2.076853067948832
+        },
+        {
+          "boat": 3,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 1.7844396789951134,
+          "exit_video_seconds": 2.0199640363643994
+        },
+        {
+          "boat": 4,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 2.2638884422340197,
+          "exit_video_seconds": 1.614530594284588
+        },
+        {
+          "boat": 5,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 2.4355559365430963,
+          "exit_video_seconds": 1.4933667647273978
+        },
+        {
+          "boat": 6,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 2.543643144927046,
+          "exit_video_seconds": 1.5375950363231823
+        }
+      ],
+      "tracking_diagnostics": [
+        {
+          "boat": 1,
+          "state": "provisional_actor_track",
+          "seed_attempts": 4,
+          "entry_connected_seed_count": 2,
+          "excluded_disconnected_seeds": 2,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1,
+            "recovery_jump_or_size_change": 2
+          }
+        },
+        {
+          "boat": 2,
+          "state": "provisional_actor_track",
+          "seed_attempts": 4,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 1,
+          "stop_reasons": {
+            "frame_edge": 7,
+            "step_limit": 1
+          }
+        },
+        {
+          "boat": 3,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        },
+        {
+          "boat": 4,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        },
+        {
+          "boat": 5,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        },
+        {
+          "boat": 6,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        }
+      ],
+      "denominator": 6,
+      "dataset_role": "development",
+      "independent_identity_accuracy_verified": false,
+      "real_time_scale_verified": false,
+      "publication_ready": false,
+      "prediction_used": false,
+      "race": 3,
+      "raw_private_result_sha256": "e161ec66c1c5747d0a6749ae23e5d68fd1cfdf73df446a2e3d81e5b16fc75137"
+    },
+    {
+      "source_container_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+      "frame_binding": {
+        "frame_export_sha256": "e8a94a1e97e3c8b26fb646e7f6cd07b2f0ff41bdb4ba7820dd40953b44ecbc91",
+        "source_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+        "time_base": [
+          1,
+          90000
+        ],
+        "first_pts": 5705520347,
+        "frame_count": 1080
+      },
+      "total_elapsed_seconds": 1031.78,
+      "stage_elapsed_seconds": {
+        "scene_selection": 45.594,
+        "frame_export": 109.265,
+        "detection_and_colour": 328.25,
+        "tracking": 533.11,
+        "bow_estimation": 14.359
+      },
+      "coarse_candidates": 1,
+      "learned_results": [
+        {
+          "boat": 1,
+          "status": "rejected",
+          "reasons": [
+            "missing_B",
+            "missing_C"
+          ],
+          "entry_video_seconds": null,
+          "exit_video_seconds": null
+        },
+        {
+          "boat": 2,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B",
+            "missing_C"
+          ],
+          "entry_video_seconds": null,
+          "exit_video_seconds": null
+        },
+        {
+          "boat": 3,
+          "status": "rejected",
+          "reasons": [
+            "missing_B"
+          ],
+          "entry_video_seconds": null,
+          "exit_video_seconds": null
+        },
+        {
+          "boat": 4,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 1.9807016426566406,
+          "exit_video_seconds": 1.6515464756084839
+        },
+        {
+          "boat": 5,
+          "status": "automatic_candidate",
+          "reasons": [],
+          "entry_video_seconds": 2.1167407494358486,
+          "exit_video_seconds": 1.578413014722173
+        },
+        {
+          "boat": 6,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ],
+          "entry_video_seconds": null,
+          "exit_video_seconds": null
+        }
+      ],
+      "tracking_diagnostics": [
+        {
+          "boat": 1,
+          "state": "provisional_actor_track",
+          "seed_attempts": 5,
+          "entry_connected_seed_count": 1,
+          "excluded_disconnected_seeds": 4,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "no_nearby_detection_after_flow_loss": 2,
+            "periodic_detector_missing": 2,
+            "hull_detection_required_for_recovery": 1
+          }
+        },
+        {
+          "boat": 2,
+          "state": "no_colour_seed",
+          "seed_attempts": null,
+          "entry_connected_seed_count": null,
+          "excluded_disconnected_seeds": null,
+          "stop_reasons": {}
+        },
+        {
+          "boat": 3,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        },
+        {
+          "boat": 4,
+          "state": "provisional_actor_track",
+          "seed_attempts": 4,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 1,
+          "stop_reasons": {
+            "frame_edge": 6,
+            "step_limit": 1,
+            "periodic_detector_missing": 1
+          }
+        },
+        {
+          "boat": 5,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "periodic_detector_missing": 1
+          }
+        },
+        {
+          "boat": 6,
+          "state": "provisional_actor_track",
+          "seed_attempts": 3,
+          "entry_connected_seed_count": 3,
+          "excluded_disconnected_seeds": 0,
+          "stop_reasons": {
+            "frame_edge": 5,
+            "step_limit": 1
+          }
+        }
+      ],
+      "denominator": 6,
+      "dataset_role": "development",
+      "independent_identity_accuracy_verified": false,
+      "real_time_scale_verified": false,
+      "publication_ready": false,
+      "prediction_used": false,
+      "race": 5,
+      "raw_private_result_sha256": "c40796889f8826fc87e57d7098dba4678e8681e7a5865890473fb644752a5c76"
+    }
+  ],
+  "development3_comparison_to_existing_ai_reviews": {
+    "state": "rejected",
+    "reason": "reference_pts_or_image_mismatch",
+    "reference_export_encoding": "JPEG quality96; original PTS, lossy review images",
+    "reference_source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+    "current_source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+    "timing_error_evaluated": false,
+    "publication_ready": false,
+    "prediction_used": false
+  },
+  "previous5_region_diagnostic": {
+    "dataset_role": "development",
+    "gate_events": 28,
+    "white_black_observations": 27,
+    "observation_reasons": {
+      "regional_agreement": 9,
+      "no_matching_person": 14,
+      "regional_disagreement_or_unknown": 4
+    },
+    "accepted_events": 0,
+    "changes_existing_candidates": false,
+    "identity_ground_truth_available": false
+  },
+  "publication_ready": false,
+  "prediction_used": false,
+  "holdout_races_evaluated": 0,
+  "other_dates_evaluated": 0
+}

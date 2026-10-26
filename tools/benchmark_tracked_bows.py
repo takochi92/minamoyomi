@@ -37,6 +37,29 @@ def compare(manifest,automatic,reference,selected):
             'reference_reviews_are_not_ground_truth':True}
 
 
+def compare_by_pts_and_sha(manifest, automatic, reference, selected):
+    """Explicitly rebind review frames from a different crop using exact PTS+SHA.
+
+    Never reuse another export's frame index, shift by a guessed offset, or match
+    on container alone. Every selected source image must exist unchanged.
+    """
+    require_frame_binding(manifest, automatic)
+    actual = {row['pts']: (index, row) for index, row in enumerate(manifest['frames'])}
+    rebound, mapping = {}, []
+    for old_index, row in selected['frames'].items():
+        matched = actual.get(row['pts'])
+        if matched is None or matched[1]['sha256'] != row['sha256']:
+            raise ValueError('reference_pts_or_image_mismatch')
+        index, _ = matched
+        rebound[str(index)] = row
+        mapping.append({'review_index': int(old_index), 'current_index': index,
+                        'pts': row['pts'], 'sha256': row['sha256']})
+    result = compare(manifest, automatic, reference, {**selected, 'frames': rebound})
+    result['review_frame_mapping'] = mapping
+    result['mapping_basis'] = 'exact_original_pts_and_image_sha256_not_index_reuse'
+    return result
+
+
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('manifest','automatic','reference','selected','output'):parser.add_argument('--'+name,type=Path,required=True)
