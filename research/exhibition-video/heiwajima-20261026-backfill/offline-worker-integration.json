@@ -1,0 +1,14 @@
+{
+  "checked_at_jst": "2026-10-27",
+  "mode": "previously_observed_local_media_not_external_live_acquisition",
+  "date": "20261026",
+  "rno": 2,
+  "state": "analyzed_candidate",
+  "source_sha256": "b93c49277f5d11cc0914faf986f9dee332a83a76bc077d87f3c787798d5299f3",
+  "model_fingerprint": "db89720f18a09915ed4c87b28a47457133a5617c7bdea7beed1e7d51ebc21a2d",
+  "accepted_boats": 2,
+  "analysis_elapsed_seconds": 135.42,
+  "external_environment_deployed": false,
+  "publication_performed": false,
+  "automatic_verified_timing_enabled": false
+}
