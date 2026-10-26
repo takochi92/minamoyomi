@@ -1,6 +1,6 @@
 // Event-flow checks with a small DOM/canvas double. Not a browser layout test.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function boot(pending=false){
+function boot(pending=false,size=[1280,720]){
  const nodes=new Map(),all=[],blobs=[],images=[],timers=new Map();let timerId=0;
  class Element{
   constructor(){this.dataset={};this.children=[];this.value='';this.checked=false;this.textContent='';this.attrs={};this.files=[];all.push(this);}
@@ -11,7 +11,7 @@ function boot(pending=false){
  const document={getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},createElement(){return new Element();},
   querySelectorAll(selector){const key=selector.match(/\[data-(.*?)\]/)[1];return all.filter(n=>n.dataset[key]!==undefined);}};
  const frames=Array.from({length:25},(_,i)=>({index:i,time:i/30,proposal:[700,300,80,40]}));
- const bundle={digest:'fixture',size:[1280,720],source_clock:'browser_capture_clock_unverified',gates:{A:{axis:'x',value:500,segment:[400,600]}},
+ const bundle={digest:'fixture',size,source_clock:'browser_capture_clock_unverified',gates:{A:{axis:'x',value:500,segment:[400,600]}},
   clips:Array.from({length:6},(_,i)=>({boat:i+1,frames})),
   events:Array.from({length:6},(_,i)=>['A','B','C'].map(g=>({boat:i+1,gate:g,frames}))).flat(),images:Object.fromEntries(frames.map(f=>[f.index,'test-image']))};
  document.getElementById('bundle').textContent=JSON.stringify(bundle);
@@ -63,5 +63,8 @@ function boot(pending=false){
  const requested=buffered.images.at(-1);requested.complete=true;requested.naturalWidth=1280;requested.onload();
  assert.equal(buffered.timers.size,1);buffered.tick();assert.equal(buffered.timers.size,0);
  assert.match(b('clock').textContent,/コマ 1 ／/);
+ const native=boot(false,[854,480]);native.document.getElementById('canvas').onclick({clientX:160,clientY:90});
+ native.document.getElementById('reviewer').value='reviewer';native.document.getElementById('export').click();
+ assert.deepEqual(JSON.parse(await native.blobs.at(-1).text()).labels['1:12'].bow,[427,240]);
  console.log('turn review click/zoom/frame/export/loading checks ok (DOM double; browser layout unverified)');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -250,6 +250,8 @@ class Site:
         self.op_through = op_report.get("methods_through", "")
         self.exs = load_exstats()
         self.cst = coursest.load()
+        from .exhibition_views import catalog
+        self.exhibition_records = catalog(load_json(DATA / 'exhibition/index.json', {}) or {})
 
     def put(self, path, text):
         if getattr(self, 'stream_output', False) and path.startswith(('racer/', 'database/')):
@@ -487,7 +489,9 @@ class Site:
         times = self.oriten_block(race, p)
         slit = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))
         waiting = '<p class="sub">展示の取得待ちです。取得できた項目から表示します。</p>' if not bx else ''
-        return times + reference + waiting + slit
+        available = any((r['date'], r['jcd'], r['rno']) == (d, jcd, rno) for r in getattr(self, 'exhibition_records', []))
+        link = (f'<p class="ev-link"><a href="{Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u("exhibition.html")}?date={d}&amp;jcd={jcd}&amp;rno={rno}">展示映像を別ページで見る →</a></p>' if available else '')
+        return times + reference + waiting + link + slit
 
     def oriten_block(self, race, fallback=None):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -2602,7 +2606,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                         self.race_page(day.name, race['jcd'], race)
             if cache and day.name < self.idx.get('date', ''):
                 cache.phase(self, 'races-' + day.name,
-                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past], render_day)
+                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past, getattr(self, 'exhibition_records', [])], render_day)
             else:
                 render_day()
         # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）
@@ -2629,6 +2633,14 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         page = Page("404.html")
         body = f'<h1>ページが見つかりません</h1><p>URLが変わったか、まだ作られていないページです。</p><p><a href="{page.u("index.html")}">今日のレース一覧へ</a></p>'
         self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
+
+    def exhibition_page(self):
+        from .exhibition_views import render
+        page = Page('exhibition.html')
+        venues = {j: {**value, 'slug': SLUG[j]} for j, value in VENUES.items()}
+        body = render(page, venues, self.idx.get('date', self.now.strftime('%Y%m%d')), self.exhibition_records)
+        self.put(page.path, page.render('展示映像｜艇ろぐ', '日付・場・レースを選んで、１マークの入りと出口を見比べます。',
+                                       body, [('', '展示映像')], noindex=not self.exhibition_records))
 
     def sitemap(self):
         # 検索に出さないページ（noindex）はサイトマップに入れない（Search Console の警告になる）
@@ -2660,6 +2672,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.racer_pages()
         self.st_pages()
         self.static_pages()
+        self.exhibition_page()
         self.share_page()
         self.grade_page()
         self.weekly_page()

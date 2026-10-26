@@ -1,0 +1,181 @@
+{
+  "race_id": "20261026-04-1",
+  "source": {
+    "clock": "decoded_pts",
+    "sha256": "d94ea6d4cee6c5cb632a506eb93acc290bbb0fac20d8ab5087d1de6ebbdc41a9",
+    "filename": "heiwajima-original-turn-private.ts",
+    "time_base": [
+      1,
+      90000
+    ],
+    "origin_verified": false,
+    "editing_speed_verified": false
+  },
+  "image_size": [
+    854,
+    480
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 333.59375,
+      "direction": 1,
+      "segment": [
+        313.3333333333333,
+        420.0
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 240.0,
+      "direction": -1,
+      "segment": [
+        493.71875000000006,
+        653.84375
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 333.59375,
+      "direction": -1,
+      "segment": [
+        113.33333333333333,
+        206.66666666666666
+      ]
+    }
+  },
+  "boat": 3,
+  "labels": {
+    "3:301": {
+      "bow": [
+        349,
+        359
+      ],
+      "stern": [
+        306,
+        383
+      ]
+    },
+    "3:302": {
+      "bow": [
+        357,
+        357
+      ],
+      "stern": [
+        316,
+        381
+      ]
+    },
+    "3:354": {
+      "bow": [
+        523,
+        235
+      ],
+      "stern": [
+        565,
+        252
+      ]
+    },
+    "3:357": {
+      "bow": [
+        524,
+        231
+      ],
+      "stern": [
+        566,
+        245
+      ]
+    },
+    "3:416": {
+      "bow": [
+        318,
+        159
+      ],
+      "stern": [
+        363,
+        164
+      ]
+    },
+    "3:418": {
+      "bow": [
+        306,
+        159
+      ],
+      "stern": [
+        350,
+        164
+      ]
+    }
+  },
+  "pairs": {
+    "3:A": {
+      "before": 301,
+      "after": 302
+    },
+    "3:B": {
+      "before": 354,
+      "after": 357
+    },
+    "3:C": {
+      "before": 416,
+      "after": 418
+    }
+  },
+  "frames": {
+    "301": {
+      "id": "301",
+      "file": "frame-000301.png",
+      "pts": 5101353347,
+      "sha256": "edded1c62db24c628b8801625fb8294ffb5cd1642dd744794418cc66b0887a9b"
+    },
+    "302": {
+      "id": "302",
+      "file": "frame-000302.png",
+      "pts": 5101356347,
+      "sha256": "93af6a7e16ee077150948e511b929ee99dd0253220dc5ad3949c0f3e7e3917f0"
+    },
+    "354": {
+      "id": "354",
+      "file": "frame-000354.png",
+      "pts": 5101512347,
+      "sha256": "040fed55facd508bce7311e6d4aec45cd886739eccef90f4586fff84a1bbbd9e"
+    },
+    "357": {
+      "id": "357",
+      "file": "frame-000357.png",
+      "pts": 5101521347,
+      "sha256": "99d40a58c3a57e3b7ee5d7bdfcfd82119385db521ebc29110257db87f7ddca0b"
+    },
+    "416": {
+      "id": "416",
+      "file": "frame-000416.png",
+      "pts": 5101698347,
+      "sha256": "f6d95d1f7915525e59990793d91709473786de4501355d719c7b52475f5625bd"
+    },
+    "418": {
+      "id": "418",
+      "file": "frame-000418.png",
+      "pts": 5101704347,
+      "sha256": "09aa8c9ed99d1c918d7ea7ce543470c342de36c34f2b11815f1a6ad5b94d050e"
+    }
+  },
+  "result": {
+    "source_sha256": "d94ea6d4cee6c5cb632a506eb93acc290bbb0fac20d8ab5087d1de6ebbdc41a9",
+    "clock": "decoded_pts",
+    "boat": 3,
+    "events": {
+      "A": 56681.726425,
+      "B": 56683.53415858586,
+      "C": 56685.57402222222
+    },
+    "entry_seconds": 1.8,
+    "exit_seconds": 2.0,
+    "review_count": 1,
+    "origin_verified": false,
+    "editing_speed_verified": false,
+    "publication_ready": false,
+    "note": "単独担当者の端点指定例。独立照合と編集速度確認は未完了。旧追跡点は計測に使用しない。"
+  },
+  "warning": "単独担当者の端点指定例。独立照合・編集速度確認前。実走時間および正式タイムではない。予想に不使用。",
+  "publication_ready": false
+}

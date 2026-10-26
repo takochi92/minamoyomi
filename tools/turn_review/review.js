@@ -65,6 +65,9 @@ if (typeof document !== 'undefined') {
   let imageToken = 0, readyFrame = null, zoom = 1, offset = [0, 0], scene = 'turn';
   let playing = false, speed = 0.5, timer = null, runVersion = 0;
   const imageCache = new Map();
+  const width = bundle.size[0], height = bundle.size[1]; canvas.width = width; canvas.height = height;
+  const watchMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'watch';
+  if (watchMode) { document.body.classList.add('watch'); document.querySelector('h1').textContent = '１マークの展示映像'; }
   function current() {
     if (scene === 'turn') {
       const clip = (bundle.clips || []).find(e => e.boat === boat);
@@ -117,7 +120,7 @@ if (typeof document !== 'undefined') {
     const ev = current(), fr = frame();
     $('seek').max = ev.frames.length - 1; $('seek').value = pos;
     $('scene').value = scene; $('speed').value = String(speed); playLabel();
-    $('clock').textContent = 'コマ ' + fr.index + ' ／ 映像内 ' + fr.time.toFixed(3) + '秒（参考時刻）';
+    $('clock').textContent = 'コマ ' + fr.index + ' ／ 映像内 ' + fr.time.toFixed(3) + (bundle.source_clock === 'decoded_pts' ? '秒（動画コマのPTS時刻）' : '秒（参考時刻）');
     document.querySelectorAll('[data-boat]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.boat === boat)));
     document.querySelectorAll('[data-gate]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gate === gate && scene === 'gate')));
     document.querySelectorAll('[data-point]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.point === point)));
@@ -130,16 +133,17 @@ if (typeof document !== 'undefined') {
       ' ／ 出口 ' + (times.exit === null ? '—' : times.exit.toFixed(1) + '秒');
     $('status').textContent = playing ? 'ゆっくり再生中。位置を指定するときは一時停止してください。' :
       '指定する線 ' + gate + '：前 ' + (pair.before ?? '未指定') + ' ／ 後 ' + (pair.after ?? '未指定') + '　次は' + (point === 'bow' ? '艇首' : '艇尾') + 'をクリック';
+    if (watchMode) $('status').textContent = playing ? 'スロー再生中' : '再生ボタンで向きの変化を確認できます。';
     draw();
   }
   function draw() {
     const fr = frame(), token = ++imageToken, img = getImage(fr.index); readyFrame = null;
     function paint() {
       if (token !== imageToken) return;
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 1280, 720);
-      const box = fr.proposal, centre = box ? [box[0] + box[2] / 2, box[1] + box[3] / 2] : [640, 360];
-      offset = zoom === 1 ? [0, 0] : [640 - centre[0] * zoom, 360 - centre[1] * zoom];
-      ctx.setTransform(zoom, 0, 0, zoom, ...offset); ctx.drawImage(img, 0, 0, 1280, 720); readyFrame = fr.index;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, width, height);
+      const box = fr.proposal, centre = box ? [box[0] + box[2] / 2, box[1] + box[3] / 2] : [width / 2, height / 2];
+      offset = zoom === 1 ? [0, 0] : [width / 2 - centre[0] * zoom, height / 2 - centre[1] * zoom];
+      ctx.setTransform(zoom, 0, 0, zoom, ...offset); ctx.drawImage(img, 0, 0, width, height); readyFrame = fr.index;
       for (const [name, g] of Object.entries(bundle.gates)) {
         ctx.strokeStyle = { A: '#f1c66a', B: '#69e3c8', C: '#76b5ff' }[name]; ctx.lineWidth = 3 / zoom; ctx.beginPath();
         if (g.axis === 'x') { ctx.moveTo(g.value, g.segment[0]); ctx.lineTo(g.value, g.segment[1]); }
@@ -181,10 +185,11 @@ if (typeof document !== 'undefined') {
   $('prev').onclick = () => { stopPlayback(); pos = Math.max(0, pos - 1); update(); };
   $('next').onclick = () => { stopPlayback(); pos = Math.min(current().frames.length - 1, pos + 1); update(); };
   canvas.onclick = e => {
-    if (playing) { stopPlayback('一時停止しました。艇首・艇尾を指定できます。'); return; }
+    if (playing) { stopPlayback(watchMode ? '一時停止しました。' : '一時停止しました。艇首・艇尾を指定できます。'); return; }
+    if (watchMode) return;
     if (readyFrame !== frame().index) { $('status').textContent = '画像の読込完了を待ってください'; return; }
-    const xy = sourcePoint(canvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), 1280, 720), zoom, offset);
-    if (xy[0] < 0 || xy[1] < 0 || xy[0] >= 1280 || xy[1] >= 720) return;
+    const xy = sourcePoint(canvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), width, height), zoom, offset);
+    if (xy[0] < 0 || xy[1] < 0 || xy[0] >= width || xy[1] >= height) return;
     const key = labelKey(); labels[key] = { ...(labels[key] || {}), [point]: xy }; point = point === 'bow' ? 'stern' : 'bow'; update();
   };
   document.querySelectorAll('[data-point]').forEach(b => b.onclick = () => { stopPlayback(); point = b.dataset.point; update(); });
@@ -208,5 +213,9 @@ if (typeof document !== 'undefined') {
     } catch (error) { $('status').textContent = error.message; }
   };
   if (document.addEventListener) document.addEventListener('visibilitychange', () => { if (document.hidden) stopPlayback('画面を離れたため一時停止しました。'); });
+  if (watchMode && typeof ResizeObserver !== 'undefined') {
+    const main = document.querySelector('main');
+    new ResizeObserver(() => window.parent.postMessage({ kind: 'teilog-exhibition-height', height: main.getBoundingClientRect().height + 4 }, '*')).observe(main);
+  }
   update();
 }

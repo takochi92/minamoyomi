@@ -1,4 +1,5 @@
 import json
+import hashlib
 
 import pytest
 from PIL import Image
@@ -49,3 +50,21 @@ def test_different_race_is_not_silently_relabelled(tmp_path):
     _, config, tracks, report = source(tmp_path)
     with pytest.raises(ValueError, match='different race'):
         build(tmp_path, {**config, 'race': 2}, tracks, report)
+
+
+def test_decoded_pts_stay_exact_and_tampered_image_is_rejected(tmp_path):
+    frames, config, tracks, report = source(tmp_path)
+    sha = hashlib.sha256((tmp_path/'frame.png').read_bytes()).hexdigest()
+    native = {'schema': 2, 'image_size': [100, 100], 'source': {'clock': 'decoded_pts', 'time_base': [1, 1000],
+              'sha256': 'a'*64, 'origin_verified': False, 'editing_speed_verified': False},
+              'frames': [{'file': f['file'], 'pts': i*33, 'sha256': sha} for i, f in enumerate(frames)]}
+    (tmp_path/'frames.json').write_text(json.dumps(native), encoding='utf-8')
+    _, bundle = build(tmp_path, config, tracks, report)
+    assert bundle['source_clock'] == 'decoded_pts'
+    assert not bundle['source_details']['origin_verified']
+    for frame in bundle['clips'][0]['frames']:
+        assert frame['pts'] == frame['index']*33
+        assert frame['time'] == frame['pts']/1000
+    (tmp_path/'frame.png').write_bytes(b'changed')
+    with pytest.raises(ValueError, match='fingerprint changed'):
+        build(tmp_path, config, tracks, report)

@@ -193,7 +193,8 @@ def assess_record(record, *, release_enabled=False):
         rows.append(row)
     return {"schema": 2, "method": METHOD, "race_id": record.get("race_id"),
             "evidence_digest": fingerprint, "rows": rows,
-            "publication_ready": bool(release_enabled and predeadline and all(not r["reasons"] for r in rows)),
+            "publication_ready": bool(release_enabled and predeadline and source.get('origin_verified') is True
+                                      and source.get('editing_speed_verified') is True and all(not r["reasons"] for r in rows)),
             "predeadline": predeadline, "time_label": "映像内の区間秒数",
             "prediction_used": False, "release_enabled": release_enabled}
 

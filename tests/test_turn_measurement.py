@@ -24,7 +24,8 @@ def record():
                 labels[f"{boat}:{ident}"] = {"bow": [x-5, y], "stern": [x+5, y]}
             events[gate] = frames
         boats.append({"boat": boat, "events": events})
-    evidence = {"source": {"sha256": "a"*64, "clock": "decoded_pts", "time_base": [1, 30]},
+    evidence = {"source": {"sha256": "a"*64, "clock": "decoded_pts", "time_base": [1, 30],
+                           "origin_verified": True, "editing_speed_verified": True},
                 "image_size": [100, 100], "camera_reference": anchors, "gates": gates, "boats": boats}
     result = {"schema": 2, "method": METHOD, "venue": "04", "turn": "1-mark", "race_id": "20261026-04-1",
             "captured_at": "2026-10-26T10:00:00+09:00", "deadline": "2026-10-26T10:10:00+09:00",
@@ -108,6 +109,12 @@ def test_reviews_cannot_be_reused_for_another_race_or_deadline():
     for key, value in [("race_id", "20261026-04-2"), ("deadline", "2026-10-26T10:20:00+09:00")]:
         r = record(); r[key] = value
         assert not assess_record(r, release_enabled=True)["publication_ready"]
+
+
+def test_precise_clock_does_not_prove_original_source_or_unedited_speed():
+    for key in ('origin_verified', 'editing_speed_verified'):
+        r = record(); r['evidence']['source'][key] = False; refresh(r)
+        assert not assess_record(r, release_enabled=True)['publication_ready']
 
 
 def test_immutable_writer_and_no_late_backfill(tmp_path):

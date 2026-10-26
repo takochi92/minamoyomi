@@ -15,6 +15,10 @@ jobs:
       - run: node tests/test_note_account.cjs
       - run: node tests/test_pwa.cjs
       - run: node tests/test_freshness.cjs
+      - run: node tests/test_exhibition.cjs
+      - run: node tests/test_exhibition_flow.cjs
+      - run: node tests/test_turn_review.cjs
+      - run: node tests/test_turn_review_flow.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.com
@@ -37,6 +41,9 @@ jobs:
             site/vendor/
             site/mynote.html
             site/install.html
+            site/exhibition.html
+            site/exhibition.js
+            site/exhibition.css
             site/pwa.js
             site/sw.js
             site/manifest.webmanifest

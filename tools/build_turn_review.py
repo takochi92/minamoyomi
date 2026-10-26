@@ -9,6 +9,8 @@ import base64
 import io
 import html
 import json
+import hashlib
+from fractions import Fraction
 from datetime import date
 from pathlib import Path
 
@@ -26,7 +28,26 @@ def build(frames_dir, config, tracks, report):
     if (report.get("date"), report.get("race"), report.get("venue")) != (config["date"], config["race"], config["venue"]):
         raise ValueError("Report belongs to a different race")
     frames_dir = Path(frames_dir).resolve()
-    manifest = json.loads((frames_dir / "frames.json").read_text(encoding="utf-8"))
+    raw_manifest = json.loads((frames_dir / "frames.json").read_text(encoding="utf-8"))
+    source_details = None
+    if isinstance(raw_manifest, list):
+        manifest = raw_manifest
+        source_clock = "browser_capture_clock_unverified"
+    else:
+        if raw_manifest.get('schema') != 2 or raw_manifest.get('source', {}).get('clock') != 'decoded_pts':
+            raise ValueError('Unsupported frame clock')
+        source_details = raw_manifest['source']
+        base = Fraction(*source_details['time_base'])
+        if base <= 0 or raw_manifest['image_size'] != config['image_size']:
+            raise ValueError('Invalid source dimensions or time base')
+        manifest = []
+        previous = None
+        for frame in raw_manifest['frames']:
+            if type(frame.get('pts')) is not int or (previous is not None and frame['pts'] <= previous):
+                raise ValueError('Invalid decoded frame PTS')
+            previous = frame['pts']
+            manifest.append({**frame, 'before': float(frame['pts']*base), 'after': float(frame['pts']*base)})
+        source_clock = 'decoded_pts'
     by_boat = {row["boat"]: {p["frame"]: p for p in row["points"]} for row in tracks}
     images = {}
     def sample(boat, index):
@@ -35,14 +56,19 @@ def build(frames_dir, config, tracks, report):
         if path.parent != frames_dir:
             raise ValueError("Frame outside supplied directory")
         if index not in images:
+            if source_details and hashlib.sha256(path.read_bytes()).hexdigest() != frame.get('sha256'):
+                raise ValueError('Decoded frame fingerprint changed')
             with Image.open(path) as image:
                 if list(image.size) != config["image_size"]:
                     raise ValueError("Frame size changed")
                 buf = io.BytesIO()
                 image.convert("RGB").save(buf, "WEBP", quality=78)
                 images[index] = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
-        return {"index": index, "time": (frame["before"] + frame["after"]) / 2,
-                "proposal": by_boat[boat].get(index, {}).get("bbox")}
+        result = {"index": index, "time": (frame["before"] + frame["after"]) / 2,
+                  "proposal": by_boat[boat].get(index, {}).get("bbox")}
+        if source_details:
+            result['pts'] = frame['pts']
+        return result
     events = []
     for row in report["results"]:
         boat = row["boat"]
@@ -57,9 +83,11 @@ def build(frames_dir, config, tracks, report):
             events.append({"boat": boat, "gate": gate, "frames": samples})
     evidence = {"date": config["date"], "race": config["race"], "venue": config["venue"],
                 "size": config["image_size"], "gates": config["gates"], "events": events,
-                "frame_manifest_digest": digest(manifest),
+                "frame_manifest_digest": digest(raw_manifest),
                 "image_digests": {key: digest(value) for key, value in images.items()},
-                "source_clock": "browser_capture_clock_unverified", "source": config["source"]}
+                "source_clock": source_clock, "source": config["source"]}
+    if source_details:
+        evidence['source_details'] = source_details
     # This exact digest identifies the previous windows-only evidence. Accept
     # its drafts only when that unchanged subset is present in this new bundle.
     legacy_digest = digest(evidence)
