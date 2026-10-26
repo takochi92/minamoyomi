@@ -52,7 +52,7 @@ def denial_summary(payload):
 def discover_master(day, race):
     # Imported only in the dedicated browser/media job, not ordinary predictions.
     from playwright.sync_api import sync_playwright
-    observed=[];statuses={};denials=[]
+    observed=[];statuses={};denials=[];stage='launch_browser'
     def response_seen(response):
         url=response.url
         if media_url(url):
@@ -73,12 +73,16 @@ def discover_master(day, race):
     with sync_playwright() as playwright:
         # GitHub's Ubuntu image already includes vendor Chrome and its codecs.
         # Do not reinstall a browser/OS dependencies on every race update.
-        browser=playwright.chromium.launch(channel='chrome',headless=True)
+        browser=None
         try:
+            browser=playwright.chromium.launch(channel='chrome',headless=True)
             context=browser.new_context() # No personal cookies or stored login.
             page=context.new_page();page.on('response',response_seen)
+            stage='open_official_player'
             page.goto(official_player(day,race),wait_until='domcontentloaded',timeout=30000)
+            stage='click_play_video'
             page.get_by_role('button',name='Play Video',exact=True).click(timeout=20000)
+            stage='wait_for_playback_manifest'
             deadline=time.monotonic()+20
             while not observed and time.monotonic()<deadline:page.wait_for_timeout(250)
             if len(observed)!=1:
@@ -87,8 +91,12 @@ def discover_master(day, race):
                                         'denials':denials}
                 raise error
             return observed[0]
+        except Exception as error:
+            error.safe_diagnostics={'stage':stage,'master_count':len(observed),
+                                    'http_statuses':{h:sorted(s) for h,s in statuses.items()},'denials':denials}
+            raise
         finally:
-            browser.close()
+            if browser is not None:browser.close()
 
 
 def fetch(url, limit, opener=urlopen):

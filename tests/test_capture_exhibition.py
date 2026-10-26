@@ -1,5 +1,34 @@
 import pytest
+import sys
+from types import SimpleNamespace
 from tools.capture_exhibition import media_url,choose_variant,selected_segments,fetch,denial_summary
+
+
+@pytest.mark.parametrize('failure_stage',['launch_browser','open_official_player','click_play_video'])
+def test_timeout_records_exact_stage_without_private_exception_text(monkeypatch,failure_stage):
+    from tools.capture_exhibition import discover_master
+    class Page:
+        def on(self,*args):pass
+        def goto(self,*args,**kwargs):
+            if failure_stage=='open_official_player':raise TimeoutError('private signed URL')
+        def get_by_role(self,*args,**kwargs):return self
+        def click(self,**kwargs):raise TimeoutError('private signed URL')
+    class Browser:
+        def new_context(self):return self
+        def new_page(self):return Page()
+        def close(self):pass
+    class Runtime:
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        @property
+        def chromium(self):return self
+        def launch(self,**kwargs):
+            if failure_stage=='launch_browser':raise TimeoutError('private signed URL')
+            return Browser()
+    monkeypatch.setitem(sys.modules,'playwright.sync_api',SimpleNamespace(sync_playwright=Runtime))
+    with pytest.raises(TimeoutError) as error:discover_master('20261026',2)
+    assert error.value.safe_diagnostics['stage']==failure_stage
+    assert 'private' not in str(error.value.safe_diagnostics)
 
 
 def test_denial_diagnostics_keep_only_known_enums_and_numeric_ids():
