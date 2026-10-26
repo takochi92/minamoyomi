@@ -195,6 +195,7 @@ class Page:
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
 <script src="{self.asset('pwa.js')}" defer></script>
+<script src="{self.asset('freshness.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head><body>
 <header class="top"><div class="wrap">
@@ -534,6 +535,8 @@ class Site:
             note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
                      "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
         return (f'<section class="panel ex-compact ex-primary"><h2>展示タイム・足の比較</h2>'
+                + ('' if ot else '<p class="ex-data-status">一周・まわり足・直線などの詳細展示は未取得です。現在は展示タイムのみ表示しています。</p>')
+                +
                 f'<div class="tbl-wrap"><table class="t-ori{" ex-many" if len(items) > 4 else ""}{" ex-dense" if len(items) > 5 else ""}"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                 f'<details class="ex-explain"><summary>順位・平均との差の見方</summary><p class="sub">{e("・".join(tops))}</p><p class="sub">{note}</p></details></section>')
 
@@ -1193,6 +1196,7 @@ class Site:
         vp = Page(page.path)
         body = f"""<section class="race-head"><div><span class="eyebrow">{e(v)} · {jdate(d)} · {e(race.get('race_name', ''))}</span>
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
+{self.freshness_block(page, race.get('updated_at', ''), f'{d}-{jcd}-{rno}') if d == self.idx.get('date') and not res else ''}
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
 <nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
@@ -1240,8 +1244,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
                 "p3": (race.get("prediction") or {}).get("p3")}
         script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
-        if not res:
-            script += "<script>setTimeout(function(){location.reload()},300000)</script>"
         # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む
         import re as _re
         body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)
@@ -1329,6 +1331,20 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         badges = (f'<i class="g g-{e(g)}">{e(g)}</i>' if g else "") + (f'<i class="tz" title="{tz[1]}" aria-label="{tz[1]}">{tz[0]}</i>' if tz else "")
         return f'<a class="vt on{" done" if st == "本日終了" else ""}" href="{href}"><b>{e(name)}</b><span>{e(day)}</span><span class="st">{st}</span><span class="bd">{badges}</span></a>'
 
+    def freshness_block(self, page, revision, key=''):
+        return (f'<div class="page-freshness" id="page-freshness" data-revision="{e(revision)}" data-source="{e(page.u("freshness.json"))}" data-key="{e(key)}">'
+                f'<span data-fresh-status role="status">データ更新 {e(revision[11:16]) if revision else "取得待ち"}</span>'
+                '<button type="button">更新</button></div>')
+
+    def freshness_manifest(self):
+        date = self.idx.get('date') or self.now.strftime('%Y%m%d')
+        since = (datetime.strptime(date, '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d')
+        revisions = {f"{d}-{r['jcd']}-{r['rno']}": r.get('updated_at', '')
+                     for d, races in self.day_races.items() if d >= since
+                     for r in races if r.get('jcd') and r.get('rno')}
+        self.put('freshness.json', json.dumps({'date': date, 'updated_at': self.idx.get('updated_at', ''),
+                                             'races': revisions}, separators=(',', ':')))
+
     def index_page(self):
         page = Page("index.html")
         d = self.idx.get("date", self.now.strftime("%Y%m%d"))
@@ -1415,7 +1431,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = f"""<section class="insight-hero"><div><span class="eyebrow">BOAT RACE / DATA &amp; INSIGHT</span><h1>水面の変化を、<br>穴の根拠へ。</h1><p>機力、本人比展示、選手のコース成績。<br>買い目の理由を、ひとつの画面で。</p><div class="insight-links"><a href="{page.u('motor.html')}">モーター相場を見る →</a><a href="{page.u('targets.html')}">コース巧者を探す →</a></div></div><img src="{page.u('img/boat-v2.webp')}" width="960" height="640" alt="水面を走る白と青のボート" fetchpriority="high"></section>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h2>今日のレースと予想の根拠</h2>
-<p class="sub" style="margin:0">最終更新 {e((self.idx.get('updated_at') or '')[11:])}</p>
+{self.freshness_block(page, self.idx.get('updated_at', ''))}
 <details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 <section class="panel fav-today" id="fav-today" hidden></section>
@@ -1879,6 +1895,22 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'<p class="sub">15走以上で、全体より12ポイント以上高い場を「得意」、低い場を「苦手」にしています。予想AIにも入っています。</p></section>')
 
     def racer_pages(self):
+        cache = getattr(self, 'build_cache', None)
+        if cache:
+            today = self.idx.get('date')
+            programmes = []
+            for venue in self.idx.get('venues', []):
+                for r in venue.get('races', []):
+                    race = load_json(DATA / 'races' / today / f"{venue['jcd']}{r['rno']:02d}.json", {})
+                    programmes.append([venue['jcd'], r['rno'], r.get('deadline'), race.get('racelist')])
+            cache.phase(self, 'racers', [self.now.strftime('%Y%m%d'), today, SITE_URL, programmes],
+                        self._racer_pages, racer=True)
+        else:
+            self._racer_pages()
+
+    def _racer_pages(self):
+        from .build_cache import hydrate
+        hydrate(ROOT, 'scraper/database/races')
         from . import racer_database as rd
         database = rd.load(self.now.strftime("%Y%m%d"))
         from .championships import player_index
@@ -2551,15 +2583,28 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             return
         limit = (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d")
         self.day_races = {}
+        cache = getattr(self, 'build_cache', None)
+        past = []
+        if cache:
+            import hashlib
+            for folder in sorted(base.iterdir()):
+                if folder.is_dir() and limit <= folder.name < self.idx.get('date', ''):
+                    past.extend((str(p.relative_to(base)), hashlib.sha256(p.read_bytes()).hexdigest())
+                                for p in sorted(folder.glob('*.json')))
         for day in sorted(base.iterdir()):
             if not day.is_dir() or day.name < limit:
                 continue
-            for p in sorted(day.glob("*.json")):
-                race = load_json(p, {})
-                if race.get("racelist") or race.get("result"):
-                    self.race_page(day.name, race["jcd"], race)
-                if race.get("jcd"):
-                    self.day_races.setdefault(day.name, []).append(race)
+            races = [load_json(p, {}) for p in sorted(day.glob('*.json'))]
+            self.day_races[day.name] = [r for r in races if r.get('jcd')]
+            def render_day():
+                for race in races:
+                    if race.get('racelist') or race.get('result'):
+                        self.race_page(day.name, race['jcd'], race)
+            if cache and day.name < self.idx.get('date', ''):
+                cache.phase(self, 'races-' + day.name,
+                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past], render_day)
+            else:
+                render_day()
         # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）
         d = self.idx.get("date")
         for v in self.idx.get("venues", []):
@@ -2598,10 +2643,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
         self.put("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
 
-    def build(self):
+    def build(self, cache=None):
+        self.build_cache = cache
+        self.output_root = OUT
+        if not hasattr(self, '_streamed'):
+            self._streamed = set()
         if self.S is None:
             raise RuntimeError("course_stats.json.gz がありません")
         self.races()
+        self.freshness_manifest()
         self.results_pages()
         self.index_page()
         self.targets_page()
@@ -2628,6 +2678,18 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             f = OUT / p
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_bytes(b)
+        cache = getattr(self, 'build_cache', None)
+        if cache:
+            cache.phase(self, 'archive-assets', [self.now.strftime('%Y%m%d')],
+                        self.write_database_assets, archive=True)
+            cache.finish()
+        else:
+            self.write_database_assets()
+        print("pages", len(self.files), "images", len(self.bins))
+
+    def write_database_assets(self):
+        from .build_cache import hydrate
+        hydrate(ROOT, 'scraper/database/player_history', 'scraper/database/races')
         from .database_sources import BASE
         import gzip, shutil
         dest=OUT/'data'/'players'
@@ -2637,14 +2699,21 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                 shutil.copyfileobj(src,target)
         from .race_archive import write_assets
         write_assets(OUT,self.now.strftime('%Y%m%d'))
-        print("pages", len(self.files), "images", len(self.bins))
+        return [str(p.relative_to(OUT)).replace('\\', '/') for folder in (dest, OUT/'data'/'database'/'races')
+                for p in sorted(folder.glob('*.json'))]
 
 
 def main():
+    import argparse
+    from .build_cache import BuildCache, source_revision
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--cache-dir', help='Disposable generated public files; missing/changed inputs rebuild')
+    args = ap.parse_args()
     s = Site()
     s.stream_output=True
     s._streamed=set()
-    s.build()
+    cache = BuildCache(args.cache_dir, source_revision(ROOT)) if args.cache_dir else None
+    s.build(cache)
     s.write()
 
 

@@ -13,6 +13,8 @@ on:
       - 'scraper/motor_renewals.json'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
+      - 'scraper/build_cache.py'
+      - '.github/workflows/update.yml'
       - 'scraper/target_methods.py'
       - 'scraper/overperf.py'
       - 'scraper/season_watch.py'
@@ -51,6 +53,7 @@ on:
       - 'site/about_body.html'
       - 'site/install_body.html'
       - 'site/pwa.js'
+      - 'site/freshness.js'
       - 'site/sw.js'
       - 'site/manifest.webmanifest'
       - 'site/offline.html'
@@ -80,8 +83,16 @@ jobs:
     env:
       SITE_URL: ${{ vars.SITE_URL }}
       HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+      SITEGEN_SPARSE: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/scraper/database/player_history/
+            !/scraper/database/races/
+            !/research/
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -99,8 +110,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site/data
           git diff --cached --quiet || (git commit -q -m "data $(TZ=Asia/Tokyo date +%m/%d-%H:%M)" && (for i in 1 2 3 4; do git pull -q --rebase -X theirs && git push -q && exit 0; git rebase --abort 2>/dev/null; sleep 15; done; exit 1))
-      - name: 検索エンジン向けの静的ページを生成（トップ・レース・場・選手・狙い目・サイトマップ）
-        run: python -m scraper.sitegen
+      - name: 変更のない公開ページの再利用データを取得
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/sitegen
+          key: public-site-v1-${{ github.run_id }}
+          restore-keys: public-site-v1-
+      - name: 最新レースを優先して全ページを生成（変更済みの入力は再生成）
+        id: sitegen
+        run: python -m scraper.sitegen --cache-dir .cache/sitegen
       - name: Cloudflare Pages へ公開
         if: env.HAS_CF == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -108,3 +126,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy site --project-name=${{ vars.CF_PROJECT_NAME }} --branch=main --commit-dirty=true
+      - name: 次回の更新に使う公開ページを保存
+        if: steps.sitegen.outputs.cache_changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/sitegen
+          key: public-site-v1-${{ github.run_id }}

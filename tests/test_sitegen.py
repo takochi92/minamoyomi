@@ -33,6 +33,39 @@ def test_account_assets_refresh_cached_clients_only_when_content_changes(tmp_pat
     assert sitegen.Page('mynote.html').asset('config.js').startswith('config.js?v=')
 
 
+def test_cached_build_matches_full_build_including_player_roster_and_links(tmp_path):
+    from scraper.build_cache import BuildCache
+    first, expected = _site(tmp_path)
+    expected = dict(expected)
+    expected_bins = dict(first.bins)
+    cold = sitegen.Site(first.now)
+    cold.build(BuildCache(tmp_path / 'build-cache', 'same-inputs'))
+    assert cold.files == expected and cold.bins == expected_bins
+    warm = sitegen.Site(first.now)
+    cache = BuildCache(tmp_path / 'build-cache', 'same-inputs')
+    warm.build(cache)
+    assert cache.hits >= 1
+    assert warm.files == expected and warm.bins == expected_bins
+    assert warm.racers == cold.racers
+
+
+def test_missing_detailed_exhibition_is_explicit_and_public_revision_is_checked():
+    s = sitegen.Site.__new__(sitegen.Site)
+    s.day_means = lambda *_: {}
+    race = {'racelist': {'boats': [{'frame': 1, 'name': '確認選手'}]},
+            'before': {'boats': [{'frame': 1, 'exhibit_time': 6.80}]}}
+    html = s.oriten_block(race)
+    assert '詳細展示は未取得' in html and '6.80' in html
+    assert 'ex-data-status' in html
+    race['oriten'] = {'items': ['一周', '直線'], 'rows': {'1': [36.20, 6.90]}}
+    html = s.oriten_block(race)
+    assert '詳細展示は未取得' not in html and '36.20' in html and '直線' in html
+    fresh = s.freshness_block(sitegen.Page('race/20261026/kiryu-1.html'),
+                               '2026-10-26T09:00', '20261026-01-1')
+    assert 'data-revision="2026-10-26T09:00"' in fresh
+    assert '../../freshness.json' in fresh and 'data-key="20261026-01-1"' in fresh
+
+
 def _site(tmp_path):
     rl = parse.parse_racelist(fx.racelist_html())
     bi = parse.parse_beforeinfo(fx.beforeinfo_html())
