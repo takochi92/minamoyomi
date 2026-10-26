@@ -103,10 +103,10 @@ def flow_consistent(previous,current,a,b,*,max_backward_error=1.5,max_proposal_e
                 np.linalg.norm(back-p)<=max_backward_error and np.linalg.norm(nxt-expected)<=max_proposal_error)
 
 
-def track_actor(image_loader,start,box,frame_count,*,detector=None,max_steps=160):
+def track_actor(image_loader,start,box,frame_count,*,detector=None,max_steps=160,diagnostics=None):
     """Track an actor in both directions. This does not measure its bow or verify ID."""
     import cv2,numpy as np
-    scale=.5;initial=np.array(box,dtype=float)*scale;tracks={start:list(map(float,box))}
+    scale=.5;initial=np.array(box,dtype=float)*scale;tracks={start:list(map(float,box))};methods={start:'colour_seed'}
     def gray(index):return cv2.resize(cv2.cvtColor(image_loader(index),cv2.COLOR_BGR2GRAY),None,fx=scale,fy=scale)
     def features(image,rect):
         x,y,w,h=rect;mask=np.zeros_like(image)
@@ -117,27 +117,60 @@ def track_actor(image_loader,start,box,frame_count,*,detector=None,max_steps=160
         return cv2.goodFeaturesToTrack(image,maxCorners=40,qualityLevel=.02,minDistance=2,mask=mask)
     for direction in (-1,1):
         previous=gray(start);rect=initial.copy();points=features(previous,rect);misses=0;last_motion=None
+        consecutive_recoveries=0;total_recoveries=0;stop_reason='step_limit';last_index=start
         for step in range(1,max_steps+1):
             index=start+direction*step
-            if not 0<=index<frame_count or points is None or len(points)<4:break
-            current=gray(index)
-            moved,status,_=cv2.calcOpticalFlowPyrLK(previous,current,points,None,winSize=(25,25),maxLevel=3)
-            if moved is None or status is None:break
-            back,back_status,_=cv2.calcOpticalFlowPyrLK(current,previous,moved,None,winSize=(25,25),maxLevel=3)
-            if back is None or back_status is None:break
-            valid=(status[:,0]>0)&(back_status[:,0]>0)&(np.max(np.abs(back-points),axis=(1,2))<1.5)
-            if int(valid.sum())<4:break
-            motion=np.median((moved-points)[valid,0,:],axis=0)
-            if not .1<=float(np.linalg.norm(motion))<=35:break
-            if last_motion is not None and float(np.linalg.norm(motion-last_motion))>15:break
-            rect[:2]+=motion;points=moved[valid];last_motion=motion
-            if rect[0]<0 or rect[1]<0 or rect[0]+rect[2]>=current.shape[1] or rect[1]+rect[3]>=current.shape[0]:break
-            if detector is not None and step%6==0:
+            if not 0<=index<frame_count:stop_reason='source_boundary';break
+            current=gray(index);motion=None;valid=None;moved=None
+            if points is not None and len(points)>=4:
+                moved,status,_=cv2.calcOpticalFlowPyrLK(previous,current,points,None,winSize=(25,25),maxLevel=3)
+                if moved is not None and status is not None:
+                    back,back_status,_=cv2.calcOpticalFlowPyrLK(current,previous,moved,None,winSize=(25,25),maxLevel=3)
+                    if back is not None and back_status is not None:
+                        valid=(status[:,0]>0)&(back_status[:,0]>0)&(np.max(np.abs(back-points),axis=(1,2))<1.5)
+                        if int(valid.sum())>=4:
+                            candidate=np.median((moved-points)[valid,0,:],axis=0)
+                            if (.1<=float(np.linalg.norm(candidate))<=35 and
+                                    (last_motion is None or float(np.linalg.norm(candidate-last_motion))<=15)):
+                                motion=candidate
+            method='optical_flow'
+            if motion is None:
+                if detector is None:stop_reason='flow_lost_no_detector';break
+                if consecutive_recoveries>=3 or total_recoveries>=12:stop_reason='recovery_limit';break
+                expected=rect.copy()
+                if last_motion is not None:expected[:2]+=last_motion
+                refreshed=detector(image_loader(index),(expected/scale).tolist())
+                if refreshed is None:stop_reason='no_nearby_detection_after_flow_loss';break
+                if isinstance(refreshed,dict):stop_reason='hull_detection_required_for_recovery';break
+                proposed=np.asarray(refreshed,dtype=float)*scale
+                if proposed.shape!=(4,) or not np.isfinite(proposed).all() or min(proposed[2:])<=0:
+                    stop_reason='invalid_recovery_detection';break
+                # A nearby detector observation may recover this actual frame.
+                # No gap is bridged and no predicted rectangle becomes evidence.
+                centre=proposed[:2]+proposed[2:]/2;expected_centre=expected[:2]+expected[2:]/2
+                if (float(np.linalg.norm(centre-expected_centre))>25 or
+                        np.any(proposed[2:]/rect[2:]<.5) or np.any(proposed[2:]/rect[2:]>2)):
+                    stop_reason='recovery_jump_or_size_change';break
+                old_centre=rect[:2]+rect[2:]/2
+                last_motion=centre-old_centre;rect=proposed;points=features(current,rect)
+                consecutive_recoveries+=1;total_recoveries+=1;method='detector_recovery'
+            else:
+                rect[:2]+=motion;points=moved[valid];last_motion=motion;consecutive_recoveries=0
+            if rect[0]<0 or rect[1]<0 or rect[0]+rect[2]>=current.shape[1] or rect[1]+rect[3]>=current.shape[0]:
+                stop_reason='frame_edge';break
+            if detector is not None and step%6==0 and method=='optical_flow':
                 refreshed=detector(image_loader(index),(rect/scale).tolist())
                 if refreshed is not None:
-                    rect=np.array(refreshed)*scale;points=features(current,rect);misses=0
+                    if isinstance(refreshed,dict):
+                        if refreshed.get('support')!='observed_rider':stop_reason='invalid_flow_support';break
+                        method='rider_supported_flow'
+                    else:rect=np.array(refreshed)*scale
+                    points=features(current,rect);misses=0
                 else:
                     misses+=1
-                    if misses>=4:break
-            tracks[index]=(rect/scale).tolist();previous=current
-    return [{'frame':i,'box':tracks[i]} for i in sorted(tracks)]
+                    if misses>=4:stop_reason='periodic_detector_missing';break
+            tracks[index]=(rect/scale).tolist();methods[index]=method;previous=current;last_index=index
+        if diagnostics is not None:
+            diagnostics.setdefault('directions',[]).append({'direction':direction,'last_verified_frame':last_index,
+                'stop_reason':stop_reason,'detector_recovery_frames':total_recoveries})
+    return [{'frame':i,'box':tracks[i],'tracking_source':methods[i]} for i in sorted(tracks)]

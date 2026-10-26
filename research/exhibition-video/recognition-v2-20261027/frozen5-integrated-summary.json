@@ -1,0 +1,89 @@
+{
+  "trial": "20261026-04-5",
+  "scope": "first integrated local-video run; no independent timing truth",
+  "input_report_sha256": "e5a65ba28ebc2d0b240a17a043276b00a6eab9f609b4992a959c1fcd5ecd7f95",
+  "source_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+  "frame_binding": {
+    "frame_export_sha256": "e8a94a1e97e3c8b26fb646e7f6cd07b2f0ff41bdb4ba7820dd40953b44ecbc91",
+    "source_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+    "time_base": [
+      1,
+      90000
+    ],
+    "first_pts": 5705520347,
+    "frame_count": 1080
+  },
+  "total_elapsed_seconds": 897.14,
+  "gate_local_elapsed_seconds": 318.25,
+  "continuous_tracking_elapsed_seconds": 379.39,
+  "learned_bow_elapsed_seconds": 15.28,
+  "gate_local_complete_candidates": 1,
+  "continuous_complete_candidates": 2,
+  "results": [
+    {
+      "boat": 1,
+      "status": "rejected",
+      "reasons": [
+        "missing_A",
+        "missing_B"
+      ],
+      "entry_video_seconds": null,
+      "exit_video_seconds": null
+    },
+    {
+      "boat": 2,
+      "status": "rejected",
+      "reasons": [
+        "missing_A",
+        "missing_B",
+        "missing_C"
+      ],
+      "entry_video_seconds": null,
+      "exit_video_seconds": null
+    },
+    {
+      "boat": 3,
+      "status": "rejected",
+      "reasons": [
+        "missing_B"
+      ],
+      "entry_video_seconds": null,
+      "exit_video_seconds": null
+    },
+    {
+      "boat": 4,
+      "status": "automatic_candidate",
+      "reasons": [],
+      "entry_video_seconds": 1.9826096136312117,
+      "exit_video_seconds": 1.6496385046339128
+    },
+    {
+      "boat": 5,
+      "status": "rejected",
+      "reasons": [
+        "missing_A"
+      ],
+      "entry_video_seconds": null,
+      "exit_video_seconds": null
+    },
+    {
+      "boat": 6,
+      "status": "automatic_candidate",
+      "reasons": [],
+      "entry_video_seconds": 2.444753633957589,
+      "exit_video_seconds": 1.582489890686702
+    }
+  ],
+  "qualitative_identity_error": {
+    "predicted_boat": 1,
+    "visually_observed_boat": 2,
+    "gate": "B",
+    "frame": 310,
+    "scope": "single assistant source-image inspection; not independent measurement ground truth"
+  },
+  "after_trial_used_for_association_fix": true,
+  "independent_timing_truth_available": false,
+  "publication_ready": false,
+  "prediction_used": false,
+  "code_snapshot_sha256_record": "five-race-trial-settings.json"
+}

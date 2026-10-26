@@ -71,3 +71,19 @@ def test_actor_tracking_moves_in_both_directions_and_stops_when_features_disappe
     for row in rows:assert abs(row['box'][0]-(50+2*row['frame']))<3
     flat=np.zeros_like(frames[0])+60
     assert len(track_actor(lambda i:flat,4,[58,60,40,40],9,max_steps=4))==1
+
+
+def test_detector_recovery_is_bounded_and_never_invents_skipped_frames():
+    cv2=pytest.importorskip('cv2');np=pytest.importorskip('numpy')
+    if not hasattr(cv2,'calcOpticalFlowPyrLK'):pytest.skip('optional OpenCV unavailable')
+    flat=np.zeros((160,200,3),np.uint8)+60
+    diagnostics={}
+    rows=track_actor(lambda i:flat,4,[58,60,40,40],9,max_steps=4,detector=lambda image,box:box,diagnostics=diagnostics)
+    assert [r['frame'] for r in rows]==list(range(1,8))
+    assert sum(r['tracking_source']=='detector_recovery' for r in rows)==6
+    assert {r['stop_reason'] for r in diagnostics['directions']}=={'recovery_limit'}
+    rows=track_actor(lambda i:flat,4,[58,60,40,40],9,max_steps=4,detector=lambda image,box:[150,60,40,40])
+    assert len(rows)==1
+    rows=track_actor(lambda i:flat,4,[58,60,40,40],9,max_steps=4,
+                     detector=lambda image,box:{'box':box,'support':'observed_rider'})
+    assert len(rows)==1  # Rider support cannot fabricate a missing flow observation.

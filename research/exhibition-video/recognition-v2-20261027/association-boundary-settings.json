@@ -1,0 +1,14 @@
+{
+  "scope": "development-only connection of adjacent real observations after 5R diagnosis",
+  "target": [
+    5,
+    1
+  ],
+  "code_sha256_lf": {
+    "actor_track_review": "fdb6c8e48f8853916661baa907615ca301d588bded5df31d7f83c0794ca31b87",
+    "boat_tracking": "5a07f11362ee18619f5ea5122e1676a26c5519f7f60f8f97d4e846d93f27e0b4",
+    "measure_tracked_bows": "8dd984d09f2b87539480a8636146f37a38e5eee4406580c5112ab66f6e1f0a36"
+  },
+  "publication_ready": false,
+  "prediction_used": false
+}

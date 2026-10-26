@@ -1,0 +1,22 @@
+{
+  "scope": "association fix after 5R diagnosis; not a fresh heldout model",
+  "targets": [
+    [
+      5,
+      1
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "code_sha256_lf": {
+    "actor_track_review": "9bf1eea7df57d204cb0e7fc9482e70396dff85a816a9fc2ce07551c11e79ea37",
+    "boat_tracking": "5a07f11362ee18619f5ea5122e1676a26c5519f7f60f8f97d4e846d93f27e0b4",
+    "measure_tracked_bows": "8dd984d09f2b87539480a8636146f37a38e5eee4406580c5112ab66f6e1f0a36",
+    "bow_keypoint": "a6131f4dc21c2ac337e7aaa8eb49a42c4c9359b43ebf94bb784262dcade33cb7",
+    "frame_binding": "6576b1a09f0435e871c73fbcd99f3b95d02056ad022400b54f7834a56ced4ca7"
+  },
+  "publication_ready": false,
+  "prediction_used": false
+}
