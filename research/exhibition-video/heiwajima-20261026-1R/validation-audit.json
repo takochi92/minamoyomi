@@ -1,0 +1,177 @@
+{
+  "kind": "turn-validation-audit-v1",
+  "source_sha256": "d94ea6d4cee6c5cb632a506eb93acc290bbb0fac20d8ab5087d1de6ebbdc41a9",
+  "frame_count": 780,
+  "pts_strict_and_continuous": true,
+  "duplicate_decoded_frames": 0,
+  "rows": [
+    {
+      "boat": 1,
+      "gate_sensitivity": {
+        "A": {
+          "status": "bounded_under_assumption",
+          "time": 56674.58314977324,
+          "low": 56674.57090487528,
+          "high": 56674.5953946712,
+          "assumed_position_error_px": 3
+        },
+        "B": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "C": {
+          "status": "bounded_under_assumption",
+          "time": 56678.234519618054,
+          "low": 56678.21576961806,
+          "high": 56678.25326961806,
+          "assumed_position_error_px": 3
+        }
+      },
+      "reasons": [
+        "B:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    },
+    {
+      "boat": 2,
+      "gate_sensitivity": {
+        "A": {
+          "status": "bounded_under_assumption",
+          "time": 56677.12432430556,
+          "low": 56677.10932430556,
+          "high": 56677.13932430556,
+          "assumed_position_error_px": 3
+        },
+        "B": {
+          "status": "bounded_under_assumption",
+          "time": 56679.21758104575,
+          "low": 56679.1822869281,
+          "high": 56679.252875163394,
+          "assumed_position_error_px": 3
+        },
+        "C": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        }
+      },
+      "reasons": [
+        "C:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    },
+    {
+      "boat": 3,
+      "gate_sensitivity": {
+        "A": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "B": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "C": {
+          "status": "bounded_under_assumption",
+          "time": 56685.57402222222,
+          "low": 56685.55802222223,
+          "high": 56685.590022222226,
+          "assumed_position_error_px": 3
+        }
+      },
+      "reasons": [
+        "A:position_error_can_change_bracketing",
+        "B:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    },
+    {
+      "boat": 4,
+      "gate_sensitivity": {
+        "A": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "B": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "C": {
+          "status": "bounded_under_assumption",
+          "time": 56689.36612407407,
+          "low": 56689.34390185185,
+          "high": 56689.38834629629,
+          "assumed_position_error_px": 3
+        }
+      },
+      "reasons": [
+        "A:position_error_can_change_bracketing",
+        "B:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    },
+    {
+      "boat": 5,
+      "gate_sensitivity": {
+        "A": {
+          "status": "bounded_under_assumption",
+          "time": 56688.35715416667,
+          "low": 56688.3404875,
+          "high": 56688.37382083333,
+          "assumed_position_error_px": 3
+        },
+        "B": {
+          "status": "bounded_under_assumption",
+          "time": 56690.357188888884,
+          "low": 56690.31718888889,
+          "high": 56690.397188888885,
+          "assumed_position_error_px": 3
+        },
+        "C": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        }
+      },
+      "reasons": [
+        "C:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    },
+    {
+      "boat": 6,
+      "gate_sensitivity": {
+        "A": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "B": {
+          "status": "remeasure",
+          "reason": "position_error_can_change_bracketing"
+        },
+        "C": {
+          "status": "bounded_under_assumption",
+          "time": 56695.19285295139,
+          "low": 56695.17410295139,
+          "high": 56695.211602951385,
+          "assumed_position_error_px": 3
+        }
+      },
+      "reasons": [
+        "A:position_error_can_change_bracketing",
+        "B:position_error_can_change_bracketing"
+      ],
+      "status": "remeasure"
+    }
+  ],
+  "independent_reviews": 0,
+  "heldout_races": 0,
+  "heldout_dates": 0,
+  "blockers": [
+    "independent_hull_review_not_complete",
+    "real_time_scale_not_verified",
+    "heldout_races_not_complete",
+    "crossings_need_remeasurement"
+  ],
+  "publication_ready": false,
+  "prediction_used": false,
+  "note": "感度分析は実測誤差ではない。この監査単体は公開を許可しない。"
+}

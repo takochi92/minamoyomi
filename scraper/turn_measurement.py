@@ -14,6 +14,7 @@ import re
 from datetime import datetime, timezone
 
 METHOD = "heiwajima-hull-gates-v1"
+BOW_METHOD = "heiwajima-bow-gates-v2"
 # Provisional engineering limits; empirical timing accuracy is NOT established.
 MAX_PAIR_GAP = .12
 MAX_ANCHOR_DRIFT_PX = 2
@@ -100,8 +101,9 @@ def assess_record(record, *, release_enabled=False):
     release_enabled is a deployment decision outside the submitted record, and
     must remain false until independent-race accuracy and ingest are validated.
     """
-    if record.get("schema") != 2 or record.get("method") != METHOD:
+    if record.get("schema") != 2 or record.get("method") not in (METHOD, BOW_METHOD):
         raise ValueError("unsupported_measurement_schema")
+    bow_only = record['method'] == BOW_METHOD
     if record.get("venue") != "04" or record.get("turn") != "1-mark":
         raise ValueError("heiwajima_first_mark_only")
     evidence = record["evidence"]
@@ -162,11 +164,11 @@ def assess_record(record, *, release_enabled=False):
                         raise ValueError("hull_review_missing")
                     # Compare endpoints individually: matching midpoints alone
                     # would allow two wrong but symmetrical annotations.
-                    for endpoint in ("bow", "stern"):
+                    for endpoint in (("bow",) if bow_only else ("bow", "stern")):
                         if math.dist(_xy(labels[0].get(endpoint), size),
                                      _xy(labels[1].get(endpoint), size)) > MAX_REVIEW_DISAGREEMENT_PX:
                             raise ValueError("reviewers_disagree")
-                    centres = [hull_centre(label, size) for label in labels]
+                    centres = [_xy(label.get('bow'), size) if bow_only else hull_centre(label, size) for label in labels]
                     x, y = ((centres[0][i] + centres[1][i]) / 2 for i in (0, 1))
                     samples.append({"time": _time(frame, source), "x": x, "y": y})
                 gap = samples[1]["time"] - samples[0]["time"]
@@ -191,11 +193,12 @@ def assess_record(record, *, release_enabled=False):
             row["entry_seconds"] = round(events["B"]["time"] - events["A"]["time"], 1)
             row["exit_seconds"] = round(events["C"]["time"] - events["B"]["time"], 1)
         rows.append(row)
-    return {"schema": 2, "method": METHOD, "race_id": record.get("race_id"),
+    return {"schema": 2, "method": record['method'], "race_id": record.get("race_id"),
             "evidence_digest": fingerprint, "rows": rows,
             "publication_ready": bool(release_enabled and predeadline and source.get('origin_verified') is True
                                       and source.get('editing_speed_verified') is True and all(not r["reasons"] for r in rows)),
             "predeadline": predeadline, "time_label": "映像内の区間秒数",
+            "reference_point": "bow_tip" if bow_only else "bow_stern_midpoint",
             "prediction_used": False, "release_enabled": release_enabled}
 
 
@@ -222,6 +225,7 @@ def render_panel(report, names=None, *, preview=False):
     if not preview and not report.get("publication_ready"):
         return ""
     names = names or {}
+    point_text = '艇首の先端' if report.get('method') == BOW_METHOD else '艇首と艇尾の中点'
     rows = []
     for row in report["rows"]:
         valid = row["status"] == "checked_reference"
@@ -236,5 +240,5 @@ def render_panel(report, names=None, *, preview=False):
             '<p>全艇共通の線で、入りと出口を比較</p>'
             '<table><thead><tr><th>艇・選手</th><th>入り<span>秒</span></th><th>出口<span>秒</span></th><th>確認</th></tr></thead>'
             f'<tbody>{"".join(rows)}</tbody></table>'
-            '<details><summary>測り方と注意点</summary><p>艇首と艇尾の中点で、進入線→マーク横線、マーク横線→出口線を計測。'
+            f'<details><summary>測り方と注意点</summary><p>{point_text}で、進入線→マーク横線、マーク横線→出口線を計測。'
             '映像内の秒数で、実距離・出足順位ではありません。測れない艇は数値を出しません。</p></details></section>')

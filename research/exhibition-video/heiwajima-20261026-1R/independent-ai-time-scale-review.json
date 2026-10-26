@@ -1,0 +1,92 @@
+{
+  "reviewer": "independent timing-scale reviewer / timing_scale_audit",
+  "method": [
+    "Only the original local TS, ffmpeg/ffprobe and PIL were used. No prediction labels, research labels, other agent analysis, external data, or source modifications were used.",
+    "Inspected overview sequences spanning live 176–204 s and replay 240–276 s, then decoded from the beginning with output-side -ss and fps=4 to inspect quarter-second turn sequences and full-resolution boat/buoy crops. Quarter-second sample labels are nominal video offsets, not measured event timestamps.",
+    "Independently enumerated all decoded best_effort_timestamp_time values with ffprobe. Video-relative time is decoded PTS minus 56426.670522 seconds; decoded PTS is not video-relative time.",
+    "Input-side -ss single-frame extraction was tested against full decode/output-side -ss and rejected for precise event timing because several different requested times returned the same frame."
+  ],
+  "evidence": {
+    "video_metadata": {
+      "width": 854,
+      "height": 480,
+      "nominal_fps": 30,
+      "time_base": "1/90000",
+      "duration_seconds": 342
+    },
+    "decoded_pts": {
+      "first_decoded_pts_seconds": 56426.670522,
+      "last_decoded_pts_seconds": 56768.637189,
+      "frame_count": 10260,
+      "median_frame_step_seconds": 0.03333299999940209,
+      "large_gaps_gt_0_05": 0
+    },
+    "visual_artifacts": [
+      "outputs/timing-scale-audit/exact-live-180-contact.jpg",
+      "outputs/timing-scale-audit/exact-replay-247-contact.jpg",
+      "outputs/timing-scale-audit/exact-live-198-contact.jpg",
+      "outputs/timing-scale-audit/exact-replay-264-contact.jpg",
+      "outputs/timing-scale-audit/boat-buoy-crops.jpg"
+    ],
+    "observations": [
+      "The same six-boat ordering and recognizable white-to-green sequence turn around the same end buoy, viewed from substantially opposing cameras.",
+      "The boom extends right from the buoy in live footage and left from the buoy in replay. Thus matching screen position, projected closest approach, or apparent heading is not automatically the same physical event.",
+      "First-boat near-buoy phase and last-boat near-buoy phase are roughly 18 seconds apart in both sequences. This is consistent with similar playback duration, but is not a measurement that establishes real-world seconds.",
+      "The metadata has continuous ~1/30-second decoded PTS progression, but this establishes presentation timing only; replay production may retime real-world motion while preserving 30fps PTS."
+    ]
+  },
+  "comparisons": [
+    {
+      "type": "candidate phase correspondence only; not 0.1-second event matching",
+      "boat": "first / white",
+      "live_nominal_video_phase_seconds": [
+        180.5,
+        182.0
+      ],
+      "replay_nominal_video_phase_seconds": [
+        248.5,
+        250.0
+      ],
+      "physical_event_verified": false,
+      "reason": "Boat passes near buoy, but projected buoy alignment and nearest screen distance differ with camera viewpoint; spray and bow visibility differ."
+    },
+    {
+      "type": "candidate phase correspondence only; not 0.1-second event matching",
+      "boat": "last / green",
+      "live_nominal_video_phase_seconds": [
+        198.5,
+        200.0
+      ],
+      "replay_nominal_video_phase_seconds": [
+        266.0,
+        267.5
+      ],
+      "physical_event_verified": false,
+      "reason": "Same last-boat turning phase is identifiable, but no common sharp camera-independent contact, crossing, or flash event was resolved."
+    },
+    {
+      "type": "coarse interval consistency",
+      "first_to_last_live_phase_center_interval_seconds": 18.0,
+      "first_to_last_replay_phase_center_interval_seconds": 17.5,
+      "replay_duration_over_live_duration_illustrative": 0.9722,
+      "validity": "Illustrative approximate phase comparison only. Uncalibrated event-phase uncertainty dominates. It does not support distinguishing small speed changes or claiming an exact 1x ratio."
+    },
+    {
+      "type": "seek control",
+      "input_side_ss_request_range_seconds": [
+        180.5,
+        182.0
+      ],
+      "observed": "Single-frame extractions were effectively identical across multiple quarter-second requests; full decode/output-side seek produced continuously changing positions.",
+      "consequence": "Input seek request times alone cannot certify selected frame time for this TS. Those input-seek images were excluded from the scale conclusion."
+    }
+  ],
+  "real_time_scale_verified": false,
+  "limitations": [
+    "No pair of sharp, camera-independent physical events was matched at 0.1-second precision, much less multiple pairs across the turn. Therefore replay-to-live mapping and exact 1x speed are not proven.",
+    "There is no independently observed wall clock, acquisition-time reference, or original camera timecode. Even exact live/replay presentation scale agreement would not by itself establish absolute real-time acquisition.",
+    "The quarter-second visual audit is intentionally coarse. It supports similar broad duration and event ordering, not numerical 0.1-second claims.",
+    "Steady 30fps, regular PTS, and plausible visual speed cannot exclude slow motion, frame interpolation, or other replay retiming. No assertion that replay is slowed is justified either.",
+    "Opposite perspective, spray occlusion, low spatial resolution, and lack of a calibrated common water-plane geometry prevent treating identical projected alignment as an identical real event."
+  ]
+}

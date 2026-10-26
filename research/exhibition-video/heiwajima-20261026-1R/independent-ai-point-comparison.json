@@ -1,0 +1,249 @@
+{
+  "independent_ai_reviews_received": 1,
+  "fully_validated_boats": 0,
+  "reviewed_frames": 36,
+  "unknown_sterns": 13,
+  "point_comparison": [
+    {
+      "file": "frame-000087.png",
+      "boat": 1,
+      "bow_difference_hd_px": 10.88,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000090.png",
+      "boat": 1,
+      "bow_difference_hd_px": 7.79,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000139.png",
+      "boat": 1,
+      "bow_difference_hd_px": 8.77,
+      "stern_difference_hd_px": 13.99,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000142.png",
+      "boat": 1,
+      "bow_difference_hd_px": 22.1,
+      "stern_difference_hd_px": 22.07,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000163.png",
+      "boat": 2,
+      "bow_difference_hd_px": 29.08,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000166.png",
+      "boat": 2,
+      "bow_difference_hd_px": 16.31,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000196.png",
+      "boat": 1,
+      "bow_difference_hd_px": 4.08,
+      "stern_difference_hd_px": 16.87,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000199.png",
+      "boat": 1,
+      "bow_difference_hd_px": 10.26,
+      "stern_difference_hd_px": 6.02,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000225.png",
+      "boat": 2,
+      "bow_difference_hd_px": 13.34,
+      "stern_difference_hd_px": 16.93,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000228.png",
+      "boat": 2,
+      "bow_difference_hd_px": 19.32,
+      "stern_difference_hd_px": 21.0,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000280.png",
+      "boat": 2,
+      "bow_difference_hd_px": 16.29,
+      "stern_difference_hd_px": 19.91,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000283.png",
+      "boat": 2,
+      "bow_difference_hd_px": 35.25,
+      "stern_difference_hd_px": 29.4,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000301.png",
+      "boat": 3,
+      "bow_difference_hd_px": 20.96,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000302.png",
+      "boat": 3,
+      "bow_difference_hd_px": 20.39,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000354.png",
+      "boat": 3,
+      "bow_difference_hd_px": 4.84,
+      "stern_difference_hd_px": 12.89,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000357.png",
+      "boat": 3,
+      "bow_difference_hd_px": 8.91,
+      "stern_difference_hd_px": 13.56,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000416.png",
+      "boat": 3,
+      "bow_difference_hd_px": 5.43,
+      "stern_difference_hd_px": 18.36,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000417.png",
+      "boat": 4,
+      "bow_difference_hd_px": 23.49,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000418.png",
+      "boat": 3,
+      "bow_difference_hd_px": 4.82,
+      "stern_difference_hd_px": 16.38,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000420.png",
+      "boat": 4,
+      "bow_difference_hd_px": 12.39,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000479.png",
+      "boat": 4,
+      "bow_difference_hd_px": 5.88,
+      "stern_difference_hd_px": 18.64,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000482.png",
+      "boat": 4,
+      "bow_difference_hd_px": 20.23,
+      "stern_difference_hd_px": 23.38,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000500.png",
+      "boat": 5,
+      "bow_difference_hd_px": 7.95,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000503.png",
+      "boat": 5,
+      "bow_difference_hd_px": 11.29,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000529.png",
+      "boat": 4,
+      "bow_difference_hd_px": 7.52,
+      "stern_difference_hd_px": 15.29,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000532.png",
+      "boat": 4,
+      "bow_difference_hd_px": 20.35,
+      "stern_difference_hd_px": 13.27,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000559.png",
+      "boat": 5,
+      "bow_difference_hd_px": 7.85,
+      "stern_difference_hd_px": 26.9,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000562.png",
+      "boat": 5,
+      "bow_difference_hd_px": 7.23,
+      "stern_difference_hd_px": 23.23,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000590.png",
+      "boat": 6,
+      "bow_difference_hd_px": 14.89,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000593.png",
+      "boat": 6,
+      "bow_difference_hd_px": 21.3,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000618.png",
+      "boat": 5,
+      "bow_difference_hd_px": 20.18,
+      "stern_difference_hd_px": 16.09,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000621.png",
+      "boat": 5,
+      "bow_difference_hd_px": 27.7,
+      "stern_difference_hd_px": 19.17,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000652.png",
+      "boat": 6,
+      "bow_difference_hd_px": 21.69,
+      "stern_difference_hd_px": 27.4,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000655.png",
+      "boat": 6,
+      "bow_difference_hd_px": 35.33,
+      "stern_difference_hd_px": 37.7,
+      "status": "point_locations_differ"
+    },
+    {
+      "file": "frame-000704.png",
+      "boat": 6,
+      "bow_difference_hd_px": 19.46,
+      "status": "stern_not_visible_in_blind_review"
+    },
+    {
+      "file": "frame-000707.png",
+      "boat": 6,
+      "bow_difference_hd_px": 22.91,
+      "stern_difference_hd_px": 13.89,
+      "status": "point_locations_differ"
+    }
+  ],
+  "publication_ready": false,
+  "note": "主担当の480p仮指定をHDへ変換して比較。AI間一致は人間の基準ラベルや実走時間の校正ではない。"
+}

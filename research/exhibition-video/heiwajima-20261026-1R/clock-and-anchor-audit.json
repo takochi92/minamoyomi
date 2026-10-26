@@ -1,0 +1,867 @@
+{
+  "frame_count": 780,
+  "time_base": [
+    1,
+    90000
+  ],
+  "pts_step_min": 3000,
+  "pts_step_max": 3000,
+  "strictly_increasing": true,
+  "duplicate_decoded_images": 0,
+  "three_anchors_tested": {
+    "shore": [
+      455,
+      25,
+      485,
+      42
+    ],
+    "boom_end": [
+      110,
+      238,
+      150,
+      253
+    ],
+    "mark": [
+      485,
+      226,
+      505,
+      251
+    ]
+  },
+  "camera_results": [
+    {
+      "frame": 87,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.927,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 11.772,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 16.961,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 90,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.392,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 14.671,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 18.516,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 139,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.348,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 14.299,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 25.145,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 142,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.348,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 16.319,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 25.366,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 163,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.859,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 21.676,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 29.059,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 166,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.771,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 20.977,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 30.132,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 196,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.601,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 21.714,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 1,
+          "rms": 33.205,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 199,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.601,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 18.284,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 1,
+          "rms": 34.327,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 225,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.987,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 22.722,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": -1,
+          "dy": 0,
+          "rms": 39.357,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 228,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.041,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 20.823,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": -1,
+          "dy": 0,
+          "rms": 37.718,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 280,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.942,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -1,
+          "dy": 1,
+          "rms": 13.171,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 42.791,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 283,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.942,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -1,
+          "dy": 1,
+          "rms": 14.41,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 44.908,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 301,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.942,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -1,
+          "dy": 1,
+          "rms": 13.528,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 47.714,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 302,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 5.942,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -1,
+          "dy": 1,
+          "rms": 13.663,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 47.945,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 354,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.636,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 1,
+          "rms": 22.719,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": -1,
+          "rms": 53.686,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 357,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.303,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 2,
+          "rms": 23.125,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 0,
+          "dy": -1,
+          "rms": 53.249,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 416,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.085,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 1,
+          "rms": 23.224,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 56.359,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 417,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.085,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 1,
+          "rms": 23.147,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 56.49,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 418,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.085,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 1,
+          "rms": 22.501,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 56.416,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 420,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.085,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -2,
+          "dy": 1,
+          "rms": 22.354,
+          "within_2px": true
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 56.577,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 479,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.786,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -3,
+          "dy": 2,
+          "rms": 17.213,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -5,
+          "dy": 0,
+          "rms": 55.046,
+          "within_2px": false
+        }
+      }
+    },
+    {
+      "frame": 482,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.811,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -3,
+          "dy": 2,
+          "rms": 16.711,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -5,
+          "dy": 0,
+          "rms": 57.236,
+          "within_2px": false
+        }
+      }
+    },
+    {
+      "frame": 500,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.811,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -3,
+          "dy": 2,
+          "rms": 14.8,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -5,
+          "dy": 1,
+          "rms": 57.978,
+          "within_2px": false
+        }
+      }
+    },
+    {
+      "frame": 503,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.811,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -3,
+          "dy": 2,
+          "rms": 16.085,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -5,
+          "dy": 1,
+          "rms": 57.61,
+          "within_2px": false
+        }
+      }
+    },
+    {
+      "frame": 529,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.956,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 17.802,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 1,
+          "rms": 54.647,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 532,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.956,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 18.585,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 1,
+          "rms": 54.709,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 559,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.956,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 14.482,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 53.714,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 562,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.956,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 14.598,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 0,
+          "dy": 1,
+          "rms": 52.657,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 590,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.958,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 14.767,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 2,
+          "dy": 0,
+          "rms": 53.492,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 593,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.958,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 16.075,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 53.309,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 618,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.958,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 1,
+          "rms": 24.198,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 52.062,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 621,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 6.958,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 1,
+          "rms": 23.243,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 1,
+          "dy": 0,
+          "rms": 52.401,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 652,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.391,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 2,
+          "rms": 22.058,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 0,
+          "dy": -1,
+          "rms": 50.351,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 655,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.426,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 1,
+          "rms": 22.5,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": 0,
+          "dy": -1,
+          "rms": 49.721,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 704,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 8.104,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 1,
+          "rms": 16.416,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -2,
+          "dy": 0,
+          "rms": 49.525,
+          "within_2px": true
+        }
+      }
+    },
+    {
+      "frame": 707,
+      "anchors": {
+        "shore": {
+          "dx": 0,
+          "dy": 0,
+          "rms": 7.934,
+          "within_2px": true
+        },
+        "boom_end": {
+          "dx": -4,
+          "dy": 1,
+          "rms": 16.751,
+          "within_2px": false
+        },
+        "mark": {
+          "dx": -1,
+          "dy": 1,
+          "rms": 47.648,
+          "within_2px": true
+        }
+      }
+    }
+  ],
+  "camera_pass_count": 20,
+  "camera_test_count": 36,
+  "publication_ready": false,
+  "note": "固定物の局所画像照合。物理距離校正、独立ラベル検証、未使用レース評価を代替しない。",
+  "interpretation": "浮体・岸の照合候補の画像安定性。浮体の運動・遮蔽・カメラ移動の区別は未完了。",
+  "floating_objects_are_not_fixed_camera_anchors": true
+}

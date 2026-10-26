@@ -1,0 +1,484 @@
+{
+  "reviewer": "independent-ai-blind-pass",
+  "size": [
+    1920,
+    1080
+  ],
+  "frames": [
+    {
+      "file": "frame-000087.png",
+      "boat": 1,
+      "bow": [
+        779,
+        798
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000090.png",
+      "boat": 1,
+      "bow": [
+        831,
+        788
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000139.png",
+      "boat": 1,
+      "bow": [
+        1156,
+        544
+      ],
+      "stern": [
+        1243,
+        574
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000142.png",
+      "boat": 1,
+      "bow": [
+        1150,
+        530
+      ],
+      "stern": [
+        1241,
+        564
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000163.png",
+      "boat": 2,
+      "bow": [
+        762,
+        803
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000166.png",
+      "boat": 2,
+      "bow": [
+        813,
+        788
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000196.png",
+      "boat": 1,
+      "bow": [
+        709,
+        374
+      ],
+      "stern": [
+        797,
+        385
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000199.png",
+      "boat": 1,
+      "bow": [
+        672,
+        369
+      ],
+      "stern": [
+        764,
+        379
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000225.png",
+      "boat": 2,
+      "bow": [
+        1158,
+        538
+      ],
+      "stern": [
+        1247,
+        564
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000228.png",
+      "boat": 2,
+      "bow": [
+        1147,
+        527
+      ],
+      "stern": [
+        1243,
+        549
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000280.png",
+      "boat": 2,
+      "bow": [
+        692,
+        374
+      ],
+      "stern": [
+        785,
+        388
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000283.png",
+      "boat": 2,
+      "bow": [
+        653,
+        369
+      ],
+      "stern": [
+        744,
+        382
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000301.png",
+      "boat": 3,
+      "bow": [
+        768,
+        795
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000302.png",
+      "boat": 3,
+      "bow": [
+        785,
+        793
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000354.png",
+      "boat": 3,
+      "bow": [
+        1171,
+        529
+      ],
+      "stern": [
+        1258,
+        563
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000357.png",
+      "boat": 3,
+      "bow": [
+        1170,
+        516
+      ],
+      "stern": [
+        1259,
+        550
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000416.png",
+      "boat": 3,
+      "bow": [
+        710,
+        360
+      ],
+      "stern": [
+        798,
+        366
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000417.png",
+      "boat": 4,
+      "bow": [
+        766,
+        815
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000418.png",
+      "boat": 3,
+      "bow": [
+        684,
+        355
+      ],
+      "stern": [
+        771,
+        365
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000420.png",
+      "boat": 4,
+      "bow": [
+        814,
+        800
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000479.png",
+      "boat": 4,
+      "bow": [
+        1134,
+        535
+      ],
+      "stern": [
+        1226,
+        560
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000482.png",
+      "boat": 4,
+      "bow": [
+        1122,
+        522
+      ],
+      "stern": [
+        1214,
+        545
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000500.png",
+      "boat": 5,
+      "bow": [
+        779,
+        811
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000503.png",
+      "boat": 5,
+      "bow": [
+        827,
+        798
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000529.png",
+      "boat": 4,
+      "bow": [
+        713,
+        391
+      ],
+      "stern": [
+        806,
+        396
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000532.png",
+      "boat": 4,
+      "bow": [
+        676,
+        386
+      ],
+      "stern": [
+        770,
+        394
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000559.png",
+      "boat": 5,
+      "bow": [
+        1186,
+        537
+      ],
+      "stern": [
+        1282,
+        565
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000562.png",
+      "boat": 5,
+      "bow": [
+        1176,
+        525
+      ],
+      "stern": [
+        1270,
+        547
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000590.png",
+      "boat": 6,
+      "bow": [
+        781,
+        832
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000593.png",
+      "boat": 6,
+      "bow": [
+        821,
+        820
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Oblique rear view. Bow outer contour marked by eye. Actual hull stern obscured by motor/rider/spray; unknown, not extrapolated from visible side corner."
+    },
+    {
+      "file": "frame-000618.png",
+      "boat": 5,
+      "bow": [
+        715,
+        374
+      ],
+      "stern": [
+        806,
+        378
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000621.png",
+      "boat": 5,
+      "bow": [
+        676,
+        371
+      ],
+      "stern": [
+        767,
+        375
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000652.png",
+      "boat": 6,
+      "bow": [
+        1148,
+        536
+      ],
+      "stern": [
+        1243,
+        571
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000655.png",
+      "boat": 6,
+      "bow": [
+        1136,
+        522
+      ],
+      "stern": [
+        1233,
+        557
+      ],
+      "obstructed": false,
+      "notes": "Bow tip and visible aft lower hull corner marked by eye. Stern is the visible hull boundary under/in front of motor, excluding motor and spray; softened contour, approximately 5-10 px uncertainty."
+    },
+    {
+      "file": "frame-000704.png",
+      "boat": 6,
+      "bow": [
+        707,
+        386
+      ],
+      "stern": null,
+      "obstructed": true,
+      "notes": "Bow visible. Aft hull boundary merges with spray and motor at this resolution; stern unknown."
+    },
+    {
+      "file": "frame-000707.png",
+      "boat": 6,
+      "bow": [
+        670,
+        378
+      ],
+      "stern": [
+        763,
+        395
+      ],
+      "obstructed": false,
+      "notes": "Small side view. Bow tip and visible aft hull corner marked by eye, excluding motor and spray; softened boundary, approximately 5-10 px uncertainty."
+    }
+  ],
+  "limitations": [
+    "Independent AI visual pass, not an independent human measurement and not machine-calibrated ground truth.",
+    "Viewed only the supplied original PNGs, manifest, and crops derived from those PNGs. No previous endpoint labels, inspection, draft, example, or audit files were read.",
+    "Target boat numbers were supplied separately to disambiguate frames containing two boats. Clothing colors agree, but numerals are not legible in every frame.",
+    "Coordinates are original-image pixels (origin top left), estimated visually from 2x crops with 25 px grid. No subpixel or exact-pixel accuracy is claimed.",
+    "Bow means visible hull nose contour; stern points where supplied are visible aft lower hull corners, not inferred centerline transom centers. This convention can differ from centerline endpoint labeling.",
+    "Null means the actual hull endpoint could not be reliably separated from motor, rider or spray. Do not interpolate null values as measured endpoints.",
+    "Obstructed=true denotes an endpoint left unknown due to overlap/ambiguity; false does not imply a perfectly sharp or wholly unobstructed boat.",
+    "Perspective, compression blur, spray, hull roll and short hull size limit repeatability. Entry bow locations also have approximately 5-10 px visual uncertainty."
+  ]
+}

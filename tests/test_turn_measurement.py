@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-from scraper.turn_measurement import METHOD, assess_record, digest, evidence_digest, hull_centre, render_panel, seal_record
+from scraper.turn_measurement import METHOD, BOW_METHOD, assess_record, digest, evidence_digest, hull_centre, render_panel, seal_record
 
 
 def record():
@@ -131,3 +131,22 @@ def test_names_are_escaped_and_status_has_no_rank_or_power_claims():
     panel = render_panel(assess_record(record()), {1: '<script>bad</script>'}, preview=True)
     assert '<script>' not in panel and '&lt;script&gt;' in panel
     assert panel.count('<tr>') == 7
+
+
+def test_bow_only_method_has_its_own_reference_and_cannot_reuse_midpoint_reviews():
+    r = record(); r['method'] = BOW_METHOD
+    # Method changes invalidate the previous review, before any point changes.
+    assert not assess_record(r, release_enabled=True)['publication_ready']
+    # New synthetic bow-only evidence is bracketed at all three gates.
+    for review in r['reviews']:
+        for key, label in review['labels'].items():
+            centre = [(label['bow'][i]+label['stern'][i])/2 for i in (0, 1)]
+            review['labels'][key] = {'bow': centre}
+    refresh(r)
+    result = assess_record(r)
+    assert result['reference_point'] == 'bow_tip' and result['method'] == BOW_METHOD
+    assert all(row['status'] == 'checked_reference' for row in result['rows'])
+    assert not result['publication_ready']
+    assert '艇首の先端で' in render_panel(result, preview=True)
+    r['method'] = METHOD; refresh(r)
+    assert all(row['status'] == 'remeasure' for row in assess_record(r)['rows'])
