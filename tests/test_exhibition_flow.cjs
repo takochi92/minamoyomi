@@ -1,12 +1,13 @@
 const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function boot(query=''){
+function boot(query='',overrides={}){
  const nodes=new Map(),messages={};let changedUrl=null;
- const config={date:'20261026',preview:true,raceBase:'',slugs:{'04':'heiwajima','05':'tamagawa'},records:[{date:'20261026',jcd:'04',rno:1,asset:'data/exhibition/20261026/04-1.html'}]};
- function node(id){if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,style:{},contentWindow:{},removeAttribute(k){delete this[k];}});return nodes.get(id);}
+ const config={date:'20261026',preview:true,raceBase:'',slugs:{'04':'heiwajima','05':'tamagawa'},records:[{date:'20261026',jcd:'04',rno:1,asset:'data/exhibition/20261026/04-1.html'}],...overrides};
+ function node(id){if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,style:{},contentWindow:{},setAttribute(k,v){this[k]=v;},removeAttribute(k){delete this[k];}});return nodes.get(id);}
+ const buttons=Array.from({length:12},(_,i)=>Object.assign(node('chip'+(i+1)),{dataset:{evRace:String(i+1)}}));
  const venue=node('ev-venue');venue.options=[{value:'04',textContent:'平和島'},{value:'05',textContent:'多摩川'}];
  Object.defineProperty(venue,'selectedIndex',{get(){return this.options.findIndex(o=>o.value===this.value);}});
  node('ev-config').textContent=JSON.stringify(config);
- const context={document:{getElementById:node},URLSearchParams,location:{search:query},history:{replaceState(a,b,url){changedUrl=url;}},window:{addEventListener(k,fn){messages[k]=fn;}},console};
+ const context={document:{getElementById:node,querySelectorAll:()=>buttons},URL,URLSearchParams,location:{search:query},history:{replaceState(a,b,url){changedUrl=url;}},window:{addEventListener(k,fn){messages[k]=fn;}},console};
  vm.runInNewContext(fs.readFileSync(require.resolve('../site/exhibition.js'),'utf8'),context);
  return{node,messages,get url(){return changedUrl;},submit(){node('ev-select').onsubmit({preventDefault(){}});}};
 }
@@ -23,4 +24,12 @@ ui.submit();assert.match(get('ev-status').textContent,/未収録/);assert.equal(
 get('ev-date').value='2026-02-30';ui.submit();assert.ok(get('ev-back').hidden);assert.equal(get('ev-frame').src,undefined);
 const deep=boot('?date=20261026&jcd=04&rno=12');assert.ok(deep.node('ev-view').hidden);assert.match(deep.node('ev-title').textContent,/12R/);
 const invalid=boot('?date=20260230&jcd=04&rno=1');assert.ok(invalid.node('ev-view').hidden);assert.equal(invalid.node('ev-frame').src,undefined);
+const research=JSON.parse(fs.readFileSync(require.resolve('../site/data/exhibition/research.json'),'utf8')).records;
+const beta=boot('',{records:[],research}),b=beta.node;
+assert.equal(b('ev-reference').hidden,false);assert.equal((b('ev-times').innerHTML.match(/<tr>/g)||[]).length,7);
+assert.equal(b('ev-source-wrap').hidden,false);assert.match(b('ev-status').textContent,/正式タイムではありません/);
+b('chip12').onclick();assert.ok(b('ev-reference').hidden);assert.equal(b('ev-times').innerHTML,'');
+assert.match(b('ev-source').href,/raceNumber=12/);assert.match(b('ev-status').textContent,/未測定/);
+b('ev-date').value='2026-10-27';b('ev-date').onchange();beta.submit();
+assert.ok(b('ev-source-wrap').hidden);assert.equal(b('ev-source').href,undefined);assert.equal(b('ev-frame').src,undefined);
 console.log('exhibition selector/deep-link/empty-state/frame-isolation checks ok (DOM double)');

@@ -163,10 +163,13 @@ class Page:
         return self.u(target) + '?v=' + version
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False, og=None):
-        nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'), ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
-               ("stats.html", "的中実績", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'), ("logic.html", "予想の根拠", "根拠", '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
+        nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),
+               ("exhibition.html", "展示解析", "展示", '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>'),
+               ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+               ("stats.html", "実績と根拠", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'),
                ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
-        navh = "".join(f'<a href="{self.u(h)}"{" aria-current=page" if h == self.path else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
+        nav_keys = {'index.html':'home', 'stats.html':'stats', 'exhibition.html':'exhibition', 'targets.html':'targets', 'racer/index.html':'search', 'mynote.html':'note'}
+        navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
         ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -252,6 +255,7 @@ class Site:
         self.cst = coursest.load()
         from .exhibition_views import catalog
         self.exhibition_records = catalog(load_json(DATA / 'exhibition/index.json', {}) or {})
+        self.exhibition_research = (load_json(DATA / 'exhibition/research.json', {}) or {}).get('records', [])
 
     def put(self, path, text):
         if getattr(self, 'stream_output', False) and path.startswith(('racer/', 'database/')):
@@ -2572,9 +2576,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                           f'<tr><td>採用予想</td><td>{paired.get("races",0)}</td><td>{pct(paired.get("hits",0)/paired["races"]) if paired.get("races") else "未算出"}</td><td>{pct(paired.get("gross_roi"),1) if paired.get("gross_roi") is not None else "未算出"}</td></tr>'
                           f'<tr><td>イン残り研究券</td><td>{inside.get("races",0)}</td><td>{pct(inside.get("hits",0)/inside["races"]) if inside.get("races") else "未算出"}</td><td>{pct(inside.get("gross_roi"),1) if inside.get("gross_roi") is not None else "未算出"}</td></tr>'
                           '</tbody></table></div><p class="sub">各券100円の仮想購入。過去診断の80.8%はこの前向き成績ではありません。未決済や取得時刻未確認の古いレースを含めません。</p></section>')
-            body = forward+'<div id="app"><p class="empty">読み込み中…</p></div>'
-            script = f'<script>window.__ROUTE__="{route}";</script><script src="app.js"></script>'
-            self.put(path, page.render(f"{title}｜{SITE_NAME}", desc, body, [("", title)], script=script))
+            if path == 'logic.html':
+                # Keep existing shared URLs working while showing the unified page.
+                forward = ''
+            body = ('<div id="app"><p class="empty">読み込み中…</p></div>'
+                    + ('<details class="evidence-fold"><summary>締切前に固定した研究券の成績</summary>'+forward+'</details>' if forward else '')
+                    + '<details id="logic-details" class="evidence-fold"><summary>予想の仕組み・過去データでの検証を見る</summary>'
+                      '<div id="logic-body"><p class="sub">開くと検証データを読み込みます。</p></div></details>')
+            script = f'<script>window.__ROUTE__="stats";window.__OPEN_LOGIC__={str(path == "logic.html").lower()};</script><script src="{page.asset("app.js")}"></script>'
+            self.put(path, page.render(f"実績と根拠｜{SITE_NAME}", desc, body, [("", "実績と根拠")], script=script, noindex=path == 'logic.html'))
         about = (OUT / "about_body.html")
         if about.exists():
             page = Page("about.html")
@@ -2638,7 +2648,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         from .exhibition_views import render
         page = Page('exhibition.html')
         venues = {j: {**value, 'slug': SLUG[j]} for j, value in VENUES.items()}
-        body = render(page, venues, self.idx.get('date', self.now.strftime('%Y%m%d')), self.exhibition_records)
+        body = render(page, venues, self.idx.get('date', self.now.strftime('%Y%m%d')), self.exhibition_records,
+                      research=getattr(self, 'exhibition_research', []))
         self.put(page.path, page.render('展示映像｜艇ろぐ', '日付・場・レースを選んで、１マークの入りと出口を見比べます。',
                                        body, [('', '展示映像')], noindex=not self.exhibition_records))
 

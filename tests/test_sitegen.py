@@ -86,6 +86,12 @@ def test_pages_and_links(tmp_path):
     s, files = _site(tmp_path)
     assert "race/20260925/kiryu-12.html" in files and "venue/omura.html" in files and "targets.html" in files
     assert len([p for p in files if p.startswith("racer/")]) > 1000
+    stats=files['stats.html']; logic=files['logic.html']
+    assert 'id="logic-details" class="evidence-fold"' in stats
+    assert '<summary>締切前に固定した研究券の成績</summary>' in stats
+    assert 'window.__ROUTE__="stats"' in stats and 'app.js?v=' in stats
+    assert 'window.__ROUTE__="stats"' in logic and 'window.__OPEN_LOGIC__=true' in logic
+    assert 'content="noindex"' in logic
     # 相対リンクがすべて生成済みのページを指している（外部・data・アンカーは除く）
     for path in ["index.html", "race/20260925/kiryu-12.html", "targets.html", "venue/kiryu.html"]:
         base = Path(path).parent

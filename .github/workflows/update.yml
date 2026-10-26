@@ -16,6 +16,7 @@ on:
       - 'scraper/exhibition_views.py'
       - 'site/exhibition.js'
       - 'site/exhibition.css'
+      - 'site/data/exhibition/**'
       - 'scraper/build_cache.py'
       - '.github/workflows/update.yml'
       - 'scraper/target_methods.py'

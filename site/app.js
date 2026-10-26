@@ -401,12 +401,13 @@
     };
     const best = (s.best || []).map((b) => `<tr><td class="num">${+b.date.slice(4, 6)}/${+b.date.slice(6)}</td><td>${esc(b.venue)} ${b.rno}R</td><td>${combo(b.combo)}</td><td class="r num best">${yen(b.payout)}</td></tr>`).join("");
     app.innerHTML = `
-      <section style="display:grid;gap:6px"><span class="eyebrow">Track record</span><h1>掲載予想の仮想成績</h1>
-        <p class="sub">保存された採用券と公式結果を自動集計。新しい一本化ルールでは厳選穴が成立すれば穴券のみ、それ以外は本線＋押さえです。各券100円の仮想購入で、実購入実績ではありません。導入前の本線＋押さえの旧成績は変更せず含めています。予想版・選択ルールが混在し、取得時刻未確認の旧記録もあります。締切前の厳密な比較検証は上の別表です。</p></section>
+      <section style="display:grid;gap:6px"><span class="eyebrow">Track record</span><h1>実績と根拠</h1>
+        <p class="sub">採用した買い目を各100円で購入した場合の仮想成績です。実購入の実績ではありません。</p>
+        <details><summary>集計条件と旧記録について</summary><p class="sub">保存された採用券と公式結果を自動集計。厳選穴が成立すれば穴券のみ、それ以外は本線＋押さえです。導入前の本線＋押さえの旧成績も含み、予想版・選択ルールが混在します。取得時刻未確認の旧記録もあるため、締切前固定の厳密な研究成績は下の折り畳みに分けています。</p></details></section>
       <div class="seg" role="group" aria-label="集計期間"><button data-r="last7">7日</button><button data-r="last30">30日</button><button data-r="all">全期間</button></div>
       <div id="stats-body" style="display:grid;gap:16px"></div>
-      <section style="display:grid;gap:8px"><h2>直近30日の的中例</h2><p class="sub">払戻額の高い順。成績全体の評価は、上の不的中も含む回収率と収支をご覧ください。</p>
-        <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>日付</th><th>レース</th><th>3連単</th><th class="r">払戻</th></tr></thead><tbody>${best || `<tr><td colspan="4" class="empty">まだありません</td></tr>`}</tbody></table></div></section>`;
+      <details class="evidence-fold"><summary>直近30日の的中例を見る</summary><p class="sub">払戻額の高い順。成績全体の評価は、上の不的中も含む回収率と収支をご覧ください。</p>
+        <div class="panel tbl-wrap" style="padding:4px 8px"><table><thead><tr><th>日付</th><th>レース</th><th>3連単</th><th class="r">払戻</th></tr></thead><tbody>${best || `<tr><td colspan="4" class="empty">まだありません</td></tr>`}</tbody></table></div></details>`;
     document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => { range = b.dataset.r; render(); }));
     render();
   }
@@ -466,10 +467,10 @@
   }
 
   // ------------------------------------------------------------ 予想の根拠
-  async function viewLogic() {
-    setNav("logic");
+  async function viewLogic(target = app, updateNav = true) {
+    if (updateNav) setNav("stats");
     const r = await load("model_report.json");
-    if (!r) { app.innerHTML = `<p class="empty">検証結果を準備中です。</p>`; return; }
+    if (!r) { target.innerHTML = `<p class="empty">検証結果を準備中です。</p>`; return; }
     const fmt = (d) => `${d.slice(0, 4)}/${+d.slice(4, 6)}/${+d.slice(6)}`;
     const vrows = Object.entries(r.variants).map(([k, v], i, a) => {
       const prev = i ? a[i - 1][1].logloss : null;
@@ -486,8 +487,8 @@
     const t = r.test;
     const topn = Object.entries(t.trifecta_topN).map(([n, v]) => `<tr><td class="r num">上位${n}点</td><td class="r num">${pct(v.hit, 1)}</td><td class="r num ${v.roi >= 1 ? "best" : ""}">${v.roi == null ? "買い目なし" : pct(v.roi, 1)}</td></tr>`).join("");
     const conf = Object.entries(t.by_confidence).map(([k, v]) => `<tr><td>${esc(confLabel(k))}</td><td class="r num">${v.races.toLocaleString()}</td><td class="r num">${pct(v.win_acc, 1)}</td><td class="r num">${pct(v.top8_hit, 1)}</td><td class="r num">${pct(v.top8_roi, 1)}</td></tr>`).join("");
-    app.innerHTML = `
-      <section style="display:grid;gap:6px"><span class="eyebrow">Evidence</span><h1>予想の根拠</h1>
+    target.innerHTML = `
+      <section style="display:grid;gap:6px"><span class="eyebrow">Evidence</span><h2>予想の根拠</h2>
         <p class="sub">重みはすべて公式の競走成績・番組表データから学習しています。検証は学習に使っていない${fmt(r.period.test[0])}〜${fmt(r.period.test[1])}の${t.races.toLocaleString()}レースで行いました（学習：${r.n_train.toLocaleString()}レース）。各レースの特徴量は、そのレースより前のデータだけで計算しています。</p></section>
       ${recoSection(r)}
       ${evSection(r)}
@@ -519,6 +520,20 @@
     }
   }
   if (!app) return;
+  const logicDetails = $('#logic-details');
+  if (logicDetails) {
+    let loading = false, loaded = false;
+    logicDetails.ontoggle = async () => {
+      if (!logicDetails.open || loading || loaded) return;
+      loading = true;
+      try { await viewLogic($('#logic-body'), false); loaded = true; }
+      catch (_) { $('#logic-body').innerHTML = '<p class="empty">検証データを読み込めませんでした。一度閉じて開き直してください。</p>'; }
+      finally { loading = false; }
+    };
+    if (window.__OPEN_LOGIC__ || location.hash === '#logic') {
+      logicDetails.open = true; logicDetails.ontoggle();
+    }
+  }
   if (!window.__ROUTE__) window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
   route();
   // 1分ごとにデータを読み直す（開いたままでも締切カウントダウンと予想が進む）

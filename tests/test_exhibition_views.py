@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-from scraper.exhibition_views import catalog, render
+from scraper.exhibition_views import catalog, render, research_catalog
 from scraper.sitegen import Page, Site, SLUG
 from scraper.predict import VENUES
 from tools.extract_turn_frames import extract
@@ -55,6 +55,30 @@ def test_registry_json_cannot_break_out_of_page_script():
     assert '</script><script>alert' not in page
     config = re.search(r'id="ev-config">(.*?)</script>', page, re.S).group(1)
     assert json.loads(config)['records'][0]['status'].startswith('</script>')
+
+
+def test_public_research_is_explicitly_distinct_from_approved_media():
+    from pathlib import Path
+    raw=json.loads((Path(__file__).resolve().parents[1]/'site/data/exhibition/research.json').read_text(encoding='utf-8'))
+    rows=research_catalog(raw)
+    assert len(rows)==12 and [r['rno'] for r in rows]==list(range(1,13))
+    assert sum('reference' in r for r in rows)==1
+    assert len(rows[0]['reference']['boats'])==6
+    assert catalog(raw)==[]  # Public numeric samples never approve source media.
+    bad={**raw['records'][0], 'official_url':raw['records'][1]['official_url']}
+    assert research_catalog({'records':[bad]})==[]
+    for change in [{'publication_ready':True},{'prediction_used':True},{'review_count':1},
+                   {'max_review_difference_seconds':float('nan')},{'boats':[None]}]:
+        candidate={**raw['records'][0], 'reference':{**raw['records'][0]['reference'],**change}}
+        assert 'reference' not in research_catalog({'records':[candidate]})[0]
+
+
+def test_navigation_keeps_six_items_and_places_exhibition_between_races_and_targets():
+    page=Page('stats.html').render('test','test','')
+    nav=re.search(r'<nav class="nav">(.*?)</nav>',page,re.S)[1]
+    assert re.findall(r'href="([^"]+)"',nav)==['index.html','exhibition.html','targets.html','racer/index.html','stats.html','mynote.html']
+    assert '実績と根拠' in nav and 'logic.html' not in nav
+    assert 'data-k="stats" aria-current=page' in nav
 
 
 @pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='offline video decoder not installed')
