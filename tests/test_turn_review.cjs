@@ -1,17 +1,33 @@
 const assert=require('node:assert/strict');
-const {hullMidpoint,canvasPoint,sourcePoint,acceptDraft}=require('../tools/turn_review/review.js');
+const {hullMidpoint,canvasPoint,sourcePoint,frameDelay,previewIntervals,acceptDraft}=require('../tools/turn_review/review.js');
 assert.deepEqual(hullMidpoint({bow:[10,20],stern:[30,40]}),[20,30]);
 assert.equal(hullMidpoint({bow:[10,20]}),null);
 // Mobile canvas coordinates must refer to the original image, not CSS pixels.
 assert.deepEqual(canvasPoint(170,110,{left:10,top:20,width:320,height:180},1280,720),[640,360]);
 assert.deepEqual(canvasPoint(-20,999,{left:0,top:0,width:320,height:180},1280,720),[0,719]);
 assert.deepEqual(sourcePoint([640,360],4,[-2560,-1000]),[800,340]);
+assert.equal(frameDelay({time:1},{time:1.125},.5),250);
+assert.equal(frameDelay({time:1},{time:1.125},.25),500);
+assert.equal(frameDelay({time:1},{time:1.125},1),125);
+assert.equal(frameDelay({time:1},{time:2},.5),null);
+assert.equal(frameDelay({time:2},{time:1},.5),null);
+assert.equal(frameDelay({time:1},{time:1.1},8),null);
 const bundle={digest:'abc',size:[1280,720],events:[{boat:1,gate:'A',frames:[{index:10},{index:11}]}]};
 const draft={kind:'turn-review-draft-v1',bundle_digest:'abc',labels:{'1:10':{bow:[50,60],stern:[90,70]}},pairs:{'1:A':{before:10,after:11}}};
 assert.deepEqual(acceptDraft(draft,bundle),draft);
+assert.deepEqual(acceptDraft({...draft,bundle_digest:'old'},{...bundle,compatible_digests:['old']}),{...draft,bundle_digest:'old'});
 assert.throws(()=>acceptDraft({...draft,bundle_digest:'stale'},bundle));
 assert.throws(()=>acceptDraft({...draft,labels:{'1:10':{bow:[9999,60]}}},bundle));
 assert.throws(()=>acceptDraft({...draft,labels:{'2:10':{bow:[50,60]}}},bundle));
 assert.throws(()=>acceptDraft({...draft,pairs:{'1:A':{after:99}}},bundle));
 assert.throws(()=>acceptDraft({...draft,pairs:{'1:A':null}},bundle));
+const timingBundle={gates:{A:{axis:'x',value:500,direction:1,segment:[450,610]},B:{axis:'y',value:360,direction:-1,segment:[740,980]},C:{axis:'x',value:500,direction:-1,segment:[150,290]}},events:[],clips:[{boat:1,frames:[1,1.05,2,2.05,3,3.05].map((time,index)=>({time,index}))}]};
+const timingPairs={'1:A':{before:0,after:1},'1:B':{before:2,after:3},'1:C':{before:4,after:5}};
+const timingLabels=Object.fromEntries([[490,550],[510,550],[800,370],[800,350],[510,250],[490,250]].map(([x,y],i)=>['1:'+i,{bow:[x-5,y],stern:[x+5,y]}]));
+assert.deepEqual(previewIntervals(timingBundle,1,timingPairs,timingLabels),{entry:1,exit:1,publication_ready:false});
+assert.equal(previewIntervals(timingBundle,1,{...timingPairs,'1:A':{before:1,after:0}},timingLabels).entry,null);
+assert.equal(previewIntervals(timingBundle,1,timingPairs,{}).entry,null);
+const snapshot=JSON.stringify(timingBundle);
+frameDelay({time:1},{time:1.05},.25);frameDelay({time:1},{time:1.05},1);
+assert.equal(JSON.stringify(timingBundle),snapshot); // Viewing speed must not rewrite evidence.
 console.log('turn review math/import checks ok (not a browser render test)');

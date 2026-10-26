@@ -29,6 +29,20 @@ def build(frames_dir, config, tracks, report):
     manifest = json.loads((frames_dir / "frames.json").read_text(encoding="utf-8"))
     by_boat = {row["boat"]: {p["frame"]: p for p in row["points"]} for row in tracks}
     images = {}
+    def sample(boat, index):
+        frame = manifest[index]
+        path = (frames_dir / frame["file"]).resolve()
+        if path.parent != frames_dir:
+            raise ValueError("Frame outside supplied directory")
+        if index not in images:
+            with Image.open(path) as image:
+                if list(image.size) != config["image_size"]:
+                    raise ValueError("Frame size changed")
+                buf = io.BytesIO()
+                image.convert("RGB").save(buf, "WEBP", quality=78)
+                images[index] = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
+        return {"index": index, "time": (frame["before"] + frame["after"]) / 2,
+                "proposal": by_boat[boat].get(index, {}).get("bbox")}
     events = []
     for row in report["results"]:
         boat = row["boat"]
@@ -39,26 +53,27 @@ def build(frames_dir, config, tracks, report):
             middle = min(range(len(manifest)), key=lambda i: abs((manifest[i]["before"] + manifest[i]["after"]) / 2 - time))
             samples = []
             for index in range(max(0, middle-12), min(len(manifest), middle+13)):
-                frame = manifest[index]
-                path = (frames_dir / frame["file"]).resolve()
-                if path.parent != frames_dir:
-                    raise ValueError("Frame outside supplied directory")
-                if index not in images:
-                    with Image.open(path) as image:
-                        if list(image.size) != config["image_size"]:
-                            raise ValueError("Frame size changed")
-                        buf = io.BytesIO()
-                        image.convert("RGB").save(buf, "WEBP", quality=78)
-                        images[index] = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
-                samples.append({"index": index, "time": (frame["before"] + frame["after"]) / 2,
-                                "proposal": by_boat[boat].get(index, {}).get("bbox")})
+                samples.append(sample(boat, index))
             events.append({"boat": boat, "gate": gate, "frames": samples})
     evidence = {"date": config["date"], "race": config["race"], "venue": config["venue"],
                 "size": config["image_size"], "gates": config["gates"], "events": events,
                 "frame_manifest_digest": digest(manifest),
                 "image_digests": {key: digest(value) for key, value in images.items()},
                 "source_clock": "browser_capture_clock_unverified", "source": config["source"]}
-    bundle = {**evidence, "digest": digest(evidence), "images": images}
+    # This exact digest identifies the previous windows-only evidence. Accept
+    # its drafts only when that unchanged subset is present in this new bundle.
+    legacy_digest = digest(evidence)
+    clips = []
+    for boat in range(1, 7):
+        indices = [frame["index"] for event in events if event["boat"] == boat for frame in event["frames"]]
+        frames = [sample(boat, index) for index in range(min(indices), max(indices)+1)]
+        if any(not 0 < b["time"]-a["time"] <= .2 for a, b in zip(frames, frames[1:])):
+            raise ValueError("Continuous replay has a missing or reversed time interval")
+        clips.append({"boat": boat, "frames": frames})
+    evidence = {**evidence, "clips": clips,
+                "image_digests": {key: digest(value) for key, value in images.items()}}
+    bundle = {**evidence, "digest": digest(evidence), "images": images,
+              "compatible_digests": [legacy_digest]}
     # Deduplicate the embedded images rather than repeat them in every event.
     names = {int(k): str(v) for k, v in config.get("names", {}).items()}
     if not names and (config["date"], config["race"]) == ("2026-10-26", 1):
