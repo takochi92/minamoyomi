@@ -1,0 +1,2252 @@
+[
+  {
+    "file": "frame-0000.png",
+    "before": 245.056915,
+    "after": 245.123238
+  },
+  {
+    "file": "frame-0001.png",
+    "before": 245.138348,
+    "after": 245.175695
+  },
+  {
+    "file": "frame-0002.png",
+    "before": 245.190313,
+    "after": 245.224502
+  },
+  {
+    "file": "frame-0003.png",
+    "before": 245.240606,
+    "after": 245.274657
+  },
+  {
+    "file": "frame-0004.png",
+    "before": 245.28973,
+    "after": 245.32498
+  },
+  {
+    "file": "frame-0005.png",
+    "before": 245.338732,
+    "after": 245.372796
+  },
+  {
+    "file": "frame-0006.png",
+    "before": 245.38823,
+    "after": 245.426199
+  },
+  {
+    "file": "frame-0007.png",
+    "before": 245.443404,
+    "after": 245.479069
+  },
+  {
+    "file": "frame-0008.png",
+    "before": 245.494276,
+    "after": 245.53193
+  },
+  {
+    "file": "frame-0009.png",
+    "before": 245.547328,
+    "after": 245.580979
+  },
+  {
+    "file": "frame-0010.png",
+    "before": 245.594478,
+    "after": 245.628213
+  },
+  {
+    "file": "frame-0011.png",
+    "before": 245.641758,
+    "after": 245.674493
+  },
+  {
+    "file": "frame-0012.png",
+    "before": 245.688408,
+    "after": 245.721376
+  },
+  {
+    "file": "frame-0013.png",
+    "before": 245.737746,
+    "after": 245.777831
+  },
+  {
+    "file": "frame-0014.png",
+    "before": 245.794278,
+    "after": 245.828941
+  },
+  {
+    "file": "frame-0015.png",
+    "before": 245.844266,
+    "after": 245.878648
+  },
+  {
+    "file": "frame-0016.png",
+    "before": 245.894369,
+    "after": 245.935607
+  },
+  {
+    "file": "frame-0017.png",
+    "before": 245.956476,
+    "after": 245.995181
+  },
+  {
+    "file": "frame-0018.png",
+    "before": 246.01035,
+    "after": 246.047115
+  },
+  {
+    "file": "frame-0019.png",
+    "before": 246.061538,
+    "after": 246.095185
+  },
+  {
+    "file": "frame-0020.png",
+    "before": 246.11151,
+    "after": 246.149753
+  },
+  {
+    "file": "frame-0021.png",
+    "before": 246.165109,
+    "after": 246.1984
+  },
+  {
+    "file": "frame-0022.png",
+    "before": 246.21306,
+    "after": 246.246855
+  },
+  {
+    "file": "frame-0023.png",
+    "before": 246.260806,
+    "after": 246.297937
+  },
+  {
+    "file": "frame-0024.png",
+    "before": 246.31208,
+    "after": 246.347069
+  },
+  {
+    "file": "frame-0025.png",
+    "before": 246.363536,
+    "after": 246.399617
+  },
+  {
+    "file": "frame-0026.png",
+    "before": 246.416049,
+    "after": 246.452869
+  },
+  {
+    "file": "frame-0027.png",
+    "before": 246.466647,
+    "after": 246.500529
+  },
+  {
+    "file": "frame-0028.png",
+    "before": 246.514921,
+    "after": 246.559618
+  },
+  {
+    "file": "frame-0029.png",
+    "before": 246.578822,
+    "after": 246.613789
+  },
+  {
+    "file": "frame-0030.png",
+    "before": 246.630505,
+    "after": 246.674873
+  },
+  {
+    "file": "frame-0031.png",
+    "before": 246.69245,
+    "after": 246.741428
+  },
+  {
+    "file": "frame-0032.png",
+    "before": 246.756921,
+    "after": 246.791878
+  },
+  {
+    "file": "frame-0033.png",
+    "before": 246.808468,
+    "after": 246.84053
+  },
+  {
+    "file": "frame-0034.png",
+    "before": 246.857257,
+    "after": 246.89598
+  },
+  {
+    "file": "frame-0035.png",
+    "before": 246.912505,
+    "after": 246.94549
+  },
+  {
+    "file": "frame-0036.png",
+    "before": 246.9599,
+    "after": 246.993289
+  },
+  {
+    "file": "frame-0037.png",
+    "before": 247.007565,
+    "after": 247.040348
+  },
+  {
+    "file": "frame-0038.png",
+    "before": 247.055832,
+    "after": 247.09155
+  },
+  {
+    "file": "frame-0039.png",
+    "before": 247.105537,
+    "after": 247.140558
+  },
+  {
+    "file": "frame-0040.png",
+    "before": 247.155654,
+    "after": 247.188981
+  },
+  {
+    "file": "frame-0041.png",
+    "before": 247.203489,
+    "after": 247.241813
+  },
+  {
+    "file": "frame-0042.png",
+    "before": 247.259852,
+    "after": 247.295134
+  },
+  {
+    "file": "frame-0043.png",
+    "before": 247.312089,
+    "after": 247.347597
+  },
+  {
+    "file": "frame-0044.png",
+    "before": 247.361153,
+    "after": 247.395484
+  },
+  {
+    "file": "frame-0045.png",
+    "before": 247.410132,
+    "after": 247.446556
+  },
+  {
+    "file": "frame-0046.png",
+    "before": 247.461591,
+    "after": 247.496111
+  },
+  {
+    "file": "frame-0047.png",
+    "before": 247.510191,
+    "after": 247.553963
+  },
+  {
+    "file": "frame-0048.png",
+    "before": 247.574639,
+    "after": 247.608196
+  },
+  {
+    "file": "frame-0049.png",
+    "before": 247.623458,
+    "after": 247.657547
+  },
+  {
+    "file": "frame-0050.png",
+    "before": 247.671443,
+    "after": 247.7045
+  },
+  {
+    "file": "frame-0051.png",
+    "before": 247.717782,
+    "after": 247.758076
+  },
+  {
+    "file": "frame-0052.png",
+    "before": 247.773488,
+    "after": 247.807732
+  },
+  {
+    "file": "frame-0053.png",
+    "before": 247.824728,
+    "after": 247.856461
+  },
+  {
+    "file": "frame-0054.png",
+    "before": 247.871446,
+    "after": 247.907137
+  },
+  {
+    "file": "frame-0055.png",
+    "before": 247.921683,
+    "after": 247.957298
+  },
+  {
+    "file": "frame-0056.png",
+    "before": 247.974682,
+    "after": 248.011353
+  },
+  {
+    "file": "frame-0057.png",
+    "before": 248.025241,
+    "after": 248.05797
+  },
+  {
+    "file": "frame-0058.png",
+    "before": 248.071642,
+    "after": 248.104503
+  },
+  {
+    "file": "frame-0059.png",
+    "before": 248.117954,
+    "after": 248.154277
+  },
+  {
+    "file": "frame-0060.png",
+    "before": 248.169727,
+    "after": 248.206028
+  },
+  {
+    "file": "frame-0061.png",
+    "before": 248.224461,
+    "after": 248.265053
+  },
+  {
+    "file": "frame-0062.png",
+    "before": 248.284185,
+    "after": 248.321812
+  },
+  {
+    "file": "frame-0063.png",
+    "before": 248.336738,
+    "after": 248.373632
+  },
+  {
+    "file": "frame-0064.png",
+    "before": 248.39211,
+    "after": 248.43029
+  },
+  {
+    "file": "frame-0065.png",
+    "before": 248.446166,
+    "after": 248.484182
+  },
+  {
+    "file": "frame-0066.png",
+    "before": 248.500002,
+    "after": 248.539091
+  },
+  {
+    "file": "frame-0067.png",
+    "before": 248.556173,
+    "after": 248.60104
+  },
+  {
+    "file": "frame-0068.png",
+    "before": 248.618387,
+    "after": 248.655344
+  },
+  {
+    "file": "frame-0069.png",
+    "before": 248.671216,
+    "after": 248.706682
+  },
+  {
+    "file": "frame-0070.png",
+    "before": 248.723754,
+    "after": 248.761471
+  },
+  {
+    "file": "frame-0071.png",
+    "before": 248.777728,
+    "after": 248.816872
+  },
+  {
+    "file": "frame-0072.png",
+    "before": 248.832745,
+    "after": 248.869667
+  },
+  {
+    "file": "frame-0073.png",
+    "before": 248.885459,
+    "after": 248.920047
+  },
+  {
+    "file": "frame-0074.png",
+    "before": 248.936335,
+    "after": 248.97638
+  },
+  {
+    "file": "frame-0075.png",
+    "before": 248.993713,
+    "after": 249.030283
+  },
+  {
+    "file": "frame-0076.png",
+    "before": 249.047607,
+    "after": 249.086551
+  },
+  {
+    "file": "frame-0077.png",
+    "before": 249.102977,
+    "after": 249.140645
+  },
+  {
+    "file": "frame-0078.png",
+    "before": 249.159844,
+    "after": 249.196203
+  },
+  {
+    "file": "frame-0079.png",
+    "before": 249.211815,
+    "after": 249.251498
+  },
+  {
+    "file": "frame-0080.png",
+    "before": 249.266478,
+    "after": 249.302181
+  },
+  {
+    "file": "frame-0081.png",
+    "before": 249.316193,
+    "after": 249.352727
+  },
+  {
+    "file": "frame-0082.png",
+    "before": 249.36867,
+    "after": 249.40393
+  },
+  {
+    "file": "frame-0083.png",
+    "before": 249.420253,
+    "after": 249.458094
+  },
+  {
+    "file": "frame-0084.png",
+    "before": 249.471912,
+    "after": 249.508515
+  },
+  {
+    "file": "frame-0085.png",
+    "before": 249.525498,
+    "after": 249.558567
+  },
+  {
+    "file": "frame-0086.png",
+    "before": 249.573499,
+    "after": 249.608719
+  },
+  {
+    "file": "frame-0087.png",
+    "before": 249.626244,
+    "after": 249.665434
+  },
+  {
+    "file": "frame-0088.png",
+    "before": 249.682578,
+    "after": 249.718431
+  },
+  {
+    "file": "frame-0089.png",
+    "before": 249.733876,
+    "after": 249.769113
+  },
+  {
+    "file": "frame-0090.png",
+    "before": 249.782091,
+    "after": 249.816935
+  },
+  {
+    "file": "frame-0091.png",
+    "before": 249.833575,
+    "after": 249.874472
+  },
+  {
+    "file": "frame-0092.png",
+    "before": 249.891109,
+    "after": 249.925983
+  },
+  {
+    "file": "frame-0093.png",
+    "before": 249.940282,
+    "after": 249.974588
+  },
+  {
+    "file": "frame-0094.png",
+    "before": 249.988625,
+    "after": 250.025595
+  },
+  {
+    "file": "frame-0095.png",
+    "before": 250.042658,
+    "after": 250.077233
+  },
+  {
+    "file": "frame-0096.png",
+    "before": 250.0917,
+    "after": 250.12535
+  },
+  {
+    "file": "frame-0097.png",
+    "before": 250.141479,
+    "after": 250.177148
+  },
+  {
+    "file": "frame-0098.png",
+    "before": 250.192346,
+    "after": 250.22715
+  },
+  {
+    "file": "frame-0099.png",
+    "before": 250.245358,
+    "after": 250.276625
+  },
+  {
+    "file": "frame-0100.png",
+    "before": 250.317033,
+    "after": 250.3499
+  },
+  {
+    "file": "frame-0101.png",
+    "before": 250.364965,
+    "after": 250.400556
+  },
+  {
+    "file": "frame-0102.png",
+    "before": 250.413763,
+    "after": 250.454458
+  },
+  {
+    "file": "frame-0103.png",
+    "before": 250.467694,
+    "after": 250.504106
+  },
+  {
+    "file": "frame-0104.png",
+    "before": 250.520366,
+    "after": 250.557029
+  },
+  {
+    "file": "frame-0105.png",
+    "before": 250.572291,
+    "after": 250.613276
+  },
+  {
+    "file": "frame-0106.png",
+    "before": 250.630034,
+    "after": 250.663644
+  },
+  {
+    "file": "frame-0107.png",
+    "before": 250.677064,
+    "after": 250.708605
+  },
+  {
+    "file": "frame-0108.png",
+    "before": 250.721883,
+    "after": 250.758057
+  },
+  {
+    "file": "frame-0109.png",
+    "before": 250.77513,
+    "after": 250.818146
+  },
+  {
+    "file": "frame-0110.png",
+    "before": 250.832007,
+    "after": 250.868305
+  },
+  {
+    "file": "frame-0111.png",
+    "before": 250.884515,
+    "after": 250.920039
+  },
+  {
+    "file": "frame-0112.png",
+    "before": 250.934255,
+    "after": 250.968753
+  },
+  {
+    "file": "frame-0113.png",
+    "before": 250.98251,
+    "after": 251.014977
+  },
+  {
+    "file": "frame-0114.png",
+    "before": 251.031747,
+    "after": 251.069049
+  },
+  {
+    "file": "frame-0115.png",
+    "before": 251.085022,
+    "after": 251.118954
+  },
+  {
+    "file": "frame-0116.png",
+    "before": 251.136704,
+    "after": 251.170339
+  },
+  {
+    "file": "frame-0117.png",
+    "before": 251.184365,
+    "after": 251.217156
+  },
+  {
+    "file": "frame-0118.png",
+    "before": 251.230927,
+    "after": 251.268324
+  },
+  {
+    "file": "frame-0119.png",
+    "before": 251.281789,
+    "after": 251.320197
+  },
+  {
+    "file": "frame-0120.png",
+    "before": 251.33462,
+    "after": 251.366946
+  },
+  {
+    "file": "frame-0121.png",
+    "before": 251.380663,
+    "after": 251.417308
+  },
+  {
+    "file": "frame-0122.png",
+    "before": 251.432089,
+    "after": 251.465681
+  },
+  {
+    "file": "frame-0123.png",
+    "before": 251.481565,
+    "after": 251.516841
+  },
+  {
+    "file": "frame-0124.png",
+    "before": 251.532174,
+    "after": 251.565533
+  },
+  {
+    "file": "frame-0125.png",
+    "before": 251.580335,
+    "after": 251.614087
+  },
+  {
+    "file": "frame-0126.png",
+    "before": 251.629294,
+    "after": 251.69898
+  },
+  {
+    "file": "frame-0127.png",
+    "before": 251.713802,
+    "after": 251.75431
+  },
+  {
+    "file": "frame-0128.png",
+    "before": 251.769375,
+    "after": 251.804049
+  },
+  {
+    "file": "frame-0129.png",
+    "before": 251.819454,
+    "after": 251.855375
+  },
+  {
+    "file": "frame-0130.png",
+    "before": 251.870482,
+    "after": 251.906883
+  },
+  {
+    "file": "frame-0131.png",
+    "before": 251.920461,
+    "after": 251.957075
+  },
+  {
+    "file": "frame-0132.png",
+    "before": 251.973809,
+    "after": 252.018697
+  },
+  {
+    "file": "frame-0133.png",
+    "before": 252.032144,
+    "after": 252.072787
+  },
+  {
+    "file": "frame-0134.png",
+    "before": 252.092449,
+    "after": 252.132948
+  },
+  {
+    "file": "frame-0135.png",
+    "before": 252.151742,
+    "after": 252.188313
+  },
+  {
+    "file": "frame-0136.png",
+    "before": 252.204278,
+    "after": 252.241755
+  },
+  {
+    "file": "frame-0137.png",
+    "before": 252.258809,
+    "after": 252.302711
+  },
+  {
+    "file": "frame-0138.png",
+    "before": 252.320641,
+    "after": 252.357163
+  },
+  {
+    "file": "frame-0139.png",
+    "before": 252.37429,
+    "after": 252.414207
+  },
+  {
+    "file": "frame-0140.png",
+    "before": 252.432112,
+    "after": 252.472989
+  },
+  {
+    "file": "frame-0141.png",
+    "before": 252.490764,
+    "after": 252.528906
+  },
+  {
+    "file": "frame-0142.png",
+    "before": 252.545903,
+    "after": 252.582199
+  },
+  {
+    "file": "frame-0143.png",
+    "before": 252.598385,
+    "after": 252.637069
+  },
+  {
+    "file": "frame-0144.png",
+    "before": 252.65761,
+    "after": 252.693179
+  },
+  {
+    "file": "frame-0145.png",
+    "before": 252.710372,
+    "after": 252.747482
+  },
+  {
+    "file": "frame-0146.png",
+    "before": 252.764651,
+    "after": 252.801528
+  },
+  {
+    "file": "frame-0147.png",
+    "before": 252.81771,
+    "after": 252.861812
+  },
+  {
+    "file": "frame-0148.png",
+    "before": 252.878761,
+    "after": 252.915711
+  },
+  {
+    "file": "frame-0149.png",
+    "before": 252.931684,
+    "after": 252.970687
+  },
+  {
+    "file": "frame-0150.png",
+    "before": 252.990138,
+    "after": 253.034047
+  },
+  {
+    "file": "frame-0151.png",
+    "before": 253.051893,
+    "after": 253.087454
+  },
+  {
+    "file": "frame-0152.png",
+    "before": 253.105751,
+    "after": 253.143504
+  },
+  {
+    "file": "frame-0153.png",
+    "before": 253.160926,
+    "after": 253.200358
+  },
+  {
+    "file": "frame-0154.png",
+    "before": 253.22045,
+    "after": 253.25931
+  },
+  {
+    "file": "frame-0155.png",
+    "before": 253.275783,
+    "after": 253.316062
+  },
+  {
+    "file": "frame-0156.png",
+    "before": 253.33396,
+    "after": 253.372318
+  },
+  {
+    "file": "frame-0157.png",
+    "before": 253.389107,
+    "after": 253.4375
+  },
+  {
+    "file": "frame-0158.png",
+    "before": 253.454519,
+    "after": 253.487543
+  },
+  {
+    "file": "frame-0159.png",
+    "before": 253.501967,
+    "after": 253.537168
+  },
+  {
+    "file": "frame-0160.png",
+    "before": 253.551863,
+    "after": 253.591097
+  },
+  {
+    "file": "frame-0161.png",
+    "before": 253.605939,
+    "after": 253.639296
+  },
+  {
+    "file": "frame-0162.png",
+    "before": 253.653615,
+    "after": 253.685896
+  },
+  {
+    "file": "frame-0163.png",
+    "before": 253.701244,
+    "after": 253.737095
+  },
+  {
+    "file": "frame-0164.png",
+    "before": 253.757139,
+    "after": 253.7968
+  },
+  {
+    "file": "frame-0165.png",
+    "before": 253.813058,
+    "after": 253.851015
+  },
+  {
+    "file": "frame-0166.png",
+    "before": 253.866323,
+    "after": 253.90125
+  },
+  {
+    "file": "frame-0167.png",
+    "before": 253.916201,
+    "after": 253.950854
+  },
+  {
+    "file": "frame-0168.png",
+    "before": 253.965887,
+    "after": 254.004317
+  },
+  {
+    "file": "frame-0169.png",
+    "before": 254.022268,
+    "after": 254.062128
+  },
+  {
+    "file": "frame-0170.png",
+    "before": 254.080074,
+    "after": 254.119338
+  },
+  {
+    "file": "frame-0171.png",
+    "before": 254.13975,
+    "after": 254.175182
+  },
+  {
+    "file": "frame-0172.png",
+    "before": 254.192498,
+    "after": 254.230999
+  },
+  {
+    "file": "frame-0173.png",
+    "before": 254.247181,
+    "after": 254.28114
+  },
+  {
+    "file": "frame-0174.png",
+    "before": 254.301128,
+    "after": 254.336043
+  },
+  {
+    "file": "frame-0175.png",
+    "before": 254.354541,
+    "after": 254.412362
+  },
+  {
+    "file": "frame-0176.png",
+    "before": 254.427259,
+    "after": 254.46301
+  },
+  {
+    "file": "frame-0177.png",
+    "before": 254.478309,
+    "after": 254.5133
+  },
+  {
+    "file": "frame-0178.png",
+    "before": 254.528904,
+    "after": 254.567491
+  },
+  {
+    "file": "frame-0179.png",
+    "before": 254.583988,
+    "after": 254.617668
+  },
+  {
+    "file": "frame-0180.png",
+    "before": 254.635892,
+    "after": 254.673851
+  },
+  {
+    "file": "frame-0181.png",
+    "before": 254.690995,
+    "after": 254.724686
+  },
+  {
+    "file": "frame-0182.png",
+    "before": 254.740938,
+    "after": 254.780862
+  },
+  {
+    "file": "frame-0183.png",
+    "before": 254.798031,
+    "after": 254.833442
+  },
+  {
+    "file": "frame-0184.png",
+    "before": 254.848253,
+    "after": 254.882057
+  },
+  {
+    "file": "frame-0185.png",
+    "before": 254.897748,
+    "after": 254.931298
+  },
+  {
+    "file": "frame-0186.png",
+    "before": 254.951979,
+    "after": 254.984767
+  },
+  {
+    "file": "frame-0187.png",
+    "before": 254.999735,
+    "after": 255.032456
+  },
+  {
+    "file": "frame-0188.png",
+    "before": 255.050172,
+    "after": 255.084129
+  },
+  {
+    "file": "frame-0189.png",
+    "before": 255.100878,
+    "after": 255.136354
+  },
+  {
+    "file": "frame-0190.png",
+    "before": 255.157606,
+    "after": 255.194126
+  },
+  {
+    "file": "frame-0191.png",
+    "before": 255.211347,
+    "after": 255.250037
+  },
+  {
+    "file": "frame-0192.png",
+    "before": 255.266767,
+    "after": 255.302931
+  },
+  {
+    "file": "frame-0193.png",
+    "before": 255.318046,
+    "after": 255.355922
+  },
+  {
+    "file": "frame-0194.png",
+    "before": 255.371359,
+    "after": 255.405132
+  },
+  {
+    "file": "frame-0195.png",
+    "before": 255.420639,
+    "after": 255.455429
+  },
+  {
+    "file": "frame-0196.png",
+    "before": 255.470552,
+    "after": 255.516174
+  },
+  {
+    "file": "frame-0197.png",
+    "before": 255.534706,
+    "after": 255.570567
+  },
+  {
+    "file": "frame-0198.png",
+    "before": 255.586011,
+    "after": 255.624906
+  },
+  {
+    "file": "frame-0199.png",
+    "before": 255.645392,
+    "after": 255.683177
+  },
+  {
+    "file": "frame-0200.png",
+    "before": 255.703864,
+    "after": 255.741299
+  },
+  {
+    "file": "frame-0201.png",
+    "before": 255.758478,
+    "after": 255.793699
+  },
+  {
+    "file": "frame-0202.png",
+    "before": 255.81063,
+    "after": 255.845234
+  },
+  {
+    "file": "frame-0203.png",
+    "before": 255.86189,
+    "after": 255.902839
+  },
+  {
+    "file": "frame-0204.png",
+    "before": 255.917707,
+    "after": 255.952506
+  },
+  {
+    "file": "frame-0205.png",
+    "before": 255.967897,
+    "after": 256.004941
+  },
+  {
+    "file": "frame-0206.png",
+    "before": 256.020447,
+    "after": 256.054103
+  },
+  {
+    "file": "frame-0207.png",
+    "before": 256.069446,
+    "after": 256.107434
+  },
+  {
+    "file": "frame-0208.png",
+    "before": 256.124496,
+    "after": 256.159391
+  },
+  {
+    "file": "frame-0209.png",
+    "before": 256.175438,
+    "after": 256.211781
+  },
+  {
+    "file": "frame-0210.png",
+    "before": 256.235922,
+    "after": 256.274759
+  },
+  {
+    "file": "frame-0211.png",
+    "before": 256.291763,
+    "after": 256.327151
+  },
+  {
+    "file": "frame-0212.png",
+    "before": 256.344856,
+    "after": 256.379358
+  },
+  {
+    "file": "frame-0213.png",
+    "before": 256.396632,
+    "after": 256.429643
+  },
+  {
+    "file": "frame-0214.png",
+    "before": 256.446815,
+    "after": 256.484476
+  },
+  {
+    "file": "frame-0215.png",
+    "before": 256.499958,
+    "after": 256.537184
+  },
+  {
+    "file": "frame-0216.png",
+    "before": 256.55291,
+    "after": 256.587486
+  },
+  {
+    "file": "frame-0217.png",
+    "before": 256.604742,
+    "after": 256.638548
+  },
+  {
+    "file": "frame-0218.png",
+    "before": 256.654218,
+    "after": 256.688118
+  },
+  {
+    "file": "frame-0219.png",
+    "before": 256.707488,
+    "after": 256.741847
+  },
+  {
+    "file": "frame-0220.png",
+    "before": 256.758309,
+    "after": 256.794904
+  },
+  {
+    "file": "frame-0221.png",
+    "before": 256.812297,
+    "after": 256.84661
+  },
+  {
+    "file": "frame-0222.png",
+    "before": 256.862949,
+    "after": 256.904166
+  },
+  {
+    "file": "frame-0223.png",
+    "before": 256.923832,
+    "after": 256.958283
+  },
+  {
+    "file": "frame-0224.png",
+    "before": 256.973502,
+    "after": 257.007641
+  },
+  {
+    "file": "frame-0225.png",
+    "before": 257.025434,
+    "after": 257.06053
+  },
+  {
+    "file": "frame-0226.png",
+    "before": 257.077356,
+    "after": 257.114934
+  },
+  {
+    "file": "frame-0227.png",
+    "before": 257.131887,
+    "after": 257.168392
+  },
+  {
+    "file": "frame-0228.png",
+    "before": 257.185452,
+    "after": 257.22076
+  },
+  {
+    "file": "frame-0229.png",
+    "before": 257.238884,
+    "after": 257.276652
+  },
+  {
+    "file": "frame-0230.png",
+    "before": 257.297208,
+    "after": 257.336694
+  },
+  {
+    "file": "frame-0231.png",
+    "before": 257.354141,
+    "after": 257.391206
+  },
+  {
+    "file": "frame-0232.png",
+    "before": 257.410445,
+    "after": 257.450086
+  },
+  {
+    "file": "frame-0233.png",
+    "before": 257.465675,
+    "after": 257.504081
+  },
+  {
+    "file": "frame-0234.png",
+    "before": 257.522714,
+    "after": 257.563192
+  },
+  {
+    "file": "frame-0235.png",
+    "before": 257.58082,
+    "after": 257.617724
+  },
+  {
+    "file": "frame-0236.png",
+    "before": 257.635914,
+    "after": 257.674146
+  },
+  {
+    "file": "frame-0237.png",
+    "before": 257.692946,
+    "after": 257.734855
+  },
+  {
+    "file": "frame-0238.png",
+    "before": 257.758363,
+    "after": 257.79995
+  },
+  {
+    "file": "frame-0239.png",
+    "before": 257.818414,
+    "after": 257.856265
+  },
+  {
+    "file": "frame-0240.png",
+    "before": 257.871188,
+    "after": 257.904142
+  },
+  {
+    "file": "frame-0241.png",
+    "before": 257.920748,
+    "after": 257.960706
+  },
+  {
+    "file": "frame-0242.png",
+    "before": 257.97643,
+    "after": 258.011498
+  },
+  {
+    "file": "frame-0243.png",
+    "before": 258.026501,
+    "after": 258.058462
+  },
+  {
+    "file": "frame-0244.png",
+    "before": 258.073635,
+    "after": 258.135642
+  },
+  {
+    "file": "frame-0245.png",
+    "before": 258.155786,
+    "after": 258.197926
+  },
+  {
+    "file": "frame-0246.png",
+    "before": 258.21874,
+    "after": 258.260393
+  },
+  {
+    "file": "frame-0247.png",
+    "before": 258.278416,
+    "after": 258.321878
+  },
+  {
+    "file": "frame-0248.png",
+    "before": 258.341418,
+    "after": 258.382113
+  },
+  {
+    "file": "frame-0249.png",
+    "before": 258.401578,
+    "after": 258.438677
+  },
+  {
+    "file": "frame-0250.png",
+    "before": 258.456489,
+    "after": 258.497614
+  },
+  {
+    "file": "frame-0251.png",
+    "before": 258.514757,
+    "after": 258.548264
+  },
+  {
+    "file": "frame-0252.png",
+    "before": 258.565067,
+    "after": 258.603058
+  },
+  {
+    "file": "frame-0253.png",
+    "before": 258.619455,
+    "after": 258.653442
+  },
+  {
+    "file": "frame-0254.png",
+    "before": 258.671364,
+    "after": 258.709693
+  },
+  {
+    "file": "frame-0255.png",
+    "before": 258.72816,
+    "after": 258.770864
+  },
+  {
+    "file": "frame-0256.png",
+    "before": 258.788712,
+    "after": 258.826141
+  },
+  {
+    "file": "frame-0257.png",
+    "before": 258.842803,
+    "after": 258.876513
+  },
+  {
+    "file": "frame-0258.png",
+    "before": 258.893847,
+    "after": 258.930468
+  },
+  {
+    "file": "frame-0259.png",
+    "before": 258.951009,
+    "after": 258.989915
+  },
+  {
+    "file": "frame-0260.png",
+    "before": 259.00886,
+    "after": 259.045967
+  },
+  {
+    "file": "frame-0261.png",
+    "before": 259.065825,
+    "after": 259.104127
+  },
+  {
+    "file": "frame-0262.png",
+    "before": 259.121728,
+    "after": 259.161736
+  },
+  {
+    "file": "frame-0263.png",
+    "before": 259.178451,
+    "after": 259.214325
+  },
+  {
+    "file": "frame-0264.png",
+    "before": 259.231311,
+    "after": 259.274568
+  },
+  {
+    "file": "frame-0265.png",
+    "before": 259.293617,
+    "after": 259.335947
+  },
+  {
+    "file": "frame-0266.png",
+    "before": 259.353098,
+    "after": 259.391929
+  },
+  {
+    "file": "frame-0267.png",
+    "before": 259.409782,
+    "after": 259.447055
+  },
+  {
+    "file": "frame-0268.png",
+    "before": 259.465268,
+    "after": 259.5034
+  },
+  {
+    "file": "frame-0269.png",
+    "before": 259.520831,
+    "after": 259.558622
+  },
+  {
+    "file": "frame-0270.png",
+    "before": 259.577631,
+    "after": 259.614703
+  },
+  {
+    "file": "frame-0271.png",
+    "before": 259.630823,
+    "after": 259.663853
+  },
+  {
+    "file": "frame-0272.png",
+    "before": 259.678854,
+    "after": 259.713215
+  },
+  {
+    "file": "frame-0273.png",
+    "before": 259.731105,
+    "after": 259.77285
+  },
+  {
+    "file": "frame-0274.png",
+    "before": 259.791172,
+    "after": 259.827434
+  },
+  {
+    "file": "frame-0275.png",
+    "before": 259.843953,
+    "after": 259.883087
+  },
+  {
+    "file": "frame-0276.png",
+    "before": 259.900352,
+    "after": 259.937998
+  },
+  {
+    "file": "frame-0277.png",
+    "before": 259.955144,
+    "after": 259.99048
+  },
+  {
+    "file": "frame-0278.png",
+    "before": 260.006208,
+    "after": 260.042263
+  },
+  {
+    "file": "frame-0279.png",
+    "before": 260.064332,
+    "after": 260.101894
+  },
+  {
+    "file": "frame-0280.png",
+    "before": 260.119469,
+    "after": 260.155647
+  },
+  {
+    "file": "frame-0281.png",
+    "before": 260.171643,
+    "after": 260.208281
+  },
+  {
+    "file": "frame-0282.png",
+    "before": 260.226147,
+    "after": 260.282025
+  },
+  {
+    "file": "frame-0283.png",
+    "before": 260.300631,
+    "after": 260.335732
+  },
+  {
+    "file": "frame-0284.png",
+    "before": 260.351203,
+    "after": 260.385066
+  },
+  {
+    "file": "frame-0285.png",
+    "before": 260.402001,
+    "after": 260.440658
+  },
+  {
+    "file": "frame-0286.png",
+    "before": 260.45743,
+    "after": 260.492415
+  },
+  {
+    "file": "frame-0287.png",
+    "before": 260.509463,
+    "after": 260.544159
+  },
+  {
+    "file": "frame-0288.png",
+    "before": 260.560913,
+    "after": 260.594656
+  },
+  {
+    "file": "frame-0289.png",
+    "before": 260.609516,
+    "after": 260.645172
+  },
+  {
+    "file": "frame-0290.png",
+    "before": 260.660716,
+    "after": 260.695008
+  },
+  {
+    "file": "frame-0291.png",
+    "before": 260.712164,
+    "after": 260.750235
+  },
+  {
+    "file": "frame-0292.png",
+    "before": 260.767363,
+    "after": 260.806441
+  },
+  {
+    "file": "frame-0293.png",
+    "before": 260.827184,
+    "after": 260.864647
+  },
+  {
+    "file": "frame-0294.png",
+    "before": 260.882623,
+    "after": 260.921175
+  },
+  {
+    "file": "frame-0295.png",
+    "before": 260.938712,
+    "after": 260.973303
+  },
+  {
+    "file": "frame-0296.png",
+    "before": 260.98921,
+    "after": 261.026744
+  },
+  {
+    "file": "frame-0297.png",
+    "before": 261.043175,
+    "after": 261.08177
+  },
+  {
+    "file": "frame-0298.png",
+    "before": 261.09957,
+    "after": 261.13423
+  },
+  {
+    "file": "frame-0299.png",
+    "before": 261.15309,
+    "after": 261.189675
+  },
+  {
+    "file": "frame-0300.png",
+    "before": 261.208836,
+    "after": 261.244977
+  },
+  {
+    "file": "frame-0301.png",
+    "before": 261.260679,
+    "after": 261.300155
+  },
+  {
+    "file": "frame-0302.png",
+    "before": 261.320701,
+    "after": 261.360863
+  },
+  {
+    "file": "frame-0303.png",
+    "before": 261.382695,
+    "after": 261.420945
+  },
+  {
+    "file": "frame-0304.png",
+    "before": 261.437491,
+    "after": 261.470906
+  },
+  {
+    "file": "frame-0305.png",
+    "before": 261.488058,
+    "after": 261.523686
+  },
+  {
+    "file": "frame-0306.png",
+    "before": 261.540555,
+    "after": 261.579491
+  },
+  {
+    "file": "frame-0307.png",
+    "before": 261.597093,
+    "after": 261.631421
+  },
+  {
+    "file": "frame-0308.png",
+    "before": 261.648716,
+    "after": 261.682595
+  },
+  {
+    "file": "frame-0309.png",
+    "before": 261.699542,
+    "after": 261.736069
+  },
+  {
+    "file": "frame-0310.png",
+    "before": 261.756352,
+    "after": 261.794553
+  },
+  {
+    "file": "frame-0311.png",
+    "before": 261.814945,
+    "after": 261.851203
+  },
+  {
+    "file": "frame-0312.png",
+    "before": 261.869231,
+    "after": 261.906298
+  },
+  {
+    "file": "frame-0313.png",
+    "before": 261.923898,
+    "after": 261.959838
+  },
+  {
+    "file": "frame-0314.png",
+    "before": 261.980517,
+    "after": 262.021657
+  },
+  {
+    "file": "frame-0315.png",
+    "before": 262.039443,
+    "after": 262.079945
+  },
+  {
+    "file": "frame-0316.png",
+    "before": 262.106033,
+    "after": 262.149676
+  },
+  {
+    "file": "frame-0317.png",
+    "before": 262.16931,
+    "after": 262.205587
+  },
+  {
+    "file": "frame-0318.png",
+    "before": 262.223035,
+    "after": 262.268458
+  },
+  {
+    "file": "frame-0319.png",
+    "before": 262.286949,
+    "after": 262.322631
+  },
+  {
+    "file": "frame-0320.png",
+    "before": 262.339917,
+    "after": 262.37523
+  },
+  {
+    "file": "frame-0321.png",
+    "before": 262.393405,
+    "after": 262.429564
+  },
+  {
+    "file": "frame-0322.png",
+    "before": 262.44687,
+    "after": 262.485392
+  },
+  {
+    "file": "frame-0323.png",
+    "before": 262.501792,
+    "after": 262.538099
+  },
+  {
+    "file": "frame-0324.png",
+    "before": 262.556479,
+    "after": 262.591325
+  },
+  {
+    "file": "frame-0325.png",
+    "before": 262.609238,
+    "after": 262.647216
+  },
+  {
+    "file": "frame-0326.png",
+    "before": 262.666393,
+    "after": 262.702605
+  },
+  {
+    "file": "frame-0327.png",
+    "before": 262.723729,
+    "after": 262.759319
+  },
+  {
+    "file": "frame-0328.png",
+    "before": 262.777796,
+    "after": 262.814522
+  },
+  {
+    "file": "frame-0329.png",
+    "before": 262.831362,
+    "after": 262.866873
+  },
+  {
+    "file": "frame-0330.png",
+    "before": 262.884659,
+    "after": 262.922941
+  },
+  {
+    "file": "frame-0331.png",
+    "before": 262.941434,
+    "after": 262.97738
+  },
+  {
+    "file": "frame-0332.png",
+    "before": 262.994682,
+    "after": 263.030966
+  },
+  {
+    "file": "frame-0333.png",
+    "before": 263.0499,
+    "after": 263.089485
+  },
+  {
+    "file": "frame-0334.png",
+    "before": 263.112048,
+    "after": 263.152111
+  },
+  {
+    "file": "frame-0335.png",
+    "before": 263.169965,
+    "after": 263.204783
+  },
+  {
+    "file": "frame-0336.png",
+    "before": 263.223288,
+    "after": 263.261861
+  },
+  {
+    "file": "frame-0337.png",
+    "before": 263.280042,
+    "after": 263.320339
+  },
+  {
+    "file": "frame-0338.png",
+    "before": 263.33781,
+    "after": 263.375332
+  },
+  {
+    "file": "frame-0339.png",
+    "before": 263.394094,
+    "after": 263.444828
+  },
+  {
+    "file": "frame-0340.png",
+    "before": 263.463004,
+    "after": 263.500117
+  },
+  {
+    "file": "frame-0341.png",
+    "before": 263.522282,
+    "after": 263.561957
+  },
+  {
+    "file": "frame-0342.png",
+    "before": 263.579468,
+    "after": 263.616742
+  },
+  {
+    "file": "frame-0343.png",
+    "before": 263.634477,
+    "after": 263.670036
+  },
+  {
+    "file": "frame-0344.png",
+    "before": 263.687671,
+    "after": 263.725283
+  },
+  {
+    "file": "frame-0345.png",
+    "before": 263.745835,
+    "after": 263.785037
+  },
+  {
+    "file": "frame-0346.png",
+    "before": 263.804825,
+    "after": 263.842141
+  },
+  {
+    "file": "frame-0347.png",
+    "before": 263.860814,
+    "after": 263.901872
+  },
+  {
+    "file": "frame-0348.png",
+    "before": 263.920295,
+    "after": 263.958891
+  },
+  {
+    "file": "frame-0349.png",
+    "before": 263.976965,
+    "after": 264.015703
+  },
+  {
+    "file": "frame-0350.png",
+    "before": 264.034274,
+    "after": 264.07081
+  },
+  {
+    "file": "frame-0351.png",
+    "before": 264.09147,
+    "after": 264.126956
+  },
+  {
+    "file": "frame-0352.png",
+    "before": 264.143948,
+    "after": 264.179899
+  },
+  {
+    "file": "frame-0353.png",
+    "before": 264.197179,
+    "after": 264.231814
+  },
+  {
+    "file": "frame-0354.png",
+    "before": 264.248789,
+    "after": 264.28822
+  },
+  {
+    "file": "frame-0355.png",
+    "before": 264.307395,
+    "after": 264.341947
+  },
+  {
+    "file": "frame-0356.png",
+    "before": 264.360159,
+    "after": 264.396915
+  },
+  {
+    "file": "frame-0357.png",
+    "before": 264.414358,
+    "after": 264.453768
+  },
+  {
+    "file": "frame-0358.png",
+    "before": 264.475978,
+    "after": 264.512285
+  },
+  {
+    "file": "frame-0359.png",
+    "before": 264.530679,
+    "after": 264.567761
+  },
+  {
+    "file": "frame-0360.png",
+    "before": 264.587008,
+    "after": 264.622723
+  },
+  {
+    "file": "frame-0361.png",
+    "before": 264.644135,
+    "after": 264.68422
+  },
+  {
+    "file": "frame-0362.png",
+    "before": 264.70261,
+    "after": 264.739366
+  },
+  {
+    "file": "frame-0363.png",
+    "before": 264.756854,
+    "after": 264.793431
+  },
+  {
+    "file": "frame-0364.png",
+    "before": 264.812761,
+    "after": 264.850243
+  },
+  {
+    "file": "frame-0365.png",
+    "before": 264.872399,
+    "after": 264.910443
+  },
+  {
+    "file": "frame-0366.png",
+    "before": 264.928498,
+    "after": 264.964715
+  },
+  {
+    "file": "frame-0367.png",
+    "before": 264.982521,
+    "after": 265.018095
+  },
+  {
+    "file": "frame-0368.png",
+    "before": 265.037379,
+    "after": 265.078215
+  },
+  {
+    "file": "frame-0369.png",
+    "before": 265.096739,
+    "after": 265.133032
+  },
+  {
+    "file": "frame-0370.png",
+    "before": 265.151108,
+    "after": 265.187962
+  },
+  {
+    "file": "frame-0371.png",
+    "before": 265.207207,
+    "after": 265.253347
+  },
+  {
+    "file": "frame-0372.png",
+    "before": 265.273162,
+    "after": 265.31411
+  },
+  {
+    "file": "frame-0373.png",
+    "before": 265.334505,
+    "after": 265.376447
+  },
+  {
+    "file": "frame-0374.png",
+    "before": 265.397131,
+    "after": 265.434218
+  },
+  {
+    "file": "frame-0375.png",
+    "before": 265.454963,
+    "after": 265.49256
+  },
+  {
+    "file": "frame-0376.png",
+    "before": 265.512232,
+    "after": 265.551599
+  },
+  {
+    "file": "frame-0377.png",
+    "before": 265.568792,
+    "after": 265.630254
+  },
+  {
+    "file": "frame-0378.png",
+    "before": 265.648363,
+    "after": 265.687902
+  },
+  {
+    "file": "frame-0379.png",
+    "before": 265.705183,
+    "after": 265.744089
+  },
+  {
+    "file": "frame-0380.png",
+    "before": 265.762583,
+    "after": 265.80181
+  },
+  {
+    "file": "frame-0381.png",
+    "before": 265.822788,
+    "after": 265.859875
+  },
+  {
+    "file": "frame-0382.png",
+    "before": 265.881488,
+    "after": 265.920722
+  },
+  {
+    "file": "frame-0383.png",
+    "before": 265.938099,
+    "after": 265.975059
+  },
+  {
+    "file": "frame-0384.png",
+    "before": 265.995515,
+    "after": 266.036367
+  },
+  {
+    "file": "frame-0385.png",
+    "before": 266.055819,
+    "after": 266.094577
+  },
+  {
+    "file": "frame-0386.png",
+    "before": 266.112903,
+    "after": 266.152269
+  },
+  {
+    "file": "frame-0387.png",
+    "before": 266.171338,
+    "after": 266.207417
+  },
+  {
+    "file": "frame-0388.png",
+    "before": 266.226203,
+    "after": 266.265861
+  },
+  {
+    "file": "frame-0389.png",
+    "before": 266.283859,
+    "after": 266.325058
+  },
+  {
+    "file": "frame-0390.png",
+    "before": 266.344677,
+    "after": 266.381524
+  },
+  {
+    "file": "frame-0391.png",
+    "before": 266.402445,
+    "after": 266.440751
+  },
+  {
+    "file": "frame-0392.png",
+    "before": 266.458824,
+    "after": 266.494509
+  },
+  {
+    "file": "frame-0393.png",
+    "before": 266.513219,
+    "after": 266.553483
+  },
+  {
+    "file": "frame-0394.png",
+    "before": 266.572153,
+    "after": 266.61348
+  },
+  {
+    "file": "frame-0395.png",
+    "before": 266.633368,
+    "after": 266.671126
+  },
+  {
+    "file": "frame-0396.png",
+    "before": 266.690104,
+    "after": 266.724573
+  },
+  {
+    "file": "frame-0397.png",
+    "before": 266.742909,
+    "after": 266.781053
+  },
+  {
+    "file": "frame-0398.png",
+    "before": 266.801968,
+    "after": 266.840711
+  },
+  {
+    "file": "frame-0399.png",
+    "before": 266.859792,
+    "after": 266.898587
+  },
+  {
+    "file": "frame-0400.png",
+    "before": 266.91776,
+    "after": 266.958594
+  },
+  {
+    "file": "frame-0401.png",
+    "before": 266.979827,
+    "after": 267.018832
+  },
+  {
+    "file": "frame-0402.png",
+    "before": 267.03892,
+    "after": 267.084922
+  },
+  {
+    "file": "frame-0403.png",
+    "before": 267.10584,
+    "after": 267.148652
+  },
+  {
+    "file": "frame-0404.png",
+    "before": 267.171376,
+    "after": 267.223851
+  },
+  {
+    "file": "frame-0405.png",
+    "before": 267.25013,
+    "after": 267.327272
+  },
+  {
+    "file": "frame-0406.png",
+    "before": 267.360467,
+    "after": 267.409342
+  },
+  {
+    "file": "frame-0407.png",
+    "before": 267.432128,
+    "after": 267.477279
+  },
+  {
+    "file": "frame-0408.png",
+    "before": 267.499401,
+    "after": 267.5432
+  },
+  {
+    "file": "frame-0409.png",
+    "before": 267.564733,
+    "after": 267.604675
+  },
+  {
+    "file": "frame-0410.png",
+    "before": 267.625834,
+    "after": 267.668825
+  },
+  {
+    "file": "frame-0411.png",
+    "before": 267.688778,
+    "after": 267.728266
+  },
+  {
+    "file": "frame-0412.png",
+    "before": 267.754848,
+    "after": 267.796041
+  },
+  {
+    "file": "frame-0413.png",
+    "before": 267.81605,
+    "after": 267.856025
+  },
+  {
+    "file": "frame-0414.png",
+    "before": 267.876172,
+    "after": 267.915709
+  },
+  {
+    "file": "frame-0415.png",
+    "before": 267.935428,
+    "after": 267.974834
+  },
+  {
+    "file": "frame-0416.png",
+    "before": 267.995013,
+    "after": 268.034556
+  },
+  {
+    "file": "frame-0417.png",
+    "before": 268.056989,
+    "after": 268.095977
+  },
+  {
+    "file": "frame-0418.png",
+    "before": 268.115275,
+    "after": 268.152154
+  },
+  {
+    "file": "frame-0419.png",
+    "before": 268.170433,
+    "after": 268.206152
+  },
+  {
+    "file": "frame-0420.png",
+    "before": 268.224239,
+    "after": 268.261853
+  },
+  {
+    "file": "frame-0421.png",
+    "before": 268.28338,
+    "after": 268.323236
+  },
+  {
+    "file": "frame-0422.png",
+    "before": 268.343506,
+    "after": 268.38211
+  },
+  {
+    "file": "frame-0423.png",
+    "before": 268.403461,
+    "after": 268.441448
+  },
+  {
+    "file": "frame-0424.png",
+    "before": 268.462549,
+    "after": 268.503866
+  },
+  {
+    "file": "frame-0425.png",
+    "before": 268.522289,
+    "after": 268.562651
+  },
+  {
+    "file": "frame-0426.png",
+    "before": 268.58377,
+    "after": 268.622334
+  },
+  {
+    "file": "frame-0427.png",
+    "before": 268.641879,
+    "after": 268.686496
+  },
+  {
+    "file": "frame-0428.png",
+    "before": 268.704214,
+    "after": 268.741024
+  },
+  {
+    "file": "frame-0429.png",
+    "before": 268.759752,
+    "after": 268.797815
+  },
+  {
+    "file": "frame-0430.png",
+    "before": 268.816982,
+    "after": 268.856121
+  },
+  {
+    "file": "frame-0431.png",
+    "before": 268.876522,
+    "after": 268.977319
+  },
+  {
+    "file": "frame-0432.png",
+    "before": 268.996766,
+    "after": 269.070602
+  },
+  {
+    "file": "frame-0433.png",
+    "before": 269.08941,
+    "after": 269.127286
+  },
+  {
+    "file": "frame-0434.png",
+    "before": 269.144778,
+    "after": 269.189054
+  },
+  {
+    "file": "frame-0435.png",
+    "before": 269.211844,
+    "after": 269.25969
+  },
+  {
+    "file": "frame-0436.png",
+    "before": 269.281187,
+    "after": 269.320855
+  },
+  {
+    "file": "frame-0437.png",
+    "before": 269.341124,
+    "after": 269.384054
+  },
+  {
+    "file": "frame-0438.png",
+    "before": 269.405746,
+    "after": 269.443662
+  },
+  {
+    "file": "frame-0439.png",
+    "before": 269.465618,
+    "after": 269.500994
+  },
+  {
+    "file": "frame-0440.png",
+    "before": 269.519003,
+    "after": 269.555409
+  },
+  {
+    "file": "frame-0441.png",
+    "before": 269.57399,
+    "after": 269.610538
+  },
+  {
+    "file": "frame-0442.png",
+    "before": 269.631953,
+    "after": 269.672238
+  },
+  {
+    "file": "frame-0443.png",
+    "before": 269.690165,
+    "after": 269.727062
+  },
+  {
+    "file": "frame-0444.png",
+    "before": 269.748584,
+    "after": 269.787853
+  },
+  {
+    "file": "frame-0445.png",
+    "before": 269.809963,
+    "after": 269.850064
+  },
+  {
+    "file": "frame-0446.png",
+    "before": 269.873051,
+    "after": 269.912403
+  },
+  {
+    "file": "frame-0447.png",
+    "before": 269.931091,
+    "after": 269.966721
+  },
+  {
+    "file": "frame-0448.png",
+    "before": 269.984842,
+    "after": 270.021661
+  },
+  {
+    "file": "frame-0449.png",
+    "before": 270.040052,
+    "after": 270.079996
+  }
+]

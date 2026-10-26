@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "method": "human-seeded-CSRT-image-gates-v1",
+  "venue": "heiwajima",
+  "date": "2026-10-26",
+  "race": 1,
+  "source": "https://race.boatcast.jp/replay?jo=04&md=T",
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 500,
+      "direction": 1,
+      "segment": [
+        470,
+        630
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 360,
+      "direction": -1,
+      "segment": [
+        740,
+        980
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 500,
+      "direction": -1,
+      "segment": [
+        170,
+        310
+      ]
+    }
+  },
+  "image_size": [
+    1280,
+    720
+  ],
+  "results": [
+    {
+      "boat": 1,
+      "status": "needs_manual_review",
+      "reasons": [],
+      "events": {
+        "A": 247.93346662000002,
+        "B": 249.67317175000002,
+        "C": 251.67457267164178
+      },
+      "candidate_entry_video_seconds": 1.7,
+      "candidate_exit_video_seconds": 2.0
+    },
+    {
+      "boat": 2,
+      "status": "rejected",
+      "reasons": [
+        "stationary_track"
+      ],
+      "events": {
+        "A": 250.46216314583333,
+        "B": 252.4493115,
+        "C": 254.45451783333334
+      }
+    },
+    {
+      "boat": 3,
+      "status": "needs_manual_review",
+      "reasons": [],
+      "events": {
+        "A": 255.07401256666665,
+        "B": 257.10424417499996,
+        "C": 258.98754745
+      },
+      "candidate_entry_video_seconds": 2.0,
+      "candidate_exit_video_seconds": 1.9
+    },
+    {
+      "boat": 4,
+      "status": "needs_manual_review",
+      "reasons": [],
+      "events": {
+        "A": 258.9435522307692,
+        "B": 260.99312857142854,
+        "C": 262.7557291
+      },
+      "candidate_entry_video_seconds": 2.0,
+      "candidate_exit_video_seconds": 1.8
+    },
+    {
+      "boat": 5,
+      "status": "rejected",
+      "reasons": [
+        "stationary_track"
+      ],
+      "events": {
+        "A": 261.7032035,
+        "B": 263.5802914318182,
+        "C": 265.721810825
+      }
+    },
+    {
+      "boat": 6,
+      "status": "needs_manual_review",
+      "reasons": [],
+      "events": {
+        "A": 264.68529935256413,
+        "B": 266.75417492857144,
+        "C": 268.58487740000004
+      },
+      "candidate_entry_video_seconds": 2.1,
+      "candidate_exit_video_seconds": 1.8
+    }
+  ],
+  "publication_ready": false,
+  "prediction_used": false,
+  "automatic_boat_identification": false,
+  "camera_calibrated": false,
+  "video_clock_calibrated": false,
+  "reference_point": "CSRT bounding-box centre; hull-centre agreement unverified",
+  "scope": "ended-race offline experiment; not predeadline evidence"
+}

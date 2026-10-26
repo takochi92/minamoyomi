@@ -1,0 +1,109 @@
+{
+  "venue": "heiwajima",
+  "turn": "1-mark",
+  "date": "2026-10-26",
+  "race": 1,
+  "source": "https://race.boatcast.jp/replay?jo=04&md=T",
+  "image_size": [
+    1280,
+    720
+  ],
+  "gates": {
+    "A": {
+      "axis": "x",
+      "value": 500,
+      "direction": 1,
+      "segment": [
+        470,
+        630
+      ]
+    },
+    "B": {
+      "axis": "y",
+      "value": 360,
+      "direction": -1,
+      "segment": [
+        740,
+        980
+      ]
+    },
+    "C": {
+      "axis": "x",
+      "value": 500,
+      "direction": -1,
+      "segment": [
+        170,
+        310
+      ]
+    }
+  },
+  "excluded_regions": [],
+  "seeds": [
+    {
+      "boat": 1,
+      "start": 51,
+      "end": 155,
+      "bbox": [
+        375,
+        535,
+        75,
+        65
+      ]
+    },
+    {
+      "boat": 2,
+      "start": 99,
+      "end": 235,
+      "bbox": [
+        388,
+        538,
+        80,
+        65
+      ]
+    },
+    {
+      "boat": 3,
+      "start": 187,
+      "end": 297,
+      "bbox": [
+        444,
+        533,
+        80,
+        65
+      ]
+    },
+    {
+      "boat": 4,
+      "start": 257,
+      "end": 362,
+      "bbox": [
+        440,
+        540,
+        80,
+        65
+      ]
+    },
+    {
+      "boat": 5,
+      "start": 303,
+      "end": 418,
+      "bbox": [
+        325,
+        550,
+        80,
+        65
+      ]
+    },
+    {
+      "boat": 6,
+      "start": 355,
+      "end": 450,
+      "bbox": [
+        290,
+        575,
+        85,
+        65
+      ]
+    }
+  ]
+}
