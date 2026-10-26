@@ -48,7 +48,9 @@ if (typeof document !== 'undefined') {
     for (const button of buttons) button.setAttribute('aria-pressed', String(+button.dataset.evRace === rno));
     const research = (config.research || []).find(r=>r.date === date && r.jcd === jcd && r.rno === rno && officialExhibitionUrl(r.official_url, selection));
     if (research) {
-      $('ev-source').href = research.official_url; $('ev-source-wrap').hidden = false;
+      if (research.source_state !== 'unavailable') {
+        $('ev-source').href = research.official_url; $('ev-source-wrap').hidden = false;
+      }
       const table = exhibitionReferenceTable(research.reference);
       if (table) {
         $('ev-times').innerHTML = table; $('ev-reference').hidden = false;
@@ -58,7 +60,7 @@ if (typeof document !== 'undefined') {
       }
     }
     const row = config.records.find(r => r.date === date && r.jcd === jcd && r.rno === rno && exhibitionAsset(r.asset));
-    if (!row) $('ev-status').textContent = research ?
+    if (!row) $('ev-status').textContent = research?.source_state === 'unavailable' ? '公式映像の登録を現在確認できません。保存済みの参考値がある場合のみ表示します。' : research ?
       ($('ev-reference').hidden ? '参考タイムは未測定です。公式展示映像を別タブで確認できます。' : '艇首方式の測定サンプルです。正式タイムではありません。') :
       'このレースは未収録です。現在は平和島で検証しています。';
     else {

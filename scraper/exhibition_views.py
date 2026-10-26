@@ -26,6 +26,8 @@ def research_catalog(raw):
         except (ValueError, TypeError):
             continue
         item = {'date':key[0], 'jcd':key[1], 'rno':key[2], 'official_url':row['official_url']}
+        if row.get('source_state') in ('registered','unavailable'):
+            item['source_state'] = row['source_state']
         ref = row.get('reference') or {}
         ref = ref if isinstance(ref, dict) else {}
         boats = ref.get('boats') or []
@@ -78,6 +80,7 @@ def render(page, venues, date, records, *, preview=False, research=None):
     payload = json.dumps(config, ensure_ascii=False, allow_nan=False).replace('<', '\\u003c')
     return (f'<link rel="stylesheet" href="{page.asset("exhibition.css")}">'
             '<h1>展示解析 <small class="ev-beta">平和島・試験公開</small></h1><p class="sub">１マークの入り・出口を、映像と参考タイムで確認</p>'
+            '<p class="sub">公式映像の登録を毎日確認します。タイムの無人解析は準備中です。</p>'
             '<form id="ev-select" class="ev-select"><label>日付<input id="ev-date" type="date" required></label>'
             f'<label>場<select id="ev-venue">{options}</select></label>'
             '<label>レース<select id="ev-race">' + ''.join(f'<option value="{n}">{n}R</option>' for n in range(1, 13)) + '</select></label>'

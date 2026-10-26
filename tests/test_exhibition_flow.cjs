@@ -32,4 +32,7 @@ b('chip12').onclick();assert.ok(b('ev-reference').hidden);assert.equal(b('ev-tim
 assert.match(b('ev-source').href,/raceNumber=12/);assert.match(b('ev-status').textContent,/未測定/);
 b('ev-date').value='2026-10-27';b('ev-date').onchange();beta.submit();
 assert.ok(b('ev-source-wrap').hidden);assert.equal(b('ev-source').href,undefined);assert.equal(b('ev-frame').src,undefined);
+const removed=boot('',{records:[],research:[{...research[0],source_state:'unavailable'}]});
+assert.ok(removed.node('ev-source-wrap').hidden);assert.equal(removed.node('ev-source').href,undefined);
+assert.equal(removed.node('ev-reference').hidden,false);assert.match(removed.node('ev-status').textContent,/登録を現在確認できません/);
 console.log('exhibition selector/deep-link/empty-state/frame-isolation checks ok (DOM double)');
