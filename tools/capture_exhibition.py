@@ -31,9 +31,12 @@ def media_url(value):
 def discover_master(day, race):
     # Imported only in the dedicated browser/media job, not ordinary predictions.
     from playwright.sync_api import sync_playwright
-    observed=[]
+    observed=[];statuses={}
     def response_seen(response):
         url=response.url
+        if media_url(url):
+            host=urlsplit(url).hostname
+            statuses.setdefault(host,set()).add(response.status)
         if response.status==200 and media_url(url) and urlsplit(url).hostname=='manifest.streaks.jp' and '.m3u8' in urlsplit(url).path:
             if url not in observed:observed.append(url)
     with sync_playwright() as playwright:
@@ -47,7 +50,10 @@ def discover_master(day, race):
             page.get_by_role('button',name='Play Video',exact=True).click(timeout=20000)
             deadline=time.monotonic()+20
             while not observed and time.monotonic()<deadline:page.wait_for_timeout(250)
-            if len(observed)!=1:raise ValueError('official_master_not_observed')
+            if len(observed)!=1:
+                error=ValueError('official_master_not_observed')
+                error.safe_diagnostics={'master_count':len(observed),'http_statuses':{h:sorted(s) for h,s in statuses.items()}}
+                raise error
             return observed[0]
         finally:
             browser.close()
@@ -152,7 +158,11 @@ def main():
         print(json.dumps(summary))
     except Exception as error:
         # Do not print exceptions containing signed network URLs or transport keys.
-        print(json.dumps({'date':args.date,'rno':args.race,'capture_failed':True,'error_type':type(error).__name__}))
+        result={'date':args.date,'rno':args.race,'capture_failed':True,'error_type':type(error).__name__}
+        if isinstance(error,ValueError) and re.fullmatch(r'[a-z_]{1,80}',str(error)):
+            result['error_code']=str(error)
+        if getattr(error,'safe_diagnostics',None):result['diagnostics']=error.safe_diagnostics
+        print(json.dumps(result))
         raise SystemExit(1)
 
 
