@@ -53,6 +53,32 @@ def safe_error(error):
     return code if isinstance(error,ValueError) and re.fullmatch('[a-z_]{1,80}',code) else type(error).__name__
 
 
+def research_analyzer(model_directory,private_root):
+    """Explicit opt-in for an approved runner. Does not acquire or publish media."""
+    models=Path(model_directory).resolve();root=Path(private_root).resolve()
+    names=('yolox-s.onnx','colour-v2.json','bow-v2.npz','pilot-v1.npz','bow-heatmap-bound-v1.pt')
+    if not all((models/name).is_file() for name in names):raise ValueError('private_research_models_required')
+    repository=Path(__file__).resolve().parents[1]
+    modules=('automatic_turn_v2','boat_tracking','actor_track_review','frame_binding','bow_keypoint','measure_tracked_bows')
+    recipe={'models':{name:sha(models/name) for name in names},
+            'code_lf':{name:hashlib.sha256((repository/f'tools/{name}.py').read_bytes().replace(b'\r\n',b'\n')).hexdigest() for name in modules},
+            'gates_config':sha(repository/'scraper/exhibition_model/pilot-v1.json')}
+    fingerprint=hashlib.sha256(json.dumps(recipe,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    def analyze_local(video):
+        if {name:sha(models/name) for name in names}!=recipe['models']:
+            raise ValueError('private_research_models_changed')
+        from tools.automatic_turn_v2 import analyze_video
+        result=analyze_video(video,root/'decoded-temporary',models/names[0],models/names[1],models/names[2],models/names[3],
+                             keypoint_weights=models/names[4])
+        result['analysis_mode']='integrated_private_research_v2'
+        result['model_fingerprint']=fingerprint
+        result['model_recipe']=recipe
+        # Keep the gate-local and continuous-stage outcomes separately visible.
+        # Neither one grants authority to publish a measured result.
+        return result
+    return analyze_local
+
+
 def run(day,private_root,*,limit=2,source_loader=fetch_setting,capturer=capture,analyzer=None):
     if not valid_date(day) or type(limit) is not int or not 1<=limit<=12:raise ValueError('invalid_worker_arguments')
     root=Path(private_root).resolve()
@@ -103,6 +129,10 @@ def run(day,private_root,*,limit=2,source_loader=fetch_setting,capturer=capture,
                 write(folder/f'race-{race:02}-candidates.json',result)
                 item.update(state='analyzed_candidate',model_fingerprint=result.get('model_fingerprint'),
                             accepted_boats=sum(r.get('status')=='automatic_candidate' for r in result.get('results',[])))
+                if result.get('analysis_mode')=='integrated_private_research_v2':
+                    item['analysis_mode']=result['analysis_mode']
+                    item['continuous_candidate_boats']=sum(r.get('status')=='automatic_candidate'
+                        for r in result.get('learned_bow_review',{}).get('results',[]))
             except Exception as error:
                 item.update(state='failed',error=safe_error(error),retry_after=time.time()+900)
                 if access_denied(error):
@@ -121,8 +151,12 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--date',required=True);parser.add_argument('--private-root',type=Path,required=True)
     parser.add_argument('--limit',type=int,default=2)
+    parser.add_argument('--research-model-dir',type=Path,
+                        help='Optional private integrated v2 models; only for an approved acquisition environment')
     args=parser.parse_args()
-    try:print(json.dumps(run(args.date,args.private_root,limit=args.limit)))
+    try:
+        analyzer=research_analyzer(args.research_model_dir,args.private_root) if args.research_model_dir else None
+        print(json.dumps(run(args.date,args.private_root,limit=args.limit,analyzer=analyzer)))
     except Exception as error:
         print(json.dumps({'state':'failed','error':safe_error(error),'publication_performed':False}))
         raise SystemExit(1)

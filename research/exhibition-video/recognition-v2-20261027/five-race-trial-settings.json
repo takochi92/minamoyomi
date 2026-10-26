@@ -1,0 +1,33 @@
+{
+  "trial": "20261026-04-5",
+  "scope": "first integrated local-video trial for this race; timing truth not labelled",
+  "code_sha256_lf": {
+    "automatic_turn_v2": "9cd8f45ed932791b88eaf2682b10a353e51ec36e49ecb55e79fb9c36012dd62a",
+    "boat_tracking": "a489236952a4edd598459ddeb850e5c52ea69ea7a35fac31d2e6a80c1e0549a1",
+    "actor_track_review": "7e5e2237342c274b9f6bfcf107e6faad93f892825510c3ecbcdac32101c8d094",
+    "frame_binding": "6576b1a09f0435e871c73fbcd99f3b95d02056ad022400b54f7834a56ced4ca7",
+    "bow_keypoint": "a6131f4dc21c2ac337e7aaa8eb49a42c4c9359b43ebf94bb784262dcade33cb7",
+    "measure_tracked_bows": "8dd984d09f2b87539480a8636146f37a38e5eee4406580c5112ab66f6e1f0a36"
+  },
+  "private_model_sha256": {
+    "yolox-s.onnx": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",
+    "colour-v2.json": "0b7fa63f42e4d66198a814042f9edc4a864face8536459a01749a7ae43b6fc2f",
+    "bow-v2.npz": "18cb050d476a8c07c54336e1573ceb057d3e2d53806313a27bb59eda5f7e161c",
+    "bow-heatmap-bound-v1.pt": "dcd481a5ce4c09d8aeaf63258670368a7ff2b18a7220b951e4c9cf3eba0916d0"
+  },
+  "source_container_sha256": "bf8d8d01ee55f40a379c674d76a25e22e48552d66b58fad5f698d5f1fae0c4b9",
+  "training_races": [
+    1,
+    2
+  ],
+  "development_races": [
+    3
+  ],
+  "previous_diagnostic_race": [
+    4
+  ],
+  "thresholds_changed_after_inspection": false,
+  "publication_ready": false,
+  "prediction_used": false,
+  "independent_timing_truth_available": false
+}

@@ -4,6 +4,7 @@ import argparse,hashlib,json,math,time
 from pathlib import Path
 from tools.automatic_turn_v2 import ObjectDetector
 from tools.boat_tracking import track_actor
+from tools.frame_binding import require_frame_binding
 
 
 def overlap(a,b):
@@ -17,7 +18,7 @@ def make_tracks(folder,observations,detector_path,*,boats=range(1,7)):
     cv2.setNumThreads(1);started=time.monotonic();folder=Path(folder)
     manifest=json.loads((folder/'frames.json').read_text());frames=manifest['frames'];base=manifest['source']['time_base']
     data=json.loads(Path(observations).read_text())
-    if data['source_sha256']!=manifest['source']['sha256']:raise ValueError('source_mismatch')
+    binding=require_frame_binding(manifest,data)
     detector=ObjectDetector(detector_path);cache={}
     def image(i):
         if i not in cache:
@@ -65,7 +66,7 @@ def make_tracks(folder,observations,detector_path,*,boats=range(1,7)):
                      'duration_video_seconds':(trajectory[-1]['pts']-trajectory[0]['pts'])*base[0]/base[1],
                      'seed_attempts':len(attempts),'seed_track_agreement':agreements,
                      'identity_independently_verified':False,'bow_measurement':False})
-    return {'source_sha256':manifest['source']['sha256'],'time_base':base,'tracks':rows,
+    return {'source_sha256':manifest['source']['sha256'],'frame_binding':binding,'time_base':base,'tracks':rows,
             'elapsed_seconds':round(time.monotonic()-started,2),'publication_ready':False,
             'prediction_used':False,'independent_identity_review_complete':False}
 

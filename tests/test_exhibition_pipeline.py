@@ -1,7 +1,7 @@
 import hashlib,json
 from pathlib import Path
 import pytest
-from tools.exhibition_pipeline import run,exclusive
+from tools.exhibition_pipeline import run,exclusive,research_analyzer
 
 
 def setting(day):
@@ -66,3 +66,27 @@ def test_worker_lock_rejects_concurrent_execution_and_releases(tmp_path):
         with pytest.raises(OSError):
             with exclusive(lock):pass
     with exclusive(lock):pass
+
+
+def test_private_v2_requires_all_models_before_runner_can_capture(tmp_path):
+    with pytest.raises(ValueError,match='private_research_models_required'):research_analyzer(tmp_path,tmp_path)
+
+
+def test_private_v2_connects_local_stages_without_enabling_publication(tmp_path,monkeypatch):
+    from tools import automatic_turn_v2
+    for name in ('yolox-s.onnx','colour-v2.json','bow-v2.npz','pilot-v1.npz','bow-heatmap-bound-v1.pt'):
+        (tmp_path/name).write_bytes(b'test')
+    calls=[]
+    def local(*args,**kwargs):
+        calls.append((args,kwargs))
+        return {'publication_ready':False,'prediction_used':False,'results':[],
+                'learned_bow_review':{'publication_ready':False,'results':[]}}
+    monkeypatch.setattr(automatic_turn_v2,'analyze_video',local)
+    result=research_analyzer(tmp_path,tmp_path)(tmp_path/'test.ts')
+    assert len(calls)==1 and calls[0][1]['keypoint_weights']==tmp_path/'bow-heatmap-bound-v1.pt'
+    assert result['analysis_mode']=='integrated_private_research_v2' and not result['publication_ready']
+    assert len(result['model_fingerprint'])==64 and len(result['model_recipe']['models'])==5
+    analyzer=research_analyzer(tmp_path,tmp_path)
+    (tmp_path/'bow-heatmap-bound-v1.pt').write_bytes(b'changed')
+    with pytest.raises(ValueError,match='private_research_models_changed'):analyzer(tmp_path/'test.ts')
+    assert len(calls)==1

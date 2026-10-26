@@ -22,8 +22,8 @@ def make_model():
 
 
 def train(dataset,metadata,output,*,steps=800,seed=20261027):
-    output=Path(output).resolve();public=Path(__file__).resolve().parents[1]/'site'
-    if output==public or public in output.parents or type(steps) is not int or not 1<=steps<=5000:
+    output=Path(output).resolve();repository=Path(__file__).resolve().parents[1]
+    if output==repository or repository in output.parents or type(steps) is not int or not 1<=steps<=5000:
         raise ValueError('invalid_private_training_arguments')
     import cv2,numpy as np,torch
     torch.set_num_threads(2);torch.manual_seed(seed);rng=np.random.default_rng(seed);started=time.monotonic()
@@ -83,7 +83,7 @@ def load_model(weights):
 
 def usable_prediction(result,*,max_spread=8,min_peak_mass=.10):
     point=result.get('point');spread=result.get('crop_spread_pixels');mass=result.get('mean_peak_mass')
-    return (isinstance(point,list) and len(point)==2 and all(math.isfinite(v) for v in point)
+    return (isinstance(point,list) and len(point)==2 and all(type(v) in (int,float) and math.isfinite(v) for v in point)
             and type(spread) in (int,float) and math.isfinite(spread) and 0<=spread<=max_spread
             and type(mass) in (int,float) and math.isfinite(mass) and min_peak_mass<=mass<=1)
 

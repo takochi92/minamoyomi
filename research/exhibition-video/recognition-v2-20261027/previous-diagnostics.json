@@ -1,0 +1,177 @@
+{
+  "previous_trials": {
+    "v1_four": {
+      "input_report_sha256": "1aed55403eac51c8ddaeb85ef54ba2e18f632047ee42483874af6267a4c9863c",
+      "source_sha256": "22f3a3c1a7452c146e8fde6c1931c8388eb4f81ab0bcdcbfdda46ef786d82576",
+      "complete_candidates": 0,
+      "rows": [
+        {
+          "boat": 1,
+          "status": "rejected",
+          "reasons": [
+            "ambiguous_B",
+            "ambiguous_C"
+          ]
+        },
+        {
+          "boat": 2,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B",
+            "missing_C"
+          ]
+        },
+        {
+          "boat": 3,
+          "status": "rejected",
+          "reasons": [
+            "missing_B",
+            "missing_C"
+          ]
+        },
+        {
+          "boat": 4,
+          "status": "rejected",
+          "reasons": [
+            "missing_B"
+          ]
+        },
+        {
+          "boat": 5,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ]
+        },
+        {
+          "boat": 6,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B",
+            "missing_C"
+          ]
+        }
+      ],
+      "elapsed_seconds": 138.26
+    },
+    "v2_four_raw": {
+      "input_report_sha256": "12d20b4f0030b357366e917b187d6d2caac398055a875cd95a6f1b65e580094f",
+      "source_sha256": "22f3a3c1a7452c146e8fde6c1931c8388eb4f81ab0bcdcbfdda46ef786d82576",
+      "complete_candidates": 0,
+      "rows": [
+        {
+          "boat": 1,
+          "status": "rejected",
+          "reasons": [
+            "missing_C"
+          ]
+        },
+        {
+          "boat": 2,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B"
+          ]
+        },
+        {
+          "boat": 3,
+          "status": "rejected",
+          "reasons": [
+            "missing_B"
+          ]
+        },
+        {
+          "boat": 4,
+          "status": "rejected",
+          "reasons": [
+            "missing_B"
+          ]
+        },
+        {
+          "boat": 5,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ]
+        },
+        {
+          "boat": 6,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ]
+        }
+      ],
+      "elapsed_seconds": 530.33
+    },
+    "v2_three_local": {
+      "input_report_sha256": "3ed3cc327b78acc648dd063bf890ce0b97159bbd8e55da6f9e7d33eaf3ce76ab",
+      "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+      "complete_candidates": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B",
+            "missing_C"
+          ]
+        },
+        {
+          "boat": 2,
+          "status": "automatic_candidate",
+          "reasons": []
+        },
+        {
+          "boat": 3,
+          "status": "rejected",
+          "reasons": [
+            "missing_A",
+            "missing_B",
+            "missing_C"
+          ]
+        },
+        {
+          "boat": 4,
+          "status": "automatic_candidate",
+          "reasons": []
+        },
+        {
+          "boat": 5,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ]
+        },
+        {
+          "boat": 6,
+          "status": "rejected",
+          "reasons": [
+            "missing_A"
+          ]
+        }
+      ],
+      "elapsed_seconds": 163.61
+    }
+  },
+  "conditional_localization_development3": {
+    "race": 3,
+    "scope": "conditional_keypoint_localization_on_known_event_frames_not_end_to_end",
+    "examples": 54,
+    "accepted": 54,
+    "median_error_all": 2.505611230046064,
+    "median_error_accepted": 2.505611230046064,
+    "p90_error_accepted": 12.941199408295674,
+    "max_error_accepted": 25.706202357328642,
+    "coarse_median_error": 3.903943276465977,
+    "publication_ready": false,
+    "prediction_used": false
+  },
+  "publication_ready": false,
+  "prediction_used": false,
+  "model_retraining_learned_tensors_equal": true
+}

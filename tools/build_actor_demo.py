@@ -2,17 +2,22 @@
 import argparse,hashlib,json,shutil,subprocess
 from fractions import Fraction
 from pathlib import Path
+from tools.frame_binding import require_frame_binding
 
 
 def render(folder,track_path,output,boat):
     import cv2
     from PIL import Image,ImageDraw,ImageFont
-    folder=Path(folder);output=Path(output);raw=json.loads(Path(track_path).read_text())
+    folder=Path(folder);output=Path(output).resolve();raw=json.loads(Path(track_path).read_text())
+    repository=Path(__file__).resolve().parents[1]
+    if output==repository or repository in output.parents:raise ValueError('private_media_outside_repository_required')
     manifest=json.loads((folder/'frames.json').read_text());frames=manifest['frames'];base=Fraction(*manifest['source']['time_base'])
+    binding=require_frame_binding(manifest,raw)
     track=next((r for r in raw.get('tracks',[raw]) if r.get('boat')==boat),None)
     if not track or len(track.get('frames',[]))<2:raise ValueError('continuous_track_required')
     records=track['frames'];indices=[r['frame'] for r in records]
     if indices!=list(range(indices[0],indices[-1]+1)):raise ValueError('continuous_frames_required')
+    if any(r.get('pts')!=frames[r['frame']]['pts'] for r in records):raise ValueError('track_pts_mismatch')
     pts=[frames[i]['pts'] for i in indices];deltas={b-a for a,b in zip(pts,pts[1:])}
     if len(deltas)!=1 or min(deltas)<=0:raise ValueError('constant_original_pts_required_for_demo')
     interval=Fraction(next(iter(deltas)))*base;fps=1/(interval*2)
@@ -42,7 +47,7 @@ def render(folder,track_path,output,boat):
         if process.returncode:raise ValueError('demo_render_failed')
     except Exception:
         process.kill();process.communicate();raise
-    receipt={'boat':boat,'source_frames':len(records),'source_video_seconds':float((pts[-1]-pts[0])*base),
+    receipt={'boat':boat,'frame_binding':binding,'source_frames':len(records),'source_video_seconds':float((pts[-1]-pts[0])*base),
              'display_speed':.5,'measurement_input':False,'publication_performed':False}
     output.with_suffix('.json').write_text(json.dumps(receipt,indent=2))
     return receipt

@@ -1,0 +1,145 @@
+{
+  "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+  "frame_binding": {
+    "frame_export_sha256": "c0cacdd68d95988abceb6950b99d306cc549d731cba99915122d753a4f7d2f9a",
+    "source_sha256": "c4d710891bdf09f15d8a137a3f23719b9312286c78f4dba678673c3495b4f0bc",
+    "time_base": [
+      1,
+      90000
+    ],
+    "first_pts": 5402310347,
+    "frame_count": 1230
+  },
+  "time_base": [
+    1,
+    90000
+  ],
+  "elapsed_seconds": 517.5,
+  "publication_ready": false,
+  "prediction_used": false,
+  "independent_identity_review_complete": false,
+  "tracks": [
+    {
+      "boat": 1,
+      "state": "provisional_actor_track",
+      "seed_frame": 350,
+      "duration_video_seconds": 6.4,
+      "seed_attempts": 2,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 280,
+          "shared_frames": 178,
+          "median_box_overlap": 0.8285076502104778
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    },
+    {
+      "boat": 2,
+      "state": "provisional_actor_track",
+      "seed_frame": 510,
+      "duration_video_seconds": 6.366666666666666,
+      "seed_attempts": 3,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 439,
+          "shared_frames": 41,
+          "median_box_overlap": 0.6489584131351107
+        },
+        {
+          "seed_frame": 555,
+          "shared_frames": 192,
+          "median_box_overlap": 0.8398912311151512
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    },
+    {
+      "boat": 3,
+      "state": "provisional_actor_track",
+      "seed_frame": 674,
+      "duration_video_seconds": 6.3,
+      "seed_attempts": 3,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 909,
+          "shared_frames": 0,
+          "median_box_overlap": 0
+        },
+        {
+          "seed_frame": 602,
+          "shared_frames": 169,
+          "median_box_overlap": 0.9099796303758472
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    },
+    {
+      "boat": 4,
+      "state": "provisional_actor_track",
+      "seed_frame": 707,
+      "duration_video_seconds": 6.366666666666666,
+      "seed_attempts": 3,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 666,
+          "shared_frames": 189,
+          "median_box_overlap": 0.8558035842923888
+        },
+        {
+          "seed_frame": 767,
+          "shared_frames": 192,
+          "median_box_overlap": 0.9450340598416491
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    },
+    {
+      "boat": 5,
+      "state": "provisional_actor_track",
+      "seed_frame": 910,
+      "duration_video_seconds": 6.333333333333333,
+      "seed_attempts": 3,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 806,
+          "shared_frames": 51,
+          "median_box_overlap": 0.6522235742813713
+        },
+        {
+          "seed_frame": 880,
+          "shared_frames": 137,
+          "median_box_overlap": 0.9523783427667526
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    },
+    {
+      "boat": 6,
+      "state": "provisional_actor_track",
+      "seed_frame": 981,
+      "duration_video_seconds": 6.266666666666667,
+      "seed_attempts": 3,
+      "seed_track_agreement": [
+        {
+          "seed_frame": 917,
+          "shared_frames": 181,
+          "median_box_overlap": 0.8603926402674562
+        },
+        {
+          "seed_frame": 1048,
+          "shared_frames": 189,
+          "median_box_overlap": 0.8958355651450909
+        }
+      ],
+      "identity_independently_verified": false,
+      "bow_measurement": false
+    }
+  ],
+  "source_result_sha256": "a56e2a352182bb368b325d5d577efff42b9598ff5eb7a7103dc21b858253bf10"
+}

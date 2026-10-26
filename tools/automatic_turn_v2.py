@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse,hashlib,json,math,shutil,subprocess,tempfile,time
 from pathlib import Path
 from scraper.turn_measurement import crossing
+from tools.frame_binding import frame_binding
 from tools.boat_tracking import rider_region,colour_features,identify_colour,temporal_identity,flow_consistent,object_bow_seed
 
 REGIONS={'A':[430,570,700,500],'B':[990,340,650,440],'C':[470,190,650,390]}
@@ -64,6 +65,7 @@ def analyze_frames(folder,detector_path,colour_model,bow_model,*,proposal_cache=
     from scipy.signal import find_peaks
     cv2.setNumThreads(1);started=time.monotonic();folder=Path(folder)
     manifest=json.loads((folder/'frames.json').read_text());frames=manifest['frames'];base=manifest['source']['time_base']
+    binding=frame_binding(manifest)
     if manifest.get('schema')!=2 or manifest['source'].get('clock')!='decoded_pts':raise ValueError('original_pts_required')
     times=[r['pts']*base[0]/base[1] for r in frames]
     if any(not 0<b-a<=.12 for a,b in zip(times,times[1:])):raise ValueError('invalid_frame_clock')
@@ -115,7 +117,7 @@ def analyze_frames(folder,detector_path,colour_model,bow_model,*,proposal_cache=
                 features=colour_features(frame,region['box']) if region else None
                 identity=identify_colour(features,config['prototypes'],max_distance=config['max_distance'],min_margin=config['min_margin'],
                                          allow_achromatic=bool(region and region['kind']=='person' and gate=='A'))
-                detector_rows.append({'frame':i,'detections':detections,'rider_region':region,'identity':identity,'point':seed})
+                detector_rows.append({'frame':i,'pts':frames[i]['pts'],'detections':detections,'rider_region':region,'identity':identity,'point':seed})
                 observations.append({'time':times[i],'point':seed,'boat':identity['boat']})
             boat=temporal_identity(observations)
             record={'gate':gate,'peak_frame':anchor_index,'boat':boat,'observations':detector_rows,'publication_ready':False}
@@ -158,7 +160,7 @@ def analyze_frames(folder,detector_path,colour_model,bow_model,*,proposal_cache=
             row.update(entry_video_seconds=round(selected['B']['time']-selected['A']['time'],1),
                        exit_video_seconds=round(selected['C']['time']-selected['B']['time'],1))
         rows.append(row)
-    return {'method':'heiwajima-detector-temporal-v2','source_sha256':manifest['source']['sha256'],
+    return {'method':'heiwajima-detector-temporal-v2','source_sha256':manifest['source']['sha256'],'frame_binding':binding,
             'implementation_sha256':hashlib.sha256(Path(__file__).read_bytes().replace(b'\r\n',b'\n')).hexdigest(),
             'tracking_implementation_sha256':hashlib.sha256(Path(__file__).with_name('boat_tracking.py').read_bytes().replace(b'\r\n',b'\n')).hexdigest(),
             'bow_model_sha256':hashlib.sha256(Path(bow_model).read_bytes()).hexdigest(),
@@ -169,7 +171,7 @@ def analyze_frames(folder,detector_path,colour_model,bow_model,*,proposal_cache=
             'coarse_proposals_from_v1_cache':proposal_cache is not None}
 
 
-def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scene_model):
+def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scene_model,*,keypoint_weights=None):
     """Decode a local original once; scene sampling never replaces original PTS."""
     import cv2,numpy as np
     from tools.automatic_turn import caption_score,scene_intervals
@@ -211,6 +213,18 @@ def analyze_video(video,private_parent,detector_path,colour_model,bow_model,scen
         if parent not in temporary.parents:raise ValueError('invalid_temporary_storage')
         folder=temporary/'frames';extract(video,folder,origin+start,origin+end)
         result=analyze_frames(folder,detector_path,colour_model,bow_model)
+        if keypoint_weights is not None:
+            # Work in the SAME decoded export before cleanup. Frame indices from
+            # another crop of the same container are deliberately not accepted.
+            from tools.actor_track_review import make_tracks
+            from tools.measure_tracked_bows import measure
+            local_observations=temporary/'observations.json'
+            local_observations.write_text(json.dumps(result),encoding='utf-8')
+            actor_tracks=make_tracks(folder,local_observations,detector_path)
+            local_tracks=temporary/'tracks.json'
+            local_tracks.write_text(json.dumps(actor_tracks),encoding='utf-8')
+            result['continuous_actor_review']=actor_tracks
+            result['learned_bow_review']=measure(folder,local_tracks,keypoint_weights)
     result.update(source_container_sha256=hashlib.sha256(video.read_bytes()).hexdigest(),
                   scene_start_relative_seconds=start,scene_end_relative_seconds=end,
                   total_elapsed_seconds=round(time.monotonic()-started,2),
@@ -222,8 +236,10 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('video','private_parent','detector','colour_model','bow_model','scene_model','output'):
         parser.add_argument('--'+name.replace('_','-'),type=Path,required=True)
+    parser.add_argument('--keypoint-weights',type=Path,help='Optional private learned-bow research stage; never publishes')
     args=parser.parse_args()
-    result=analyze_video(args.video,args.private_parent,args.detector,args.colour_model,args.bow_model,args.scene_model)
+    result=analyze_video(args.video,args.private_parent,args.detector,args.colour_model,args.bow_model,args.scene_model,
+                         keypoint_weights=args.keypoint_weights)
     args.output.write_text(json.dumps(result,indent=2),encoding='utf-8')
     print(json.dumps({'complete_candidates':sum(r['status']=='automatic_candidate' for r in result['results']),
                       'publication_ready':False,'total_elapsed_seconds':result['total_elapsed_seconds']}))
