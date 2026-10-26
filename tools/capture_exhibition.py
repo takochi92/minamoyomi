@@ -37,7 +37,9 @@ def discover_master(day, race):
         if response.status==200 and media_url(url) and urlsplit(url).hostname=='manifest.streaks.jp' and '.m3u8' in urlsplit(url).path:
             if url not in observed:observed.append(url)
     with sync_playwright() as playwright:
-        browser=playwright.chromium.launch(headless=True)
+        # GitHub's Ubuntu image already includes vendor Chrome and its codecs.
+        # Do not reinstall a browser/OS dependencies on every race update.
+        browser=playwright.chromium.launch(channel='chrome',headless=True)
         try:
             context=browser.new_context() # No personal cookies or stored login.
             page=context.new_page();page.on('response',response_seen)

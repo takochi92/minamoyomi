@@ -17,7 +17,7 @@ permissions:
   contents: read
 concurrency:
   group: exhibition-capture-research-test
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   normal-player:
     runs-on: ubuntu-latest
@@ -41,7 +41,8 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-exhibition.txt
       - run: pip install -r requirements-exhibition.txt
-      - run: python -m playwright install --with-deps chromium
+      - name: 実行環境に用意済みのChromeを利用
+        run: google-chrome --version
       - name: ローカル復号の実行環境を確認
         run: |
           if ! command -v ffmpeg; then
