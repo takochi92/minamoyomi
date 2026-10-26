@@ -1,0 +1,16 @@
+{
+  "checked_at_jst": "2026-10-27",
+  "date": "20261026",
+  "rno": 2,
+  "run_url": "https://github.com/takochi92/minamoyomi/actions/runs/40346698930",
+  "mode": "normal_chrome_playback_diagnosis_only",
+  "stage": "wait_for_playback_manifest",
+  "player_http_status": 200,
+  "playback_api_http_status": 403,
+  "error_code": "REQUEST_FAILED",
+  "error_id": 124,
+  "master_count": 0,
+  "media_downloaded": false,
+  "cause_vendor_confirmed": false,
+  "automatic_video_analysis_enabled": false
+}
