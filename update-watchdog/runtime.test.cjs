@@ -16,7 +16,7 @@ const mf=new Miniflare({modules:true,script,compatibilityDate:'2026-04-12',
    assert.equal(request.headers.get('Authorization'),'Bearer test-secret');
    if(mode==='auth-failure')return new Response('',{status:401});
    if(request.method==='POST'){dispatches++;return new Response(null,{status:204});}
-   return Response.json({workflow_runs:[]});
+   return Response.json({workflow_runs:mode==='registration-skew'?[{status:'completed',created_at:'2026-10-27T06:15:02Z'}]:[]});
   }
   assert.equal(url.hostname,'ntfy.sh');assert.equal(request.headers.get('Authorization'),null);
   const body=await request.json();assert.equal(body.topic,'test-topic');assert.ok(!JSON.stringify(body).includes('test-secret'));
@@ -29,6 +29,7 @@ try{
  assert.equal((await check()).body.state,'fresh');assert.equal(notifications,1);
  await check();assert.equal(notifications,1,'test notification is not repeated');
  mode='stale';assert.equal((await check()).body.state,'dispatched');assert.equal(dispatches,1);
+ mode='registration-skew';assert.equal((await check()).body.state,'dispatched');assert.equal(dispatches,2,'workerd must dispatch at the nominal five-minute boundary despite API registration skew');
  mode='auth-failure';assert.equal((await check()).status,503);assert.equal(notifications,2,'one authentication alert');
  await check();assert.equal(notifications,2);
  const state=await (await stub.fetch('https://internal/status')).json();assert.equal(state.alertDelivery,'sent');assert.equal(state.alertHttpStatus,200);

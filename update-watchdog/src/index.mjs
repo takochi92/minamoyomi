@@ -1,7 +1,10 @@
 const BASE = 'https://api.github.com/repos/takochi92/minamoyomi';
 const WORKFLOW = '/actions/workflows/update.yml';
 const STALE_MS = 5 * 60_000;
-const BACKOFF_MS = 5 * 60_000;
+// Cron begins around :33; GitHub records creation around :35. Allow five
+// seconds of registration skew, otherwise every five-minute boundary is missed
+// and the one-minute poll silently turns the cadence into six minutes.
+const BACKOFF_MS = 5 * 60_000 - 5_000;
 
 export function operatingTime(now) {
   const hour = new Date(now.getTime() + 9 * 3600_000).getUTCHours();
