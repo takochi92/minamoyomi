@@ -21,6 +21,7 @@ jobs:
       - run: node tests/test_note_account.cjs
       - run: node tests/test_pwa.cjs
       - run: node tests/test_freshness.cjs
+      - run: node tests/test_player_info.cjs
       - run: node tests/test_exhibition.cjs
       - run: node tests/test_exhibition_flow.cjs
       - run: node tests/test_stats_logic_flow.cjs
