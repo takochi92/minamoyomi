@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-27T02:03:21.854Z",
+  "updated": "2026-10-27T11:09:49.607300+00:00",
   "posts": [
+    {
+      "id": "2026-10-27-teirogu-X-improvements",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-27",
+      "slot": "improvements",
+      "text": "艇ろぐ、今日も改善しました🚤\n\n・自動更新を改善\n・お気に入り選手の出走を朝にまとめて通知\n・通知ON/OFF、枠番指定に対応\n・トップと重賞の結果・オッズを見やすく整理\n\n出走表・展示・モーター情報の確認に。\nhttps://teilog.com\n\n※20歳未満は購入不可。のめり込みに注意",
+      "images": [],
+      "created_at": "2026-10-27T11:09:49.607300+00:00"
+    },
     {
       "id": "2026-10-27-teirogu-X-morning",
       "project": "teirogu",
