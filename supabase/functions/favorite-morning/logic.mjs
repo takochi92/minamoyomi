@@ -2,6 +2,9 @@ export function jst(now=new Date()) {
  const s=new Date(now.getTime()+9*3600000).toISOString();
  return {day:s.slice(0,10).replace(/-/g,''),date:s.slice(0,10),hm:s.slice(11,16),hour:Number(s.slice(11,13))};
 }
+export function morningWindow(time) {
+ return time.hm >= '07:30' && time.hm < '10:00';
+}
 export function validSubscription(s) {
  try {const u=new URL(s.endpoint);
  return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&!u.hash&&!!u.pathname.slice(1)&&

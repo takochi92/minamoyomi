@@ -2,7 +2,7 @@
 import webpush from 'web-push';
 import {timingSafeEqual} from 'node:crypto';
 import {Buffer} from 'node:buffer';
-import {jst,matches,payload,validSubscription} from './logic.mjs';
+import {jst,matches,payload,validSubscription,morningWindow} from './logic.mjs';
 
 const base=Deno.env.get('SUPABASE_URL')!,service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const cors={'Access-Control-Allow-Origin':'https://teilog.com','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin'};
@@ -37,7 +37,7 @@ Deno.serve(async req=>{
   const now=new Date(),time=jst(now),kind=body.action==='test'?'test':'morning';
   if(kind==='test'&&!userId)return reply({error:'Authentication required'},401);
   if(kind==='morning'&&(!job||body.action!=='morning'))return reply({error:'Not allowed'},403);
-  if(kind==='morning'&&(time.hour<8||time.hour>=10))return reply({skipped:'outside morning window'});
+  if(kind==='morning'&&!morningWindow(time))return reply({skipped:'outside morning window'});
   const summary={sent:0,failed:0,skipped:0};
   async function send(device:any,rows:any[]){
    if(!device.enabled||!validSubscription(device.subscription)){summary.skipped++;return;}

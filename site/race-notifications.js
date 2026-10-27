@@ -52,7 +52,7 @@
  function draw(){
   var notebook=document.getElementById('note-app');if(notebook&&A.state().ready&&root.nextElementSibling!==notebook)notebook.before(root);
   root.replaceChildren();root.append(node('h2','朝のお気に入り出走通知'));
-  root.append(node('p','朝8時台を目安に、対象レースをまとめて通知します。対象がない日は通知しません。配信・端末の状態で遅れたり届かない場合があります。'));
+  root.append(node('p','朝7時30分を目安に、対象レースをまとめて通知します。対象がない日は通知しません。配信・端末の状態で遅れたり届かない場合があります。'));
   if(!A.state().user){root.append(node('p','お気に入りを保存したアカウントでログインしてください。'));return;}
   if(!supported()){root.append(node('p','このブラウザでは通知を利用できません。iPhone・iPadはホーム画面に追加した艇ろぐで確認してください。'));return;}
   var ready=cfg.enabled&&cfg.vapidPublicKey;
