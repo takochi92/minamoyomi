@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-27T16:04:51.696817+00:00",
+  "updated": "2026-10-27T18:19:55.751Z",
   "posts": [
+    {
+      "id": "2026-10-27-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-27",
+      "slot": "evening",
+      "text": "【10/27（火）の結果】\nAI本線 168R中39的中\n最高配当 大村12R 2-4-3 20,950円\n\n今日のフライング 3人（F後はスタート控えめになりがち）\n・津1R 井澤 聖奈\n・平和島9R 堀本 裕也\n・大村11R 永松 良教\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-10-27T18:19:55.751Z"
+    },
     {
       "id": "2026-10-28-teirogu-X-notebook",
       "project": "teirogu",
@@ -300,26 +310,6 @@
       "text": "【10/15（木）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-10-14T17:35:20.584Z"
-    },
-    {
-      "id": "2026-10-14-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-14",
-      "slot": "morning",
-      "text": "【10/14（水）の艇ろぐ】\n今日は13場で開催\n🏆平和島 G1\n\nAIの自信が高いレース\n・鳴門1R、徳山1R、芦屋1R\n\n昨日のAI本線：131レース中 24的中\n最高配当 びわこ4R 1-6-3 16,420円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-14T01:51:49.093Z"
-    },
-    {
-      "id": "2026-10-14-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-14",
-      "slot": "evening",
-      "text": "【10/14（水）の結果】\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-13T19:31:04.788Z"
     }
   ]
 }
