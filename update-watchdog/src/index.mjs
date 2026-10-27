@@ -60,11 +60,24 @@ export async function tick(env, now = new Date(), request = fetch) {
 
 export {UpdateMonitor} from './monitor.mjs';
 
+async function authorized(request,env) {
+  const actual=request.headers.get('Authorization') || '';
+  if (!env.UPDATE_DISPATCH_TOKEN || !actual.startsWith('Bearer ') || actual.length>1000) return false;
+  const hash=async value=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)));
+  const [a,b]=await Promise.all([hash(actual.slice(7)),hash(env.UPDATE_DISPATCH_TOKEN)]);
+  let different=0;for(let i=0;i<a.length;i++)different|=a[i]^b[i];return different===0;
+}
+
 export default {
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(env.UPDATE_MONITOR.get(env.UPDATE_MONITOR.idFromName('race-updates')).fetch('https://internal/check', {method:'POST'}).then(response => {
       if (!response.ok) throw new Error('race-update-watchdog-failed');
     }));
   },
-  fetch() { return new Response('Not found', {status:404}); },
+  async fetch(request,env) {
+    if (request?.method!=='GET' || new URL(request.url).pathname!=='/health') return new Response('Not found',{status:404});
+    if (!await authorized(request,env)) return new Response('Unauthorized',{status:401});
+    const response=await env.UPDATE_MONITOR.get(env.UPDATE_MONITOR.idFromName('race-updates')).fetch('https://internal/status');
+    return new Response(response.body,{status:response.status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  },
 };
