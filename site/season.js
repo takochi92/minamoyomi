@@ -43,6 +43,7 @@ if(typeof document!=='undefined')(() => {
   const hit=(p,q)=>!q||clean([p.name,p.kana,p.toban,p.branch].join(' ')).includes(clean(q));
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
   function who(p){const a=el('a',p.name.replace(/\s/g,''),'sw-name');a.href=`../racer/${p.toban}.html`;return a;}
+  function detail(lines){const d=el('details',undefined,'sw-card-note');d.append(el('summary','詳しく'));for(const line of lines)if(line)d.append(el('p',line));return d;}
   function conditionBlock(p,target,tier){
     const box=el('div',undefined,'sw-condition'),context=data.conditions_context||{},c=p.condition||{};
     const scenario=by('sw-mode').value==='scenario';
@@ -60,23 +61,29 @@ if(typeof document!=='undefined')(() => {
       if(races.some(r=>!r))issues.push('残り出走の競走区分・着順点が未確認');
       title=context.last_day?`期末当日・確認できた残り${races.length}走`:`本日確認できた残り${races.length}走（期末全体は未確定）`;
     }
-    box.append(el('p',title,'sw-condition-title'));
-    if(issues.length){box.append(el('p',[...new Set(issues)].join(' ／ '),'sw-card-note'));return box;}
+    const shortTitle=scenario?`残り${races.length}走と仮定`:context.last_day?`期末当日・残り${races.length}走`:`本日あと${races.length}走`;
+    box.append(el('p',shortTitle,'sw-condition-title'));
+    if(issues.length){box.append(el('strong','計算保留'),detail([...new Set(issues),title,base]));return box;}
     const result=seasonCondition(p,target,tier,races);
     let text=result.message||'';
     if(result.state==='goal')text=result.rest===1?`${result.bestAllowed}着以上が目安`:`合計${result.needed}点以上が必要`;
-    if(result.state==='safe')text=result.rest===1?'６着でも設定目標と確認済み条件を満たす':'全走６着でも設定目標と確認済み条件を満たす';
-    if(result.state==='impossible')text=result.rest===1?'１着でも設定目標・条件に届かない':'全走１着でも設定目標・条件に届かない';
-    if(result.state==='met')text='確認済み成績は設定目標と確認済み条件を満たす';
-    if(result.state==='unmet')text='確認済み成績は設定目標・条件に未達';
+    if(result.state==='safe')text=result.rest===1?'6着でも目標以上':'全走6着でも目標以上';
+    if(result.state==='impossible')text=result.rest===1?'1着でも目標に届かない':'全走1着でも目標に届かない';
+    if(result.state==='met')text='現在の条件クリア（参考）';
+    if(result.state==='unmet')text='現在は目標に未達';
+    if(result.state==='starts_short')text=`出走条件 あと${Math.max(0,(tier==='A1'?90:80)-p.n)}走`;
+    if(result.state==='accident_block')text='事故率条件に未達';
+    if(result.state==='blocked')text='計算保留';
     box.append(el('strong',text));
+    const notes=[title,result.message];
     if(result.rest>0&&result.needed!==undefined){
-      box.append(el('p',`必要な着順点 合計${result.needed}点 ／ １走平均${(result.needed/result.rest).toFixed(2)}点`,'sw-card-note'));
-      if(result.examples?.length)box.append(el('p','組み合わせ例：'+result.examples.map(v=>result.unordered?`${v[0]}着＋${v[1]}着`:`１走目${v[0]}着→２走目${v[1]}着`).join(' ／ ')+(result.unordered?'（順不同）':''),'sw-card-note'));
-      if(result.top2Needed||result.top3Needed)box.append(el('p',`連対率条件：２着以内あと${result.top2Needed}回・３着以内あと${result.top3Needed}回`,'sw-card-note'));
+      box.append(el('p',`必要平均 ${ (result.needed/result.rest).toFixed(2)}点`,'sw-card-note'));
+      notes.push(`必要な着順点 合計${result.needed}点 ／ １走平均${(result.needed/result.rest).toFixed(2)}点`);
+      if(result.examples?.length)notes.push('組み合わせ例：'+result.examples.map(v=>result.unordered?`${v[0]}着＋${v[1]}着`:`１走目${v[0]}着→２走目${v[1]}着`).join(' ／ ')+(result.unordered?'（順不同）':''));
+      if(result.top2Needed||result.top3Needed)notes.push(`連対率条件：２着以内あと${result.top2Needed}回・３着以内あと${result.top3Needed}回`);
     }
-    if(!scenario&&c.races?.length)box.append(el('p',c.races.map(r=>`${r.venue}${r.rno}R ${r.deadline}締切`).join(' ／ '),'sw-card-note'));
-    box.append(el('p',base+' ／ 事故・欠場・同着なしの参考条件。級別確定ではありません。','sw-card-note'));
+    if(!scenario&&c.races?.length)notes.push(c.races.map(r=>`${r.venue}${r.rno}R ${r.deadline}締切`).join(' ／ '));
+    notes.push(base+' ／ 事故・欠場・同着なしの参考条件。級別確定ではありません。');box.append(detail(notes));
     return box;
   }
   let limit=20;
@@ -100,15 +107,15 @@ if(typeof document!=='undefined')(() => {
     for(const p of rows.slice(0,limit)){
       const card=el('article',undefined,'sw-card'),head=el('div',undefined,'sw-card-head');
       head.append(who(p),el('span',`${p.class||'級未確認'} · ${p.branch||'支部未確認'}`,'sub'));
-      const stat=el('div',undefined,'sw-score');stat.setAttribute('aria-label','参考勝率と目標との差');stat.append(el('strong',p.win.toFixed(2)),el('span',`目標差 ${Math.abs(p.diff)<.005?'±0.00':(p.diff>0?'+':'')+p.diff.toFixed(2)}`,p.diff>=-.005?'dgood':'sub'));
+      const stat=el('div',undefined,'sw-score');stat.setAttribute('aria-label','参考勝率と目標');stat.append(el('strong',p.win.toFixed(2)),el('span',`目標 ${target.toFixed(2)}`,p.diff>=-.005?'dgood':'sub'));
       const nums=el('div',undefined,'sw-metrics');
-      nums.append(el('span',`出走 ${p.n}回`),el('span',`2連対 ${(p.top2/p.n*100).toFixed(1)}%`),el('span',`3連対 ${(p.top3/p.n*100).toFixed(1)}%`));
+      nums.append(el('span',`出走 ${p.n}走`),el('span',p.n<minimum?`出走条件 あと${minimum-p.n}走`:'出走条件クリア'));
       const issues=[];if(p.n<minimum)issues.push(`${tier}の出走条件まであと${minimum-p.n}回`);
       if(p.top2/p.n<.30||p.top3/p.n<.40)issues.push('連対率条件に未達');
       if(p.accident_min/p.n>.70)issues.push('確認済み事故点だけで事故率0.70超');
       if(p.unknown)issues.push(`計算条件未確認 ${p.unknown}走`);
       card.append(head,stat,nums);
-      if(issues.length)card.append(el('p',issues.join(' ／ '),'sw-card-note'));
+      if(issues.length)card.append(detail(issues));
       card.append(conditionBlock(p,target,tier));
       list.append(card);
     }

@@ -77,7 +77,7 @@ def test_public_research_is_explicitly_distinct_from_approved_media():
 def test_navigation_replaces_exhibition_with_player_information():
     page=Page('stats.html').render('test','test','')
     nav=re.search(r'<nav class="nav">(.*?)</nav>',page,re.S)[1]
-    assert re.findall(r'href="([^"]+)"',nav)==['index.html','players.html','targets.html','racer/index.html','stats.html','mynote.html']
+    assert re.findall(r'href="([^"]+)"',nav)==['index.html','targets.html','players.html','racer/index.html','stats.html','mynote.html']
     assert '実績と根拠' in nav and 'logic.html' not in nav
     assert 'data-k="stats" aria-current=page' in nav
 

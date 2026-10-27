@@ -3,7 +3,7 @@ import json
 import re
 import pytest
 from scraper.player_info import build_f_report, programme_snapshots, f_page, prize_page
-from scraper.prize_rankings import parse_omura
+from scraper.prize_rankings import parse_omura, parse_queens
 from scraper.season_watch import period
 from scraper.sitegen import Page
 
@@ -75,3 +75,33 @@ def test_public_payload_escapes_html_and_leaves_keep_the_original_basis():
     assert data['rows'][0]['f'] is None and data['rows'][0]['rests'][0]['start'] is None
     text=f_page(Page('players-f.html'),data)
     assert '</script><script>bad' not in text and '\\u003c/script>' in text
+
+
+def queens_html(n=18):
+    return '<table id="rankingtable"><caption>2026年10月24日現在</caption><tbody>'+''.join(
+        f'<tr data="{4500+i}"><td class="rank"><span class="rank">{i}</span></td><td class="racer"><span class="racer">確認女子{i}</span></td><td class="shibu">東京</td><td class="money"><span class="money">{40000000-i*10000:,}</span>円</td></tr>' for i in range(1,n+1))+'</tbody></table>'
+
+
+def test_queens_ranking_has_its_own_date_twelve_place_border_and_podium():
+    report=parse_queens(queens_html(),2026)
+    report['source']='https://www.boatrace-grandprix.jp/2026/qc/sp/ranking.php'
+    text=prize_page(Page('players-prizes-women.html'),report,'20261027',[],women=True)
+    data=json.loads(re.search(r'id="pi-data" type="application/json">(.*?)</script>',text)[1])
+    assert data['cutoff']==12 and data['women'] is True and data['through']=='20261024'
+    assert data['rows'][11]['gapBorder']==0 and data['rows'][12]['gapBorder']==-10000
+    assert all(f'pi-medal-{i}' in text for i in (1,2,3))
+    assert '現在の12位ライン' in text and '2026/10/24' in text
+    with pytest.raises(ValueError):parse_queens(queens_html(11),2026)
+    with pytest.raises(ValueError):parse_queens(queens_html().replace('2026年','2025年'),2026)
+
+
+def test_served_badge_requires_explicit_current_evidence_and_no_later_f():
+    document={'toban':'4001','source':'https://www.boatrace-tsu.com/cover.pdf','document_date':'20261027','status':'served_confirmed','explicit_served':True,'days':0}
+    snapshots={'4001':{'date':'20261027','jcd':'09','rno':1,'f':1}}
+    report={'f_players':[{'toban':'4001','last_f':'20261001','events':[]}]}
+    assert build_f_report(report,snapshots,{'records':[document]},'20261027',{})['rows'][0]['leave_state']=='served'
+    report['f_players'][0]['last_f']='20261028'
+    assert build_f_report(report,snapshots,{'records':[document]},'20261028',{})['rows'][0]['leave_state']=='unknown'
+    report['f_players'][0]['last_f']='20261001'
+    snapshots['4001']['known_f_date']='20261027'
+    assert build_f_report(report,snapshots,{'records':[document]},'20261027',{})['rows'][0]['leave_state']=='unknown'

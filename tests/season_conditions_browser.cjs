@@ -45,6 +45,7 @@ const server=http.createServer((req,res)=>{
         .sort((a,b)=>Math.abs(a.win-6.3)-Math.abs(b.win-6.3))[0]?.toban;
     });
     assert.ok(candidate,'Real fixture must include a verified programme candidate');
+    await page.locator('#sw-advanced > summary').click();
     await page.locator('#sw-scope').selectOption('all');await page.locator('#sw-q').fill(candidate);
     assert.equal(await page.locator('.sw-card').count(),1);
     assert.match(await page.locator('.sw-condition').textContent(),/期末全体は未確定/);
