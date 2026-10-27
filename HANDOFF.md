@@ -1,5 +1,13 @@
 # 艇ろぐ 引き継ぎメモ
 
+## 2026-10-27 取得経路を最優先・平和島公式入口の外部試験も403
+
+- ユーザーから「許可だけでなく取得経路を先に解決して」と再度指示。タイム研究の追加を止め、公式とBOATCASTの入口を調査した。
+- 公式の公開iframeは `service=jyohp`、従来試験は `service=boatcast` と判明。値の置換はせず、公式ページの実際のiframeをたどる診断を追加。
+- 公式入口をGitHub標準Chromeで１回実行。2026-10-26平和島1Rの公式ページ・iframe・再生操作は成功、配信APIは403/REQUEST_FAILED/ID124、マスター0。実行40424265663、証跡 `research/exhibition-video/official-entry-denial-20261027.json`。映像保存なし。
+- 公式入口でも外部取得は不成立。新しい無料・PC常駐なしの取得経路を確保したとは言わない。新診断のpush起動も削除して再試行を止めた。掲載許可だけで解決とは説明せず、既に送信した問い合わせのAPI/実行条件について提供元の回答が必要な状態。
+- 変更は診断専用ブランチ `diagnostic/exhibition-official-route` に保存。main・本番は変更していない。関連ローカル31テスト成功、GitHubの全Pythonも成功した。
+
 ## 2026-10-27 展示の１〜６艇比較閲覧（非公開プレビュー）
 
 - 最新main `91273414a5` から専用ブランチ `feat/exhibition-compare` で実装。作業コピーは `2026-10-27/compact-openai-main/teilog`。元のチェックアウトは変更していない。

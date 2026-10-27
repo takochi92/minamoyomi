@@ -1,10 +1,7 @@
 name: exhibition-official-route-diagnose
 on:
-  push:
-    branches: [diagnostic/exhibition-official-route]
-    paths:
-      - .github/workflows/exhibition-official-route-diagnose.yml
-      - tools/capture_exhibition.py
+  # The one-off official-entry test also returned 403/ID124. No push retries.
+  # Rerun manually only after the provider confirms applicable access conditions.
   workflow_dispatch:
     inputs:
       date:

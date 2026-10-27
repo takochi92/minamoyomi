@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "checked_at_utc": "2026-10-27T00:07:08Z",
+  "run_id": 40424265663,
+  "run_url": "https://github.com/takochi92/minamoyomi/actions/runs/40424265663",
+  "code_commit": "d143183009e09c923df96f522170014efdba05b9",
+  "official_page_followed": true,
+  "service_observed_from_official_page": "jyohp",
+  "result": {
+    "date": "20261026",
+    "rno": 1,
+    "capture_failed": true,
+    "error_type": "ValueError",
+    "error_code": "official_playback_denied_stop",
+    "diagnostics": {
+      "stage": "wait_for_playback_manifest",
+      "master_count": 0,
+      "entry_route": "official",
+      "blocked_sdk_retries": 0,
+      "http_statuses": {
+        "front.player.boatrace-cdn.jp": [
+          200
+        ],
+        "playback.api.streaks.jp": [
+          403
+        ]
+      },
+      "denials": [
+        {
+          "json_error": true,
+          "codes": [
+            "REQUEST_FAILED"
+          ],
+          "error_ids": [
+            124
+          ]
+        }
+      ]
+    }
+  },
+  "media_downloaded": false,
+  "external_acquisition_operational": false,
+  "stopped_after_denial": true,
+  "automatic_retry_enabled": false
+}
