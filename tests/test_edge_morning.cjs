@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
-(async()=>{const {matches,jst,payload,validSubscription}=await import(pathToFileURL(path.resolve('supabase/functions/favorite-morning/logic.mjs')));
+(async()=>{const {matches,jst,payload,validSubscription,morningWindow}=await import(pathToFileURL(path.resolve('supabase/functions/favorite-morning/logic.mjs')));
+for(const [iso,allowed] of [['2026-10-26T22:29:59Z',false],['2026-10-26T22:30:00Z',true],['2026-10-26T22:50:00Z',true],['2026-10-27T00:59:59Z',true],['2026-10-27T01:00:00Z',false]])assert.equal(morningWindow(jst(new Date(iso))),allowed,iso);
 const now=new Date('2026-10-26T23:13:00Z'),device={rules:{'1234':[4]},racer_names:{'1234':'Test A'}};
 const feed={date:'20261027',racers:{'1234':[['平和島',1,'race/20261027/heiwajima-1.html','09:00',1],['平和島',6,'race/20261027/heiwajima-6.html','13:00',4]]}};
 assert.equal(jst(now).hour,8);const rows=matches(feed,device,now);assert.equal(rows.length,1);assert.equal(rows[0].frame,4);
