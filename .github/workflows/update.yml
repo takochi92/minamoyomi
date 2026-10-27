@@ -24,7 +24,6 @@ on:
       - 'scraper/season_watch.py'
       - 'scraper/season_conditions.py'
       - 'scraper/season_views.py'
-      - 'scraper/season_views.py'
       - 'scraper/fl_leave.py'
       - 'scraper/parse.py'
       - 'site/season.js'
