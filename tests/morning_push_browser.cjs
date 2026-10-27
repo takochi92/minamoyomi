@@ -17,10 +17,11 @@ await page.evaluate(()=>{
  window.testReg={pushManager:{getSubscription:async()=>window.subscribed?window.testSub:null,subscribe:async()=>{window.subscribed=true;return window.testSub;}}};
  Object.defineProperty(navigator,'serviceWorker',{value:{register:async()=>{},ready:Promise.resolve(window.testReg),getRegistration:async()=>window.testReg},configurable:true});
  window.PushManager=function(){};window.Notification={permission:'granted',requestPermission:async()=>window.denied?'denied':'granted'};
- window.TeiNoteAccount={identity:()=>window.testUser,state:()=>({ready:window.testReady,user:!!window.testUser}),data:()=>({fav:window.testUser==='B'?{'5678':{name:'別アカウント'}}:{'1234':{name:'確認用選手'}}}),subscribe:f=>window.notify=f,
+ window.TeiNoteAccount={identity:()=>window.testUser,state:()=>({ready:window.testReady,user:!!window.testUser}),data:()=>({fav:window.testUser==='B'?{'5678':{name:'別アカウント'}}:Object.assign({'1234':{name:'確認用選手'}},window.extraFavorites||{})}),subscribe:f=>window.notify=f,
  notificationCall:async(name,args)=>{if(window.fail)throw Error('保存失敗');window.calls.push({name,args});if(name==='read')return window.rows[window.testUser]||null;if(name==='test')return {sent:1};window.rows[window.testUser]={subscription:args.push_subscription,rules:JSON.parse(JSON.stringify(args.push_rules)),enabled:args.turn_on,revision:args.expected_revision+1};return args.expected_revision+1;}};
 });
 await page.addScriptTag({content:js});
+await page.locator('.push-racer-row > summary').filter({hasText:'確認用選手'}).click();
 await page.getByRole('checkbox',{name:'確認用選手 4号艇',exact:true}).check();
 await page.getByRole('button',{name:'この端末の通知をオン',exact:true}).click();
 await page.waitForFunction(()=>document.querySelector('#race-notifications').textContent.includes('この端末の通知：オン'));
@@ -37,6 +38,7 @@ await page.evaluate(()=>{window.fail=true});
 await page.getByRole('button',{name:'この端末の通知をオン',exact:true}).click();
 await page.waitForSelector('[role=alert]');assert.equal(await page.evaluate(()=>window.subscribed),false);
 await page.evaluate(()=>{window.fail=false;window.testUser='B';window.notify();});
+await page.locator('.push-racer-row > summary').filter({hasText:'別アカウント'}).click();
 await page.getByRole('checkbox',{name:'別アカウント 5号艇',exact:true}).check();
 assert.equal(await page.getByRole('checkbox',{name:/確認用選手/}).count(),0);
 await page.getByRole('button',{name:'この端末の通知をオン',exact:true}).click();
@@ -44,6 +46,16 @@ await page.waitForFunction(()=>window.rows.B&&window.rows.B.enabled);
 await page.evaluate(()=>window.TeiRaceNotifications.beforeSignOut());
 assert.equal(await page.evaluate(()=>window.rows.B.enabled),false);
 assert.equal(await page.evaluate(()=>window.subscribed),false);
+await page.evaluate(()=>{window.testUser='A';window.extraFavorites=Object.fromEntries(Array.from({length:19},(_,i)=>[String(4000+i),{name:'確認選手'+(i+1)}]));window.notify();});
+await page.waitForFunction(()=>document.querySelectorAll('.push-racer-row').length===20);
+assert.equal(await page.locator('.push-racer-row[open]').count(),0);
+assert.ok(await page.locator('.push-racer-row').evaluateAll(rows=>rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0)<1300));
+await page.screenshot({path:'private/morning-push/20-favorites-folded.png',fullPage:true});
+await page.locator('.push-racer-row > summary').first().click();
+await page.getByRole('checkbox',{name:'確認用選手 3号艇',exact:true}).check();
+assert.equal(await page.locator('.push-racer-row[open]').count(),1);
+assert.match(await page.locator('.push-racer-row > summary').first().textContent(),/3・4・6号艇/);
+for(const width of [320,390]){await page.setViewportSize({width,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
 assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
 fs.mkdirSync('private/morning-push',{recursive:true});
 await page.screenshot({path:'private/morning-push/mobile-settings.png',fullPage:true});

@@ -23,6 +23,7 @@ await page.route('**/*',async r=>{
  return r.fulfill({contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'application/octet-stream',body:fs.readFileSync(file)});
 });
 await page.goto('https://teilog.com/mynote');
+await page.locator('.push-racer-row > summary').filter({hasText:'結合確認用選手'}).click();
 await page.getByRole('checkbox',{name:'結合確認用選手 4号艇',exact:true}).check();
 await page.getByRole('button',{name:'この端末の通知をオン',exact:true}).click();
 await page.waitForFunction(()=>document.querySelector('#race-notifications').textContent.includes('この端末の通知：オン'));
