@@ -12,6 +12,7 @@ jobs:
       - run: python -m pytest -q tests
       - run: node worker/test.mjs
       - run: node update-watchdog/test.mjs
+      - run: node update-watchdog/monitor.test.mjs
       - run: node tests/test_note_store.cjs
       - run: node tests/test_note_account.cjs
       - run: node tests/test_pwa.cjs
