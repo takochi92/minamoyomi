@@ -89,7 +89,8 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 日付切替の取得（約5分）と全再生成・公開が重なる場合も完了させる。
+    timeout-minutes: 25
     env:
       SITE_URL: ${{ vars.SITE_URL }}
       HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
