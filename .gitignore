@@ -38,3 +38,4 @@ scraper/exhibition_model/*.pt
 scraper/exhibition_model/*.onnx
 # Local previews and private source media must never enter Git or CI artifacts.
 private/
+supabase/.temp/

@@ -17,24 +17,26 @@
  var previousIdentity=A.identity();
  A.subscribe(function(){var next=A.identity();if(previousIdentity&&previousIdentity!==next)stopNotifications(previousIdentity).catch(()=>{});previousIdentity=next;});
  if(!root)return;
- var cfg=(window.SITE_CONFIG||{}).notifications||{},record=null,device,epoch=0,uid=null,busy=false,loaded=false,active=false,error='',draft={},todayFeed=null;
+ var cfg=(window.SITE_CONFIG||{}).notifications||{},record=null,device,epoch=0,uid=null,busy=false,loaded=false,active=false,error='',notice='',draft={},todayFeed=null,favoritesVersion='';
  fetch('/fav-today.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{todayFeed=d;draw();}).catch(()=>{});
  function node(tag,text){var e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
  function supported(){return window.isSecureContext&&'Notification' in window&&'serviceWorker' in navigator&&'PushManager' in window;}
  function id(){if(!device){var k='teilog_push_device_v1:'+A.identity();device=localStorage.getItem(k);if(!device){device=crypto.randomUUID();localStorage.setItem(k,device);}}return device;}
  function key(){return Uint8Array.from(atob(cfg.vapidPublicKey.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));}
  function check(e,u){if(epoch!==e||A.identity()!==u)throw new Error('ログイン状態が変わりました。');}
- async function registration(){await navigator.serviceWorker.register('/sw.js',{scope:'/',updateViaCache:'none'});return navigator.serviceWorker.ready;}
+ async function registration(){await navigator.serviceWorker.register('/sw.js',{scope:'/',updateViaCache:'none'});return Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('通知の準備が完了しませんでした。通信を確認して再度お試しください。')),20000))]);}
  async function save(on,sub,e,u){
   check(e,u);var revision=await A.notificationCall('save',{device_id:id(),push_subscription:sub,push_rules:draft,turn_on:on,expected_revision:record?record.revision:0});
   check(e,u);record={revision:revision,subscription:sub,rules:JSON.parse(JSON.stringify(draft)),enabled:on};active=on;
  }
  async function action(kind){
-  if(busy||!loaded)return;busy=true;error='';var e=epoch,u=A.identity(),created=null;draw();
+  if(busy||!loaded)return;busy=true;error='';notice='';var e=epoch,u=A.identity(),created=null;draw();
   try{
    if(kind==='off'){
     await save(false,record.subscription,e,u);
     var reg=await registration(),sub=await reg.pushManager.getSubscription();check(e,u);if(sub)await sub.unsubscribe();
+   }else if(kind==='test'){
+    await A.notificationCall('test',{device_id:id()});check(e,u);notice='テスト通知を送信しました。端末の通知を確認してください。同日のテスト送信は１回です。';
    }else if(kind==='save')await save(record.enabled,record.subscription,e,u);
    else{
     if(!Object.values(draft).some(x=>x.length))throw new Error('通知したい選手の枠番を選んでください。');
@@ -48,6 +50,7 @@
   finally{if(e===epoch){busy=false;draw();}}
  }
  function draw(){
+  var notebook=document.getElementById('note-app');if(notebook&&A.state().ready&&root.nextElementSibling!==notebook)notebook.before(root);
   root.replaceChildren();root.append(node('h2','朝のお気に入り出走通知'));
   root.append(node('p','朝8時台を目安に、対象レースをまとめて通知します。対象がない日は通知しません。配信・端末の状態で遅れたり届かない場合があります。'));
   if(!A.state().user){root.append(node('p','お気に入りを保存したアカウントでログインしてください。'));return;}
@@ -74,21 +77,23 @@
    });});root.append(list.childElementCount?list:node('p','選択中の条件に合う出走はありません。'));
   }
   if(error){var err=node('p',error);err.setAttribute('role','alert');root.append(err);}
+  if(notice)root.append(node('p',notice));
   var buttons=node('div');buttons.className='push-buttons';
-  [['on','この端末の通知をオン'],['save','選んだ枠番を保存'],['off','この端末の通知をオフ']].forEach(function(x){
-   var b=node('button',x[1]);b.type='button';b.disabled=busy||!ready||!loaded||!A.state().ready||(x[0]!=='on'&&!record);
+  [['on','この端末の通知をオン'],['save','選んだ枠番を保存'],['test','テスト通知を送る'],['off','この端末の通知をオフ']].forEach(function(x){
+   var b=node('button',x[1]);b.type='button';b.disabled=busy||!ready||!loaded||!A.state().ready||(x[0]!=='on'&&!record)||(x[0]==='test'&&(!record||!record.enabled||!active));
    b.addEventListener('click',()=>action(x[0]));buttons.append(b);
   });root.append(buttons);if(busy)root.append(node('p','通知設定を確認しています…'));
  }
  async function load(){
   if(!A.state().ready){if(A.identity()!==uid){epoch++;record=null;draft={};device=null;uid=null;loaded=false;busy=false;}draw();return;}
-  var next=A.identity();if(next===uid){draw();return;}
-  uid=next;epoch++;record=null;device=null;draft={};busy=false;loaded=false;error='';var e=epoch;draw();
+  var next=A.identity(),version=JSON.stringify(A.data().fav||{});if(next===uid&&version===favoritesVersion){draw();return;}
+  var sameUser=next===uid,previousDraft=sameUser?draft:{};favoritesVersion=version;
+  uid=next;epoch++;record=null;device=null;draft=previousDraft;busy=false;loaded=false;error='';notice='';var e=epoch;draw();
   if(!next||!cfg.enabled||!cfg.vapidPublicKey)return;
   try{var data=await A.notificationCall('read',{device_id:id()});check(e,next);
    var reg=supported()&&await navigator.serviceWorker.getRegistration('/'),sub=reg&&await reg.pushManager.getSubscription();check(e,next);
    record=data;active=!!(sub&&data&&data.subscription.endpoint===sub.toJSON().endpoint&&Notification.permission==='granted');
-   draft=data?JSON.parse(JSON.stringify(data.rules)):{};loaded=true;draw();}
+   draft=Object.assign({},data?JSON.parse(JSON.stringify(data.rules)):{},previousDraft);loaded=true;draw();}
   catch(_){if(e===epoch){error='通知設定を読み込めません。再読み込みしてください。';draw();}}
  }
  window.TeiRaceNotifications={beforeSignOut:async function(){

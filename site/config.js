@@ -5,7 +5,7 @@ window.SITE_CONFIG = {
   // Live Google login, RLS, cloud round-trip and logout checks passed.
   account: { url: "https://xkibgkdniwlfocwpmuzy.supabase.co", publishableKey: "sb_publishable_g3Xf_bVA_fLJfzfZ2lQpIw_J0v4yaDS", verificationOnly: false },
   // Enable only after DB, sender and real-device delivery checks.
-  notifications: { enabled: false, vapidPublicKey: "" },
+  notifications: { enabled: true, vapidPublicKey: "BDkIwAgdBTOgumCuqrhfCm7gR5AjqJTrMj-KM_tZ0Kjsa0-48G73z9SWB9WOznrqB-1oEiH-z-cilqjIL_phI0o" },
   // ライブオッズの Worker のURL（例 "https://teilog-live.あなた.workers.dev"）。空ならライブ欄は出ません
   liveApi: "",
   ads: {

@@ -23,6 +23,13 @@ jobs:
       - run: node --test tests/test_season_conditions.cjs
       - run: node tests/test_push_worker.cjs
       - run: node tests/test_notification_account.cjs
+      - run: node tests/test_edge_morning.cjs
+      - name: 通知のDB権限と所有者分離を検査
+        run: |
+          npm install --prefix .cache/push-tests --ignore-scripts --no-save --package-lock=false @electric-sql/pglite@0.5.2
+          PGLITE_MODULE="$GITHUB_WORKSPACE/.cache/push-tests/node_modules/@electric-sql/pglite" node tests/test_push_database.cjs
+      - name: 通知配信コードと依存ロックを検査
+        run: npx --yes deno@2.9.6 check --frozen --config supabase/functions/favorite-morning/deno.json --lock=supabase/functions/favorite-morning/deno.lock supabase/functions/favorite-morning/index.ts
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.com

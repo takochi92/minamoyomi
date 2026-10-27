@@ -32,7 +32,7 @@ self.addEventListener('push', event => {
   event.waitUntil((async () => {
     let message;try { message=event.data.json(); } catch (_) { return; }
     const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
-    if(!message || message.day!==day || message.tag!=='teilog-morning-'+day ||
+    if(!message || message.day!==day || !['teilog-morning-'+day,'teilog-test-'+day].includes(message.tag) ||
       message.url!=='/mynote?morning='+day || typeof message.title!=='string' || typeof message.body!=='string')return;
     await self.registration.showNotification(message.title.slice(0,80),{
       body:message.body.slice(0,600),tag:message.tag,icon:'/img/pwa-192-v2.png',

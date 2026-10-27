@@ -1,39 +1,48 @@
-# 朝のお気に入り出走通知（実装版、配信未有効化）
+# 朝のお気に入り出走通知
 
-ユーザー希望：朝に対象レースをまとめる。お気に入り選手ごとに通知する枠番を選択する。
-所有者限定の機能ではない。既存・新規の全ログイン利用者が自分の端末・お気に入りに対して利用する設計。利用者にSupabase連携は求めない。ChatGPT側のSupabase管理接続は所有者の開発作業用であり、サイトのGoogleログイン接続と別物。
+全ログイン利用者が自分のお気に入りについて、選手ごとの通知対象枠番と端末ごとのオン・オフを設定する。所有者限定ではない。一般利用者にSupabase連携を求めない。
 
 ## 動作
 
-- マイノートに通知のオン・オフと選手別1〜6号艇の選択。初期はオフ・全選手未選択。端末ごとの設定で、本人操作で通知許可を求める。枠番と実際の進入コースは区別する。
-- 配信はJST 8:13/33/53、9:13/33/53の候補時刻。GitHubの遅延を考慮し8:00〜9:59だけ実行。原子的な日次claimで端末ごとに1回。予定は保証時刻ではない。
-- 公開の当日出走表と、本人の現在のお気に入り、明示設定の枠番の共通部分だけ。締切済み・古い日付・中止場は除外。対象なしは無通知。新しいお気に入りも勝手に通知対象にしない。
-- 通知タップは同一サイトのマイノートへ。選択条件に合う今日のレースへのリンクを表示する。表示時点で締切済みのものも今日の確認用に残る。
-- DBはRLS＋所有者RPC、revisionによる競合拒否。端末の配信先・鍵は公開git、ログ、成果物に含めない。配信先ホストを限定し任意URLへのサーバー通信を防ぐ。ユーザー削除は通知設定にもcascade。
-- 明示ログアウト時にその端末のPush購読を解除。再ログイン後は「オン」で再登録する。ブラウザ権限の取り消しや購読失効でも再登録が必要。
-- 送信の結果が不明な失敗はその日の再送をしない。重複より欠配を選ぶ。claim後のオン・オフ変更は進行中の1件を取り消せない場合がある。通知文は端末ロック画面へ表示されることがある。
+- 初期はオフ・全枠番未選択。本人のボタン操作で端末の通知許可を求める。枠番（号艇）を選ぶもので、実際の進入コースは未確定。
+- 朝8:13/33/53・9:13/33/53（JST）の定期実行で、その日にまだ締切を迎えていない対象をまとめる。配信・端末の状態による遅れ・欠配はあり、時刻を保証しない。対象なしは無通知。
+- ユーザーのGoogleログインを使い、本人の端末設定だけをRLSと保存RPCで扱う。CASで古いrevisionを拒否。お気に入りから外した選手は、保存時の連動処理で通知条件から除外する。新規お気に入りは勝手に通知対象へ加えない。
+- 通知側に保存するのは明示設定の枠番・登録番号と選手の表示名。配信側に既存ノート表の読取権限を与えない。個人メモ本文・収支をコピーしない。
+- 当日付の公開番組だけ。中止場・中止Rは公開フィード生成で除外。送信側でも日付・締切・枠番・URLを検査する。
+- 端末・日・種類の原子的claimで重複防止。通常の朝通知と本人用テスト通知は別枠。どちらも1端末1日1回。結果不明時は再送しない。
+- 通知タップは同一サイトのマイノート。今日の選択条件に合う出走へリンク。通知文に選手名とレース情報が含まれ、端末設定によってロック画面へ表示される。
+- 明示ログアウトは保存側をオフにし端末購読を解除。アカウント切替時も購読解除。サーバー停止時でも端末側の解除を試みる。新規アカウントへの再登録を旧オフ状態のendpointが妨げない。
+- アカウント削除は通知設定・送信記録にもcascadeする。進行中の送信はオフ操作で取り消せない場合がある。
 
-## 本番で残る設定（これが済むまで通知可能とは報告しない）
+## 配信構成
 
-1. 専用Supabase `teilog-notes` に `supabase/migrations/20261027_morning_push.sql` を適用する。既存ノートと別テーブルで、ノート本体の形を変えない。
-2. 実DBで匿名拒否、A/Bユーザーの読み書き分離、所有者不一致、古いrevision、重複endpoint、日次claim、削除cascadeを確認する。ローカルの模擬ブラウザ試験はこの検証の代わりではない。
-3. VAPIDの鍵ペアを生成し、秘密鍵はGitHub Actions Secret `PUSH_VAPID_PRIVATE_KEY`、Supabaseのサーバー用キーは `PUSH_SUPABASE_SERVICE_KEY` へ登録。チャット・公開ファイルへ貼らない。公開鍵だけ `SITE_CONFIG.notifications.vapidPublicKey` へ。
-4. `SITE_CONFIG.notifications.enabled` とGitHub variable `PUSH_ENABLED` は、実DB確認とテスト端末の登録後に有効化。まず所有者端末への受信を実確認し、画面を閉じた状態で届くこと、オフ・別枠番・解除済みお気に入りで届かないことを確認する。
-5. iPhone/iPadはホーム画面追加と対応OSが必要。AndroidもOS・ブラウザの通知設定が必要。正確な配信・到着時刻は保証しない。
+- `supabase/functions/favorite-morning/`：Deno Edge Function、Node互換web-push固定版、依存ロック。公開ゲートウェイJWTチェックはfalseだが、関数本体でAuth APIによるユーザー確認、または定期実行専用秘密キーを必須にする。
+- 本人テストは有効なユーザーJWTで、その本人が登録した端末だけを選択する。定期処理は秘密キーを定数時間比較して照合する。認証なし・無効セッション・誤ったjobキーは401。
+- `pg_cron`＋`pg_net`で既知の自分のEdge URLへだけ呼出し。jobキーとVAPID鍵はSupabase Vaultへ暗号化保管。VAPID秘密鍵はEdge内で生成し、チャット・ローカルファイル・Git・ログへ出さない。公開鍵だけsite/config.jsに記載。
+- Edge組込のサーバー認証を使うため、ユーザーから追加の管理キーを受け取らず、GitHub Secretsへservice_role鍵を移さない。
+- GitHub配信案のPythonとワークフローは削除した。Supabase側だけが実送信を担当する。
 
-本セッションの管理画面操作ランタイムは `failed to write kernel assets` で起動できず、専用Supabaseの変更・本番鍵の登録は未実行。既存のログインや公開サイトの設定を壊さないよう、通知フラグはfalseのまま。
-Supabaseの管理連携を検索し、未接続を確認して提案済み。ユーザーは前回の接続との違いと全員利用を質問。既存のログインは接続済みであり、一般利用者には新しい外部連携不要と説明した。新規アカウント作成やSupabaseプロジェクト作り直しは不要。
+## 本番設定・承認と確認
 
-## 開発環境での確認
+- 専用プロジェクト `teilog-notes`（`xkibgkdniwlfocwpmuzy`）を確認。既存ログインの作り直し・新規プロジェクト・有料契約なし。
+- 自動承認が個人メモ全体へのSELECT追加案を拒否。全体読取のGRANTを除き、本人の保存時のfav部分だけを使う形へ変更した。
+- 本番DBへの通知表・保存関数・解除連動の追加について、ユーザーが明示的に許可。`favorite_morning_push`適用成功。
+- 別途、定期実行・HTTP・Vault・Edge配信・通知画面の本番反映についてもユーザーが明示的に許可。`favorite_push_runtime`適用、Edge v2、Vault初期化、定期実行の登録を確認。
+- Bootstrap呼出しはHTTP200・ready=true。秘密鍵を返さず公開鍵だけ取得。正午のmorning呼出しはHTTP200・outside morning windowで停止。runtimeとcronは有効。
+- 本番SQLで匿名拒否・所有者分離・お気に入り限定コピーと解除連動・claim重複防止・テスト枠分離・自己削除cascadeを確認。合成データは全てrollback済み。
+- 実端末でのOS通知の受信は未確認。公開後、本人がマイノートでオン→テスト通知を操作して確認する。サイトを開いていない状態で受け取れるかも確認対象。
 
-- 実Edge・390pxで選手別の枠番、オン・オフ、保存、登録失敗時の購読解除、別アカウントの分離を確認。Push/認証APIは模擬で、本番受信試験ではない。
-- ローカルPostgreSQL（PGlite）で既存ノートSQLと今回のSQLを実行。匿名拒否・A/BのRLS分離・所有者/旧revisionの拒否・不正な枠番/配信先の拒否・service_roleだけの日次claim・重複排除・オフ・自己アカウント削除時のcascadeを確認。本番Supabaseの設定確認とは区別する。
-- 実pywebpushでP-256の一時鍵を使った暗号化とVAPID署名・TTLとtimeoutを確認。HTTP送信はMock、秘密鍵はメモリ内のみ。
-- Pythonで絞り込み、古い日付、締切、中止、重複、配信先URL、日次claimとログ非公開、昼の実行停止を検査。既存worker・JS検査も成功。
-- 検査画像とX下書きは `private/morning-push/`。未投稿・Atelier未送信。
+## 検査
 
-## 出典
+- `supabase/tests/morning_push.sql`：本番上の権限検査（合成データ・rollback）。
+- `tests/test_push_database.cjs`：PGlite上で既存ノートSQLと通知SQLを実行。所有者・匿名・CAS・URL・枠番・削除・endpoint再登録。
+- `tests/test_edge_morning.cjs`：実配信と共有するJS計算。JST、未選択、古い番組、締切、対象枠番、送信先制限、テスト区分。
+- `tests/morning_push_browser.cjs`：実Edge390px、認証とPushはMock。選手別設定・オンオフ・テスト通知・保存失敗・アカウント切替・ログアウト。実受信の証明ではない。
+- 既存のログイン・PWA・予想表示を含む全検査とDeno型検査を実行。検査画像・紹介用1200×675画像・X下書きは `private/morning-push/`。外部投稿・Atelier送信なし。
 
-- [Push API / MDN](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
+## 参考
+
+- [Supabase Edge Functions scheduling](https://supabase.com/docs/guides/functions/schedule-functions)
+- [Supabase Vault](https://supabase.com/docs/guides/database/vault)
+- [Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
 - [Apple Web Push](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers)
-- [pywebpush 2.0.3](https://pypi.org/project/pywebpush/2.0.3/)

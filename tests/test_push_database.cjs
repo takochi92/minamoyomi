@@ -11,6 +11,7 @@ await db.exec(fs.readFileSync('supabase/migrations/20261025_private_notes.sql','
 await db.exec(fs.readFileSync('supabase/migrations/20261027_morning_push.sql','utf8'));
 const A='00000000-0000-4000-8000-000000000001',B='00000000-0000-4000-8000-000000000002',D='00000000-0000-4000-8000-000000000003';
 await db.query('insert into auth.users values($1),($2)',[A,B]);
+await db.query('insert into public.teilog_notes(user_id,data) values($1,$2),($3,$4)',[A,{racer:{},motor:{},fav:{'1234':{name:'Test A'}},bets:[],budget:0},B,{racer:{},motor:{},fav:{'5678':{name:'Test B'}},bets:[],budget:0}]);
 const subscription={endpoint:'https://fcm.googleapis.com/fcm/send/test-only',keys:{p256dh:'a'.repeat(87),auth:'b'.repeat(22)}};
 async function role(r,id=''){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role '+r);}
 async function save(owner=A,rev=0,on=true,s=subscription,rules={'1234':[4]}){return db.query('select public.teilog_save_push($1,$2,$3,$4,$5,$6) as revision',[D,s,rules,on,rev,owner]);}

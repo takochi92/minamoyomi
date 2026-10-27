@@ -243,9 +243,13 @@
     var epoch=generation, uid=user.id, result;
     if(name==='read') result=await client.from('teilog_push_devices').select('id,subscription,rules,enabled,revision').eq('user_id',uid).eq('id',args.device_id).maybeSingle();
     else if(name==='save') result=await client.rpc('teilog_save_push',Object.assign({},args,{expected_user_id:uid}));
+    else if(name==='test') result=await client.functions.invoke('favorite-morning',{body:{action:'test',device_id:args.device_id}});
     else throw new Error('未対応の通知操作です。');
     if(epoch!==generation || !user || user.id!==uid) throw new Error('ログイン状態が変わりました。');
-    if(result.error) throw new Error('通知設定を保存できませんでした。通信と配信設定を確認してください。');
+    if(result.error){
+      if(name==='test')throw new Error(result.error.context&&result.error.context.status===409?'本日のテスト通知は送信済みです。端末の通知設定を確認してください。':'テスト通知を送信できませんでした。通信と端末の通知設定を確認してください。');
+      throw new Error('通知設定を保存できませんでした。通信を確認してページを読み直してください。');
+    }
     return result.data;
   }
   window.TeiNoteAccount = { notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,

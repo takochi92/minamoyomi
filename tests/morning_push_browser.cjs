@@ -18,13 +18,15 @@ await page.evaluate(()=>{
  Object.defineProperty(navigator,'serviceWorker',{value:{register:async()=>{},ready:Promise.resolve(window.testReg),getRegistration:async()=>window.testReg},configurable:true});
  window.PushManager=function(){};window.Notification={permission:'granted',requestPermission:async()=>window.denied?'denied':'granted'};
  window.TeiNoteAccount={identity:()=>window.testUser,state:()=>({ready:window.testReady,user:!!window.testUser}),data:()=>({fav:window.testUser==='B'?{'5678':{name:'別アカウント'}}:{'1234':{name:'確認用選手'}}}),subscribe:f=>window.notify=f,
- notificationCall:async(name,args)=>{if(window.fail)throw Error('保存失敗');window.calls.push({name,args});if(name==='read')return window.rows[window.testUser]||null;window.rows[window.testUser]={subscription:args.push_subscription,rules:JSON.parse(JSON.stringify(args.push_rules)),enabled:args.turn_on,revision:args.expected_revision+1};return args.expected_revision+1;}};
+ notificationCall:async(name,args)=>{if(window.fail)throw Error('保存失敗');window.calls.push({name,args});if(name==='read')return window.rows[window.testUser]||null;if(name==='test')return {sent:1};window.rows[window.testUser]={subscription:args.push_subscription,rules:JSON.parse(JSON.stringify(args.push_rules)),enabled:args.turn_on,revision:args.expected_revision+1};return args.expected_revision+1;}};
 });
 await page.addScriptTag({content:js});
 await page.getByRole('checkbox',{name:'確認用選手 4号艇',exact:true}).check();
 await page.getByRole('button',{name:'この端末の通知をオン',exact:true}).click();
 await page.waitForFunction(()=>document.querySelector('#race-notifications').textContent.includes('この端末の通知：オン'));
 assert.deepEqual(await page.evaluate(()=>window.rows.A.rules),{'1234':[4]});
+await page.getByRole('button',{name:'テスト通知を送る',exact:true}).click();
+await page.waitForFunction(()=>document.querySelector('#race-notifications').textContent.includes('テスト通知を送信しました'));
 assert.equal(await page.getByRole('link',{name:/平和島6R 4号艇/}).count(),1);
 await page.getByRole('checkbox',{name:'確認用選手 6号艇',exact:true}).check();
 await page.getByRole('button',{name:'選んだ枠番を保存',exact:true}).click();
