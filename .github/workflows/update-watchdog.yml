@@ -1,6 +1,11 @@
 name: deploy-update-watchdog
 on:
   workflow_dispatch:
+    inputs:
+      send_test_alert:
+        description: '管理者通知を一度テストする（本人の許可がある場合だけ）'
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -8,19 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UPDATE_DISPATCH_TOKEN: ${{ secrets.UPDATE_DISPATCH_TOKEN }}
+      ADMIN_ALERT_TOPIC: ${{ secrets.NTFY_TOPIC }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: update-watchdog
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: node update-watchdog/test.mjs
+      - run: node update-watchdog/monitor.test.mjs
       - name: Require a dedicated dispatch token
-        run: test -n "$UPDATE_DISPATCH_TOKEN"
+        run: test -n "$UPDATE_DISPATCH_TOKEN" && test -n "$ADMIN_ALERT_TOPIC"
+      - name: 配備前にGitHub認証と起動鍵の期限を検査
+        run: node update-watchdog/preflight.mjs
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: update-watchdog
-          command: deploy
+          command: deploy --var ADMIN_ALERT_TEST_ID:${{ inputs.send_test_alert && github.run_id || 'none' }}
           secrets: |
             UPDATE_DISPATCH_TOKEN
+            ADMIN_ALERT_TOPIC

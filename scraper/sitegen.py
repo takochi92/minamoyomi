@@ -2125,6 +2125,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             todayh = ""
             if today:
                 todayh = (f'<section style="display:grid;gap:10px"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
+                          f'{self.freshness_block(page, self.idx.get("updated_at", ""))}'
                           f'<div class="rcards">{self.race_cards(page, self.idx["date"], jcd, today)}</div></section>')
             body = f"""<h1>{e(v['name'])}ボートレース</h1>
 {todayh}

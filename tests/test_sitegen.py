@@ -86,6 +86,9 @@ def test_pages_and_links(tmp_path):
     s, files = _site(tmp_path)
     assert "race/20260925/kiryu-12.html" in files and "venue/omura.html" in files and "targets.html" in files
     assert len([p for p in files if p.startswith("racer/")]) > 1000
+    assert 'id="page-freshness"' in files['venue/kiryu.html']
+    assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']
+    assert 'id="page-freshness"' not in files['venue/omura.html']
     stats=files['stats.html']; logic=files['logic.html']
     assert 'id="logic-details" class="evidence-fold"' in stats
     assert '<summary>締切前に固定した研究券の成績</summary>' in stats
