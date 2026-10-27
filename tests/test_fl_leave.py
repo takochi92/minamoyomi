@@ -57,3 +57,20 @@ def test_fetch_error_preserves_last_verified_snapshot(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError):
         fl.refresh_tsu()
     assert fl.read_json(tmp_path/'tsu.json') == old
+
+
+def test_only_explicit_zero_or_served_word_can_mark_consumption():
+    zero=fl.parse_tsu(table().replace(' 30日 ',' 0日 '))
+    assert zero[2]['explicit_served'] is True and zero[2]['days']==0
+    served=fl.parse_tsu(table().replace(' 30日 ',' 消化済み '))
+    assert served[2]['explicit_served'] is True
+    assert served[0]['explicit_served'] is False and served[0]['days'] is None
+
+
+def test_omura_day_ranges_are_not_f_counts_and_duplicate_names_are_rejected():
+    html='<h2>2026年10月27日</h2><div class="tinymce"><p>F・Ｌ休み未消化選手</p><p>◎30～35日</p><p>確認 選手</p><p>※今節の欠場選手</p></div>'
+    rows=fl.parse_omura(html,'20261027',{'4001':{'name':'確認選手'}})
+    assert rows[0]['days'] is None and rows[0]['days_min']==30 and rows[0]['days_max']==35
+    assert rows[0]['start'] is None and rows[0]['end'] is None
+    with pytest.raises(ValueError):fl.parse_omura(html,'20261028',{'4001':{'name':'確認選手'}})
+    with pytest.raises(ValueError):fl.parse_omura(html,'20261027',{'4001':{'name':'確認選手'},'4002':{'name':'確認選手'}})

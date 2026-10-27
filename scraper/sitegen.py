@@ -164,12 +164,13 @@ class Page:
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False, og=None):
         nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),
+               ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'),
                ("players.html", "選手情報", "選手情報", '<path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/>'),
-               ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+               ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
                ("stats.html", "実績と根拠", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'),
                ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
         nav_keys = {'index.html':'home', 'stats.html':'stats', 'players.html':'players', 'targets.html':'targets', 'racer/index.html':'search', 'mynote.html':'note'}
-        navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" or h == "players.html" and self.path in ("players-f.html", "players-prizes.html", "database/season.html") else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
+        navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" or h == "players.html" and (self.path.startswith("players-") or self.path == "database/season.html") else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
         ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -2668,13 +2669,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         from .player_info import hub, build_f_report, f_page, prize_page, programme_snapshots
         today=self.now.strftime('%Y%m%d')
         prizes=read_json(BASE/'prizes/latest.json',{}) or {}
+        women=read_json(BASE/'prizes/women.json',{}) or {}
         report=read_json(BASE/'season_watch/summary.json.gz',{}) or {}
         races=(race for rows in getattr(self,'day_races',{}).values() for race in rows)
         fdata=build_f_report(report,programme_snapshots(races,today),published_records(today),today,self.racers)
         for path,title,body in (
             ('players.html','選手情報',lambda p:hub(p,prizes)),
             ('players-f.html','F・休みの確認',lambda p:f_page(p,fdata)),
-            ('players-prizes.html','賞金ランキング・グランプリ',lambda p:prize_page(p,prizes,today,calendars()))):
+            ('players-prizes.html','賞金ランキング・グランプリ',lambda p:prize_page(p,prizes,today,calendars())),
+            ('players-prizes-women.html','女子賞金・クイーンズクライマックス',lambda p:prize_page(p,women,today,calendars(),women=True))):
             page=Page(path)
             crumbs=[('players.html','選手情報'),('',title)] if path!='players.html' else [('',title)]
             content=self.freshness_block(page,self.idx.get('updated_at',''))+body(page)

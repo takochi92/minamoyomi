@@ -10,6 +10,26 @@ from .database_sources import BASE, JST, session, fetch, read_json, write_json
 STORE = BASE / 'prizes'
 
 
+def parse_queens(raw, year):
+    soup=BeautifulSoup(raw,'html.parser');table=soup.select_one('#rankingtable')
+    caption=table.select_one('caption') if table else None
+    stamp=re.fullmatch(r'\s*(\d{4})年(\d+)月(\d+)日現在\s*',caption.get_text() if caption else '')
+    if not stamp or int(stamp[1])!=year:
+        raise ValueError('Official Queens ranking date missing')
+    through=datetime(*map(int,stamp.groups())).strftime('%Y%m%d')
+    rows=[]
+    for tr in table.select('tbody tr'):
+        rank=tr.select_one('td.rank span.rank');name=tr.select_one('td.racer span.racer');money=tr.select_one('td.money span.money')
+        toban=tr.get('data','')
+        if not all((rank,name,money)) or not re.fullmatch(r'\d{4}',toban):raise ValueError('Official Queens row incomplete')
+        amount=money.get_text(strip=True)
+        if not re.fullmatch(r'\d[\d,]*',amount):raise ValueError('Official Queens amount invalid')
+        rows.append({'rank':int(rank.get_text()),'toban':toban,'name':re.sub(r'\s','',name.get_text()),'amount':int(amount.replace(',','')),'branch':tr.select_one('td.shibu').get_text(strip=True)})
+    if len(rows)<12 or [r['rank'] for r in rows]!=list(range(1,len(rows)+1)) or len({r['toban'] for r in rows})!=len(rows):raise ValueError('Official Queens ranking incomplete')
+    if any(a['amount']<b['amount'] for a,b in zip(rows,rows[1:])):raise ValueError('Official Queens order inconsistent')
+    return {'year':year,'from':f'{year}0101','through':through,'players':rows,'category':'women'}
+
+
 def parse_omura(raw, year):
     soup = BeautifulSoup(raw, 'html.parser')
     text = soup.get_text(' ', strip=True)
@@ -47,24 +67,24 @@ def parse_omura(raw, year):
     return {'year':year,'from':start.strftime('%Y%m%d'),'through':end.strftime('%Y%m%d'),'players':ranked}
 
 
-def refresh(year=None):
+def refresh(year=None, women=False):
     now = datetime.now(JST);year = year or now.year
     # Only a published official page is read; a missing new-year page keeps
     # the last snapshot instead of relabelling old figures as current.
-    source = f'https://omurakyotei.jp/special/{year}grandprix/prize_ranking/'
+    source = (f'https://www.boatrace-grandprix.jp/{year}/qc/sp/ranking.php' if women else f'https://omurakyotei.jp/special/{year}grandprix/prize_ranking/')
     raw = fetch(session(), source)
-    report = parse_omura(raw,year)
+    report = parse_queens(raw,year) if women else parse_omura(raw,year)
     if report['through'] > now.strftime('%Y%m%d'):
         raise ValueError('Official ranking date is in the future')
-    path = STORE / 'latest.json'
+    path = STORE / ('women.json' if women else 'latest.json')
     previous = read_json(path,{}) or {}
     if previous.get('through','') > report['through']:
         raise ValueError('Official ranking snapshot would regress')
     report.update(source=source,checked_at=now.isoformat(),sha256=hashlib.sha256(raw).hexdigest())
     write_json(path,report)
-    print('official prizes:',report['through'],len(report['players']),'players',flush=True)
+    print('official prizes:','women' if women else 'overall',report['through'],len(report['players']),'players',flush=True)
 
 
 if __name__ == '__main__':
-    ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--year',type=int)
-    refresh(ap.parse_args().year)
+    ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--year',type=int);ap.add_argument('--women',action='store_true')
+    args=ap.parse_args();refresh(args.year,args.women)
