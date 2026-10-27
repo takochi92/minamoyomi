@@ -1,0 +1,177 @@
+{
+  "entries": [
+    {
+      "entry": "heiwajima_official_movie",
+      "page": "https://www.heiwajima.gr.jp/replay/replay_movie/race/2026102601.htm",
+      "query_keys": [
+        "type"
+      ],
+      "media_downloaded": false,
+      "status": 200,
+      "html_sha256": "d2dbdb80c7f1153b43ae76e803a7cfda0763989867d0991668838b59620eb25a",
+      "routes": [
+        {
+          "element": "iframe",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/asp/heiwajima/replay/replay_movie_player.php",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/common.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/jquery-1.8.3.min.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/jquery-3.5.1.min.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/jquery.colorbox.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/kaisai_system.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/mymenu.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/replay.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/viewport.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        }
+      ]
+    },
+    {
+      "entry": "boatcast_exhibition_entry",
+      "page": "https://race.boatcast.jp/replay",
+      "query_keys": [
+        "jo",
+        "md"
+      ],
+      "media_downloaded": false,
+      "status": 200,
+      "html_sha256": "dd9ddd87e48e91b36f5eba03b0cac1ffbae5ef062543e52a997ebac9bb5c702e",
+      "routes": [
+        {
+          "element": "script",
+          "host": "race.boatcast.jp",
+          "path": "/assets/js/main.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        }
+      ]
+    },
+    {
+      "entry": "heiwajima_official_movie-child-1",
+      "page": "https://www.heiwajima.gr.jp/asp/heiwajima/replay/replay_movie_player.php",
+      "query_keys": [
+        "racenum",
+        "type",
+        "yd"
+      ],
+      "media_downloaded": false,
+      "status": 200,
+      "html_sha256": "d69158aa8bf248defff5295e5518dc6218e914336a75af8376266af561587d7e",
+      "routes": [
+        {
+          "element": "iframe",
+          "host": "front.player.boatrace-cdn.jp",
+          "path": "/player/vod",
+          "service": "jyohp",
+          "stadium": "04heiwajima",
+          "race_type": "exhibition"
+        },
+        {
+          "element": "inline",
+          "host": "front.player.boatrace-cdn.jp",
+          "path": "/player/vod",
+          "service": "jyohp",
+          "stadium": "04heiwajima",
+          "race_type": "exhibition"
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/jquery-1.8.3.min.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        },
+        {
+          "element": "script",
+          "host": "www.heiwajima.gr.jp",
+          "path": "/js/viewport3.js",
+          "service": "",
+          "stadium": "",
+          "race_type": ""
+        }
+      ]
+    },
+    {
+      "entry": "heiwajima_official_movie-child-2",
+      "page": "https://www.heiwajima.gr.jp/js/replay.js",
+      "query_keys": [],
+      "media_downloaded": false,
+      "status": 200,
+      "html_sha256": "c112e279eeff4b66fb8162e4fe77011ba721bb6ecf8d15879f68ba16c824cfaa",
+      "routes": []
+    },
+    {
+      "entry": "boatcast_exhibition_entry-child-2",
+      "page": "https://race.boatcast.jp/assets/js/main.js",
+      "query_keys": [],
+      "media_downloaded": false,
+      "status": 200,
+      "html_sha256": "83f1bf539388ee9ca3a652d90b42b89ff4657b40f72d010a3a0cf77aa2a9fe51",
+      "routes": []
+    }
+  ],
+  "denied_playback_api_retried": false,
+  "source_address_changed": false,
+  "credentials_extracted": false,
+  "external_acquisition_operational": false
+}

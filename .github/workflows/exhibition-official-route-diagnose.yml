@@ -1,0 +1,43 @@
+name: exhibition-official-route-diagnose
+on:
+  push:
+    branches: [diagnostic/exhibition-official-route]
+    paths:
+      - .github/workflows/exhibition-official-route-diagnose.yml
+      - tools/capture_exhibition.py
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date of the public official exhibition entry (YYYYMMDD)'
+        default: '20261026'
+      race:
+        description: 'Race number'
+        default: '1'
+permissions:
+  contents: read
+concurrency:
+  group: exhibition-official-route-diagnose
+  cancel-in-progress: false
+jobs:
+  official-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      REQUESTED_DATE: ${{ inputs.date || '20261026' }}
+      REQUESTED_RACE: ${{ inputs.race || '1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/capture_exhibition.py
+            /tools/update_exhibition.py
+            /scraper/__init__.py
+            /scraper/exhibition_views.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install 'playwright>=1.55,<2'
+      - run: google-chrome --version
+      - name: Follow the actual official entry once; no media download
+        run: python -m tools.capture_exhibition --date "$REQUESTED_DATE" --race "$REQUESTED_RACE" --private-output .cache/unused-official-diagnostic --entry-route official --diagnose-only

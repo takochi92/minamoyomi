@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from urllib.parse import urlsplit, urljoin
+from urllib.parse import urlsplit, urljoin, parse_qs
 from urllib.request import urlopen
 
 from tools.update_exhibition import official_player
@@ -49,10 +49,27 @@ def denial_summary(payload):
     return result
 
 
-def discover_master(day, race):
+def official_movie_page(day, race):
+    official_player(day, race)  # Reuse calendar/race validation, never a service-ID substitution.
+    return f'https://www.heiwajima.gr.jp/replay/replay_movie/race/{day}{race:02}.htm?type=1'
+
+
+def observed_official_frame(value, day, race):
+    """Validate the actual frame supplied by the official page; do not invent it."""
+    u=urlsplit(value);q=parse_qs(u.query)
+    return (u.scheme=='https' and u.netloc=='front.player.boatrace-cdn.jp' and u.path=='/player/vod'
+            and q.get('service')==['jyohp'] and q.get('stadium')==['04heiwajima']
+            and q.get('raceType')==['exhibition'] and q.get('raceDate')==[day]
+            and q.get('raceNumber')==[f'{race:02}'])
+
+
+def discover_master(day, race, *, entry_route='boatcast'):
     # Imported only in the dedicated browser/media job, not ordinary predictions.
     from playwright.sync_api import sync_playwright
-    observed=[];statuses={};denials=[];stage='launch_browser'
+    if entry_route not in ('boatcast','official'):raise ValueError('unknown_entry_route')
+    observed=[];statuses={};denials=[];stage='launch_browser';blocked_repeats=0
+    def denied():
+        return bool(statuses.get('playback.api.streaks.jp',set()) & {401,403})
     def response_seen(response):
         url=response.url
         if media_url(url):
@@ -78,13 +95,36 @@ def discover_master(day, race):
             browser=playwright.chromium.launch(channel='chrome',headless=True)
             context=browser.new_context() # No personal cookies or stored login.
             page=context.new_page();page.on('response',response_seen)
-            stage='open_official_player'
-            page.goto(official_player(day,race),wait_until='domcontentloaded',timeout=30000)
-            stage='click_play_video'
-            page.get_by_role('button',name='Play Video',exact=True).click(timeout=20000)
+            if entry_route=='official':
+                # Once denied, prevent SDK retries as well as our own retries.
+                def prevent_retry(route):
+                    nonlocal blocked_repeats
+                    if denied():blocked_repeats+=1;route.abort()
+                    else:route.continue_()
+                page.route('https://playback.api.streaks.jp/**',prevent_retry)
+                stage='open_official_page'
+                page.goto(official_movie_page(day,race),wait_until='domcontentloaded',timeout=30000)
+                stage='click_official_frame_play'
+                deadline=time.monotonic()+20;clicked=False
+                while not clicked and not observed and time.monotonic()<deadline:
+                    if denied():raise ValueError('official_playback_denied_stop')
+                    for frame in page.frames:
+                        if not observed_official_frame(frame.url,day,race):continue
+                        button=frame.get_by_role('button',name='Play Video',exact=True)
+                        if button.count() and button.first.is_visible():
+                            button.first.click(timeout=2000);clicked=True;break
+                    if not clicked and not observed:page.wait_for_timeout(250)
+                if not clicked and not observed:raise ValueError('official_play_button_not_observed')
+            else:
+                stage='open_official_player'
+                page.goto(official_player(day,race),wait_until='domcontentloaded',timeout=30000)
+                stage='click_play_video'
+                page.get_by_role('button',name='Play Video',exact=True).click(timeout=20000)
             stage='wait_for_playback_manifest'
             deadline=time.monotonic()+20
-            while not observed and time.monotonic()<deadline:page.wait_for_timeout(250)
+            while not observed and time.monotonic()<deadline:
+                if entry_route=='official' and denied():raise ValueError('official_playback_denied_stop')
+                page.wait_for_timeout(250)
             if len(observed)!=1:
                 error=ValueError('official_master_not_observed')
                 error.safe_diagnostics={'master_count':len(observed),'http_statuses':{h:sorted(s) for h,s in statuses.items()},
@@ -92,7 +132,8 @@ def discover_master(day, race):
                 raise error
             return observed[0]
         except Exception as error:
-            error.safe_diagnostics={'stage':stage,'master_count':len(observed),
+            error.safe_diagnostics={'stage':stage,'master_count':len(observed),'entry_route':entry_route,
+                                    'blocked_sdk_retries':blocked_repeats,
                                     'http_statuses':{h:sorted(s) for h,s in statuses.items()},'denials':denials}
             raise
         finally:
@@ -199,6 +240,8 @@ def main():
     parser.add_argument('--window-start',type=float)
     parser.add_argument('--window-end',type=float)
     parser.add_argument('--diagnose-only',action='store_true',help='Observe normal playback; do not download or save media')
+    parser.add_argument('--entry-route',choices=('boatcast','official'),default='boatcast',
+                        help='official follows the publicly supplied Heiwajima page/iframe; no service-ID editing')
     args=parser.parse_args()
     # Validate before opening a browser or creating any files.
     official_player(args.date,args.race)
@@ -206,11 +249,12 @@ def main():
     window=None if args.window_start is None else (args.window_start,args.window_end)
     try:
         if args.diagnose_only:
-            discover_master(args.date,args.race)
+            discover_master(args.date,args.race,entry_route=args.entry_route)
             print(json.dumps({'date':args.date,'rno':args.race,'normal_playback_master_observed':True,
-                              'media_downloaded':False,'publication_ready':False}))
+                              'entry_route':args.entry_route,'media_downloaded':False,'publication_ready':False}))
             return
-        _,summary=capture(args.date,args.race,args.private_output,preferred_window=window)
+        discover=lambda day,race:discover_master(day,race,entry_route=args.entry_route)
+        _,summary=capture(args.date,args.race,args.private_output,preferred_window=window,discover=discover)
         print(json.dumps(summary))
     except Exception as error:
         # Do not print exceptions containing signed network URLs or transport keys.

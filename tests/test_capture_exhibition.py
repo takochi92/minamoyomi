@@ -2,6 +2,64 @@ import pytest
 import sys
 from types import SimpleNamespace
 from tools.capture_exhibition import media_url,choose_variant,selected_segments,fetch,denial_summary
+from tools.capture_exhibition import official_movie_page, observed_official_frame
+
+
+def test_official_entry_uses_public_wrapper_and_accepts_only_matching_observed_frame():
+    assert official_movie_page('20261026',1)=='https://www.heiwajima.gr.jp/replay/replay_movie/race/2026102601.htm?type=1'
+    frame='https://front.player.boatrace-cdn.jp/player/vod?service=jyohp&stadium=04heiwajima&raceType=exhibition&raceDate=20261026&raceNumber=01&autoplay=1'
+    assert observed_official_frame(frame,'20261026',1)
+    for changed in (frame.replace('jyohp','boatcast'),frame.replace('20261026','20261025'),
+                    frame.replace('raceNumber=01','raceNumber=02'),frame.replace('https://','http://'),
+                    frame.replace('front.player.boatrace-cdn.jp','evil.test')):
+        assert not observed_official_frame(changed,'20261026',1)
+    with pytest.raises(ValueError):official_movie_page('20260230',1)
+
+
+def test_public_route_mapping_records_jyohp_without_fetching_or_leaking_credentials():
+    from tools.audit_exhibition_routes import classify
+    page='https://www.heiwajima.gr.jp/asp/heiwajima/replay/replay_movie_player.php'
+    body='<iframe src="https://front.player.boatrace-cdn.jp/player/vod?service=jyohp&amp;stadium=04heiwajima&amp;raceType=exhibition&amp;token=secret"></iframe>'
+    result=classify(page,body)
+    assert any(r['service']=='jyohp' for r in result)
+    assert 'secret' not in str(result) and 'token' not in str(result)
+
+
+def test_official_denial_stops_before_click_and_blocks_sdk_retry(monkeypatch):
+    from tools.capture_exhibition import discover_master
+    seen={}
+    class Response:
+        url='https://playback.api.streaks.jp/private-endpoint?token=secret'
+        status=403
+        headers={'content-type':'application/json'}
+        def body(self):return b'{"errors":[{"id":124,"code":"REQUEST_FAILED","token":"secret"}]}'
+    class Route:
+        def abort(self):seen['retry_aborted']=True
+        def continue_(self):raise AssertionError('A denied playback API must not be retried')
+    class Page:
+        frames=[]
+        def on(self,event,callback):self.callback=callback
+        def route(self,pattern,callback):self.guard=callback
+        def goto(self,url,**kwargs):
+            seen['url']=url;self.callback(Response());self.guard(Route())
+        def get_by_role(self,*args,**kwargs):raise AssertionError('Must stop before clicking after denial')
+    class Browser:
+        def new_context(self):return self
+        def new_page(self):return Page()
+        def close(self):seen['closed']=True
+    class Runtime:
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        @property
+        def chromium(self):return self
+        def launch(self,**kwargs):return Browser()
+    monkeypatch.setitem(sys.modules,'playwright.sync_api',SimpleNamespace(sync_playwright=Runtime))
+    with pytest.raises(ValueError,match='official_playback_denied_stop') as error:
+        discover_master('20261026',1,entry_route='official')
+    assert seen['url']==official_movie_page('20261026',1)
+    assert seen['retry_aborted'] and seen['closed']
+    assert error.value.safe_diagnostics['blocked_sdk_retries']==1
+    assert 'secret' not in str(error.value.safe_diagnostics)
 
 
 @pytest.mark.parametrize('failure_stage',['launch_browser','open_official_player','click_play_video'])
