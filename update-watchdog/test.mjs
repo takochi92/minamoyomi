@@ -37,7 +37,9 @@ s=await scenario({at:'2026-10-27T15:16'});assert.equal((await s.run()).state,'fr
 s=await scenario({at:'2026-10-27T15:16',runs:[{status:'completed',created_at:'2026-10-27T06:15:00Z'}]});
 assert.equal((await s.run()).state,'dispatched','normal cadence is five minutes from the previous start, not five minutes after setup and collection');
 s=await scenario({at:'2026-10-27T15:16',runs:[{status:'completed',created_at:'2026-10-27T06:15:01Z'}]});
-assert.equal((await s.run()).state,'backoff','never dispatch before five minutes have elapsed');
+assert.equal((await s.run()).state,'dispatched','absorb the observed two-second registration delay at the five-minute Cron boundary');
+s=await scenario({at:'2026-10-27T15:16',runs:[{status:'completed',created_at:'2026-10-27T06:15:06Z'}]});
+assert.equal((await s.run()).state,'backoff','never dispatch before the bounded five-second registration allowance');
 for(const githubStatus of [401,403,500]) {
  s=await scenario({githubStatus});await assert.rejects(s.run(),error=>error.message==='github-status-'+githubStatus && error.health.ageMinutes>20);
  assert.equal(s.calls.filter(c=>c.options.method==='POST').length,0);
