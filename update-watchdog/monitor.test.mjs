@@ -29,6 +29,12 @@ for(const days of [14,13,7,6,1,0]) {
 }
 assert.equal(sent.length,3,'warnings at 14/7/1 day stages, not every minute');
 store=storage();sent=[];
+const nearExpiry=new Date('2027-01-12T06:00:00Z');
+await monitorCheck(store,env,nearExpiry,request,async()=>({...await healthy(),tokenExpiresOn:'2027-01-24'}));
+await monitorCheck(store,env,nearExpiry,request,async()=>({state:'outside-hours'}));
+await monitorCheck(store,env,nearExpiry,request,async()=>({...await healthy(),tokenExpiresOn:'2027-01-24'}));
+assert.equal(sent.length,1,'UTC header versus configured date must not reset expiry warnings overnight');
+store=storage();sent=[];
 await monitorCheck(store,env,now,request,async()=>({state:'update-stuck',ageMinutes:30}));assert.equal(sent.length,1);
 store=storage();sent=[];
 await monitorCheck(store,env,now,request,async()=>({state:'update-running',ageMinutes:21}));assert.equal(sent.length,1);
@@ -46,19 +52,29 @@ let pending;
 await worker.scheduled({}, {UPDATE_MONITOR:{idFromName:()=>'',get:()=>({fetch:async()=>new Response('',{status:503})})}}, {waitUntil:p=>{pending=p}});
 await assert.rejects(pending,/race-update-watchdog-failed/);
 assert.equal((await worker.fetch(new Request('https://example.com/'))).status,404);
+assert.equal((await worker.fetch(new Request('https://example.com/health'),env)).status,401);
+assert.equal((await worker.fetch(new Request('https://example.com/health',{headers:{Authorization:'Bearer wrong'}}),env)).status,401);
+let statusRead=0;
+const healthEnv={...env,UPDATE_MONITOR:{idFromName:()=>'',get:()=>({fetch:async()=>{statusRead++;return Response.json({state:'fresh'})}})}};
+assert.equal((await worker.fetch(new Request('https://example.com/health',{headers:{Authorization:'Bearer test-secret'}}),healthEnv)).status,200);
+assert.equal(statusRead,1);
+const internalState=storage();await monitorCheck(internalState,env,now,request,healthy);
+const statusResponse=await new UpdateMonitor({storage:internalState},env).fetch(new Request('https://internal/status'));
+const statusText=await statusResponse.text();assert.ok(!statusText.includes('test-topic'));assert.ok(!statusText.includes('test-secret'));
 store=storage();sent=[];
 result=await monitorCheck(store,{...env,DISPATCH_TOKEN_EXPIRES_ON:'2027-02-31'},now,request,healthy);
 assert.equal(result.unhealthy,true);assert.equal(sent.length,1);
 // Concurrent deliveries share one in-flight check, not three dispatch attempts.
-const originalFetch=globalThis.fetch;let reads=0;
+const originalFetch=globalThis.fetch,originalDate=globalThis.Date;let reads=0;
 try {
+ globalThis.Date=class extends originalDate {constructor(...args){super(...(args.length ? args : [now.getTime()]));}static now(){return now.getTime();}};
  const at=new Date(Date.now()+9*3600_000-120_000).toISOString().slice(0,16);
  globalThis.fetch=async(url)=>{reads++;return url.startsWith('https://teilog.com/')
   ? Response.json({updated_at:at}) : Response.json({workflow_runs:[]});};
  const instance=new UpdateMonitor({storage:storage()},{...env,ADMIN_ALERTS_ENABLED:'false'});
  const responses=await Promise.all([1,2,3].map(()=>instance.fetch(new Request('https://internal/check',{method:'POST'}))));
  assert.equal(reads,2);for(const response of responses)assert.equal(response.status,200);
-} finally {globalThis.fetch=originalFetch;}
+} finally {globalThis.fetch=originalFetch;globalThis.Date=originalDate;}
 for(const status of [401,403]) await assert.rejects(preflight('never-print',async()=>new Response('',{status})),new RegExp('dispatch-token-check-'+status));
 await assert.rejects(preflight('never-print',async()=>new Response('',{headers:{'github-authentication-token-expiration':'2000-01-01T00:00:00Z'}})),/expires-too-soon/);
 assert.equal((await preflight('never-print',async()=>new Response('',{headers:{'github-authentication-token-expiration':'2099-01-01T00:00:00Z'}}))).tokenExpiresOn,'2099-01-01');

@@ -10,7 +10,8 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
   const day = new Date(now.getTime()+9*3600_000).toISOString().slice(0,10);
   let result, failure;
   try {result = await check(env,now,request);} catch(error) {failure=safeFailure(error);result=error.health || {};}
-  const expiry = result.tokenExpiresOn || env.DISPATCH_TOKEN_EXPIRES_ON;
+  const configuredChanged=previous.configuredExpiresOn!==env.DISPATCH_TOKEN_EXPIRES_ON;
+  const expiry = result.tokenExpiresOn || (!configuredChanged && previous.tokenExpiresOn) || env.DISPATCH_TOKEN_EXPIRES_ON;
   const expiresAt = /^\d{4}-\d{2}-\d{2}$/.test(expiry || '') ? Date.parse(expiry+'T00:00:00Z') : NaN;
   const daysLeft = Number.isFinite(expiresAt) && new Date(expiresAt).toISOString().slice(0,10)===expiry
     ? Math.floor((expiresAt-Date.parse(day+'T00:00:00Z'))/86400_000) : null;
@@ -19,9 +20,11 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     checkedAt:now.toISOString(), state:failure || result.state,
     updatedAt:result.updated_at || null, ageMinutes:result.ageMinutes ?? null,
     consecutiveFailures, tokenExpiresOn:daysLeft===null ? null : expiry,
+    configuredExpiresOn:env.DISPATCH_TOKEN_EXPIRES_ON,
     alerts:previous.tokenExpiresOn===expiry ? {...previous.alerts} : {},
     lastTestId:previous.lastTestId || null,
     alertDelivery:previous.alertDelivery || null,
+    alertHttpStatus:previous.alertHttpStatus || null,
   };
   let category, message;
   if (/^(github-status-(401|403)|missing-dispatch-token)$/.test(failure || '')) {
@@ -61,7 +64,8 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
           message,click:'https://github.com/takochi92/minamoyomi/actions/workflows/update.yml',tags:['warning']}),
       });
       state.alertDelivery=response.ok ? 'sent' : 'failed';
-    } catch (_) {state.alertDelivery='unknown';}
+      state.alertHttpStatus=response.status;
+    } catch (_) {state.alertDelivery='unknown';state.alertHttpStatus=null;}
     await storage.put('state',state);
   }
   const unhealthy=!!failure || daysLeft===null || (enabled && !env.ADMIN_ALERT_TOPIC) ||
@@ -72,6 +76,12 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
 export class UpdateMonitor {
   constructor(ctx,env) {this.ctx=ctx;this.env=env;this.running=null;}
   async fetch(request) {
+    if (request.method==='GET' && new URL(request.url).pathname==='/status') {
+      const state=await this.ctx.storage.get('state');
+      return Response.json(state ? {checkedAt:state.checkedAt,state:state.state,updatedAt:state.updatedAt,
+        ageMinutes:state.ageMinutes,tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,
+        testClaimed:!!state.lastTestId,testCurrent:state.lastTestId===this.env.ADMIN_ALERT_TEST_ID} : {state:'not-checked'});
+    }
     if (request.method!=='POST' || new URL(request.url).pathname!=='/check') return new Response('Not found',{status:404});
     // One global instance serializes concurrent Cron deliveries, avoiding duplicate dispatches and alerts.
     if (!this.running) this.running=monitorCheck(this.ctx.storage,this.env).finally(()=>{this.running=null;});

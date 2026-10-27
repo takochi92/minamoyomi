@@ -14,6 +14,7 @@ jobs:
     env:
       UPDATE_DISPATCH_TOKEN: ${{ secrets.UPDATE_DISPATCH_TOKEN }}
       ADMIN_ALERT_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      EXPECT_TEST_ALERT: ${{ inputs.send_test_alert && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,3 +37,5 @@ jobs:
           secrets: |
             UPDATE_DISPATCH_TOKEN
             ADMIN_ALERT_TOPIC
+      - name: 本番の監視状態とテスト通知の受付結果を検査
+        run: node update-watchdog/verify-live.mjs
