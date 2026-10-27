@@ -28,7 +28,12 @@
     const days=band?(band.days!=null?`${band.days}日`:`${band.days_min}〜${band.days_max}日`):'';
     return `<article class="pi-card"><div class="pi-line">${name(r)}<b class="pi-f-state pi-f-${state}">${r.f==null?'F本数未確認':'F'+r.f}・${label}${state==='unserved'?days:''}</b></div>${state==='unserved'?`<p class="pi-rest-plan">${schedule||'休み日程未確認'}</p>`:''}<details class="pi-source"><summary>確認日・出典</summary>${details}</details></article>`;
   }
-  function prizeCard(r){const cutoff=data.cutoff||18;return `<article class="pi-card${r.rank===cutoff?' pi-border':''}${r.rank<=3?' pi-winner-'+r.rank:''}"><div class="pi-line"><span class="pi-rank">${r.rank<=3?['🥇','🥈','🥉'][r.rank-1]:r.rank+'位'}</span>${name(r)}<strong class="num">${yen(r.amount)}</strong></div><div class="pi-gaps"><span>${cutoff}位差 <b>${gap(r.gapBorder??r.gap18)}</b></span>${data.women?'':`<span>6位差 <b>${gap(r.gap6)}</b></span>`}</div></article>`;}
+  function prizeCard(r){
+    const cutoff=data.cutoff||18,difference=r.gapBorder??r.gap18,inside=r.rank<=cutoff;
+    const position=r.rank===cutoff?`現在の${cutoff}位ライン`:inside?'現在ライン内':'現在ライン外';
+    const distance=difference==null?'差額未確認':difference<0?`あと${yen(-difference)}でラインと同額`:difference>0?`${cutoff}位より${yen(difference)}上`:'基準額';
+    return `<article class="pi-card${r.rank===cutoff?' pi-border':''}${r.rank<=3?' pi-winner-'+r.rank:''}"><div class="pi-line"><span class="pi-rank">${r.rank<=3?['🥇','🥈','🥉'][r.rank-1]:r.rank+'位'}</span>${name(r)}<strong class="num">${yen(r.amount)}</strong></div><div class="pi-standing ${inside?'pi-standing-in':'pi-standing-out'}"><span>${position}</span><b>${distance}</b></div><details class="pi-source"><summary>差額の詳細</summary><div class="pi-gaps"><span>${cutoff}位差 <b>${gap(difference)}</b></span>${data.women?'':`<span>6位差 <b>${gap(r.gap6)}</b></span>`}</div></details></article>`;
+  }
   function render(){const search=normalize(q.value),mode=filter.value;
     const cutoff=data.cutoff||18;
     const rows=(data.rows||[]).filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search)).filter(r=>data.kind==='prizes'?mode==='top18'?r.rank<=cutoff:mode==='top6'?r.rank<=6:mode==='border'?r.rank>=cutoff-5&&r.rank<=cutoff+6:true:mode==='f'?r.f>0:mode==='f2'?r.f>=2:mode==='leave'?leaveState(r)==='unserved':mode==='served'?leaveState(r)==='served':mode==='rollover'?r.rollover:true);
