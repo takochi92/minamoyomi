@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {monitorCheck,safeFailure,UpdateMonitor} from './src/monitor.mjs';
 import worker from './src/index.mjs';
-import {preflight} from './preflight.mjs';
+import {preflight,preflightSettings} from './preflight.mjs';
 import {notificationTopic} from './topic.mjs';
 assert.equal(notificationTopic(' https://ntfy.sh/test-topic/\n'),'test-topic');
 assert.equal(notificationTopic(' test-topic\n'),'test-topic');
@@ -52,6 +52,9 @@ store=storage();let attempts=0;
 const uncertain=async()=>{attempts++;throw new Error('transport failed');};
 await monitorCheck(store,env,now,uncertain,auth);await monitorCheck(store,env,now,uncertain,auth);assert.equal(attempts,1);
 assert.equal(store.value().alertDelivery,'unknown','retain bounded delivery status without raw transport errors');
+result=await monitorCheck(store,{...env,ADMIN_ALERTS_ENABLED:'false'},now,request,healthy);
+assert.equal(result.unhealthy,false,'an unavailable optional alert channel must not make the functioning updater fail');
+assert.equal(result.state.alertsEnabled,false);
 const fakeDO=new UpdateMonitor({storage:storage()},env);
 assert.equal((await fakeDO.fetch(new Request('https://internal/check'))).status,404);
 let pending;
@@ -84,4 +87,7 @@ try {
 for(const status of [401,403]) await assert.rejects(preflight('never-print',async()=>new Response('',{status})),new RegExp('dispatch-token-check-'+status));
 await assert.rejects(preflight('never-print',async()=>new Response('',{headers:{'github-authentication-token-expiration':'2000-01-01T00:00:00Z'}})),/expires-too-soon/);
 assert.equal((await preflight('never-print',async()=>new Response('',{headers:{'github-authentication-token-expiration':'2099-01-01T00:00:00Z'}}))).tokenExpiresOn,'2099-01-01');
+const optionalChannel=await preflightSettings('never-print','invalid topic',async()=>new Response(''));
+assert.equal(optionalChannel.ready,true);assert.equal(optionalChannel.notificationReady,false);
+assert.equal((await preflightSettings('never-print','valid-topic',async()=>new Response(''))).notificationReady,true);
 console.log('monitor: authentication, stale/stuck updates, expiry stages, deduplication, transport ambiguity, secret isolation, Cron failure propagation passed');

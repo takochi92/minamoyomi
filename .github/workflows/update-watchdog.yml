@@ -14,7 +14,6 @@ jobs:
     env:
       UPDATE_DISPATCH_TOKEN: ${{ secrets.UPDATE_DISPATCH_TOKEN }}
       ADMIN_ALERT_TOPIC: ${{ secrets.NTFY_TOPIC }}
-      EXPECT_TEST_ALERT: ${{ inputs.send_test_alert && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,17 +28,21 @@ jobs:
           npm install --prefix .cache/watchdog-runtime --ignore-scripts --no-save --package-lock=false miniflare@4.20260405.0 esbuild@0.25.4
           MINIFLARE_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/miniflare" ESBUILD_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/esbuild" node update-watchdog/runtime.test.cjs
       - name: Require a dedicated dispatch token
-        run: test -n "$UPDATE_DISPATCH_TOKEN" && test -n "$ADMIN_ALERT_TOPIC"
+        run: test -n "$UPDATE_DISPATCH_TOKEN"
       - name: 配備前にGitHub認証と起動鍵の期限を検査
+        id: preflight
         run: node update-watchdog/preflight.mjs
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: update-watchdog
-          command: deploy --var ADMIN_ALERT_TEST_ID:${{ inputs.send_test_alert && github.run_id || 'none' }}
+          command: deploy --var ADMIN_ALERTS_ENABLED:${{ steps.preflight.outputs.notifications_ready }} --var ADMIN_ALERT_TEST_ID:${{ inputs.send_test_alert && steps.preflight.outputs.notifications_ready == 'true' && github.run_id || 'none' }}
           secrets: |
             UPDATE_DISPATCH_TOKEN
-            ADMIN_ALERT_TOPIC
+            ${{ env.ADMIN_ALERT_TOPIC != '' && 'ADMIN_ALERT_TOPIC' || '' }}
       - name: 本番の監視状態とテスト通知の受付結果を検査
+        env:
+          EXPECT_TEST_ALERT: ${{ inputs.send_test_alert && steps.preflight.outputs.notifications_ready == 'true' && 'true' || 'false' }}
+          EXPECT_ALERTS_ENABLED: ${{ steps.preflight.outputs.notifications_ready }}
         run: node update-watchdog/verify-live.mjs

@@ -53,7 +53,12 @@ export async function tick(env, now = new Date(), request = fetch) {
     const at = Date.parse(run.created_at);
     return Number.isFinite(at) && now.getTime() - at < BACKOFF_MS;
   })) return {state:'backoff',...health};
-  if (age < STALE_MS) return {state:'fresh',...health};
+  // The data timestamp is recorded after runner setup. Waiting five minutes
+  // from that timestamp adds setup time to every cycle (observed: six minutes).
+  // Keep the normal cadence measured from the previous workflow start, while
+  // still respecting active jobs and the five-minute backoff above.
+  const knownPreviousStart=runs.some(run=>Number.isFinite(Date.parse(run.created_at)));
+  if (age < STALE_MS && !knownPreviousStart) return {state:'fresh',...health};
   await api(WORKFLOW + '/dispatches', 'POST', {ref:'main'});
   return {state:'dispatched',...health};
 }
