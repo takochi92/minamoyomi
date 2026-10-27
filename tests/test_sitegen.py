@@ -309,7 +309,14 @@ def test_grade_page(tmp_path):
     assert "grade.html" in files and "今日は重賞の開催がありません" in files["grade.html"]
     s.idx["venues"][0]["grade"] = "G1"
     s.grade_page()
-    assert "今日のG1 予想" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
+    assert "今日のG1 結果" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
+    r = s.idx['venues'][0]['races'][0]
+    r.update(result='1-3-2', payout=2460, honmei=['6-5-4'], confidence='本命')
+    s.grade_page()
+    grade = s.files['grade.html']
+    assert '24.6倍' in grade and '確定オッズ' in grade
+    assert '<th>本線</th>' not in grade and 'AIの見込み' not in grade
+    assert 'class="grade-results-table"' in grade
     assert "今日の重賞" in s.grade_banner(sitegen.Page("index.html"))
     brief=s.grade_banner(sitegen.Page('index.html'))
     assert 'img/grades/g1.png' in brief and '#grade-01' in brief and 'class="grade-brief-row"' in brief
