@@ -1443,7 +1443,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.freshness_block(page, self.idx.get('updated_at', ''))}
 <details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
-<section class="panel fav-today" id="fav-today" hidden></section>
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
 {f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
@@ -2317,9 +2316,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         vs = self.graded()
         if not vs:
             return ""
-        items = "".join(f'<li><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <span class="sub">{e(v.get("title", "")[:28])}・{e(v.get("day", ""))}</span></li>' for v in vs)
-        return (f'<a class="panel" href="{page.u("grade.html")}" style="display:grid;gap:6px;text-decoration:none;color:inherit">'
-                f'<h2 style="margin:0">今日の重賞 <small>重賞レースだけの予想まとめ →</small></h2><ul class="comments" style="margin:0">{items}</ul></a>')
+        items = "".join(
+            f'<a class="grade-brief-row" href="{page.u("grade.html")}#grade-{e(v["jcd"])}">'
+            f'<img src="{page.u("img/grades/"+v["grade"].lower()+".png")}" width="32" height="32" alt="{e(v["grade"])}">'
+            f'<span class="grade-brief-title" title="{e(v.get("title") or "重賞レース")}">{e(v.get("title") or "重賞レース")}</span>'
+            f'<span class="grade-brief-venue">{e(v["name"])}</span></a>' for v in vs)
+        return f'<section class="grade-brief" aria-label="今日の重賞">{items}</section>'
 
     def grade_page(self):
         """今日の重賞（SG・PG1・G1・G2・G3）だけの予想まとめ。重賞がない日も「次の重賞はなし」と出す"""
@@ -2334,7 +2336,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 res = (f'{combo(r["result"])} <span class="num">{yen(r.get("payout"))}</span>' + (' <span class="pill hit">的中</span>' if r.get("hit") else "")) if r.get("result") else ""
                 rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(display_confidence(r.get("confidence", "")))}</td>'
                             f'<td>{combo(r["honmei"][0]) if r.get("honmei") else "-"}</td><td>{res}</td></tr>')
-            secs.append(f'<section class="panel" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
+            secs.append(f'<section class="panel" id="grade-{e(v["jcd"])}" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
                         f'<div class="tbl-wrap"><table><thead><tr><th>R</th><th>AIの見込み</th><th>本線</th><th>結果</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                         f'<p style="margin:0"><a href="{page.u("venue/" + SLUG[v["jcd"]] + ".html")}">{e(v["name"])}の水面の特徴とコース別成績 →</a></p></section>')
         names = "・".join(dict.fromkeys(v["grade"] for v in vs))

@@ -239,7 +239,7 @@ def test_racer_search_and_fav(tmp_path):
     assert len(data["racers"]) > 1000 and data["date"] == "20260925"
     fav = json.loads(files["fav-today.json"])
     assert fav["racers"] and all(x[2].startswith("race/20260925/") for v in fav["racers"].values() for x in v)
-    assert 'class="fav-btn"' in files["racer/4872.html"] and 'id="fav-today"' in files["index.html"]
+    assert 'class="fav-btn"' in files["racer/4872.html"] and 'id="fav-today"' not in files["index.html"]
 
 
 def test_ex_counts_and_meet(tmp_path, monkeypatch):
@@ -308,6 +308,10 @@ def test_grade_page(tmp_path):
     s.grade_page()
     assert "今日のG1 予想" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
     assert "今日の重賞" in s.grade_banner(sitegen.Page("index.html"))
+    brief=s.grade_banner(sitegen.Page('index.html'))
+    assert 'img/grades/g1.png' in brief and '#grade-01' in brief and 'class="grade-brief-row"' in brief
+    assert 'class="panel"' not in brief and '重賞レースだけの予想まとめ' not in brief
+    assert 'id="grade-01"' in s.files['grade.html']
 
 
 def test_buffs_and_ai_block(tmp_path):
