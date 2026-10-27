@@ -135,11 +135,18 @@ def prize_page(page, report, today, events, women=False):
     age=(datetime.strptime(today,'%Y%m%d')-datetime.strptime(report['through'],'%Y%m%d')).days
     warning='<p class="pi-note">公式掲載日から7日以上経過しています。最新の選出発表も確認してください。</p>' if age>7 else ''
     source=(f'<a href="{e(report["source"],quote=True)}" target="_blank" rel="noopener">公式賞金ランキング ↗</a>' if official_url(report.get('source')) else '出典確認中')
+    selection=(f'<details class="more pi-selection"><summary>{event_name}の出場条件</summary>'
+               f'<p>本戦はチャレンジカップ・レディースチャレンジカップ終了時点の女子賞金上位12人です。重賞優勝による優先枠ではありません。併設のシリーズ戦は別にあります。</p>' if women else
+               '<details class="more pi-selection"><summary>グランプリの出場条件</summary><p>本戦はチャレンジカップ終了時点の賞金上位18人です。周年・G1優勝による優先枠ではありません。</p>')
+    selection+=('<p>周年などのG1優勝者が選出対象になるのは、ボートレースクラシックなど別の大会です。対象期間・出場資格は各大会の公式発表で確認します。</p>'
+                '<p><a href="https://www.boatrace.jp/owpc/pc/data/record/list?category=3000" target="_blank" rel="noopener">公式クイーンズ基準</a> ／ '
+                f'<a href="{GP_GUIDE}" target="_blank" rel="noopener">公式グランプリ基準</a> ／ '
+                '<a href="https://www.boatrace.jp/owpc/pc/extra/enjoy/guide/jiten/30/y_143.html" target="_blank" rel="noopener">公式クラシック基準</a></p></details>')
     podium='<div class="pi-podium">'+''.join(f'<a class="pi-medal pi-medal-{r["rank"]}" href="{page.u("racer/"+r["toban"]+".html")}"><span class="pi-medal-mark">{("🥇","🥈","🥉")[r["rank"]-1]}</span><strong>{e(r["name"])}</strong><b class="num">{r["amount"]:,}円</b></a>' for r in rows if r['rank']<=3)+'</div>'
     border=by_rank.get(cutoff);next_player=by_rank.get(cutoff+1)
     border_card=(f'<section class="pi-border-summary"><span>{event_name}・現在の{cutoff}位ライン</span><strong>{border["amount"]:,}円</strong><p>{e(border["name"])} ／ {cutoff+1}位との差 {border["amount"]-next_player["amount"]:,}円</p><small>賞金順の参考ライン・出場確定ではありません</small>{schedule}</section>' if border and next_player else '')
     return intro+f'''<p class="sub">{report['year']}年 ／ {date(report['from'])}〜{date(report['through'])}の公式掲載分。日次で確認します。</p>{warning}
-{podium}{border_card}
+{podium}{border_card}<p class="pi-line-legend">賞金順で現在ライン内か、ラインまでいくらかを表示します。</p>{selection}
 <div class="pi-controls"><input id="pi-q" type="search" placeholder="選手名・登録番号" aria-label="賞金ランキングの選手を検索"><select id="pi-filter" aria-label="賞金順位の絞り込み"><option value="all">掲載順位すべて</option><option value="border">{cutoff}位前後（{cutoff-5}〜{cutoff+6}位）</option><option value="top18">上位{cutoff}位</option>{'' if women else '<option value="top6">上位6位</option>'}</select></div>
 <details class="more"><summary>集計・出典</summary><p>差額は同じ掲載時点の{cutoff}位との比較です。最終ボーダーの予測額ではありません。掲載順位だけで出場確定とは判断しません。出場資格・欠場を含む正式発表を優先します。</p><p class="sub">{source}</p></details>
 <p id="pi-count" class="sub" role="status"></p><div id="pi-list" class="pi-list"></div><button id="pi-more" class="btn" type="button" hidden>もっと見る</button>
