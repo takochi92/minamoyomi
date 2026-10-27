@@ -11,7 +11,7 @@ while(Date.now()<end) {
  const state=await response.json();
  // Fixed fields only; no credentials, notification topic or user data in output.
  console.log(JSON.stringify({checkedAt:state.checkedAt,state:state.state,updatedAt:state.updatedAt,
-  tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,testClaimed:state.testClaimed,testCurrent:state.testCurrent}));
+  tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,alertErrorCode:state.alertErrorCode,testClaimed:state.testClaimed,testCurrent:state.testCurrent}));
  const fresh=state.checkedAt && Date.now()-Date.parse(state.checkedAt)<180_000;
  if(fresh && ['fresh','update-running','backoff','dispatched','outside-hours'].includes(state.state) &&
     (process.env.EXPECT_TEST_ALERT!=='true' || (state.testCurrent && state.alertDelivery==='sent')))process.exit(0);

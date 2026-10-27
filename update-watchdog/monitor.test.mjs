@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import {monitorCheck,safeFailure,UpdateMonitor} from './src/monitor.mjs';
 import worker from './src/index.mjs';
 import {preflight} from './preflight.mjs';
+import {notificationTopic} from './topic.mjs';
+assert.equal(notificationTopic(' https://ntfy.sh/test-topic/\n'),'test-topic');
+assert.equal(notificationTopic(' test-topic\n'),'test-topic');
+for(const invalid of ['https://evil.test/topic','https://ntfy.sh/a/b','https://ntfy.sh/test?x=y','https://a@ntfy.sh/topic','bad space','test/',''])assert.equal(notificationTopic(invalid),null);
 const now=new Date('2026-10-27T06:20:00Z');
 const env={DISPATCH_TOKEN_EXPIRES_ON:'2027-01-25',ADMIN_ALERTS_ENABLED:'true',ADMIN_ALERT_TOPIC:'test-topic',UPDATE_DISPATCH_TOKEN:'test-secret'};
 function storage(){let value;return {get:async()=>structuredClone(value),put:async(_key,v)=>{value=structuredClone(v)},value:()=>value};}
@@ -11,6 +15,8 @@ const healthy=async()=>({state:'fresh',updated_at:'2026-10-27T15:18',ageMinutes:
 const auth=async()=>{throw new Error('github-status-401');};
 let result=await monitorCheck(store,env,now,request,auth);
 assert.equal(result.unhealthy,true);assert.equal(sent.length,1);assert.equal(result.state.alertDelivery,'sent');
+await monitorCheck(storage(),{...env,ADMIN_ALERT_TOPIC:'https://ntfy.sh/test-topic/'},now,request,auth);
+assert.equal(sent.at(-1).topic,'test-topic');sent.pop();
 await monitorCheck(store,env,now,request,auth);assert.equal(sent.length,1,'one outage alert per JST day');
 const tomorrow=new Date(now.getTime()+86400_000);
 await monitorCheck(store,env,tomorrow,request,auth);assert.equal(sent.length,2);

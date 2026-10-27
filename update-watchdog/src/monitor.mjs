@@ -1,4 +1,5 @@
 import {tick} from './index.mjs';
+import {notificationTopic} from '../topic.mjs';
 
 export function safeFailure(error) {
   return /^(github-status-\d{3}|freshness-status-\d{3}|invalid-[a-z-]+|missing-dispatch-token)$/.test(error?.message)
@@ -25,6 +26,7 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     lastTestId:previous.lastTestId || null,
     alertDelivery:previous.alertDelivery || null,
     alertHttpStatus:previous.alertHttpStatus || null,
+    alertErrorCode:previous.alertErrorCode || null,
   };
   let category, message;
   if (/^(github-status-(401|403)|missing-dispatch-token)$/.test(failure || '')) {
@@ -46,8 +48,9 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     category='test'; message='艇ろぐの更新停止・鍵期限の管理者通知テストです。一般利用者への通知ではありません。';
   }
   const enabled=env.ADMIN_ALERTS_ENABLED==='true';
-  if (enabled && !env.ADMIN_ALERT_TOPIC) {state.alertDelivery='channel-missing';}
-  const send=category && enabled && !!env.ADMIN_ALERT_TOPIC;
+  const topic=notificationTopic(env.ADMIN_ALERT_TOPIC);
+  if (enabled && !topic) {state.alertDelivery='channel-invalid';}
+  const send=category && enabled && !!topic;
   if (send) {
     if (category==='test') state.lastTestId=testId;
     else state.alerts[category]=category==='outage' ? day : expiry;
@@ -60,15 +63,19 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     try {
       const response=await request('https://ntfy.sh/',{
         method:'POST',headers:{'Content-Type':'application/json'},redirect:'manual',signal:AbortSignal.timeout(10_000),
-        body:JSON.stringify({topic:env.ADMIN_ALERT_TOPIC,title:category==='test' ? '艇ろぐ：更新監視のテスト' : '艇ろぐ：自動更新の確認が必要です',
+        body:JSON.stringify({topic,title:category==='test' ? '艇ろぐ：更新監視のテスト' : '艇ろぐ：自動更新の確認が必要です',
           message,click:'https://github.com/takochi92/minamoyomi/actions/workflows/update.yml',tags:['warning']}),
       });
       state.alertDelivery=response.ok ? 'sent' : 'failed';
       state.alertHttpStatus=response.status;
+      state.alertErrorCode=null;
+      if (!response.ok) {
+        try {const body=await response.json();if(Number.isInteger(body.code))state.alertErrorCode=body.code;}catch(_){}
+      }
     } catch (_) {state.alertDelivery='unknown';state.alertHttpStatus=null;}
     await storage.put('state',state);
   }
-  const unhealthy=!!failure || daysLeft===null || (enabled && !env.ADMIN_ALERT_TOPIC) ||
+  const unhealthy=!!failure || daysLeft===null || (enabled && !topic) ||
     ['failed','unknown'].includes(state.alertDelivery) || result.state==='update-stuck' || result.ageMinutes>=20;
   return {state,unhealthy};
 }
@@ -79,7 +86,7 @@ export class UpdateMonitor {
     if (request.method==='GET' && new URL(request.url).pathname==='/status') {
       const state=await this.ctx.storage.get('state');
       return Response.json(state ? {checkedAt:state.checkedAt,state:state.state,updatedAt:state.updatedAt,
-        ageMinutes:state.ageMinutes,tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,
+        ageMinutes:state.ageMinutes,tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,alertErrorCode:state.alertErrorCode,
         testClaimed:!!state.lastTestId,testCurrent:state.lastTestId===this.env.ADMIN_ALERT_TEST_ID} : {state:'not-checked'});
     }
     if (request.method!=='POST' || new URL(request.url).pathname!=='/check') return new Response('Not found',{status:404});

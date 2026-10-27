@@ -7,7 +7,7 @@ const script=`const RealDate=Date;globalThis.Date=class extends RealDate{constru
 (async()=>{
 let mode='fresh',dispatches=0,notifications=0;
 const mf=new Miniflare({modules:true,script,compatibilityDate:'2026-04-12',
- bindings:{UPDATE_DISPATCH_TOKEN:'test-secret',ADMIN_ALERTS_ENABLED:'true',ADMIN_ALERT_TOPIC:'test-topic',ADMIN_ALERT_TEST_ID:'123',DISPATCH_TOKEN_EXPIRES_ON:'2027-01-25'},
+ bindings:{UPDATE_DISPATCH_TOKEN:'test-secret',ADMIN_ALERTS_ENABLED:'true',ADMIN_ALERT_TOPIC:' https://ntfy.sh/test-topic/\n',ADMIN_ALERT_TEST_ID:'123',DISPATCH_TOKEN_EXPIRES_ON:'2027-01-25'},
  durableObjects:{UPDATE_MONITOR:{className:'UpdateMonitor',useSQLite:true}},
  outboundService:async request=>{
   const url=new URL(request.url);
