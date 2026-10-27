@@ -15,16 +15,30 @@ GitHub公式の案内に合わせ、5分間隔を保ったまま予約を毎時2
 
 ## 運用上の限界と次の対策
 
-GitHub予約は遅延や取りこぼしがあり、外部から独立して起動・監視する仕組みが未設置。予約時刻変更だけで「停止しなくなった」とは判定しない。公開時刻と後続の自動実行・公開を別々に確認する。
+GitHub予約は遅延や取りこぼしがあり、障害調査の当初は独立した監視が機能していなかった。予約時刻変更だけで「停止しなくなった」とは判定しない。公開時刻と後続の自動実行・公開を別々に確認する。新しい独立タイマーの配備状況は下記に記す。
 
 独立したタイマーを導入する場合は、対象リポジトリのActions起動に限定した専用認証を使い、既存の個人用GitHubログイン資格情報を外部サービスへコピーしない。停止監視は公開データ時刻と実行中ジョブを照合し、同時実行・重複起動を抑止する。
 
-## 独立タイマーの実装（未配備）
+## 独立タイマーの実装と配備
 
 `update-watchdog/` にCloudflare Cron Workerを用意した。公開データが8分以上古く、update.ymlの実行中・待機中ジョブがなければmainのworkflow_dispatchを呼ぶ。直近起動から5分は再起動しない。公開時刻の取得失敗・不正な応答では連打せず失敗を記録する。HTTPから起動できる公開操作口は作らない。
 
 配備には、GitHubで **Only select repositories: takochi92/minamoyomi / Repository permissions: Actions Read and write** のfine-grained PATを作り、このリポジトリのActions Secret `UPDATE_DISPATCH_TOKEN` へ保存する。アカウントの全リポジトリ用トークンは使わない。Contentsへの書き込み権限は不要。有効期限を記録し、期限前に交換する。
 
-その後 `.github/workflows/update-watchdog.yml` を手動起動する。既存Cloudflare資格情報でWorker公開権限が足りなければ配備失敗として扱い、サイト更新の復旧とは分けて報告する。Workerのdispatchと、後続GitHub更新・公開時刻の前進を実測するまで配備完了・恒久対策完了とはしない。専用トークンはまだ未登録のため、このタイマーは動いていない。
+その後 `.github/workflows/update-watchdog.yml` を手動起動する。既存Cloudflare資格情報でWorker公開権限が足りなければ配備失敗として扱い、サイト更新の復旧とは分けて報告する。Workerのdispatchと、後続GitHub更新・公開時刻の前進を別々に実測する。
+
+### 2026-10-27 本番作業
+
+- 利用者が対象リポジトリのActions専用鍵をGitHub Secretへ登録。鍵の値をチャット・ローカルファイル・Gitへ出していない。
+- 初回配備40462711871はCloudflare権限不足で失敗。既存`teilog-deploy`のPages編集権限を確認し、Workersスクリプト編集の追加とアカウント一つへの限定を確認画面まで準備。利用者が「トークンを更新する」を押して確定した。
+- 再配備40463617914は成功。15:55に`teilog-update-watchdog`とCron `1-59/5 * * * *`が登録された。Worker version `4c0d1ef6-9d83-4c2e-857a-9c04ebf67676`。
+- 別に存在していた旧Worker `teilog-kick`は5分間隔で呼び出されていたが、プレビューの応答が「GitHub の応答401」。旧Workerの認証失敗を確認した。旧秘密鍵は読み出していない。
+- 15:58の新Worker検証実行で`dispatched`を確認し、更新ジョブ40464318684が作成された。これはQuick Editのスケジュール検証による起動で、Cronの自然起動とは区別する。
+- 上記の検証起動は公開まで成功。新規ブラウザでホームとfreshness.jsonが16:00へ進んだことを確認した。
+- 以後は検証ボタン・API手動dispatchを実行せず観測。16:11:41に更新ジョブ40465643247がworkflow_dispatchで作成され、新Cronからの自動起動を確認した。
+- 自動起動40465643247は公開まで成功。16:16の390px幅の新規ブラウザで、ホームの表示revisionとfreshness.jsonがともに16:12へ前進したことを検査した。検証画像と日時はローカル`outputs/teilog-update-recovery/`に保存。予約開始・取得時刻・公開確認時刻はそれぞれ別であり、5分ごとの公開完了を保証するものではない。
+- 補助的なWorkers Logs保存の追加は、明示承認のない本番設定変更として自動承認チェックに拒否されたため、未保存の設定を破棄した。ログ保存は無効のまま。GitHub実行履歴と公開ページで検証する。
+- 専用GitHub鍵の作成画面で確認した有効期限は2027-01-25。期限前に対象リポジトリ・Actions権限だけの鍵へ交換し、GitHub Secret更新後に監視Workerを再配備する。期限切れ後も自動復旧できるとは扱わない。
+- mainのCI40462307103成功。ローカル全Python319成功・12skip、既存JS/Worker/通知DBテストと新監視Workerテスト成功。
 
 参考：[GitHub公式の予約実行に関する制約](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
