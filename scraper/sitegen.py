@@ -1343,7 +1343,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     def freshness_block(self, page, revision, key=''):
         return (f'<div class="page-freshness" id="page-freshness" data-revision="{e(revision)}" data-source="{e(page.u("freshness.json"))}" data-key="{e(key)}">'
                 f'<span data-fresh-status role="status">データ更新 {e(revision[11:16]) if revision else "取得待ち"}</span>'
-                '<button type="button">更新</button></div>')
+                '</div>')
 
     def freshness_manifest(self):
         date = self.idx.get('date') or self.now.strftime('%Y%m%d')
