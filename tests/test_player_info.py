@@ -21,6 +21,7 @@ def test_new_information_pages_follow_public_revision_without_a_refresh_button(t
         assert 'data-revision="2026-10-27T20:00"' in html and 'freshness.js' in html
         block=html.split('id="page-freshness"',1)[1].split('</div>',1)[0]
         assert '<button' not in block
+        assert '<div hidden id="page-freshness"' in html and 'data-fresh-status' not in block
 
 
 def ranking_html(n=20):

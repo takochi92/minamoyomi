@@ -64,6 +64,7 @@ def test_missing_detailed_exhibition_is_explicit_and_public_revision_is_checked(
                                '2026-10-26T09:00', '20261026-01-1')
     assert 'data-revision="2026-10-26T09:00"' in fresh
     assert '../../freshness.json' in fresh and 'data-key="20261026-01-1"' in fresh
+    assert '<div hidden ' in fresh and 'データ更新' not in fresh and '<span' not in fresh
 
 
 def _site(tmp_path):
