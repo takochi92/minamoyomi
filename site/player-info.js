@@ -32,7 +32,7 @@
     const cutoff=data.cutoff||18,difference=r.gapBorder??r.gap18,inside=r.rank<=cutoff;
     const position=r.rank===cutoff?`現在の${cutoff}位ライン`:inside?'現在ライン内':'現在ライン外';
     const distance=difference==null?'差額未確認':difference<0?`あと${yen(-difference)}でラインと同額`:difference>0?`${cutoff}位より${yen(difference)}上`:'基準額';
-    return `<article class="pi-card${r.rank===cutoff?' pi-border':''}${r.rank<=3?' pi-winner-'+r.rank:''}"><div class="pi-line"><span class="pi-rank">${r.rank<=3?['🥇','🥈','🥉'][r.rank-1]:r.rank+'位'}</span>${name(r)}<strong class="num">${yen(r.amount)}</strong></div><div class="pi-standing ${inside?'pi-standing-in':'pi-standing-out'}"><span>${position}</span><b>${distance}</b></div><details class="pi-source"><summary>差額の詳細</summary><div class="pi-gaps"><span>${cutoff}位差 <b>${gap(difference)}</b></span>${data.women?'':`<span>6位差 <b>${gap(r.gap6)}</b></span>`}</div></details></article>`;
+    return `<article class="pi-card${r.rank===cutoff?' pi-border':''}${r.rank<=3?' pi-winner-'+r.rank:''}"><div class="pi-line"><span class="pi-rank">${r.rank<=3?`<span class="pi-rank-metal pi-metal-${r.rank}" aria-label="${r.rank}位"><span>${r.rank}</span></span>`:r.rank+'位'}</span>${name(r)}<strong class="num">${yen(r.amount)}</strong></div><div class="pi-standing ${inside?'pi-standing-in':'pi-standing-out'}"><span>${position}</span><b>${distance}</b></div><details class="pi-source"><summary>差額の詳細</summary><div class="pi-gaps"><span>${cutoff}位差 <b>${gap(difference)}</b></span>${data.women?'':`<span>6位差 <b>${gap(r.gap6)}</b></span>`}</div></details></article>`;
   }
   function render(){const search=normalize(q.value),mode=filter.value;
     const cutoff=data.cutoff||18;
