@@ -22,6 +22,8 @@ on:
       - 'scraper/target_methods.py'
       - 'scraper/overperf.py'
       - 'scraper/season_watch.py'
+      - 'scraper/season_conditions.py'
+      - 'scraper/season_views.py'
       - 'scraper/season_views.py'
       - 'scraper/fl_leave.py'
       - 'scraper/parse.py'

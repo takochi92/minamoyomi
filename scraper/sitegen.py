@@ -2633,8 +2633,15 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
     def season_page(self):
         from .database_sources import BASE, read_json
         from .season_views import render
+        from .season_conditions import current_conditions
+        from .season_watch import calendars
         page = Page('database/season.html')
-        body = render(page, read_json(BASE / 'season_watch/summary.json.gz'))
+        report = read_json(BASE / 'season_watch/summary.json.gz')
+        if report:
+            report = current_conditions(report, self.idx,
+                lambda d,j,r: load_json(DATA/'races'/d/f'{j}{r:02}.json', {}), self.now, calendars())
+        body = render(page, report)
+        body += self.freshness_block(page, self.idx.get('updated_at', ''))
         self.put(page.path, page.render(f'期末A1・A2ボーダー｜{SITE_NAME}',
                  'A1・A2の参考ボーダー、現在級と勝率の差、出走回数の条件。勝率の高い順・低い順で選手を比較できます。',
                  body, [('racer/index.html', '選手・モーター'), ('', '期末A1・A2ボーダー')]))

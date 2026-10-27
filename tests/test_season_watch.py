@@ -106,6 +106,8 @@ def test_display_keeps_provisional_and_unserved_leave_limits_explicit():
     text = render(Page('database/season.html'), p)
     assert '公式確定ではありません' in text
     assert 'sw-sort' in text and '勝率の高い順' in text
+    assert all(f'id="{name}"' in text for name in ('sw-mode','sw-remaining','sw-kind','sw-final'))
+    assert 'season.js?v=' in text
     assert 'f-check' not in text and 'f_players' not in text and 'fl_leave' not in text
     import re, json
     payload = json.loads(re.search(r'<script id="sw-data" type="application/json">(.*?)</script>', text).group(1))

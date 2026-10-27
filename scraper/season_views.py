@@ -30,6 +30,8 @@ def render(page, report):
     class_note = (class_period[:4] + '年' + ('前期' if class_period.endswith('-1') else '後期')) if class_period else '未確認'
     return f'''<h1>期末A1・A2ボーダー</h1>
 <p class="sub">{e(period['label'])}適用分 ／ 審査 {date(period['from'])}〜{date(period['through'])}<br>{date(report['through'])}の結果まで・日次更新</p>
+<p class="sub">条件計算：{e((report.get('conditions_context') or {}).get('updated_at') or '番組照合待ち')}。
+確認済みの当日結果を勝率・出走数へ追加し、締切後の結果待ちは計算を保留します。</p>
 
 <section class="panel" id="border"><h2>期末の勝率ボーダー <small>公式確定ではありません</small></h2>
 <div class="sw-borders">{''.join(cards)}</div>
@@ -41,8 +43,14 @@ def render(page, report):
 <div class="sw-controls"><label>見る級<select id="sw-tier"><option>A1</option><option>A2</option></select></label><label>目標勝率<input id="sw-target" type="number" min="0" max="12" step="0.01" value="{report['borders']['A1']['win'] or report['borders']['A1']['previous_official'] or 6.3:.2f}"></label>
 <label>絞り込み<select id="sw-scope"><option value="near">ライン±0.30</option><option value="up">上の級を目指す目安</option><option value="keep">現在同級のライン付近</option><option value="below">現在級の目安割れ</option><option value="short">出走回数が不足</option><option value="all">全選手</option></select></label><label>並び順<select id="sw-sort"><option value="desc">勝率の高い順</option><option value="asc">勝率の低い順</option><option value="near">目標に近い順</option></select></label></div>
 <input class="sw-search" id="sw-q" type="search" aria-label="選手名・登録番号・支部で検索" placeholder="選手名・登録番号・支部で検索">
+<div class="sw-condition-controls"><label>必要な着順を見る<select id="sw-mode"><option value="auto">本日確認できた残り出走</option><option value="scenario">期末までの残りを仮定</option></select></label>
+<div id="sw-scenario" hidden><label>残り走数（仮定）<input id="sw-remaining" type="number" min="1" max="12" step="1" value="2"></label>
+<label>競走（仮定）<select id="sw-kind"><option value="general">一般・G3</option><option value="graded">G1・G2</option><option value="sg">SG</option></select></label>
+<label class="sw-final"><input id="sw-final" type="checkbox">最後の１走は優勝戦と仮定</label></div></div>
+<p class="sub">「あと何着」は設定した目標勝率に対する参考条件です。本日以降の出走は決めつけず、期末当日以外は本日の残りと期末全体を区別します。仮定モードでは残り走数・競走を自分で指定できます。</p>
+<details class="sw-method"><summary>必要点の計算について</summary><p>必要点＝目標勝率×（現在の出走数＋残り走数）−現在の着順点合計を、整数の点まで切り上げます。丸め前の勝率が目標以上となる条件で、公式発表の端数処理や級別の確定判定ではありません。SG・G1・G2・優勝戦の着順点、出走回数・連対率・確認できた事故点の条件も合わせて確認します。今後は事故・欠場・同着なしを仮定し、不良航法など未収録の事故点と動く全国ボーダーは別に確認が必要です。</p></details>
 <p class="sub">一覧の勝率は参考値です。級別は未確定。数値の下に目標との差を表示します。</p>
 <p class="sub" id="sw-count" aria-live="polite"></p><div class="sw-list" id="sw-list"></div><button class="btn" id="sw-more" type="button" hidden>もっと見る</button>
 <noscript><p>絞り込み一覧にはJavaScriptが必要です。上のボーダーと出典はそのまま確認できます。</p></noscript></section>
 <p class="sub"><a href="{page.u('racer/index.html')}">選手・モーター検索へ戻る →</a></p>
-<script id="sw-data" type="application/json">{payload}</script><script src="{page.u('season.js')}" defer></script>'''
+<script id="sw-data" type="application/json">{payload}</script><script src="{page.asset('season.js')}" defer></script>'''
