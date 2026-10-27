@@ -118,7 +118,15 @@ def f_page(page, data):
 
 def prize_page(page, report, today, events, women=False):
     label='女子賞金・クイーンズクライマックス' if women else '賞金ランキング・グランプリ'
-    intro=f'<h1>{label}</h1><nav class="pi-prize-tabs"><a href="{page.u("players-prizes.html")}"'+(' class="on"' if not women else '')+'>総合・グランプリ</a><a href="'+page.u('players-prizes-women.html')+'"'+(' class="on"' if women else '')+'>女子・クイーンズ</a></nav>'
+    theme='queens' if women else 'grand-prix'
+    english='QUEENS CLIMAX' if women else 'GRAND PRIX'
+    heading='クイーンズクライマックス' if women else 'グランプリ'
+    year=report.get('year',today[:4])
+    intro=(f'<header class="pi-finale pi-finale-{theme}"><img class="pi-finale-art" src="{page.asset("img/prizes/"+theme+"-hero.webp")}" width="1600" height="533" alt="" fetchpriority="high">'
+           f'<div class="pi-finale-copy"><span class="pi-finale-eyebrow">{e(str(year))} · YEAR-END RACE</span>'
+           f'<p class="pi-finale-title" aria-hidden="true">{english}</p><h1>{heading}<small>{"女子賞金ランキング" if women else "獲得賞金ランキング"}</small></h1></div>'
+           '<span class="pi-finale-brand">艇ろぐ / PRIZE RANKING</span></header>'
+           f'<nav class="pi-prize-tabs" aria-label="賞金ランキングの切り替え"><a href="{page.u("players-prizes.html")}"'+(' class="on" aria-current="page"' if not women else '')+'>総合・グランプリ</a><a href="'+page.u('players-prizes-women.html')+'"'+(' class="on" aria-current="page"' if women else '')+'>女子・クイーンズ</a></nav>')
     if not report:
         return intro+'<p>公式賞金ランキングを確認中です。</p>'
     rows=report.get('players',[])
@@ -142,7 +150,12 @@ def prize_page(page, report, today, events, women=False):
                 '<p><a href="https://www.boatrace.jp/owpc/pc/data/record/list?category=3000" target="_blank" rel="noopener">公式クイーンズ基準</a> ／ '
                 f'<a href="{GP_GUIDE}" target="_blank" rel="noopener">公式グランプリ基準</a> ／ '
                 '<a href="https://www.boatrace.jp/owpc/pc/extra/enjoy/guide/jiten/30/y_143.html" target="_blank" rel="noopener">公式クラシック基準</a></p></details>')
-    podium='<div class="pi-podium">'+''.join(f'<a class="pi-medal pi-medal-{r["rank"]}" href="{page.u("racer/"+r["toban"]+".html")}"><span class="pi-medal-mark">{("🥇","🥈","🥉")[r["rank"]-1]}</span><strong>{e(r["name"])}</strong><b class="num">{r["amount"]:,}円</b></a>' for r in rows if r['rank']<=3)+'</div>'
+    podium=('<section class="pi-leaders"><div class="pi-leaders-heading"><h2>賞金ランキング TOP 3</h2><span>現在順位</span></div><div class="pi-podium">'
+            +''.join(f'<a class="pi-medal pi-medal-{r["rank"]}" href="{page.u("racer/"+r["toban"]+".html")}" aria-label="賞金{r["rank"]}位 {e(r["name"])} {r["amount"]:,}円">'
+                     f'<span class="pi-rank-metal pi-metal-{r["rank"]}" aria-hidden="true"><span>{r["rank"]}</span></span>'
+                     f'<small class="pi-leader-label">{("GOLD","SILVER","BRONZE")[r["rank"]-1]} <span>／ {r["rank"]}位</span></small>'
+                     f'<strong>{e(r["name"])}</strong><b class="num">{r["amount"]:,}<small>円</small></b></a>' for r in rows if r['rank']<=3)
+            +'</div></section>')
     border=by_rank.get(cutoff);next_player=by_rank.get(cutoff+1)
     border_card=(f'<section class="pi-border-summary"><span>{event_name}・現在の{cutoff}位ライン</span><strong>{border["amount"]:,}円</strong><p>{e(border["name"])} ／ {cutoff+1}位との差 {border["amount"]-next_player["amount"]:,}円</p><small>賞金順の参考ライン・出場確定ではありません</small>{schedule}</section>' if border and next_player else '')
     return intro+f'''<p class="sub">{report['year']}年 ／ {date(report['from'])}〜{date(report['through'])}の公式掲載分。日次で確認します。</p>{warning}
