@@ -164,12 +164,12 @@ class Page:
 
     def render(self, title, desc, body, crumbs=(), script="", noindex=False, og=None):
         nav = [("index.html", "本日のレース", "レース", '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),
-               ("exhibition.html", "展示解析", "展示", '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>'),
+               ("players.html", "選手情報", "選手情報", '<path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/>'),
                ("targets.html", "狙い目レーサー", "狙い目", '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'), ("racer/index.html", "選手・モーター", "検索", '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
                ("stats.html", "実績と根拠", "実績", '<path d="M4 20h16M6 16l4-5 3 3 5-7"/>'),
                ("mynote.html", "マイノート", "ノート", '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>')]
-        nav_keys = {'index.html':'home', 'stats.html':'stats', 'exhibition.html':'exhibition', 'targets.html':'targets', 'racer/index.html':'search', 'mynote.html':'note'}
-        navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
+        nav_keys = {'index.html':'home', 'stats.html':'stats', 'players.html':'players', 'targets.html':'targets', 'racer/index.html':'search', 'mynote.html':'note'}
+        navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" or h == "players.html" and self.path in ("players-f.html", "players-prizes.html", "database/season.html") else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
         ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -494,9 +494,7 @@ class Site:
         times = self.oriten_block(race, p)
         slit = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))
         waiting = '<p class="sub">展示の取得待ちです。取得できた項目から表示します。</p>' if not bx else ''
-        available = any((r['date'], r['jcd'], r['rno']) == (d, jcd, rno) for r in getattr(self, 'exhibition_records', []))
-        link = (f'<p class="ev-link"><a href="{Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u("exhibition.html")}?date={d}&amp;jcd={jcd}&amp;rno={rno}">展示映像を別ページで見る →</a></p>' if available else '')
-        return times + reference + waiting + link + slit
+        return times + reference + waiting + slit
 
     def oriten_block(self, race, fallback=None):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
@@ -2015,7 +2013,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         vnames = {j: VENUES[j]["name"] for j in VENUES}
         held = sorted({x["jcd"] for x in self.idx.get("venues", []) if not x.get("cancelled")})
         opt = lambda xs: "".join(f'<option value="{e(x)}">{e(y)}</option>' for x, y in xs)
-        body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><div class="sw-links"><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a><a class="btn" href="../database/season.html">期末A1・A2ボーダー →</a></div>
+        body = f"""<link rel="stylesheet" href="../racer.css"><h1>選手・モーター検索</h1><div class="sw-links"><a class="btn" href="../database/index.html">選手データバンク：期別・支部・養成期・場別 →</a><a class="btn" href="../players.html">F・期末勝率・賞金ランキング →</a></div>
 <p class="sub">名前・よみ・登録番号・支部{"・期" if has_ki else ""}で選手をさがせます。☆を押すとお気に入りに入り、出走表やトップページで目立つようになります（登録せずに使う場合はこの端末に保存）。</p>
 <div class="rtabs sx-tabs" role="tablist"><button type="button" class="on" data-tab="r">選手<small> {len(rs):,}人</small></button><button type="button" data-tab="m">モーター<small> 全24場</small></button><button type="button" data-tab="f">☆お気に入り<small class="fav-n"></small></button></div>
 <section class="tabp sx" id="sx-r" data-tab="r">
@@ -2656,13 +2654,31 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.put("404.html", page.render(f"ページが見つかりません｜{SITE_NAME}", "ページが見つかりません。", body, noindex=True))
 
     def exhibition_page(self):
-        from .exhibition_views import render
         page = Page('exhibition.html')
-        venues = {j: {**value, 'slug': SLUG[j]} for j, value in VENUES.items()}
-        body = render(page, venues, self.idx.get('date', self.now.strftime('%Y%m%d')), self.exhibition_records,
-                      research=getattr(self, 'exhibition_research', []))
-        self.put(page.path, page.render('展示映像｜艇ろぐ', '日付・場・レースを選んで、１マークの入りと出口を見比べます。',
-                                       body, [('', '展示映像')], noindex=not self.exhibition_records))
+        body = (f'<h1>展示映像ページは公開を休止しました</h1>'
+                f'<p>展示タイム・進入情報は、各レースの「展示」で確認できます。</p>'
+                f'<p><a href="{page.u("index.html")}">今日のレース一覧へ →</a></p>')
+        self.put(page.path, page.render('展示映像ページの休止｜艇ろぐ', '各レースの展示情報をご利用ください。',
+                                       body, [('', '公開休止')], noindex=True))
+
+    def player_info_pages(self):
+        from .database_sources import BASE, read_json
+        from .season_watch import calendars
+        from .fl_leave import published_records
+        from .player_info import hub, build_f_report, f_page, prize_page, programme_snapshots
+        today=self.now.strftime('%Y%m%d')
+        prizes=read_json(BASE/'prizes/latest.json',{}) or {}
+        report=read_json(BASE/'season_watch/summary.json.gz',{}) or {}
+        races=(race for rows in getattr(self,'day_races',{}).values() for race in rows)
+        fdata=build_f_report(report,programme_snapshots(races,today),published_records(today),today,self.racers)
+        for path,title,body in (
+            ('players.html','選手情報',lambda p:hub(p,prizes)),
+            ('players-f.html','F・休みの確認',lambda p:f_page(p,fdata)),
+            ('players-prizes.html','賞金ランキング・グランプリ',lambda p:prize_page(p,prizes,today,calendars()))):
+            page=Page(path)
+            crumbs=[('players.html','選手情報'),('',title)] if path!='players.html' else [('',title)]
+            content=self.freshness_block(page,self.idx.get('updated_at',''))+body(page)
+            self.put(path,page.render(f'{title}｜{SITE_NAME}',title+'を公式資料と保存データから確認。',content,crumbs))
 
     def sitemap(self):
         # 検索に出さないページ（noindex）はサイトマップに入れない（Search Console の警告になる）
@@ -2695,6 +2711,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         self.st_pages()
         self.static_pages()
         self.exhibition_page()
+        self.player_info_pages()
         self.share_page()
         self.grade_page()
         self.weekly_page()

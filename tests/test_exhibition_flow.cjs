@@ -24,7 +24,9 @@ ui.submit();assert.match(get('ev-status').textContent,/未収録/);assert.equal(
 get('ev-date').value='2026-02-30';ui.submit();assert.ok(get('ev-back').hidden);assert.equal(get('ev-frame').src,undefined);
 const deep=boot('?date=20261026&jcd=04&rno=12');assert.ok(deep.node('ev-view').hidden);assert.match(deep.node('ev-title').textContent,/12R/);
 const invalid=boot('?date=20260230&jcd=04&rno=1');assert.ok(invalid.node('ev-view').hidden);assert.equal(invalid.node('ev-frame').src,undefined);
-const research=JSON.parse(fs.readFileSync(require.resolve('../site/data/exhibition/research.json'),'utf8')).records;
+// Pin this prototype scenario to its original day; later research records
+// must not change which day this test treats as unmeasured.
+const research=JSON.parse(fs.readFileSync(require.resolve('../site/data/exhibition/research.json'),'utf8')).records.filter(r=>r.date==='20261026');
 const beta=boot('',{records:[],research}),b=beta.node;
 assert.equal(b('ev-reference').hidden,false);assert.equal((b('ev-times').innerHTML.match(/<tr>/g)||[]).length,7);
 assert.equal(b('ev-source-wrap').hidden,false);assert.match(b('ev-status').textContent,/正式タイムではありません/);

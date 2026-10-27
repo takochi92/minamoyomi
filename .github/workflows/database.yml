@@ -60,6 +60,12 @@ jobs:
       - name: 期末ボーダーの参考データを更新
         continue-on-error: true
         run: python -m scraper.season_watch --refresh-calendars
+      - name: 公式賞金ランキングを更新（失敗時は前回分を保持）
+        continue-on-error: true
+        run: python -m scraper.prize_rankings
+      - name: 公式の未消化FL記載を確認（取得できた場だけ）
+        continue-on-error: true
+        run: python -m scraper.fl_leave
       - name: テスト
         run: |
           pip install pytest

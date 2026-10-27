@@ -21,20 +21,21 @@ def test_catalog_requires_explicit_publication_and_rights_and_rejects_unsafe_ass
         assert catalog({'records': [{**approved, **change}]}) == []
 
 
-def test_separate_page_has_selectors_and_does_not_embed_media_into_the_race():
+def test_retired_page_never_embeds_media_or_research_data():
     s = Site.__new__(Site); s.files = {}; s.exhibition_records = []; s.idx = {'date': '20261026'}
     from datetime import datetime
     s.now = datetime(2026, 10, 26)
     s.exhibition_page()
     page = s.files['exhibition.html']
-    assert all(f'id="ev-{field}"' in page for field in ('date', 'venue', 'race', 'frame'))
+    assert '公開を休止しました' in page
+    assert 'ev-config' not in page and '<iframe' not in page
+    assert 'exhibition.js' not in page and 'ev-source' not in page
     assert '20歳未満' in page and 'のめり込み' in page
     assert 'content="noindex"' in page
-    assert 'sandbox="allow-scripts"' in page
     assert 'data:image' not in page
 
 
-def test_race_page_gets_only_a_small_deep_link_when_media_is_approved():
+def test_race_page_preserves_official_exhibition_without_retired_video_links():
     s = Site.__new__(Site)
     s.oriten_block = lambda *_: '<table>既存の展示表</table>'
     s.slit_block = lambda *_: '<section>既存のスリット</section>'
@@ -44,7 +45,7 @@ def test_race_page_gets_only_a_small_deep_link_when_media_is_approved():
     assert '展示映像を別ページ' not in before
     s.exhibition_records = [{'date': '20261026', 'jcd': '04', 'rno': 1}]
     after = s.ex_tab('20261026', '04', 1, race, {})
-    assert 'exhibition.html?date=20261026&amp;jcd=04&amp;rno=1' in after
+    assert 'exhibition.html' not in after
     assert '<iframe' not in after and '<canvas' not in after
     assert after.count('既存の展示表') == 1
 
@@ -73,10 +74,10 @@ def test_public_research_is_explicitly_distinct_from_approved_media():
         assert 'reference' not in research_catalog({'records':[candidate]})[0]
 
 
-def test_navigation_keeps_six_items_and_places_exhibition_between_races_and_targets():
+def test_navigation_replaces_exhibition_with_player_information():
     page=Page('stats.html').render('test','test','')
     nav=re.search(r'<nav class="nav">(.*?)</nav>',page,re.S)[1]
-    assert re.findall(r'href="([^"]+)"',nav)==['index.html','exhibition.html','targets.html','racer/index.html','stats.html','mynote.html']
+    assert re.findall(r'href="([^"]+)"',nav)==['index.html','players.html','targets.html','racer/index.html','stats.html','mynote.html']
     assert '実績と根拠' in nav and 'logic.html' not in nav
     assert 'data-k="stats" aria-current=page' in nav
 
