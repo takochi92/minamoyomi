@@ -464,7 +464,7 @@ class Site:
             return f'<td class="r num"><b class="{wc}">{w * 100:.0f}%</b><br><small class="sub">{st}<br>{v[0]}走</small></td>'
         rows = []
         for b in sorted(boats, key=lambda b: b["course"]):
-            rows.append(f'<tr><td>{bt(b["frame"])} {e(b["name"])}<br><small class="sub">{b["course"]}コース</small></td>'
+            rows.append(f'<tr><td><span class="cond-person">{bt(b["frame"])} <span>{e(b["name"])}</span></span><small class="sub">{b["course"]}コース</small></td>'
                         + "".join(cell(b["toban"], b["course"], k) for k, _ in cols) + "</tr>")
         head = "".join(f'<th class="r">{e(lab)}</th>' for _, lab in cols)
         return (f'<section class="panel"><h2>このコースの成績 <small>直近2年・上から1着率・平均ST・走数</small></h2>'

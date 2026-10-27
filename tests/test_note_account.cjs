@@ -78,6 +78,14 @@ function harness({account=true,uid='A',guest=M.empty(),verificationOnly=false,ch
   releaseWrite();await sleep(12);assert.equal(h.cloud.has('B'),false);assert.equal(h.writes.length,0);
   h.switch('A');await until(()=>h.cloud.has('A'));assert.equal(h.cloud.get('A').data.racer['3456'].text,'Aだけの非公開メモ');
 
+  h=harness();await h.init();await until(()=>h.api.state().ready);
+  next=h.api.data();next.motor['03-36']={jcd:'03',no:'36',venue:'江戸川',favorite:true};
+  h.api.save(h.api.data(),next);await until(()=>h.cloud.has('A'));
+  assert.equal(h.cloud.get('A').data.motor['03-36'].favorite,true);
+  h.switch('B');await until(()=>h.api.state().ready&&!h.api.data().motor['03-36']);
+  h.switch('A');await until(()=>h.api.state().ready&&h.api.data().motor['03-36']);
+  assert.equal(h.api.data().motor['03-36'].favorite,true);
+
   // Old/malformed guest storage is never silently replaced with an empty note.
   h=harness({account:false});h.backing.set('teilog_note_v1','broken');
   // Construct a fresh harness with a shape the normalizer rejects.

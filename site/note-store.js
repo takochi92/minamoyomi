@@ -26,7 +26,8 @@
             row[f] = String(v[f]);
           }
         });
-        if (g !== 'fav' && !row.text) return;
+        if (g === 'motor' && v.favorite === true) row.favorite = true;
+        if (g !== 'fav' && !row.text && !row.favorite) return;
         out[g][k] = row;
       });
     });

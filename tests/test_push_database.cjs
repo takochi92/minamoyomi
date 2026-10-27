@@ -18,6 +18,10 @@ async function save(owner=A,rev=0,on=true,s=subscription,rules={'1234':[4]}){ret
 await role('anon');await assert.rejects(db.query('select * from public.teilog_push_devices'),/permission denied/);
 await assert.rejects(save(),/permission denied/);
 await role('authenticated',A);assert.equal((await save()).rows[0].revision,1);
+const motorNote={racer:{},motor:{'03-36':{jcd:'03',no:'36',venue:'江戸川',favorite:true}},fav:{'1234':{name:'Test A'}},bets:[],budget:0};
+await db.query('select public.teilog_save_notes(1,$1,$2)',[motorNote,A]);
+assert.equal((await db.query('select data from public.teilog_notes')).rows[0].data.motor['03-36'].favorite,true,'Existing private note schema accepts motor favorites');
+assert.deepEqual((await db.query('select rules from public.teilog_push_devices')).rows[0].rules,{'1234':[4]},'Motor favorites never create notification rules');
 await assert.rejects(save(A,0),/Settings changed/);
 await assert.rejects(save(A,1,true,subscription,{'1234':[7]}),/Invalid frame/);
 await assert.rejects(save(A,1,true,{...subscription,endpoint:'https://localhost/x'}),/Invalid notification/);

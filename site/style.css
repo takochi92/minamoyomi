@@ -460,6 +460,7 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 @media (max-width:520px){.nb-tiles{grid-template-columns:repeat(2,1fr)}}
 .plus{color:#3DD68C}.minus{color:#FF6B6B}.nb-over{color:#FF6B6B;font-weight:700}
 .nb-mark{font-size:11px;text-decoration:none}
+.nb-picker{display:grid;gap:10px;min-width:0}.nb-pick-label{display:grid;gap:5px;font-size:12px;color:var(--ink2);min-width:0}.nb-pick-label select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px}.nb-picked:empty{display:none}.nb-picked{min-width:0;overflow-wrap:anywhere}.nb-picked p{margin:0 0 10px}.nb-picked .nb-memo textarea{max-height:240px}.motor-fav-btn{margin-bottom:10px}.motor-fav-btn.on{color:var(--gold,#e4bf6b)}
 /* 収支カレンダー */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cal-nav h2{margin:0;font-size:18px}
@@ -545,6 +546,8 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 .fav-ul a b{color:var(--warn)}
 .chip small{font-weight:500;opacity:.8}
 .cond th,.cond td{padding-left:4px;padding-right:4px}.cond small{line-height:1.25}
+.cond{table-layout:fixed;width:100%}.cond th,.cond td{white-space:normal;overflow-wrap:anywhere}.cond th:first-child{width:29%}
+.cond-person{display:flex;gap:5px;align-items:center}.cond-person .bt{flex-shrink:0}.cond-person>span:last-child{min-width:0}
 .share textarea{width:100%;box-sizing:border-box;resize:vertical;background:var(--bg);color:inherit;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:14px;line-height:1.6}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .ai-rows{display:grid;gap:8px}.ai-r{display:grid;grid-template-columns:76px 1fr 44px;gap:4px 8px;align-items:center}
@@ -614,6 +617,7 @@ button:hover,.btn:hover{filter:brightness(1.1)}
  .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8),.t-today td:is(:nth-child(2),:nth-child(7)),.t-race td:nth-child(2){white-space:normal}
  .t-tgt td:nth-child(7),.t-vc td:nth-child(6),.t-rc td:nth-child(8){min-width:5em}
  .t-ex td:first-child,.t-ori td:first-child,.cond td:first-child{white-space:normal;min-width:5.5em}
+ .cond td:first-child{min-width:0}.cond th,.cond td{padding:6px 3px;font-size:11.5px}.cond .bt{width:24px;height:24px;font-size:15px}
 }
 /* スマホは24場を4×6で全部並べるので、タイルを小さく */
 @media (max-width:720px){
