@@ -17,7 +17,7 @@
  var previousIdentity=A.identity();
  A.subscribe(function(){var next=A.identity();if(previousIdentity&&previousIdentity!==next)stopNotifications(previousIdentity).catch(()=>{});previousIdentity=next;});
  if(!root)return;
- var cfg=(window.SITE_CONFIG||{}).notifications||{},record=null,device,epoch=0,uid=null,busy=false,loaded=false,active=false,error='',notice='',draft={},todayFeed=null,favoritesVersion='';
+ var cfg=(window.SITE_CONFIG||{}).notifications||{},record=null,device,epoch=0,uid=null,busy=false,loaded=false,active=false,error='',notice='',draft={},todayFeed=null,favoritesVersion='',expanded=new Set();
  fetch('/fav-today.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{todayFeed=d;draw();}).catch(()=>{});
  function node(tag,text){var e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
  function supported(){return window.isSecureContext&&'Notification' in window&&'serviceWorker' in navigator&&'PushManager' in window;}
@@ -59,15 +59,19 @@
   root.append(node('p',ready?(record&&record.enabled&&active?'この端末の通知：オン':'この端末の通知：オフ'):'通知配信は準備中です。枠番の選択は試せますが、まだ保存・配信はできません。'));
   root.append(node('p','出走表の枠番（号艇）で選びます。実際の進入コースとは異なる場合があります。未選択の選手・枠番は通知しません。設定はこの端末用です。'));
   var favorites=A.data().fav||{},keys=Object.keys(favorites);
+  root.append(node('p','お気に入り'+keys.length+'人・枠番を選択済み'+keys.filter(t=>(draft[t]||[]).length).length+'人。選手名をタップすると枠番を変更できます。'));
   if(!keys.length)root.append(node('p','選手ページの☆でお気に入りを登録してください。'));
   keys.forEach(function(t){
+   var row=node('details'),summary=node('summary'),frames=draft[t]||[];row.className='push-racer-row';row.open=expanded.has(t);
+   summary.append(node('span',(favorites[t].name||t).replace(/\s/g,'')),node('small',frames.length===6?'全枠':frames.length?frames.join('・')+'号艇':'未設定'));row.append(summary);
+   row.addEventListener('toggle',function(){if(!row.isConnected)return;if(row.open)expanded.add(t);else expanded.delete(t);});
    var field=node('fieldset');field.className='push-racer';field.append(node('legend',favorites[t].name||t));
    [1,2,3,4,5,6].forEach(function(f){
     var label=node('label'),input=node('input');input.type='checkbox';input.checked=(draft[t]||[]).includes(f);input.disabled=busy;
     input.setAttribute('aria-label',(favorites[t].name||t)+' '+f+'号艇');
     input.addEventListener('change',function(){var a=new Set(draft[t]||[]);if(input.checked)a.add(f);else a.delete(f);draft[t]=Array.from(a).sort();draw();});
     label.append(input,document.createTextNode(f+'号艇'));field.append(label);
-   });root.append(field);
+   });row.append(field);root.append(row);
   });
   if(todayFeed&&todayFeed.date===new Date(Date.now()+9*3600000).toISOString().slice(0,10).replace(/-/g,'')){
    var list=node('ul');root.append(node('h3','今日の通知条件に合う出走'));
@@ -88,6 +92,7 @@
   if(!A.state().ready){if(A.identity()!==uid){epoch++;record=null;draft={};device=null;uid=null;loaded=false;busy=false;}draw();return;}
   var next=A.identity(),version=JSON.stringify(A.data().fav||{});if(next===uid&&version===favoritesVersion){draw();return;}
   var sameUser=next===uid,previousDraft=sameUser?draft:{};favoritesVersion=version;
+  if(!sameUser)expanded.clear();
   uid=next;epoch++;record=null;device=null;draft=previousDraft;busy=false;loaded=false;error='';notice='';var e=epoch;draw();
   if(!next||!cfg.enabled||!cfg.vapidPublicKey)return;
   try{var data=await A.notificationCall('read',{device_id:id()});check(e,next);
