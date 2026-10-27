@@ -186,6 +186,7 @@
         if (confirm('このブラウザにあるメモ・お気に入り・収支を、ログイン中のアカウントへ取り込みます。元の記録も残します。続けますか？')) importData(guest());
       } else if (name === 'logout') {
         if (pending().length && !confirm('未同期の変更があります。この端末に保存してある変更は、同じアカウントで再ログインすると同期できます。今ログアウトしますか？')) return;
+        if(window.TeiRaceNotifications) await window.TeiRaceNotifications.beforeSignOut();
         var out = await client.auth.signOut({scope:'local'});
         if (out.error) throw out.error;
         if (actionEpoch === generation) await changeUser(null);
@@ -237,7 +238,21 @@
       window.addEventListener('beforeunload', function (e) { if (user && pending().length) { e.preventDefault(); e.returnValue = ''; } });
     } catch (e) { state.ready = false; authError(e); }
   }
-  window.TeiNoteAccount = { data:function () { return clone(data); }, save:save, importData:importData,
+  async function notificationCall(name, args) {
+    if (!client || !user || !state.ready) throw new Error('ログインと読み込みの完了が必要です。');
+    var epoch=generation, uid=user.id, result;
+    if(name==='read') result=await client.from('teilog_push_devices').select('id,subscription,rules,enabled,revision').eq('user_id',uid).eq('id',args.device_id).maybeSingle();
+    else if(name==='save') result=await client.rpc('teilog_save_push',Object.assign({},args,{expected_user_id:uid}));
+    else if(name==='test') result=await client.functions.invoke('favorite-morning',{body:{action:'test',device_id:args.device_id}});
+    else throw new Error('未対応の通知操作です。');
+    if(epoch!==generation || !user || user.id!==uid) throw new Error('ログイン状態が変わりました。');
+    if(result.error){
+      if(name==='test')throw new Error(result.error.context&&result.error.context.status===409?'本日のテスト通知は送信済みです。端末の通知設定を確認してください。':'テスト通知を送信できませんでした。通信と端末の通知設定を確認してください。');
+      throw new Error('通知設定を保存できませんでした。通信を確認してページを読み直してください。');
+    }
+    return result.data;
+  }
+  window.TeiNoteAccount = { notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,
     subscribe:function (f) { callbacks.push(f); }, state:function () { return Object.assign({}, state, {user:!!user}); }, exportData:exportData };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

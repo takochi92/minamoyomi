@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),{pathToFileURL}=require('node:url'),path=require('node:path');
+(async()=>{const {matches,jst,payload,validSubscription}=await import(pathToFileURL(path.resolve('supabase/functions/favorite-morning/logic.mjs')));
+const now=new Date('2026-10-26T23:13:00Z'),device={rules:{'1234':[4]},racer_names:{'1234':'Test A'}};
+const feed={date:'20261027',racers:{'1234':[['平和島',1,'race/20261027/heiwajima-1.html','09:00',1],['平和島',6,'race/20261027/heiwajima-6.html','13:00',4]]}};
+assert.equal(jst(now).hour,8);const rows=matches(feed,device,now);assert.equal(rows.length,1);assert.equal(rows[0].frame,4);
+assert.equal(matches({...feed,date:'20261026'},device,now).length,0);
+assert.equal(matches(feed,device,new Date('2026-10-27T05:00:00Z')).length,0);
+assert.equal(matches(feed,{...device,rules:{}},now).length,0);
+assert.equal(matches(feed,{...device,rules:{'1234':[true]}},now).length,0);
+assert.match(payload(rows,feed.date).body,/Test A.*4号艇/);
+assert.equal(payload([],feed.date,'test').tag,'teilog-test-20261027');
+assert.equal(payload([],feed.date,'test').url,'/mynote?morning=20261027');
+const sub={endpoint:'https://fcm.googleapis.com/fcm/send/test-only',keys:{p256dh:'a'.repeat(87),auth:'b'.repeat(22)}};
+assert.ok(validSubscription(sub));for(const endpoint of ['https://127.0.0.1/x','https://user@fcm.googleapis.com/x','https://fcm.googleapis.com.evil.test/x','http://fcm.googleapis.com/x'])assert.equal(validSubscription({...sub,endpoint}),false);
+console.log('Edge sender: JST, selected frames, stale programme, passed deadline, explicit opt-in, valid destination and test/morning separation passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});
