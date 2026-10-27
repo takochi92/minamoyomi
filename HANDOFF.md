@@ -1,5 +1,14 @@
 # 艇ろぐ 引き継ぎメモ
 
+## 2026-10-27 朝のお気に入り出走通知（ブランチ実装・本番配信は未有効化）
+
+- 全ログイン利用者向け。本人のお気に入りを対象に選手別1〜6号艇を選択し、端末ごとにオン・オフ。ユーザーは「朝に対象レースをまとめて通知」を選択。出走表の枠番で、実際の進入コースとは区別する。新規利用者も利用可能な設計で、所有者限定ではない。
+- `site/race-notifications.js`、認証付き所有者RPC、`supabase/migrations/20261027_morning_push.sql`、`tools/morning_push.py`、`morning-push.yml` を追加。中止場・締切済み・古い日付・解除済みお気に入り・未選択の枠番は除外。日次claimで端末ごと1回。通知タップはマイノートの当日対象一覧へ。明示ログアウトで保存側もオフにし端末購読も解除。古い登録のendpointをオフ後は別アカウントが再登録可能。
+- 実Edgeの390pxで操作検査（認証・送信先はMock）、ローカルPostgreSQLでRLS・匿名拒否・所有者/CAS・日次claim・削除cascade、実pywebpushの暗号化・VAPID署名を確認。本番配信の証明ではない。Python全体321件成功・12件skip、その後追加関連テストとJSを確認。
+- `SITE_CONFIG.notifications.enabled=false`、公開鍵空、GitHub `PUSH_ENABLED` 未有効化。専用SupabaseへのSQL適用、本番配信用キー・VAPID秘密鍵のSecrets登録、所有者端末への実受信確認は未実施。ログイン既存接続は正常で、Supabaseアカウントやプロジェクトの作り直しは不要。
+- 管理画面操作はnode_repl/cuaとも起動時の `failed to write kernel assets` で利用不可（reset後も再現）。管理用Supabase連携を検索し未接続を確認・提案。ユーザーは「この前接続したのでは／全利用者にできるか」と質問。サイトのログインとChatGPT側の管理連携は別で、一般利用者にSupabase連携は不要と説明。現時点の接続確認は取れていない。
+- 続きの設定と検証範囲：`research/improvements/FAVORITE_MORNING_PUSH.md`。画面・紹介用1200×675画像・X下書きは `private/morning-push/`。未投稿、Atelier未送信。鍵・endpoint・個人データはGitやログへ入れない。
+
 ## 2026-10-27 期末の必要着順・残り出走の参考計算
 
 - `/database/season.html` に、発表済みの本日残り出走から必要点・必要着順を表示する機能を追加。期末当日以外は「本日の残り」と明記し、翌日以降の出走数を推測しない。「期末まで残り○走と仮定」する手動計算も用意。

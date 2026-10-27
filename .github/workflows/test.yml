@@ -21,6 +21,8 @@ jobs:
       - run: node tests/test_turn_review.cjs
       - run: node tests/test_turn_review_flow.cjs
       - run: node --test tests/test_season_conditions.cjs
+      - run: node tests/test_push_worker.cjs
+      - run: node tests/test_notification_account.cjs
       - name: 本番保存データから全ページを生成できることを確認
         env:
           SITE_URL: https://teilog.com

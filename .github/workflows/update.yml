@@ -54,6 +54,7 @@ on:
       - 'site/note.js'
       - 'site/note-store.js'
       - 'site/note-account.js'
+      - 'site/race-notifications.js'
       - 'site/vendor/**'
       - 'site/about_body.html'
       - 'site/install_body.html'

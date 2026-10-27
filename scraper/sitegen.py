@@ -197,6 +197,7 @@ class Page:
 <script src="{self.asset('note-store.js')}" defer></script>
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
+<script src="{self.asset('race-notifications.js')}" defer></script>
 <script src="{self.asset('pwa.js')}" defer></script>
 <script src="{self.asset('freshness.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
@@ -1910,7 +1911,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             for venue in self.idx.get('venues', []):
                 for r in venue.get('races', []):
                     race = load_json(DATA / 'races' / today / f"{venue['jcd']}{r['rno']:02d}.json", {})
-                    programmes.append([venue['jcd'], r['rno'], r.get('deadline'), race.get('racelist')])
+                    programmes.append([venue['jcd'], r['rno'], r.get('deadline'), race.get('racelist'), venue.get('cancelled'), r.get('cancelled')])
             cache.phase(self, 'racers', [self.now.strftime('%Y%m%d'), today, SITE_URL, programmes],
                         self._racer_pages, racer=True)
         else:
@@ -1962,12 +1963,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 
     def fav_today(self, today):
         """お気に入り選手の「今日の出走」用。登番 → [[場, R, ページ, 締切, 枠]]（ブラウザ側で読む）"""
-        dl = {(v["jcd"], r["rno"]): r.get("deadline", "") for v in self.idx.get("venues", []) for r in v.get("races", [])}
+        dl = {(v["jcd"], r["rno"]): r.get("deadline", "") for v in self.idx.get("venues", []) if not v.get('cancelled') for r in v.get("races", []) if not r.get('cancelled')}
         out = {}
         for t, xs in today.items():
             if not t:
                 continue
-            out[t] = [[VENUES[j]["name"], rn, f"race/{d}/{SLUG[j]}-{rn}.html", dl.get((j, rn), ""), f] for d, j, rn, f in sorted(xs, key=lambda x: dl.get((x[1], x[2]), ""))]
+            out[t] = [[VENUES[j]["name"], rn, f"race/{d}/{SLUG[j]}-{rn}.html", dl[(j,rn)], f] for d, j, rn, f in sorted(xs, key=lambda x: dl.get((x[1], x[2]), "")) if (j,rn) in dl]
         self.put("fav-today.json", json.dumps({"date": self.idx.get("date", ""), "racers": out}, ensure_ascii=False, separators=(",", ":")))
 
     def motor_rows(self, today):
@@ -2515,6 +2516,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = f"""<h1>マイノート</h1>
 <p class="sub">収支表・選手メモ・モーターメモ。登録せずにも使えます。保存先は、下のログイン状態と案内を確認してください。</p>
 <div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
+<section class="panel" id="race-notifications" aria-live="polite"></section>
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
         page = Page("tools/composite.html")
