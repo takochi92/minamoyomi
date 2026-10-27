@@ -59,7 +59,7 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
   if (send) {
     try {
       const response=await request('https://ntfy.sh/',{
-        method:'POST',headers:{'Content-Type':'application/json'},redirect:'error',signal:AbortSignal.timeout(10_000),
+        method:'POST',headers:{'Content-Type':'application/json'},redirect:'manual',signal:AbortSignal.timeout(10_000),
         body:JSON.stringify({topic:env.ADMIN_ALERT_TOPIC,title:category==='test' ? '艇ろぐ：更新監視のテスト' : '艇ろぐ：自動更新の確認が必要です',
           message,click:'https://github.com/takochi92/minamoyomi/actions/workflows/update.yml',tags:['warning']}),
       });

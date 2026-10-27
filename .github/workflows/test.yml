@@ -13,6 +13,10 @@ jobs:
       - run: node worker/test.mjs
       - run: node update-watchdog/test.mjs
       - run: node update-watchdog/monitor.test.mjs
+      - name: Cloudflare実行エンジンで監視と通知を検査（外部通信はテスト応答）
+        run: |
+          npm install --prefix .cache/watchdog-runtime --ignore-scripts --no-save --package-lock=false miniflare@4.20260405.0 esbuild@0.25.4
+          MINIFLARE_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/miniflare" ESBUILD_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/esbuild" node update-watchdog/runtime.test.cjs
       - run: node tests/test_note_store.cjs
       - run: node tests/test_note_account.cjs
       - run: node tests/test_pwa.cjs

@@ -24,6 +24,10 @@ jobs:
           node-version: '22'
       - run: node update-watchdog/test.mjs
       - run: node update-watchdog/monitor.test.mjs
+      - name: 配備前にCloudflare実行環境で通信と通知を検査
+        run: |
+          npm install --prefix .cache/watchdog-runtime --ignore-scripts --no-save --package-lock=false miniflare@4.20260405.0 esbuild@0.25.4
+          MINIFLARE_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/miniflare" ESBUILD_MODULE="$GITHUB_WORKSPACE/.cache/watchdog-runtime/node_modules/esbuild" node update-watchdog/runtime.test.cjs
       - name: Require a dedicated dispatch token
         run: test -n "$UPDATE_DISPATCH_TOKEN" && test -n "$ADMIN_ALERT_TOPIC"
       - name: 配備前にGitHub認証と起動鍵の期限を検査

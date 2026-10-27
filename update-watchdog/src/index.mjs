@@ -29,7 +29,7 @@ export async function tick(env, now = new Date(), request = fetch) {
   };
   async function api(path, method = 'GET', body) {
     const response = await request(BASE + path, {
-      method, headers, redirect:'error', signal:AbortSignal.timeout(10_000),
+      method, headers, redirect:'manual', signal:AbortSignal.timeout(10_000),
       ...(body ? {body:JSON.stringify(body)} : {}),
     });
     if (!response.ok) {
