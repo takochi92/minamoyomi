@@ -714,7 +714,6 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 /* Current public data, kept compact on phones. */
 .page-freshness{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink2);padding:5px 0;min-width:0}
 .page-freshness span{flex:1 1 180px;overflow-wrap:anywhere}
-.page-freshness button{flex:none;font:inherit;color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:6px;padding:5px 9px;cursor:pointer}
 .ex-data-status{font-size:12px;line-height:1.7;color:var(--ink2);margin:6px 0 10px}
 /* Shared evidence details keep the main navigation at six items. */
 .evidence-fold{margin:18px 0;border-top:1px solid var(--line);padding-top:14px}.evidence-fold>summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--ink2)}.evidence-fold[open]>summary{margin-bottom:14px}
