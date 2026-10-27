@@ -1345,6 +1345,15 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'<span data-fresh-status role="status">データ更新 {e(revision[11:16]) if revision else "取得待ち"}</span>'
                 '</div>')
 
+    @staticmethod
+    def home_race_group(title, note, upcoming, completed):
+        if not upcoming and not completed:
+            return ''
+        history = (f'<details class="home-race-history"><summary>本日の結果 {len(completed)}R</summary>'
+                   f'<div class="home-race-list">{"".join(completed)}</div></details>') if completed else ''
+        return (f'<section class="home-race-group"><h2>{e(title)}</h2><p class="sub">{e(note)}</p>'
+                f'<div class="home-race-list">{"".join(upcoming)}</div>{history}</section>')
+
     def freshness_manifest(self):
         date = self.idx.get('date') or self.now.strftime('%Y%m%d')
         since = (datetime.strptime(date, '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d')
@@ -1386,20 +1395,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             if self.finished(r):
                 h = rc.get("hit")
                 pay = f" {yen(r.get('payout'))}" if h else ""
-                done.append(f'<a href="{href}"><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> {e(v["name"])}{r["rno"]}R{pay}</a>')
+                done.append(f'<a class="home-race-row" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub">{"的中" if h else "不的中"}{pay}</span></a>')
                 continue
-            cards.append(f'<a class="cfc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div>'
-                         f'<div class="row">{self.reco_summary(rc)}</div></a>')
-        n_done = len(done)
-        n_hit = sum(1 for v, r in conf if self.finished(r) and r["reco"].get("hit"))
-        ticker = ""
-        if done:
-            items = "".join(done)
-            ticker = (f'<div class="ticker" aria-label="終わった自信ありレース"><span class="tk-h">本日 {n_done}R中{n_hit}的中</span>'
-                      f'<div class="tk-w"><div class="tk-t" style="animation-duration:{max(12, n_done * 5)}s">{items}{items}</div></div></div>')
-        cards = ("<div class=\"strip\">" + "".join(cards) + "</div>" if cards else '<p class="sub">これから締切の自信ありレースはありません。</p>') if (cards or done) else ""
-        if cards:
-            cards = ticker + cards
+            cards.append(f'<a class="home-race-row" data-dl="{d} {r["deadline"]}" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span>'
+                         f'<span class="sub num">{r["deadline"]}締切</span></a>')
+        confidence_home = self.home_race_group('AIの注目レース', '展示・オッズから抽出したレース', cards, done)
         hon_cards, hon_done = [], []
         for v in self.idx.get("venues", []):
             for r in v["races"]:
@@ -1426,16 +1426,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 href = self.race_link(page, d, v["jcd"], r["rno"])
                 if self.finished(r):
                     h = t.get("hit")
-                    ana_done.append(h)
-                    if not h:
-                        continue
-                    ana_cards.append((1, r["deadline"], f'<a class="cfc tkc" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span></div><div class="row"><span class="sub">{bt(t["frame"])}の頭・{t["n"]}点</span>{("<span class=num>" + yen(r.get("payout")) + "</span>") if h else ""}</div></a>'))
+                    pay = f' {yen(r.get("payout"))}' if h else ''
+                    ana_done.append(f'<a class="home-race-row" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub">{"的中" if h else "不的中"}{pay}</span></a>')
                 else:
                     cp = f'<span class="num">合成 {t["comp"]:.1f}倍</span>' if t.get("comp") else '<span class="sub">オッズ待ち</span>'
-                    ana_cards.append((0, r["deadline"], f'<a class="cfc tkc" data-dl="{d} {r["deadline"]}" href="{href}"><div class="row"><strong>{e(v["name"])} {r["rno"]}R</strong><span class="num">{r["deadline"]}締切</span></div><div class="row"><span class="sub">{bt(t["frame"])}の頭・{t["n"]}点</span>{cp}</div></a>'))
+                    ana_cards.append((0, r["deadline"], f'<a class="home-race-row" data-dl="{d} {r["deadline"]}" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub num">{r["deadline"]}締切</span></a>'))
         ana_cards.sort(key=lambda x: (x[0], x[1]))
-        anah = (f'<section style="display:grid;gap:10px"><h2>厳選穴 <small>穴目の条件がすべてそろったレース{f"・本日 {len(ana_done)}R中{sum(1 for x in ana_done if x)}的中" if ana_done else ""}</small></h2>'
-                f'<div class="strip">{"".join(c for _, _, c in ana_cards)}</div></section>') if ana_cards else ""
+        anah = self.home_race_group('条件に合うレース', '検証中・高配当を示すものではありません', [c for _, _, c in ana_cards], ana_done)
         targets = self.today_targets(page)
         body = f"""<section class="insight-hero"><div><span class="eyebrow">BOAT RACE / DATA &amp; INSIGHT</span><h1>水面の変化を、<br>穴の根拠へ。</h1><p>機力、本人比展示、選手のコース成績。<br>買い目の理由を、ひとつの画面で。</p><div class="insight-links"><a href="{page.u('motor.html')}">モーター相場を見る →</a><a href="{page.u('targets.html')}">コース巧者を探す →</a></div></div><img src="{page.u('img/boat-v2.webp')}" width="960" height="640" alt="水面を走る白と青のボート" fetchpriority="high"></section>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
@@ -1445,7 +1442,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
-{f'<section class="conf" style="display:grid;gap:10px"><h2>自信ありレース <small>展示まで見たうえで、本線・押さえから合成オッズ5倍以上に絞れて、AIの見込みが高いレース</small></h2>{cards}</section>' if cards else ''}
+{confidence_home}
 {anah}
 <section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
@@ -2325,7 +2322,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return f'<section class="grade-brief" aria-label="今日の重賞">{items}</section>'
 
     def grade_page(self):
-        """今日の重賞（SG・PG1・G1・G2・G3）だけの予想まとめ。重賞がない日も「次の重賞はなし」と出す"""
+        """今日の重賞の結果と確定オッズをコンパクトに表示する。"""
         page = Page("grade.html")
         d = self.idx.get("date", self.now.strftime("%Y%m%d"))
         vs = self.graded()
@@ -2334,21 +2331,23 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             rows = []
             for r in v["races"]:
                 href = self.race_link(page, d, v["jcd"], r["rno"])
-                res = (f'{combo(r["result"])} <span class="num">{yen(r.get("payout"))}</span>' + (' <span class="pill hit">的中</span>' if r.get("hit") else "")) if r.get("result") else ""
-                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{r["deadline"]}</small></td><td>{e(display_confidence(r.get("confidence", "")))}</td>'
-                            f'<td>{combo(r["honmei"][0]) if r.get("honmei") else "-"}</td><td>{res}</td></tr>')
-            secs.append(f'<section class="panel" id="grade-{e(v["jcd"])}" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
-                        f'<div class="tbl-wrap"><table><thead><tr><th>R</th><th>AIの見込み</th><th>本線</th><th>結果</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                res = combo(r['result']) if r.get('result') else '<span class="sub">未確定</span>'
+                payout = r.get('payout')
+                odds = f'{payout / 100:,.1f}倍' if r.get('result') and payout else '—'
+                rows.append(f'<tr><td><a href="{href}"><b>{r["rno"]}R</b></a><br><small class="sub num">{e(r.get("deadline", ""))}</small></td>'
+                            f'<td><a href="{href}#kekka">{res}</a></td><td class="r num">{odds}</td></tr>')
+            secs.append(f'<section class="panel grade-results" id="grade-{e(v["jcd"])}" style="display:grid;gap:8px"><h2><i class="g g-{e(v["grade"])}">{e(v["grade"])}</i> {e(v["name"])} <small>{e(v.get("title", ""))}・{e(v.get("day", ""))}</small></h2>'
+                        f'<table class="grade-results-table"><thead><tr><th>R</th><th>結果</th><th class="r">確定オッズ</th></tr></thead><tbody>{"".join(rows)}</tbody></table>'
                         f'<p style="margin:0"><a href="{page.u("venue/" + SLUG[v["jcd"]] + ".html")}">{e(v["name"])}の水面の特徴とコース別成績 →</a></p></section>')
         names = "・".join(dict.fromkeys(v["grade"] for v in vs))
-        head = f"今日の{names} 予想" if vs else "今日の重賞（SG・G1）予想"
+        head = f"今日の{names} 結果" if vs else "今日の重賞 結果"
         body = (f'<h1>{e(head)} <small class="sub" style="font-size:14px">{jdate(d)}</small></h1>'
-                f'<p>SG・G1 などの重賞レースだけを集めた、艇ろぐのAI予想です。本線はAIの確率がいちばん高い3連単。レース名を押すと、出走表・展示・オッズを見られます。</p>'
+                f'<p class="sub">重賞の3連単結果と確定オッズ。レース番号から出走表・展示・オッズへ。</p>'
                 + ("".join(secs) or '<section class="panel"><p style="margin:0">今日は重賞の開催がありません。<a href="index.html">全場の予想はこちら →</a></p></section>')
                 + '<p class="sub">予想は的中を保証するものではありません。20歳未満の方は舟券を購入できません。</p>')
         title = (f"{head}（{jdate(d)}）{vs[0]['name']} {vs[0].get('title', '')[:20]}｜{SITE_NAME}" if vs else f"今日の重賞（SG・G1）競艇予想｜{SITE_NAME}")
-        desc = (f"{jdate(d)}のボートレース重賞（{names}）のAI予想。" + "・".join(f"{v['name']}「{v.get('title', '')[:24]}」" for v in vs[:3]) + "の全レースの本線と結果。") if vs else "ボートレースのSG・G1など重賞レースのAI予想まとめ。"
-        self.put(page.path, page.render(title, desc, body, [("", "重賞の予想")]))
+        desc = (f"{jdate(d)}のボートレース重賞（{names}）の結果。" + "・".join(f"{v['name']}「{v.get('title', '')[:24]}」" for v in vs[:3]) + "の3連単結果と確定オッズ。") if vs else "ボートレースの重賞結果と確定オッズ。"
+        self.put(page.path, page.render(title, desc, body, [("", "重賞の結果")]))
 
     def share_card(self, title, text, note=""):
         return (f'<section class="panel share" style="display:grid;gap:8px"><h2>{e(title)} <small>{share.weight(text)}/280</small></h2>'
