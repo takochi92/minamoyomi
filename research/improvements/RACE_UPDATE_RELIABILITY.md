@@ -59,4 +59,12 @@ Cloudflare Durable Objectの単一インスタンスで重複Cronをまとめ、
 
 診断のため`GET /health`に読み取り専用の確認を追加する。同じ専用鍵のBearer認証が必須で、実行や通知送信は行わない。内部状態から確認時刻・公開時刻・失敗種別・期限日・送信結果・テスト実施有無だけを返し、鍵や通知先を返さない。診断認証自体はSHA-256で固定長比較し、応答はno-store。配備workflowで秘密値を表示せず状態を読み、テスト要求時は配信サービスの受付成功まで確認する。OSの表示・実受信は利用者確認と区別する。
 
+### 警告追加時の不具合と再現
+
+17:12配備40471888220はWorker公開後の診断で失敗。状態はrequest-failed・alertDelivery unknown・testClaimed true。Nodeの模擬fetchテストでは検知できなかったが、workerd/Miniflareで同じバンドルを実行すると`redirect:'error'`がCloudflareランタイム非対応としてTypeErrorになった。GitHub APIとntfyの両方にこの設定を追加していたため、監視の起動と警告が失敗した。追加実装による不具合であり、利用者の端末のせいとは扱わない。
+
+Worker内の通信は`redirect:'manual'`に変更し、3xxはHTTP失敗として扱う。リダイレクト先へ認証情報を転送しない方針は維持する。Node上で実行する配備用preflight/verify-liveのredirect errorは対応済み環境なのでそのまま。
+
+workerdで公開データ取得・GitHub dispatch・ntfy受付200・通知重複抑止・401の異常判定・認証付き診断まで一連の回帰テストを追加。テストは全外部通信を模擬し、実在の秘密鍵・通知先を使わない。UTC稼働時刻も固定して夜間CIでの取りこぼしを防ぐ。一般のNodeテストだけでCloudflare互換性を保証したとは扱わない。
+
 検証：全Python319成功・12skip。既存JS・通知DB権限・Workerテスト成功。新規テストで401/403、期限切れ、14/7/1日前の通知抑止、連続失敗、20分超ジョブ、同時呼び出し、秘密値隔離、通知応答不明の重複防止、Cron失敗伝播を検査。wranglerのdry-runでDurable Object bindingとSQLite migrationを確認。
