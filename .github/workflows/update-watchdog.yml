@@ -1,0 +1,26 @@
+name: deploy-update-watchdog
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_DISPATCH_TOKEN: ${{ secrets.UPDATE_DISPATCH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node update-watchdog/test.mjs
+      - name: Require a dedicated dispatch token
+        run: test -n "$UPDATE_DISPATCH_TOKEN"
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: update-watchdog
+          command: deploy
+          secrets: |
+            UPDATE_DISPATCH_TOKEN
