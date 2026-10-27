@@ -1340,9 +1340,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return f'<a class="vt on{" done" if st == "本日終了" else ""}" href="{href}"><b>{e(name)}</b><span>{e(day)}</span><span class="st">{st}</span><span class="bd">{badges}</span></a>'
 
     def freshness_block(self, page, revision, key=''):
-        return (f'<div class="page-freshness" id="page-freshness" data-revision="{e(revision)}" data-source="{e(page.u("freshness.json"))}" data-key="{e(key)}">'
-                f'<span data-fresh-status role="status">データ更新 {e(revision[11:16]) if revision else "取得待ち"}</span>'
-                '</div>')
+        return (f'<div hidden id="page-freshness" data-revision="{e(revision)}" '
+                f'data-source="{e(page.u("freshness.json"))}" data-key="{e(key)}"></div>')
 
     @staticmethod
     def home_race_group(title, note, upcoming, completed):

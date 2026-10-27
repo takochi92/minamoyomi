@@ -3,19 +3,14 @@
   'use strict';
   var box = document.getElementById('page-freshness');
   if (!box) return;
-  var status = box.querySelector('[data-fresh-status]');
   var revision = box.dataset.revision || '', source = box.dataset.source;
-  var edited = false, busy = false, newer = false;
+  var edited = false, busy = false;
   function safeToReload() {
     var active = document.activeElement;
     if (edited || document.hidden || (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName))) return false;
     var account = window.TeiNoteAccount && window.TeiNoteAccount.state();
     return !account || ((!account.configured || account.ready) &&
       (!account.user || (account.mode === 'account' && account.message === '同期済み')));
-  }
-  function label(message) {
-    var text = message + (revision ? '（表示中 ' + revision.slice(11, 16) + '時点）' : '');
-    if (status.textContent !== text) status.textContent = text;
   }
   function reload() { location.reload(); }
   document.addEventListener('input', function (event) {
@@ -36,8 +31,6 @@
       if (!response.ok) throw Error('unavailable');
       var data = await response.json(), at = box.dataset.key ? (data.races || {})[box.dataset.key] : data.updated_at;
       if (typeof at === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(at) && (!revision || at > revision)) {
-        newer = true;
-        label('新しい情報を自動で反映します');
         if (safeToReload()) {
           // A CDN serving an older HTML document must not cause a reload loop.
           var key = 'teilog_public_refresh:' + url.pathname + ':' + (box.dataset.key || ''), permit = true;
@@ -46,16 +39,12 @@
             if (permit) sessionStorage.setItem(key, at);
           } catch (_) { permit = false; }
           if (permit) reload();
-        } else label('新しい情報を受信しました。入力内容を保護して反映待ちです');
-      } else if (!newer) {
-        var age = revision ? Date.now() - new Date(revision + '+09:00').getTime() : 0;
-        label(age > 600000 ? 'データ更新が遅れています。自動で再確認します' : '自動更新中');
+        }
       }
     } catch (_) {
-      if (!newer) label('通信を確認できません。自動で再接続します');
+      // Keep the displayed data timestamp; the next check retries automatically.
     } finally { clearTimeout(timer); busy = false; }
   }
-  label('最新データを確認中');
   document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
   window.addEventListener('pageshow', check);
   window.addEventListener('online', check);
