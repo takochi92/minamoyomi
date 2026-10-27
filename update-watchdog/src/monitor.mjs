@@ -48,6 +48,7 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     category='test'; message='艇ろぐの更新停止・鍵期限の管理者通知テストです。一般利用者への通知ではありません。';
   }
   const enabled=env.ADMIN_ALERTS_ENABLED==='true';
+  state.alertsEnabled=enabled;
   const topic=notificationTopic(env.ADMIN_ALERT_TOPIC);
   if (enabled && !topic) {state.alertDelivery='channel-invalid';}
   const send=category && enabled && !!topic;
@@ -76,7 +77,7 @@ export async function monitorCheck(storage, env, now = new Date(), request = fet
     await storage.put('state',state);
   }
   const unhealthy=!!failure || daysLeft===null || (enabled && !topic) ||
-    ['failed','unknown'].includes(state.alertDelivery) || result.state==='update-stuck' || result.ageMinutes>=20;
+    (enabled && ['failed','unknown'].includes(state.alertDelivery)) || result.state==='update-stuck' || result.ageMinutes>=20;
   return {state,unhealthy};
 }
 
@@ -86,7 +87,7 @@ export class UpdateMonitor {
     if (request.method==='GET' && new URL(request.url).pathname==='/status') {
       const state=await this.ctx.storage.get('state');
       return Response.json(state ? {checkedAt:state.checkedAt,state:state.state,updatedAt:state.updatedAt,
-        ageMinutes:state.ageMinutes,tokenExpiresOn:state.tokenExpiresOn,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,alertErrorCode:state.alertErrorCode,
+        ageMinutes:state.ageMinutes,tokenExpiresOn:state.tokenExpiresOn,alertsEnabled:state.alertsEnabled,alertDelivery:state.alertDelivery,alertHttpStatus:state.alertHttpStatus,alertErrorCode:state.alertErrorCode,
         testClaimed:!!state.lastTestId,testCurrent:state.lastTestId===this.env.ADMIN_ALERT_TEST_ID} : {state:'not-checked'});
     }
     if (request.method!=='POST' || new URL(request.url).pathname!=='/check') return new Response('Not found',{status:404});
