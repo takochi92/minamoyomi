@@ -53,8 +53,7 @@ def late_exhibition(site, data, race):
 def cache_inputs(site, data, day):
     """Attempt timestamps must not invalidate every historical HTML page."""
     return [{k: f.get(k) for k in ('jcd','start','end','title','precheck')} |
-            {'points': {d:v for d,v in f.get('points',{}).items() if d<=day},
-             'exhibitions': {k:v for k,v in f.get('exhibitions',{}).items() if k[:8]<=day},
+            {'exhibitions': {k:v for k,v in f.get('exhibitions',{}).items() if k[:8]<=day},
              'late_exhibition': {k:v for k,v in f.get('late_exhibition',{}).items() if k[:8]==day}}
             for f in feeds(site, data) if f['start']<=day<=f['end']]
 
@@ -64,15 +63,12 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
     if not feed:
         return '<section class="panel"><h2>節間</h2><p class="sub">この節の開催期間を確認できていません。取得後に表示します。</p></section>'
     records = index(site, data, load_history)
-    snapshots = [(d,v) for d,v in feed.get('points',{}).items() if feed['start']<=d<=day]
-    points = max(snapshots, default=('',{}), key=lambda p:p[0])[1]
     precheck = feed.get('precheck',{})
     rows, finishes = [], []
     for b in (race.get('racelist') or {}).get('boats', []):
         toban = str(b.get('toban',''))
         s = records.summary(jcd,toban,feed['start'],feed['end'],day)
         pre = precheck.get('rows',{}).get(toban,{})
-        point = points.get('rows',{}).get(toban,{})
         def cell(key, label, unit):
             value = s[key]
             text = f'{value:.2f}' if value is not None else '—'
@@ -84,10 +80,8 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
         pt = f'<b>{pre["time"]:.2f}</b>' if pre else '—'
         if pre and pre.get('motor_no') != b.get('motor_no'):
             pt += f'<small>{pre["motor_no"]}号機</small>'
-        score = (f'<b>{point["rank"]}位</b><small>{point["rate"]:.2f}</small>'
-                 if point and point.get('n') != 0 else '—')
         rows.append(f'<tr><th scope="row">{name}</th>{cell("ex","平均展示","回")}<td>{pt}</td>'
-                    f'{cell("st","平均ST","走")}{cell("rank","ST順位","走")}<td>{score}</td></tr>')
+                    f'{cell("st","平均ST","走")}{cell("rank","ST順位","走")}</tr>')
         chips=[]
         for r in s['results']:
             label = str(r['place'])
@@ -106,15 +100,10 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
     # Construct official URLs ourselves rather than trusting a stored URL in HTML.
     if precheck:
         sources.append(f'<a href="https://www.boatrace.jp/owpc/pc/race/rankingmotor?jcd={jcd}&amp;hd={day}" target="_blank" rel="noopener">公式の前検タイム</a>')
-    if points:
-        url=('https://www.boatrace-karatsu.jp/sp/index.php?page=raceinfo-tokutenrank' if jcd=='23' else
-             f'https://www.boatrace.jp/owpc/pc/race/pointrank?jcd={jcd}&amp;hd={max(snapshots)[0]}')
-        sources.append(f'<a href="{url}" target="_blank" rel="noopener">公式の得点率一覧</a>')
-    point_note = f'得点率：{esc(points.get("as_of") or md(max(snapshots)[0])+"の公式掲載分")}' if points else '得点率順位は公式一覧を取得できた場から表示します。'
     return (f'<section class="panel meeting-panel"><h2>節間の比較</h2>'
             f'<p class="sub meeting-period">{md(feed["start"])}〜{md(feed["end"])} · {md(day)}までの保存済み記録</p>'
-            '<table class="meeting-table"><thead><tr><th>艇・選手</th><th>平均<br>展示</th><th>前検</th><th>平均<br>ST</th><th>ST<br>順位</th><th>順位<br>得点率</th></tr></thead>'
-            f'<tbody>{"".join(rows)}</tbody></table><p class="sub meeting-point-note">{point_note}</p>'
+            '<table class="meeting-table"><thead><tr><th>艇・選手</th><th>平均<br>展示</th><th>前検</th><th>平均<br>ST</th><th>ST<br>順位</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table>'
             '<details class="meeting-explain"><summary>集計の見方・出典</summary><p class="sub">'
             '平均展示・平均ST・ST順位は今節の保存済み公式記録を艇ろぐで集計。数字の下は集計数です。'
             'F・Lは平均STとST順位から除外。ST順位は6艇分を確認できたレースのみで、同タイミングは同順位です。'
