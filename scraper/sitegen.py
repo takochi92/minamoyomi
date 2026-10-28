@@ -471,6 +471,14 @@ class Site:
                 f'<div class="tbl-wrap"><table class="cond"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                 f'<p class="sub">今日のコース（展示後は進入）での成績を、全体・この場・今日の風・今日の波高に分けたもの。1着率の緑は同じコース・同じ条件の全選手の平均よりはっきり良い（1.3倍以上）、赤は悪い（0.7倍以下）。風は2m以下を「風2m以下」にまとめ、それより強いときは追い風・向かい風・横風に分けています。5走未満は「-」。</p></section>')
 
+    def meeting_block(self, d, jcd, race, page):
+        from .meeting_views import block
+        return block(self, DATA, load_all, d, jcd, race, page, bt, e, SLUG)
+
+    def meeting_cache_inputs(self, day):
+        from .meeting_views import cache_inputs
+        return cache_inputs(self, DATA, day)
+
     def ex_tab(self, d, jcd, rno, race, p):
         """6艇のタイム一覧を先頭に。重複しない補足比較は閉じておく。"""
         rl = (race.get("racelist") or {}).get("boats") or []
@@ -479,19 +487,17 @@ class Site:
         rows = []
         for b in rl:
             f, x = b["frame"], bx.get(b["frame"], {})
-            m = self.meet_ex(d, jcd, b.get("toban", ""), rno)
             t = self.ex_top(b.get("toban", ""))
             tl = x.get("tilt")
-            mc = f'{m[0]:.2f}<small class="sub">{m[1]}走</small>' if m else "-"
             tc = f'<span class="{"dgood" if t[0] >= 0.25 else ""}">{t[0] * 100:.0f}%</span>' if t else "-"
             lc = f"{tl:+.1f}" if tl is not None else "-"
             rows.append(f'<tr><td><span class="ex-boat">{bt(f)} <span>{e(b.get("name", ""))}</span></span></td>'
-                        f'<td class="r num" data-label="今節平均">{mc}</td><td class="r num" data-label="いつもの1位率">{tc}</td><td class="r num" data-label="チルト">{lc}</td></tr>')
+                        f'<td class="r num" data-label="いつもの1位率">{tc}</td><td class="r num" data-label="チルト">{lc}</td></tr>')
         reference = ''
         if rows:
-            reference = (f'<details class="panel ex-reference ex-compact" id="ex-reference"><summary>今節・普段との比較／チルト</summary>'
-                         f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">今節平均</th><th class="r">通常の<br>展示1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                         '<p class="sub">今節平均は、このレースより前に保存した今節の展示タイム平均。通常の展示1位率は、過去2年で展示タイムが6艇中1位だった割合（25％以上は緑）。同タイム1位を含み、今回の1着確率ではありません。</p></details>')
+            reference = (f'<details class="panel ex-reference ex-compact" id="ex-reference"><summary>普段との比較／チルト</summary>'
+                         f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">通常の<br>展示1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                         '<p class="sub">今節平均は「節間」タブへ。通常の展示1位率は、過去2年で展示タイムが6艇中1位だった割合（25％以上は緑）。同タイム1位を含み、今回の1着確率ではありません。</p></details>')
         times = self.oriten_block(race, p)
         slit = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))
         waiting = '<p class="sub">展示の取得待ちです。取得できた項目から表示します。</p>' if not bx else ''
@@ -499,7 +505,9 @@ class Site:
 
     def oriten_block(self, race, fallback=None):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
-        ot = race.get("oriten")
+        from .meeting_views import late_exhibition
+        late = None if race.get("oriten") else late_exhibition(self, DATA, race)
+        ot = race.get("oriten") or late
         bi = race.get("before") or {}
         ex = {str(b["frame"]): b.get("exhibit_time") for b in bi.get("boats", [])}
         for b in (fallback or {}).get('boats', []):
@@ -539,6 +547,8 @@ class Site:
             if best:
                 tops.append(f"{it}1位 {'・'.join(best)}号艇")
         note = "展示タイムは公式、一周・まわり足・直線などは各レース場が独自に計測したオリジナル展示データ（BOATCAST掲載）。数字が小さいほど速い。" if ot else "展示タイムは公式。数字が小さいほど速い。"
+        if late:
+            note += "詳細展示は締切後に補完した公式掲載値です（締切前の予想には未使用）。"
         if dmeans:
             note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
                      "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
@@ -1206,7 +1216,7 @@ class Site:
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 {self.freshness_block(page, race.get('updated_at', ''), f'{d}-{jcd}-{rno}') if d == self.idx.get('date') and not res else ''}
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-<nav class="rtabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
+<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 {ai_rows}
@@ -1226,6 +1236,9 @@ class Site:
 {f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
 <section class="panel nb" id="mynote" data-date="{d}" data-jcd="{jcd}" data-venue="{e(v)}" data-rno="{rno}" hidden></section>
 </div>
+<div class="tabp" data-p="setsukan" style="display:grid;gap:16px;min-width:0" hidden>
+{self.meeting_block(d, jcd, race, page)}
+</div>
 <div class="tabp" data-p="tenji" style="display:grid;gap:16px;min-width:0" hidden>
 {self.ex_tab(d, jcd, rno, race, p)}
 </div>
@@ -1239,7 +1252,7 @@ class Site:
 </div>
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
@@ -2471,7 +2484,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = (f'<h1>展示タイムの見方</h1><p>本番の前に、6艇がそろって走る「展示航走」があります。そのときの直線のタイムが<b>展示タイム</b>。数字が小さいほど速く、モーターの調子の目安になります。</p>'
                 f'{secs}'
                 '<section class="panel"><h2>見るときのコツ</h2><ul class="comments"><li>同じレースの<b>6艇の中で何番目か</b>を見る（場や天気で全体のタイムが変わるため）。</li>'
-                '<li>その選手の<b>いつもの順位</b>と比べる。艇ろぐの「展示」タブに「今節の平均」「いつもの1位率」があります。</li>'
+                '<li>その選手の<b>いつもの順位</b>と比べる。艇ろぐの「節間」タブに今節の平均、「展示」タブにいつもの1位率があります。</li>'
                 '<li>ただし、展示が速い艇はみんな気づくので、オッズも下がります。展示だけで買うと、もうけは出にくいです。</li></ul></section>'
                 + self.guide_foot(page, page.path))
         self.put(page.path, page.render(f"展示タイムの見方｜展示1位の艇は本当に勝つ？（過去2年のデータ）｜{SITE_NAME}", "ボートレースの展示タイムの見方。コースごとに、展示タイムの順位と1着率の関係を過去2年の公式データで集計。展示1位の艇はどれくらい勝つのかを解説。", body, [("guide/index.html", "初心者ガイド"), ("", "展示タイムの見方")]))
@@ -2618,7 +2631,7 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
                         self.race_page(day.name, race['jcd'], race)
             if cache and day.name < self.idx.get('date', ''):
                 cache.phase(self, 'races-' + day.name,
-                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past, getattr(self, 'exhibition_records', [])], render_day)
+                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past, getattr(self, 'exhibition_records', []), self.meeting_cache_inputs(day.name)], render_day)
             else:
                 render_day()
         # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）

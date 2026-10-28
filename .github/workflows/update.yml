@@ -13,6 +13,8 @@ on:
       - 'scraper/motor_renewals.json'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'
+      - 'scraper/meeting.py'
+      - 'scraper/meeting_views.py'
       - 'scraper/exhibition_views.py'
       - 'site/exhibition.js'
       - 'site/exhibition.css'
