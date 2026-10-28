@@ -137,4 +137,3 @@ def test_backfilled_exhibition_merges_by_athlete_without_duplicate_results(tmp_p
     stats=x.summary('23','4001','20261027','20261031','20261028')
     assert stats['ex']==6.78 and stats['ex_n']==1
     assert stats['st_n']==1 and len(stats['results'])==1
-
