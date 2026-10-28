@@ -88,6 +88,8 @@ def test_pages_and_links(tmp_path):
     assert "race/20260925/kiryu-12.html" in files and "venue/omura.html" in files and "targets.html" in files
     race_html=files['race/20260925/kiryu-12.html']
     assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
+    assert race_html.index('data-t="yoso"') < race_html.index('data-t="setsukan"') < race_html.index('data-t="tenji"')
+    assert 'data-p="setsukan"' in race_html
     assert len([p for p in files if p.startswith("racer/")]) > 1000
     assert 'id="page-freshness"' in files['venue/kiryu.html']
     assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']
@@ -143,7 +145,7 @@ def test_exhibition_mobile_labels_preserve_all_values_and_missing_items():
         assert html.count(f'data-label="{label}"') == 6
     assert '36.72' in html and '7.63' in html
     html = s.ex_tab('20261025', '03', 1, race, {})
-    for label in ['展示タイム', '今節平均', 'いつもの1位率', 'チルト']:
+    for label in ['展示タイム', 'いつもの1位率', 'チルト']:
         assert f'data-label="{label}"' in html
     assert html.count('data-label="展示タイム"') == 6
     assert '<details class="panel ex-reference ex-compact"' in html
@@ -267,7 +269,8 @@ def test_ex_counts_and_meet(tmp_path, monkeypatch):
     s.exs = {t: [100, 31]}
     race = json.loads((sitegen.DATA / "races" / "20260925" / "0112.json").read_text(encoding="utf-8"))
     tab = s.ex_tab("20260925", "01", 12, race, race["prediction"])
-    assert "31%" in tab and "6.85" in tab and "スタート展示" in tab
+    assert "31%" in tab and "スタート展示" in tab
+    assert 'data-label="今節平均"' not in tab  # 今節平均は節間タブへ移動
     page = files["race/20260925/kiryu-12.html"]
     assert 'data-t="tenji"' in page and "このコースの成績" in page
 

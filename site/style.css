@@ -424,6 +424,25 @@ details.cr th,details.cr td{padding:7px 5px}
 .rtabs button{font:inherit;font-weight:700;font-size:14px;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);cursor:pointer}
 .rtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rtabs small{font-weight:400;font-size:11px}
+.rtabs.race-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}
+.race-tabs button{min-width:0;white-space:nowrap}
+.meeting-period{margin:0 0 12px;font-size:12px}
+.meeting-table{width:100%;table-layout:fixed;font-size:13px}
+.meeting-table th,.meeting-table td{padding:12px 2px;text-align:center;overflow-wrap:anywhere}
+.meeting-table thead th{font-size:11px;line-height:1.4}
+.meeting-table th:first-child{width:27%;text-align:left}
+.meeting-table small{display:block;font-size:10px;color:var(--ink2);font-weight:400;line-height:1.6}
+.meeting-boat{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;min-width:0}
+.meeting-boat>.bt{flex:0 0 auto}
+.meeting-boat>span:last-child{overflow-wrap:anywhere;min-width:0}
+.meeting-point-note{font-size:11px;margin:12px 0;overflow-wrap:anywhere}
+.meeting-explain{font-size:12px}
+.meeting-results-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.meeting-finishes{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.meeting-finish{display:inline-grid;gap:2px;text-align:center;border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-decoration:none}
+.meeting-finish small{font-size:10px;color:var(--ink2)}
+.meeting-finish b{font-size:13px}
+@media(max-width:480px){.race-tabs button{font-size:12px;padding-left:2px;padding-right:2px}.race-tabs small{font-size:9px}.meeting-panel,.meeting-results{padding:14px}.meeting-table{font-size:12px}.meeting-table th:first-child{width:26%}.meeting-boat{font-size:11px;gap:4px}.meeting-boat .bt{width:24px;height:28px;font-size:17px}.meeting-results-row{grid-template-columns:78px minmax(0,1fr)}}
 details.more{margin-top:4px}details.more summary{font-size:12px;color:var(--ink2);cursor:pointer}details.more p{font-size:12px;color:var(--ink2);margin:4px 0 0;line-height:1.6}
 .rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 .rcard2{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
