@@ -75,6 +75,25 @@ h2 small{font-weight:400;color:var(--ink2);font-size:12px}
 /* tables */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;font-size:13px}
+.t-race .race-name{display:inline;line-height:1.5}
+.t-race .race-meta{display:flex;align-items:center;flex-wrap:wrap;gap:2px 7px;line-height:1.5}
+.t-race .race-region{white-space:nowrap}
+@media(max-width:720px){
+ .tbl-wrap .t-race{display:block;position:relative;width:100%}
+ .t-race thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .t-race tbody{display:block}
+ .t-race tbody tr{display:grid;grid-template-columns:30px repeat(4,minmax(0,1fr));gap:7px 4px;padding:12px 2px;border-bottom:1px solid var(--line)}
+ .t-race tbody tr:last-child{border-bottom:0}
+ .tbl-wrap .t-race td{min-width:0;padding:0;border:0;white-space:normal}
+ .tbl-wrap .t-race td:first-child{grid-column:1;grid-row:1/3;align-self:center}
+ .tbl-wrap .t-race .race-person{grid-column:2/-1;grid-row:1;text-align:left}
+ .t-race .race-name{font-size:15px;overflow-wrap:anywhere}
+ .t-race .race-meta{font-size:12px;gap:3px 8px}
+ .tbl-wrap .t-race td:nth-child(n+3){grid-row:2;text-align:center;white-space:nowrap;font-size:13px}
+ .t-race td[data-label]:before{content:attr(data-label);display:block;font:10px/1.6 var(--body);color:var(--ink2)}
+ .t-race td:last-child a{display:block}
+ .t-race td:last-child .sub{display:block;font-size:10px;line-height:1.4;white-space:nowrap}
+}
 th{font-size:11px;font-weight:500;color:var(--ink2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
 tr.link{cursor:pointer}
