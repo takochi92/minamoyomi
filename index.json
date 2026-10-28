@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-28T04:32:38.130817+00:00",
+  "updated": "2026-10-28T13:07:46.159613+00:00",
   "posts": [
+    {
+      "id": "2026-10-28-teirogu-X-raceentry",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-28",
+      "slot": "raceentry",
+      "text": "艇ろぐのスマホ出走表を見やすくしました。\n\n選手名・級別・支部／出身地を上段に、コース・勝率・モーター情報を下段に整理。\n「広島／広島」が途中で折れて読みにくくなる表示も修正しました。\n\n各レースの出走表から確認できます。\nhttps://teilog.com/\n\n#ボートレース #艇ろぐ",
+      "images": [],
+      "created_at": "2026-10-28T13:07:46.159613+00:00"
+    },
     {
       "id": "2026-10-28-teirogu-X-meetingcompact",
       "project": "teirogu",
