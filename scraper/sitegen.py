@@ -1159,8 +1159,8 @@ class Site:
             mot = b.get("motor_2") or "-"
             mcell = (f'<a href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}#m{b["motor_no"]}">{mot}<span class="sub">／{b["motor_no"]}号</span></a>'
                      if b.get("motor_no") is not None else mot)
-            rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td><strong>{nm}</strong> <span class="sub">{e(b.get("class", ""))} {e(b.get("branch", ""))}</span>{fl}</td>'
-                        f'<td class="r num">{q.get("course", f)}</td><td class="r num">{b.get("nat_win") or "-"}</td><td class="r num">{b.get("loc_win") or "-"}</td><td class="r num">{mcell}</td></tr>')
+            rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td class="race-person"><strong class="race-name">{nm}</strong><span class="race-meta sub"><span>{e(b.get("class", ""))}</span><span class="race-region">{e(b.get("branch", ""))}</span>{fl}</span></td>'
+                        f'<td class="r num" data-label="コース">{q.get("course", f)}</td><td class="r num" data-label="全国勝率">{b.get("nat_win") or "-"}</td><td class="r num" data-label="当地勝率">{b.get("loc_win") or "-"}</td><td class="r num" data-label="モーター">{mcell}</td></tr>')
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
         comments = "".join(f"<li>{e(c)}</li>" for c in p.get("comments", []))
@@ -1223,7 +1223,7 @@ class Site:
 {self.evidence_block(page, race, p)}
 {self.in_survivor_block(race)}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race" role="table" aria-label="出走選手とコース・勝率・モーター2連率"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
 {self.arechu_block(race)}
 {self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
