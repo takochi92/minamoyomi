@@ -437,11 +437,20 @@ details.cr th,details.cr td{padding:7px 5px}
 .meeting-boat>span:last-child{overflow-wrap:anywhere;min-width:0}
 .meeting-point-note{font-size:11px;margin:12px 0;overflow-wrap:anywhere}
 .meeting-explain{font-size:12px}
-.meeting-results-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
-.meeting-finishes{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
-.meeting-finish{display:inline-grid;gap:2px;text-align:center;border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-decoration:none}
-.meeting-finish small{font-size:10px;color:var(--ink2)}
-.meeting-finish b{font-size:13px}
+.meeting-results-scroll{max-width:100%;overflow-x:auto}
+.meeting-results-table{width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
+.meeting-results-table th,.meeting-results-table td{padding:9px 1px;text-align:center;vertical-align:middle}
+.meeting-results-table thead th{font-size:10px;color:var(--ink2);font-weight:400;white-space:nowrap}
+.meeting-results-table th:first-child{width:26%;text-align:left;padding-right:6px}
+.meeting-results-table .meeting-boat{font-size:11px;gap:4px}
+.meeting-results-table .bt{width:23px;height:27px;font-size:16px}
+.meeting-day-results{display:grid;gap:2px;align-content:center;min-height:48px}
+.meeting-finish{display:flex;align-items:center;justify-content:center;gap:3px;min-height:24px;text-decoration:none;color:var(--ink);border-radius:3px}
+.meeting-finish small{font-size:8px;color:var(--ink2);font-weight:400}
+.meeting-finish b{font-size:13px;line-height:1;color:var(--ink)}
+.meeting-finish.podium b{color:var(--accent)}
+.meeting-finish.incident b{color:var(--warn)}
+a.meeting-finish:hover,a.meeting-finish:focus-visible{background:var(--surface2);outline:1px solid var(--accent)}
 @media(max-width:480px){.race-tabs button{font-size:12px;padding-left:2px;padding-right:2px}.race-tabs small{font-size:9px}.meeting-panel,.meeting-results{padding:14px}.meeting-table{font-size:12px}.meeting-table th:first-child{width:26%}.meeting-boat{font-size:11px;gap:4px}.meeting-boat .bt{width:24px;height:28px;font-size:17px}.meeting-results-row{grid-template-columns:78px minmax(0,1fr)}}
 details.more{margin-top:4px}details.more summary{font-size:12px;color:var(--ink2);cursor:pointer}details.more p{font-size:12px;color:var(--ink2);margin:4px 0 0;line-height:1.6}
 .rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
