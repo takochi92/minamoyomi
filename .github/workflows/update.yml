@@ -52,6 +52,8 @@ on:
       - 'scraper/research_snapshot.py'
       - 'tools/forward_ana_review.py'
       - 'site/style.css'
+      - 'site/pick.js'
+      - 'site/live.js'
       - 'site/app.js'
       - 'site/config.js'
       - 'site/note.js'
