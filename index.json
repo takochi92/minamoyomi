@@ -1,6 +1,16 @@
 {
-  "updated": "2026-10-28T13:07:46.159613+00:00",
+  "updated": "2026-10-28T15:49:03.530239+00:00",
   "posts": [
+    {
+      "id": "2026-10-29-teirogu-X-setsukancards",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-10-29",
+      "slot": "setsukancards",
+      "text": "会場のレース一覧に「節間」の入口を追加しました。\n\n予想 → 節間 → 展示 → オッズ → 結果\n\n一覧の「節間」をタップすると、そのレースの節間データへ直接移動できます。スマホでも5つの入口が1行に収まるように整理しました。\n\nhttps://teilog.com/\n#ボートレース #艇ろぐ",
+      "images": [],
+      "created_at": "2026-10-28T15:49:03.530239+00:00"
+    },
     {
       "id": "2026-10-28-teirogu-X-raceentry",
       "project": "teirogu",
