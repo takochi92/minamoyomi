@@ -1251,7 +1251,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 "bets": race['primary_slip']['tickets'] if race.get('primary_slip') else ([b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else []), "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
                 "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
                 "p3": (race.get("prediction") or {}).get("p3")}
-        script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.u("live.js")}"></script><script src="{page.u("pick.js")}"></script>'
+        script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.asset("pick.js")}"></script><script src="{page.asset("live.js")}"></script>'
         # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む
         import re as _re
         body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)

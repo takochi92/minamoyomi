@@ -86,6 +86,8 @@ def _site(tmp_path):
 def test_pages_and_links(tmp_path):
     s, files = _site(tmp_path)
     assert "race/20260925/kiryu-12.html" in files and "venue/omura.html" in files and "targets.html" in files
+    race_html=files['race/20260925/kiryu-12.html']
+    assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
     assert len([p for p in files if p.startswith("racer/")]) > 1000
     assert 'id="page-freshness"' in files['venue/kiryu.html']
     assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']
