@@ -1,5 +1,5 @@
 """Compact meeting comparison; public records only, no prediction inputs."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from . import meeting
 
@@ -64,6 +64,9 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
         return '<section class="panel"><h2>節間</h2><p class="sub">この節の開催期間を確認できていません。取得後に表示します。</p></section>'
     records = index(site, data, load_history)
     precheck = feed.get('precheck',{})
+    start = datetime.strptime(feed['start'],'%Y%m%d')
+    through = datetime.strptime(min(day,feed['end']),'%Y%m%d')
+    days = [(start+timedelta(days=i)).strftime('%Y%m%d') for i in range((through-start).days+1)]
     rows, finishes = [], []
     for b in (race.get('racelist') or {}).get('boats', []):
         toban = str(b.get('toban',''))
@@ -82,19 +85,22 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
             pt += f'<small>{pre["motor_no"]}号機</small>'
         rows.append(f'<tr><th scope="row">{name}</th>{cell("ex","平均展示","回")}<td>{pt}</td>'
                     f'{cell("st","平均ST","走")}{cell("rank","ST順位","走")}</tr>')
-        chips=[]
+        by_day={d:[] for d in days}
         for r in s['results']:
             label = str(r['place'])
-            if label.isdigit(): label+='着'
             date = datetime.strptime(r['date'],'%Y%m%d').strftime('%m/%d')
-            text = f'<small>{date} {r["rno"]}R</small><b>{esc(label)}</b>'
+            full_label = label+'着' if label.isdigit() else label
+            description = f'{date} {r["rno"]}R {full_label}'
+            text = f'<small>{r["rno"]}R</small><b>{esc(label)}</b>'
+            cls = ' podium' if label in ('1','2','3') else (' incident' if not label.isdigit() else '')
+            attrs = f'class="meeting-finish{cls}" title="{esc(description)}" aria-label="{esc(description)}"'
             if (Path(data)/'races'/r['date']/f'{jcd}{r["rno"]:02}.json').exists():
                 url=page.u(f'race/{r["date"]}/{slug[jcd]}-{r["rno"]}.html#kekka')
-                chips.append(f'<a class="meeting-finish" href="{url}">{text}</a>')
+                by_day[r['date']].append(f'<a {attrs} href="{url}">{text}</a>')
             else:
-                chips.append(f'<span class="meeting-finish">{text}</span>')
-        finishes.append(f'<div class="meeting-results-row">{name}<div class="meeting-finishes">'
-                        +(''.join(chips) or '<span class="sub">成績待ち</span>')+'</div></div>')
+                by_day[r['date']].append(f'<span {attrs}>{text}</span>')
+        cells=''.join('<td><div class="meeting-day-results">'+(''.join(by_day[d]) or '<span class="sub" aria-label="保存済み成績なし">—</span>')+'</div></td>' for d in days)
+        finishes.append(f'<tr><th scope="row">{name}</th>{cells}</tr>')
     def md(value): return datetime.strptime(value,'%Y%m%d').strftime('%m/%d')
     sources=[]
     # Construct official URLs ourselves rather than trusting a stored URL in HTML.
@@ -110,4 +116,7 @@ def block(site, data, load_history, day, jcd, race, page, bt, esc, slug):
             '欠けたデータは推定せず「—」。当日分は表示中のレース以降の結果も含みます。締切前の予想には使いません。'
             '前検時と使用モーターが異なる場合は前検時の号機を併記します。</p>'
             f'<p class="sub">{" · ".join(sources)}</p></details></section>'
-            f'<section class="panel meeting-results"><h2>今節成績</h2>{"".join(finishes)}</section>')
+            '<section class="panel meeting-results"><h2>今節成績</h2><p class="sub meeting-period">着順 · タップでレース結果</p>'
+            '<div class="meeting-results-scroll"><table class="meeting-results-table"><thead><tr><th>艇・選手</th>'
+            +''.join(f'<th scope="col">{md(d)}</th>' for d in days)+'</tr></thead>'
+            +f'<tbody>{"".join(finishes)}</tbody></table></div></section>')
