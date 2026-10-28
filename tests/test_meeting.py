@@ -118,13 +118,20 @@ def test_late_exhibition_is_display_only_and_new_tab_has_counts(tmp_path,monkeyp
     html=s.oriten_block(race)
     assert '36.37' in html and '締切後に補完' in html and '詳細展示は未取得' not in html
     html=s.meeting_block('20261028','23',race,sitegen.Page('race/20261028/karatsu-3.html'))
-    for text in ('6.75','6.71','.10','1回','1走','3位','7.50','1着','公式の得点率一覧'):
+    for text in ('6.75','6.71','.10','1回','1走','1着'):
         assert text in html
+    assert '得点率' not in html and '7.50' not in html and '3位' not in html
+    from bs4 import BeautifulSoup
+    table=BeautifulSoup(html,'html.parser').select_one('.meeting-table')
+    assert len(table.select('thead th'))==5
+    assert all(len(tr.select('th,td'))==5 for tr in table.select('tbody tr'))
     assert race==before
     a=copy.deepcopy(V.cache_inputs(s,tmp_path,'20261028'))
     feed['attempts']={'points':{'at':'changed'}};feed['updated_at']='changed'
     assert V.cache_inputs(s,tmp_path,'20261028')==a
     feed['points']['20261028']['rows']['4001']['rate']=8.5
+    assert V.cache_inputs(s,tmp_path,'20261028')==a  # Hidden points do not invalidate displayed pages.
+    feed['precheck']['rows']['4001']['time']=6.80
     assert V.cache_inputs(s,tmp_path,'20261028')!=a
 
 
