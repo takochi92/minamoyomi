@@ -564,6 +564,14 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 .mt-period{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
 .mt-period>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;padding:10px 12px;background:rgba(255,255,255,.025)}
 .mt-period-date{grid-column:1/-1;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.mt-period-date{display:flex;align-items:center;flex-wrap:wrap;gap:5px 9px}
+.mt-award{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;border:1px solid #639ab9;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700;line-height:1.6;color:var(--ink);background:rgba(93,160,203,.15)}
+.mt-award--champion{border-color:#b9913d;background:rgba(201,165,78,.18)}
+.mt-award--champion>span{color:#b08831}
+.mt-period.mt-finalist{border-left:3px solid #639ab9}.mt-period.mt-champion{border-left:3px solid #b9913d}
+.mt-period.mt-finalist>summary{background:rgba(93,160,203,.06)}.mt-period.mt-champion>summary{background:rgba(201,165,78,.08)}
+.mt-result-award{font-size:10px;font-weight:700}.mt-finish.mt-finalist{outline:1px solid #639ab9}.mt-finish.mt-champion{outline:1px solid #b9913d;background:rgba(201,165,78,.13)}
+.mt-award-legend{line-height:2.1}
 .mt-period>summary>b{font-size:15px;overflow-wrap:anywhere}.mt-period>summary::after{content:'着順を見る ＋';grid-column:1/-1;font-size:11px;color:var(--accent)}
 .mt-period[open]>summary::after{content:'着順を閉じる −'}
 .mt-period-stat{font-size:12px;text-align:right;display:grid;gap:2px;font-variant-numeric:tabular-nums}

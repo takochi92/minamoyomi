@@ -2182,6 +2182,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 
     def _motor_page(self, jcd, v, data):
         from .motor import display_stats
+        from .motor_finals import for_site
+        finals = for_site(self, ROOT, DATA, data)
         if True:
             page = Page(f"venue/{SLUG[jcd]}-motor.html")
             ms = data.get(jcd) or {}
@@ -2202,7 +2204,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 return (f'<div class="mt-meet"><span class="sub">{label} {int(x["from"][4:6])}/{int(x["from"][6:])}〜{int(x["to"][4:6])}/{int(x["to"][6:])}</span>'
                         f'<div>{who} <span class="sub">{e(self.racers.get(t, {}).get("class", ""))}</span></div><div class="mt-res">{res}</div></div>')
 
-            def full_history(m):
+            def award_badge(award):
+                if not award:
+                    return ''
+                label = '<span aria-hidden="true">★</span> 優勝' if award == 'champion' else '優出'
+                return f'<span class="mt-award mt-award--{award}">{label}</span>'
+
+            def full_history(m, motor_no):
                 periods = m.get("history")
                 if periods is None:
                     mt = m.get("meets") or []
@@ -2223,11 +2231,18 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                     t = x['toban']
                     rows = x['races']
                     top2 = sum(r['place'] in (1, 2) for r in rows)
-                    res = ''.join(f'<a class="mt-finish place-{e(str(r["place"]))}" href="https://www.boatrace.jp/owpc/pc/race/raceresult?hd={r["date"]}&amp;jcd={jcd}&amp;rno={r["rno"]}" '
-                                  f'target="_blank" rel="noopener" title="{date(r["date"])} {r["rno"]}R・公式結果">'
-                                  f'<small>{r["date"][4:6]}/{r["date"][6:]} {r["rno"]}R</small><b>{e(str(r["place"]))}<small>{"着" if isinstance(r["place"], int) else ""}</small></b></a>' for r in rows)
-                    parts.append(f'<details class="mt-period"{" open" if i == 0 else ""}><summary>'
-                                 f'<span class="mt-period-date">{date(x["from"])}〜{date(x["to"])}</span>'
+                    period_award = finals.period_award(jcd, motor_no, rows)
+                    finishes = []
+                    for r in rows:
+                        award = finals.award(jcd, motor_no, r)
+                        tag = '<span class="mt-result-award">優勝</span>' if award == 'champion' else '<span class="mt-result-award">優出</span>' if award else ''
+                        label = '・優勝戦' if award else ''
+                        finishes.append(f'<a class="mt-finish place-{e(str(r["place"]))}{" mt-" + award if award else ""}" href="https://www.boatrace.jp/owpc/pc/race/raceresult?hd={r["date"]}&amp;jcd={jcd}&amp;rno={r["rno"]}" '
+                                        f'target="_blank" rel="noopener" title="{date(r["date"])} {r["rno"]}R{label}・公式結果">'
+                                        f'<small>{r["date"][4:6]}/{r["date"][6:]} {r["rno"]}R</small><b>{e(str(r["place"]))}<small>{"着" if isinstance(r["place"], int) else ""}</small></b>{tag}</a>')
+                    res = ''.join(finishes)
+                    parts.append(f'<details class="mt-period{" mt-" + period_award if period_award else ""}"{" open" if i == 0 else ""}><summary>'
+                                 f'<span class="mt-period-date"><span>{date(x["from"])}〜{date(x["to"])}</span>{award_badge(period_award)}</span>'
                                  f'<b>{e(self.racer_name(t, "登録" + t))}</b>'
                                  f'<span class="mt-period-stat">{len(rows)}記録 <span>2着以内 {top2}回</span></span>'
                                  f'</summary><div class="mt-period-body"><a href="{self.racer_link(page, t) or "#"}">選手データ →</a>'
@@ -2243,7 +2258,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                              f'<span class="mt-v"><small>2連対率</small><b class="num {"best" if r2 is not None and r2 >= 0.40 else ""}">{pct(r2, 1)}</b></span>'
                              f'<span class="mt-v"><small>3連対率</small><b class="num">{pct(r3, 1)}</b></span>'
                              f'<span class="mt-v"><small>出走</small><b class="num">{display_stats(m).get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
-                             f'<div class="mt-body">{full_history(m)}'
+                             f'<div class="mt-body">{full_history(m, no)}'
                              f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
             sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
             official = any(m.get('history_boundary_source') == 'official_confirmed' for m in ms.values())
@@ -2251,6 +2266,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                              f'交換推定日は{sh}。番組表の2連率0％から判定しており、公式の初卸日とは未照合です。' if sh else '交換日は未確認です。')
             body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
 <p class="sub">2連対率の高い順。号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}登録せずに使うメモはこの端末に保存します。</p>
+<p class="sub mt-award-legend">{award_badge('finalist')} 優勝戦出走　{award_badge('champion')} 優勝戦1着。公式のレース名・進入・結果で確認できた記録に表示します。</p>
 <div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から独自集計。一覧の出走回数・連対率は選手責任外の失格・欠場（S0・L0・K0）を除外します。全使用履歴の記録件数にはこれらも含めます。取得期間や欠落により公式表示と異なる場合があります。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
