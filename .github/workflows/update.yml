@@ -10,6 +10,8 @@ on:
       - 'scraper/prediction_context.py'
       - 'scraper/motoradj.py'
       - 'scraper/motor.py'
+      - 'scraper/motor_finals.py'
+      - 'site/motor.js'
       - 'scraper/motor_renewals.json'
       - 'scraper/run.py'
       - 'scraper/sitegen.py'

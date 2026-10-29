@@ -107,3 +107,16 @@ def test_html_incident_spelling_does_not_hide_a_confirmed_finalist(tmp_path):
     index=MotorFinals.load(tmp_path,tmp_path/'data','20261001','20261031')
     assert index.award('04','22',{**history_row(2),'course':3,'place':'S0'})=='finalist'
     assert index.award('04','22',{**history_row(2),'course':3,'place':1})==''
+
+
+def test_counts_include_wins_as_finals_and_ignore_duplicate_rows_and_heats():
+    index = MotorFinals({
+        ('20261018', '04', 12): {(1, '4001', '21'): 1},
+        ('20260918', '04', 12): {(1, '4001', '21'): 3},
+    })
+    winner = history_row()
+    third = {**history_row(date='20260918'), 'place': 3}
+    periods = [{'races': [winner, third, history_row(date='20261017')]}, {'races': [winner]}]
+    assert index.counts('04', '21', periods) == (2, 1)
+    assert index.counts('04', '99', periods) == (0, 0)
+    assert index.counts('04', '21', []) == (0, 0)

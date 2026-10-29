@@ -2253,11 +2253,16 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             cards = []
             for no, m in sorted(ms.items(), key=lambda kv: -(rate(kv[1], "top2") or 0)):
                 r2, r3 = rate(m, "top2"), rate(m, "top3")
+                nf, nw = finals.counts(jcd, no, m['history']) if 'history' in m else (None, None)
+                sort_values = {'top2': r2, 'top3': r3, 'finals': nf, 'wins': nw, 'starts': display_stats(m).get('n'), 'number': int(no)}
+                sort_attrs = ' '.join(f'data-{k}="{value if value is not None else ""}"' for k, value in sort_values.items())
+                award_counts = f'優出 <b class="num">{nf if nf is not None else "—"}</b>回 <span>／</span> 優勝 <b class="num">{nw if nw is not None else "—"}</b>回'
                 exs = f'展示 {m["rank"]}位/{m["of"]}' if m.get("rank") else ""
-                cards.append(f'<details class="mt" id="m{e(no)}"><summary><b class="mt-no num">{e(no)}<small>号機</small></b>'
+                cards.append(f'<details class="mt" id="m{e(no)}" {sort_attrs}><summary><b class="mt-no num">{e(no)}<small>号機</small></b>'
                              f'<span class="mt-v"><small>2連対率</small><b class="num {"best" if r2 is not None and r2 >= 0.40 else ""}">{pct(r2, 1)}</b></span>'
                              f'<span class="mt-v"><small>3連対率</small><b class="num">{pct(r3, 1)}</b></span>'
-                             f'<span class="mt-v"><small>出走</small><b class="num">{display_stats(m).get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span></summary>'
+                             f'<span class="mt-v"><small>出走</small><b class="num">{display_stats(m).get("n", 0)}</b></span><span class="sub mt-ex">{exs}</span><span class="nb-mark-m" data-mkey="{jcd}-{e(no)}"></span>'
+                             f'<span class="mt-award-count sub">{award_counts}</span></summary>'
                              f'<div class="mt-body">{full_history(m, no)}'
                              f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
             sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
@@ -2265,13 +2270,15 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             boundary_note = (f'現モーターの使用開始は{sh}（公式確認済み）。' if official else
                              f'交換推定日は{sh}。番組表の2連率0％から判定しており、公式の初卸日とは未照合です。' if sh else '交換日は未確認です。')
             body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
-<p class="sub">2連対率の高い順。号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}登録せずに使うメモはこの端末に保存します。</p>
+<p class="sub">号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}登録せずに使うメモはこの端末に保存します。</p>
 <p class="sub mt-award-legend">{award_badge('finalist')} 優勝戦出走　{award_badge('champion')} 優勝戦1着。公式のレース名・進入・結果で確認できた記録に表示します。</p>
+<div class="mt-sort"><label for="motor-sort">並び順</label><select id="motor-sort"><option value="top2">2連対率が高い順</option><option value="top3">3連対率が高い順</option><option value="finals">優出が多い順</option><option value="wins">優勝が多い順</option><option value="starts">出走が多い順</option><option value="number">号機順</option></select><span class="sub" id="motor-sort-status" role="status" aria-live="polite"></span></div>
+<p class="sub mt-count-note">優出・優勝回数は保存済み機歴で確認できた回数です。優出回数には優勝も含みます。</p>
 <div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から独自集計。一覧の出走回数・連対率は選手責任外の失格・欠場（S0・L0・K0）を除外します。全使用履歴の記録件数にはこれらも含めます。取得期間や欠落により公式表示と異なる場合があります。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
                                             f"{v['name']}のモーターを2連対率・3連対率の順に一覧。保存済みの全使用者・使用期間・着順と、展示タイムの順位。", body,
-                                            [("motor.html", "モーター一覧"), ("", v["name"])]))
+                                            [("motor.html", "モーター一覧"), ("", v["name"])], script=f'<script src="{page.asset("motor.js")}" defer></script>'))
 
     def venue_extra(self, jcd):
         out = []
