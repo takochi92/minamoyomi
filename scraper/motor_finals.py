@@ -141,6 +141,19 @@ class MotorFinals:
         awards = {self.award(jcd, motor_no, row) for row in rows}
         return 'champion' if 'champion' in awards else 'finalist' if 'finalist' in awards else ''
 
+    def counts(self, jcd, motor_no, history):
+        """Count confirmed final starts, including victories, once per race."""
+        finals, wins = set(), set()
+        for period in history:
+            for row in period['races']:
+                award = self.award(jcd, motor_no, row)
+                if award:
+                    key = (row['date'], int(row['rno']))
+                    finals.add(key)
+                    if award == 'champion':
+                        wins.add(key)
+        return len(finals), len(wins)
+
 
 def for_site(site, root, data, motors):
     if not hasattr(site, '_motor_finals'):

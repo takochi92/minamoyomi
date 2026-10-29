@@ -547,6 +547,7 @@ td.second{background:color-mix(in srgb,#E5484D 13%,transparent)}
 .cal-d.on{outline:2px solid var(--accent);outline-offset:-1px}
 /* モーター一覧 */
 .mt-list{display:grid;gap:6px}
+.mt-sort{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:14px 0 6px}.mt-sort label{font-size:13px;font-weight:700}.mt-sort select{max-width:100%;min-height:44px;padding:7px 30px 7px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--surface);font:inherit;font-size:14px}.mt-sort select option{background:var(--bg);color:var(--ink)}.mt-sort [role=status]{font-size:12px}.mt-count-note{font-size:11px;margin:4px 0 12px}.mt-award-count{flex-basis:100%;font-size:12px;display:flex;align-items:center;gap:5px}.mt-award-count b{color:var(--ink)}.mt-award-count>span{margin:0 5px}
 .mt{border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02)}
 .mt summary{display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;list-style:none;flex-wrap:wrap}
 .mt summary::-webkit-details-marker{display:none}
