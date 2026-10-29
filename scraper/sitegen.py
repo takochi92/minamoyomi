@@ -1260,7 +1260,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <div><small>天候</small><b style="font-family:var(--body)">{e(w.get('weather', '-') or '-')}</b></div><div><small>気温</small><b>{w.get('air_temp', '-')}℃</b></div><div><small>水温</small><b>{w.get('water_temp', '-')}℃</b></div></div>
 <p class="sub"><a href="{vp.u('venue/' + SLUG[jcd] + '.html')}">{e(v)}の水面の特徴とコース別成績 →</a></p>
 <div class="ad-slot" data-slot="race_side"></div></aside></div>"""
-        live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""),
+        live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""), "historical": d < self.idx.get('date', d),
                 "bets": race['primary_slip']['tickets'] if race.get('primary_slip') else ([b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else []), "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
                 "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
                 "p3": (race.get("prediction") or {}).get("p3")}
@@ -1268,7 +1268,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む
         import re as _re
         body = _re.sub(r'<p class="sub">(.*?)</p>', lambda m: f'<details class="more"><summary>くわしく</summary><p>{m.group(1)}</p></details>', body, flags=_re.S)
-        self.put(page.path, page.render(title, desc, body, [(f"venue/{SLUG[jcd]}.html", v), ("", f"{rno}R")], script=script,
+        if d < self.idx.get('date', d):
+            body = (f'<div class="archive-return"><a href="{page.u("races/" + d + ".html")}#v{jcd}">← {d[:4]}/{d[4:6]}/{d[6:]}の開催に戻る</a>'
+                    '<p class="archive-note">予想・展示・オッズは当時の保存分です。選手・コースなどの集計は現在の値を含みます。</p></div>') + body
+        crumb = (f'races/{d}.html#v{jcd}', v) if d < self.idx.get('date', d) else (f'venue/{SLUG[jcd]}.html', v)
+        self.put(page.path, page.render(title, desc, body, [crumb, ("", f"{rno}R")], script=script,
                                         og=self.race_og(d, jcd, race, p)))
 
     def race_og(self, d, jcd, race, p):
@@ -1375,6 +1379,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                                              'races': revisions}, separators=(',', ':')))
 
     def index_page(self):
+        from .day_browser import date_picker
         page = Page("index.html")
         d = self.idx.get("date", self.now.strftime("%Y%m%d"))
         conf, gachi, checked = [], 0, 0
@@ -1455,7 +1460,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.buff_all_block(page)}
 {confidence_home}
 {anah}
-<section style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2><div class="vtiles">{tiles}</div></section>
+<section id="held-races" style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}
@@ -1463,7 +1468,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <ul class="comments"><li><a href="{page.u('guide/kaikata.html')}">舟券の種類と買い方</a></li><li><a href="{page.u('guide/tenji.html')}">展示タイムの見方（展示1位は本当に勝つ？）</a></li>
 <li><a href="{page.u('guide/wind.html')}">風と波でどう変わる？</a></li><li><a href="{page.u('tools/composite.html')}">合成オッズの計算ツール</a></li></ul></section>"""
         self.put("index.html", page.render(f"今日のボートレース予想｜全場の推奨買い目・合成オッズ｜{SITE_NAME}",
-                                           "ボートレース全場の今日の予想。公式データと展示・オッズから、合成オッズ5倍以上の推奨買い目、購入非推奨レース、選手のコース別成績を毎日自動更新。", body))
+                                           "ボートレース全場の今日の予想。公式データと展示・オッズから、合成オッズ5倍以上の推奨買い目、購入非推奨レース、選手のコース別成績を毎日自動更新。", body, script=f'<script src="{page.asset("day-browser.js")}" defer></script>'))
 
     # ------------------------------------------------------------ 払戻金一覧
     def results_pages(self):
@@ -2081,16 +2086,18 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         """場ページの「本日のレース」：1Rずつ、締切・状態・6人・印・タブへのボタン"""
         out = []
         if today.get("cancelled"):
-            return '<p class="sub">本日は中止です。</p>'
+            return '<p class="sub">この日の開催は中止の記録があります。</p>' if d < self.idx.get('date', d) else '<p class="sub">本日は中止です。</p>'
         for r in today.get("races", []):
-            race = load_json(DATA / "races" / d / f"{jcd}{r['rno']:02d}.json", {}) or {}
+            race = next((x for x in getattr(self, 'day_races', {}).get(d, []) if x.get('jcd') == jcd and x.get('rno') == r['rno']), None)
+            race = race or load_json(DATA / "races" / d / f"{jcd}{r['rno']:02d}.json", {}) or {}
             boats = (race.get("racelist") or {}).get("boats", [])
             href = self.race_link(page, d, jcd, r["rno"])
-            fin = self.finished(r)
+            past = d < self.idx.get('date', d)
+            fin = bool(r.get('result')) if past else self.finished(r)
             if fin:
                 st = f'<span class="pill hit">結果 {combo(r["result"])} {yen(r.get("payout"))}</span>' if r.get("result") else '<span class="pill">確定</span>'
             else:
-                st = f'<span class="num" data-dl="{d} {r["deadline"]}">{r["deadline"]}締切</span>'
+                st = '<span class="sub">結果未保存</span>' if past else f'<span class="num" data-dl="{d} {r["deadline"]}">{r["deadline"]}締切</span>'
             marks = []
             if r.get("hon"):
                 marks.append('<span class="chip hm">イン優勢</span>')
@@ -2100,13 +2107,16 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 marks.append('<span class="chip iw1">攻めあり</span>')
             if fin and r.get("hit"):
                 marks.append('<span class="chip hitc">的中</span>')
-            names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or '<li class="sub">出走表は締切2時間前ごろに表示</li>'
+            names = "".join(f'<li>{bt(b["frame"])}<span>{e(b.get("name", ""))}</span><small>{e(b.get("class", ""))}</small></li>' for b in boats) or f'<li class="sub">{"出走表未保存" if past else "出走表は締切2時間前ごろに表示"}</li>'
+            nav = (f'<a href="{href}#kekka">出走・結果を見る</a>' if race.get('_archive_results_only') else
+                   f'<a href="{href}#yoso">予想</a><a href="{href}#setsukan">節間</a><a href="{href}#tenji">展示</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a>')
             out.append(f'<article class="rcard2"><header><a href="{href}"><b>{r["rno"]}R</b></a><small>{e(race.get("race_name", ""))}</small></header>'
                        f'<div class="rc-st"><span class="st">{st}</span><span class="marks">{"".join(marks)}</span></div><ul class="names">{names}</ul>'
-                       f'<nav class="go{" fin" if fin else ""}"><a href="{href}#yoso">予想</a><a href="{href}#setsukan">節間</a><a href="{href}#tenji">展示</a><a href="{href}#odds">オッズ</a><a href="{href}#kekka">結果</a></nav></article>')
+                       f'<nav class="go{" fin" if fin else ""}{" archive-result-go" if race.get("_archive_results_only") else ""}">{nav}</nav></article>')
         return "".join(out)
 
     def venue_pages(self):
+        from .day_browser import date_picker
         for jcd, v in VENUES.items():
             page = Page(f"venue/{SLUG[jcd]}.html")
             vc, vn, vl = self.S.vc[jcd], self.S.vn[jcd], self.S.vl[jcd]
@@ -2136,6 +2146,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                           f'{self.freshness_block(page, self.idx.get("updated_at", ""))}'
                           f'<div class="rcards">{self.race_cards(page, self.idx["date"], jcd, today)}</div></section>')
             body = f"""<h1>{e(v['name'])}ボートレース</h1>
+{date_picker(page, self.idx.get('date') or self.now.strftime('%Y%m%d'), self.idx.get('date') or self.now.strftime('%Y%m%d'), jcd)}
 {todayh}
 <h2 style="margin-top:8px">{e(v['name'])}の水面の特徴とコース別成績</h2>
 <p>{e(lead)}{e(v.get('note', ''))}</p>
@@ -2145,7 +2156,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
             self.put(page.path, page.render(f"{v['name']}競艇場（ボートレース{v['name']}）の特徴・コース別1着率・決まり手｜{SITE_NAME}",
-                                            f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])]))
+                                            f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])], script=f'<script src="{page.asset("day-browser.js")}" defer></script>'))
 
     def motor_pages(self):
         from . import motor as _motor
@@ -2630,31 +2641,20 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
 
     # ------------------------------------------------------------ 全体
     def races(self):
-        base = DATA / "races"
-        if not base.exists():
-            return
-        limit = (self.now - timedelta(days=RACE_KEEP_DAYS)).strftime("%Y%m%d")
-        self.day_races = {}
+        from .race_days import load_details
+        today = self.idx.get('date') or self.now.strftime('%Y%m%d')
+        self.day_races = load_details(DATA, today)
         cache = getattr(self, 'build_cache', None)
-        past = []
-        if cache:
-            import hashlib
-            for folder in sorted(base.iterdir()):
-                if folder.is_dir() and limit <= folder.name < self.idx.get('date', ''):
-                    past.extend((str(p.relative_to(base)), hashlib.sha256(p.read_bytes()).hexdigest())
-                                for p in sorted(folder.glob('*.json')))
-        for day in sorted(base.iterdir()):
-            if not day.is_dir() or day.name < limit:
-                continue
-            races = [load_json(p, {}) for p in sorted(day.glob('*.json'))]
-            self.day_races[day.name] = [r for r in races if r.get('jcd')]
+        import hashlib
+        for day, races in sorted(self.day_races.items()):
             def render_day():
                 for race in races:
                     if race.get('racelist') or race.get('result'):
-                        self.race_page(day.name, race['jcd'], race)
-            if cache and day.name < self.idx.get('date', ''):
-                cache.phase(self, 'races-' + day.name,
-                            [self.now.strftime('%Y%m%d'), SITE_URL, self.idx.get('date'), past, getattr(self, 'exhibition_records', []), self.meeting_cache_inputs(day.name)], render_day)
+                        self.race_page(day, race['jcd'], race)
+            if cache and day < today:
+                signature = hashlib.sha256(json.dumps(races, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+                cache.phase(self, 'races-' + day,
+                            [self.now.strftime('%Y%m%d'), SITE_URL, today, signature, getattr(self, 'exhibition_records', []), self.meeting_cache_inputs(day)], render_day)
             else:
                 render_day()
         # 今日のレースは出走表がまだでもページを作る（リンク切れ防止）
@@ -2739,6 +2739,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         if self.S is None:
             raise RuntimeError("course_stats.json.gz がありません")
         self.races()
+        from .day_browser import build as build_day_browser
+        build_day_browser(self)
         self.freshness_manifest()
         self.results_pages()
         self.index_page()
@@ -2759,6 +2761,8 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         return self.files
 
     def write(self):
+        from .race_days import prune_generated
+        prune_generated(OUT, self.idx.get('date') or self.now.strftime('%Y%m%d'))
         for p, text in self.files.items():
             if p in getattr(self,'_streamed',set()):continue
             f = OUT / p

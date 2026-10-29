@@ -472,12 +472,15 @@ def build_stats():
 
 
 def prune(today: str):
+    from .race_days import retain_completed
+    retain_completed(DATA, today, KEEP_DAYS)
     base = DATA / "races"
     if not base.exists():
         return
     limit = (datetime.strptime(today, "%Y%m%d") - timedelta(days=KEEP_DAYS)).strftime("%Y%m%d")
     for p in base.iterdir():
-        if p.is_dir() and p.name < limit:
+        if (p.is_dir() and not p.is_symlink() and len(p.name) == 8 and p.name.isdigit()
+                and p.name < limit and p.resolve().parent == base.resolve()):
             shutil.rmtree(p)
 
 
@@ -534,6 +537,8 @@ def main(argv=None):
 
     idx["updated_at"] = now.strftime("%Y-%m-%dT%H:%M")
     _save(DATA / "index.json", idx)
+    from .race_days import save_index
+    save_index(DATA, idx)
     shutil.copyfile(Path(__file__).parent / "venues.json", DATA / "venues.json")
     if (Path(__file__).parent / "model_report.json").exists():
         shutil.copyfile(Path(__file__).parent / "model_report.json", DATA / "model_report.json")

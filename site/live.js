@@ -4,6 +4,8 @@
  */
 (() => {
   const R = window.__RACE__, box = document.getElementById("live");
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, '');
+  if (R && !window.__LIVE_DEMO__ && (R.historical || R.date !== today)) return;
   const api = (window.SITE_CONFIG || {}).liveApi;
   if (!R || !box || (!api && !window.__LIVE_DEMO__)) return;
   const G=window.TeiOddsGrid;if(!G)return;
