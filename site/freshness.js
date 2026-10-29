@@ -14,9 +14,11 @@
   }
   function reload() { location.reload(); }
   document.addEventListener('input', function (event) {
+    if (event.target.closest && event.target.closest('.day-picker')) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) edited = true;
   });
   document.addEventListener('change', function (event) {
+    if (event.target.closest && event.target.closest('.day-picker')) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) edited = true;
   });
   async function check() {
