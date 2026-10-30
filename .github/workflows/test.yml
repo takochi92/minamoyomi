@@ -20,6 +20,7 @@ jobs:
       - run: node tests/test_note_store.cjs
       - run: node tests/test_note_account.cjs
       - run: node tests/test_pwa.cjs
+      - run: node tests/test_pwa_install.cjs
       - run: node tests/test_freshness.cjs
       - run: node tests/test_odds_grid.cjs
       - run: node tests/test_player_info.cjs
