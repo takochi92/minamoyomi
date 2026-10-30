@@ -23,9 +23,8 @@ def date_picker(page, today, selected, jcd=''):
     return (f'<form class="day-picker" data-today="{today}" data-home="{home}" data-venue="{jcd}" data-current="{current}">'
             f'<label for="race-day">開催日</label><input id="race-day" name="date" type="date" min="{iso(first)}" max="{iso(last)}" value="{iso(selected)}" required>'
             '<button type="submit">表示</button>'
-            f'<a href="{current}">今日</a><a href="{page.u("races.html")}">日付一覧</a>'
-            '<span class="day-picker-status" role="alert"></span></form>'
-            '<noscript><p>日付一覧から日付を選べます。</p></noscript>')
+            f'<a href="{current}">本日</a>'
+            '<span class="day-picker-status" role="alert"></span></form>')
 
 
 def saved_results(data, today):
