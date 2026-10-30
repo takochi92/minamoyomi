@@ -2422,13 +2422,13 @@
   },
   "excluded_reason_counts": {
     "missing_or_invalid_timestamps": 2361,
-    "no_research_tickets": 5066,
-    "no_tickets": 2227,
-    "missing_exhibition_model_decision": 2227,
-    "fingerprint_mismatch": 2490,
     "unverified_inputs": 2227,
+    "no_tickets": 2227,
     "entry_mismatch": 2490,
+    "fingerprint_mismatch": 2490,
+    "missing_exhibition_model_decision": 2227,
     "fixed_tickets_mismatch": 2490,
+    "no_research_tickets": 5066,
     "missing_fixed_decision": 2227,
     "missing_or_changed_protocol": 2490,
     "incomplete_odds": 246
