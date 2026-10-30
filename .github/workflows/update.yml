@@ -16,6 +16,8 @@ on:
       - 'scraper/run.py'
       - 'scraper/race_days.py'
       - 'scraper/day_browser.py'
+      - 'scraper/next_meetings.py'
+      - 'site/data/next_meetings.json'
       - 'site/day-browser.js'
       - 'scraper/sitegen.py'
       - 'scraper/meeting.py'

@@ -247,6 +247,7 @@ class Site:
         self.S = load_stats()
         self.racers = (load_json(Path(__file__).parent / "racers.json", {}) or {}).get("racers", {})
         self.idx = load_json(DATA / "index.json", {"date": self.now.strftime("%Y%m%d"), "venues": []})
+        self.next_meetings = load_json(DATA / 'next_meetings.json', {}) or {}
         self.report = load_json(Path(__file__).parent / "model_report.json", {})
         op_report = overperf.load() or {}
         self.op = op_report.get("oe", {})
@@ -1337,7 +1338,11 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         name = VENUES[jcd]["name"]
         href = page.u(f"venue/{SLUG[jcd]}.html")
         if not v:
-            return f'<a class="vt off" href="{href}"><b>{e(name)}</b><span>開催なし</span><span class="st">&nbsp;</span><span class="bd"></span></a>'
+            from .next_meetings import upcoming, short_date
+            event = upcoming(getattr(self, 'next_meetings', {}), jcd, self.idx.get('date') or self.now.strftime('%Y%m%d'))
+            label = f'次回 {short_date(event["from"])}〜' if event else '日程確認中'
+            detail = '出場予定' if event and event.get('entrants') else '選手発表待ち' if event else '&nbsp;'
+            return f'<a class="vt off upcoming" href="{href}#next-meeting"><b>{e(name)}</b><span>{label}</span><span class="st">{detail}</span><span class="bd"></span></a>'
         import re as _re
         dd = v.get("day", "")
         m = _re.search(r"(\d)日目$", dd)
@@ -2145,6 +2150,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 todayh = (f'<section style="display:grid;gap:10px"><h2>{jdate(self.idx["date"])}のレース <small>{e(today.get("title", ""))}・{e(" ".join(day_parts(today.get("day", ""))[::-1]))}</small></h2>'
                           f'{self.freshness_block(page, self.idx.get("updated_at", ""))}'
                           f'<div class="rcards">{self.race_cards(page, self.idx["date"], jcd, today)}</div></section>')
+            else:
+                from .next_meetings import upcoming, render
+                event = upcoming(self.next_meetings, jcd, self.idx.get('date') or self.now.strftime('%Y%m%d'))
+                todayh = render(page, event, self.next_meetings.get('win_source', ''))
             body = f"""<h1>{e(v['name'])}ボートレース</h1>
 {date_picker(page, self.idx.get('date') or self.now.strftime('%Y%m%d'), self.idx.get('date') or self.now.strftime('%Y%m%d'), jcd)}
 {todayh}

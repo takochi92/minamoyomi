@@ -233,7 +233,9 @@ main>*,.panel{min-width:0}
 .vt i.g-G2{background:#D8342C;color:#fff;border-color:#D8342C}
 .vt i.g-G3{background:#2E6FD8;color:#fff;border-color:#2E6FD8}
 .vt i.tz{background:#1B2A5A;color:#F2D231;border-color:#1B2A5A}
-.vt.on:hover{border-color:var(--accent)}
+.vt.on:hover,.vt.upcoming:hover{border-color:var(--accent)}
+.vt.upcoming .st{font-size:11px;color:var(--accent);font-weight:400}.vt.upcoming>span:first-of-type{color:var(--ink)}
+.next-meeting{scroll-margin-top:90px;min-width:0}.next-meeting h2{margin-bottom:8px}.next-title{font-weight:700;margin:0 0 20px}.next-meeting h3{font-size:18px;margin-bottom:4px}.next-meeting h3 small{font-size:12px;font-weight:400;color:var(--ink2)}.next-period{font-size:12px;margin:0 0 12px}.next-entrants{width:100%;table-layout:fixed}.next-entrants th,.next-entrants td{padding:10px 5px}.next-entrants th:first-child{width:52px}.next-entrants th:nth-child(3){width:44px}.next-entrants th:last-child{width:55px}.next-entrants td:nth-child(2){overflow-wrap:anywhere}.next-class{font-size:12px;white-space:nowrap}.next-footnote{font-size:12px;margin-top:16px}
 .vt.done .st{color:var(--ink2)}
 .vt.off{background:var(--surface2);color:var(--ink2)}
 .vt.off b{background:#8A99A5}
