@@ -1220,21 +1220,21 @@ class Site:
 <nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
-{ai_rows}
-{self.evidence_block(page, race, p)}
-{self.in_survivor_block(race)}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race" role="table" aria-label="出走選手とコース・勝率・モーター2連率"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 </section>
-{self.arechu_block(race)}
-{self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
+{self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}
+{f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
+{self.evidence_block(page, race, p)}
+{ai_rows}
+{self.in_survivor_block(race)}
+{self.arechu_block(race)}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p)) if not race.get('primary_slip') else ''}
 {self.worry_block(p)}
 {self.tenkai_block(p)}
 {self.fstart_block(p)}
 {loss}
-{f'<section class="panel"><h2>見立て</h2><ul class="comments">{comments}</ul></section>' if comments else ''}
 <section class="panel nb" id="mynote" data-date="{d}" data-jcd="{jcd}" data-venue="{e(v)}" data-rno="{rno}" hidden></section>
 </div>
 <div class="tabp" data-p="setsukan" style="display:grid;gap:16px;min-width:0" hidden>
