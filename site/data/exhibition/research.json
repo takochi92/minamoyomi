@@ -400,6 +400,38 @@
       "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261031&raceNumber=08&autoplay=0&bitrate=low",
       "source_state": "registered",
       "analysis_state": "not_measured"
+    },
+    {
+      "date": "20261031",
+      "jcd": "04",
+      "rno": 9,
+      "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261031&raceNumber=09&autoplay=0&bitrate=low",
+      "source_state": "registered",
+      "analysis_state": "not_measured"
+    },
+    {
+      "date": "20261031",
+      "jcd": "04",
+      "rno": 10,
+      "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261031&raceNumber=10&autoplay=0&bitrate=low",
+      "source_state": "registered",
+      "analysis_state": "not_measured"
+    },
+    {
+      "date": "20261031",
+      "jcd": "04",
+      "rno": 11,
+      "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261031&raceNumber=11&autoplay=0&bitrate=low",
+      "source_state": "registered",
+      "analysis_state": "not_measured"
+    },
+    {
+      "date": "20261031",
+      "jcd": "04",
+      "rno": 12,
+      "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261031&raceNumber=12&autoplay=0&bitrate=low",
+      "source_state": "registered",
+      "analysis_state": "not_measured"
     }
   ]
 }
