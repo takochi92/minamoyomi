@@ -54,13 +54,13 @@
     const tot = al.reduce((a, b) => a + b, 0), minRet = al.length ? Math.min(...chosen.map((x, i) => al[i] * x.o)) : 0;
     const mk = chosen.reduce((a, x) => a + 0.75 / x.o, 0);
     const grid=G.render(odds,{first,selected:sel,selectable:true});
-    const rows = chosen.map((x, i) => `<tr><td>${x.c.split("-").map(bt).join("-")}</td><td class="r num">${f1(x.o)}倍</td><td class="r num">${pending?'—':yen(al[i])}</td><td class="r num">${pending?'—':yen(al[i] * x.o)}</td></tr>`).join("");
+    const rows = chosen.map((x, i) => `<tr><td><span class="combo">${x.c.split("-").map(bt).join('<span class="sep">-</span>')}</span></td><td class="r num" data-label="オッズ">${f1(x.o)}倍</td><td class="r num" data-label="配分">${pending?'—':yen(al[i])}</td><td class="r num" data-label="当たれば">${pending?'—':yen(al[i] * x.o)}</td></tr>`).join("");
     box.innerHTML = `<h2>3連単オッズ <small>${at ? at + "時点" : ""}・タップで買い目を選択</small></h2>
       <details class="pk-selection"${selectionOpen?' open':''}><summary>選択中 ${sel.size}点 · ${pending?'未取得あり':comp?'合成 '+comp.toFixed(2)+'倍':'配分を見る'}</summary>
       <div class="tiles"><div class="tile ${comp && comp < 5 ? "warn" : ""}"><small>合成オッズ</small><b>${comp ? comp.toFixed(2) + "倍" : "-"}</b></div>
       <div class="tile"><small>点数</small><b>${sel.size}点</b></div><div class="tile"><small>的中の目安（オッズから）</small><b>${chosen.length&&!pending ? Math.round(mk * 100) + "%" : "-"}</b></div>
-      <div class="tile"><small>予算</small><b><input id="pk-budget" type="number" step="100" min="100" value="${budget}" inputmode="numeric" style="width:90px"> 円</b></div></div>
-      ${rows ? `<div class="tbl-wrap"><table><thead><tr><th>3連単</th><th class="r">オッズ</th><th class="r">配分${pending?'':`（計${yen(tot)}）`}</th><th class="r">当たれば</th></tr></thead><tbody>${rows}</tbody></table></div>${pending?'':`<p class="sub">どれが当たっても ${yen(minRet)} 以上。</p>`}` : '<p class="sub">表から買いたい目を選んでください。</p>'}
+      <div class="tile"><label class="pk-budget-label" for="pk-budget">予算（円）</label><input id="pk-budget" type="number" step="100" min="100" value="${budget}" inputmode="numeric"></div></div>
+      ${rows ? `<p class="pk-allocation-total sub">配分合計 <b>${pending?'—':yen(tot)}</b></p><div class="tbl-wrap"><table class="pk-alloc"><thead><tr><th>3連単</th><th class="r">オッズ</th><th class="r">配分${pending?'':`（計${yen(tot)}）`}</th><th class="r">当たれば</th></tr></thead><tbody>${rows}</tbody></table></div>${pending?'':`<p class="sub">どれが当たっても ${yen(minRet)} 以上。</p>`}` : '<p class="sub">表から買いたい目を選んでください。</p>'}
       <div class="pk-actions"><button type="button" class="btn" id="pk-clear">選択をクリア</button>${R.bets.length?'<button type="button" class="btn" id="pk-reco">採用予想を選ぶ</button>':''}</div></details>
       ${pending?'<p class="sub" role="status">選択した買い目に未取得のオッズがあります。計算は取得後に再開します。</p>':''}
       ${G.filters(first)}<div class="ogrid${first?' one':''}">${grid}</div><p class="sub odds-key">艇番は白・黒・赤・青・黄・緑。✓は選択中、—はオッズ未取得。</p>`;
