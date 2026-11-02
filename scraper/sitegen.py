@@ -500,9 +500,11 @@ class Site:
                          f'<div class="tbl-wrap"><table class="t-ex"><thead><tr><th>艇</th><th class="r">通常の<br>展示1位率</th><th class="r">チルト</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
                          '<p class="sub">今節平均は「節間」タブへ。通常の展示1位率は、過去2年で展示タイムが6艇中1位だった割合（25％以上は緑）。同タイム1位を含み、今回の1着確率ではありません。</p></details>')
         times = self.oriten_block(race, p)
+        from .parts_view import block as parts_block
+        parts = parts_block(race, bt)
         slit = self.slit_block(race, Page(f"race/{d}/{SLUG[jcd]}-{rno}.html").u(f'race/{d}/{SLUG[jcd]}-{rno}-st.html'))
         waiting = '<p class="sub">展示の取得待ちです。取得できた項目から表示します。</p>' if not bx else ''
-        return times + reference + waiting + slit
+        return times + parts + reference + waiting + slit
 
     def oriten_block(self, race, fallback=None):
         """展示の数字（公式の展示タイム＋各場のオリジナル展示データ）。各項目で速い順に順位をつける"""
