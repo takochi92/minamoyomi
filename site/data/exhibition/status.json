@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "date": "20261104",
-  "checked_at": "2026-11-04T23:16:08+09:00",
+  "date": "20261105",
+  "checked_at": "2026-11-05T15:21:48+09:00",
   "venue": "04",
-  "source_registered_races": 12,
+  "source_registered_races": 10,
   "source_state": "checked",
   "automatic_video_analysis_enabled": false,
   "automatic_video_analysis_state": "not_implemented",
