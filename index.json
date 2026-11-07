@@ -1,6 +1,16 @@
 {
-  "updated": "2026-11-07T02:47:38.470Z",
+  "updated": "2026-11-07T17:53:44.217Z",
   "posts": [
+    {
+      "id": "2026-11-07-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-11-07",
+      "slot": "evening",
+      "text": "【11/7（土）の結果】\nAI本線 130R中24的中\n最高配当 鳴門12R 5-1-6 11,560円\n\n今日のフライング 1人（F後はスタート控えめになりがち）\n・びわこ7R 有山 望\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-11-07T17:53:44.217Z"
+    },
     {
       "id": "2026-11-07-teirogu-X-morning",
       "project": "teirogu",
@@ -460,26 +470,6 @@
       "text": "【10/26（月）の艇ろぐ】\n今日は12場で開催\n🏆浜名湖 G3\n\nAIの自信が高いレース\n・芦屋1R、芦屋2R、芦屋3R\n\n昨日のAI本線：167レース中 38的中\n最高配当 三国11R 3-5-6 4,870円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-10-26T01:08:41.071Z"
-    },
-    {
-      "id": "2026-10-25-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-25",
-      "slot": "evening",
-      "text": "【10/25（日）の結果】\nAI本線 167R中38的中\n最高配当 三国11R 3-5-6 4,870円\n\n今日のフライング 1人（F後はスタート控えめになりがち）\n・多摩川10R 川原 涼\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-25T16:49:56.184Z"
-    },
-    {
-      "id": "2026-10-25-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-25",
-      "slot": "morning",
-      "text": "【10/25（日）の艇ろぐ】\n今日は14場で開催\n🏆浜名湖 G3\n\nAIの自信が高いレース\n・鳴門1R、三国1R、芦屋2R\n\n昨日のAI本線：167レース中 30的中\n最高配当 浜名湖9R 3-1-2 3,670円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-25T01:07:52.399Z"
     }
   ]
 }
