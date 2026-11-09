@@ -77,7 +77,7 @@
    var list=node('ul');root.append(node('h3','今日の通知条件に合う出走'));
    keys.forEach(function(t){(todayFeed.racers[t]||[]).forEach(function(r){
     if(!(draft[t]||[]).includes(r[4])||!/^race\/\d{8}\/[a-z]+-\d{1,2}\.html$/.test(r[2]))return;
-    var li=node('li'),a=node('a',(favorites[t].name||t)+' '+r[0]+r[1]+'R '+r[4]+'号艇 '+r[3]+'締切');a.href='/'+r[2];li.append(a);list.append(li);
+    var li=node('li'),a=node('a',(favorites[t].name||t)+' '+r[0]+r[1]+'R '+r[4]+'号艇 '+r[3]+'締切');a.href='/'+r[2].replace(/\.html$/, '');li.append(a);list.append(li);
    });});root.append(list.childElementCount?list:node('p','選択中の条件に合う出走はありません。'));
   }
   if(error){var err=node('p',error);err.setAttribute('role','alert');root.append(err);}

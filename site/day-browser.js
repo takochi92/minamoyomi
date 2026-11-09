@@ -12,7 +12,7 @@
       const date = value.replace(/-/g, '');
       if (date === form.dataset.today) { location.assign(form.dataset.current); return; }
       const home = new URL(form.dataset.home, location.href);
-      const target = new URL(`races/${date}.html`, home);
+      const target = new URL(`races/${date}`, home);
       if (form.dataset.venue) target.hash = 'v' + form.dataset.venue;
       location.assign(target.href);
     });

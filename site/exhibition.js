@@ -44,7 +44,7 @@ if (typeof document !== 'undefined') {
     const { date, jcd, rno } = selection;
     dates.value = date.slice(0, 4) + '-' + date.slice(4, 6) + '-' + date.slice(6, 8); venues.value = jcd; races.value = String(rno);
     $('ev-title').textContent = venues.options[venues.selectedIndex].textContent + ' ' + rno + 'R';
-    $('ev-back').href = config.raceBase + 'race/' + date + '/' + config.slugs[jcd] + '-' + rno + '.html#tenji'; $('ev-back').hidden = false;
+    $('ev-back').href = config.raceBase + 'race/' + date + '/' + config.slugs[jcd] + '-' + rno + '#tenji'; $('ev-back').hidden = false;
     for (const button of buttons) button.setAttribute('aria-pressed', String(+button.dataset.evRace === rno));
     const research = (config.research || []).find(r=>r.date === date && r.jcd === jcd && r.rno === rno && officialExhibitionUrl(r.official_url, selection));
     if (research) {

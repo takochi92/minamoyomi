@@ -13,7 +13,7 @@
   stats.html / logic.html            的中実績・予想の根拠（data/*.json を読む小さなJS）
   sitemap.xml / robots.txt
 
-リンクはすべて相対パス（どの階層から開いても、プレビューでも動く）。
+公開ページのURLと、Cloudflare Pagesに渡すファイル名は別に扱う。
 """
 from __future__ import annotations
 
@@ -33,6 +33,7 @@ from . import arechu, coursest, fstart, ogimg, overperf, share, target_methods
 from .history import load_all, load_exstats
 from .model import KIM, load_stats
 from .predict import VENUES
+from .public_urls import html_links, public_url
 
 JST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parent.parent
@@ -151,6 +152,8 @@ class Page:
         self.depth = path.count("/")
 
     def u(self, target: str) -> str:
+        if re.search(r'\.html(?:[?#]|$)', target):
+            return public_url('/' + target)
         return "../" * self.depth + target
 
     def asset(self, target: str) -> str:
@@ -173,14 +176,18 @@ class Page:
         navh = "".join(f'<a href="{self.u(h)}" data-k="{nav_keys[h]}"{" aria-current=page" if h == self.path or h == "stats.html" and self.path == "logic.html" or h == "players.html" and (self.path.startswith("players-") or self.path == "database/season.html") else ""}><svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{ic}</svg><span class="l">{t}</span><span class="s">{st}</span></a>' for h, t, st, ic in nav)
         crumbs = [("index.html", "トップ")] + list(crumbs)
         bc = " › ".join(f'<a href="{self.u(h)}">{e(t)}</a>' if h else e(t) for h, t in crumbs)
+        canonical = SITE_URL + self.u(self.path)
+        body = html_links(body, self.path, SITE_URL)
         ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": i + 1, "name": t, **({"item": f"{SITE_URL}/{h}"} if h else {})} for i, (h, t) in enumerate(crumbs)]}
+            {"@type": "ListItem", "position": i + 1, "name": t, **({"item": SITE_URL + self.u(h)} if h else {})} for i, (h, t) in enumerate(crumbs)]}
         return f"""<!doctype html>
 <html lang="ja" data-theme="dark"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
-<link rel="canonical" href="{SITE_URL}/{self.path if self.path != 'index.html' else ''}">
+<meta name="google-site-verification" content="u6sE4KPLKHHUt4FLbl3alvE1NNQr2HX5pfEkxxjivM8" />
+<link rel="canonical" href="{e(canonical)}">
+<meta property="og:url" content="{e(canonical)}">
 {'<meta name="robots" content="noindex">' if noindex else ''}
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
 <meta property="og:image" content="{SITE_URL}/{og or 'img/og.jpg'}"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
@@ -1152,8 +1159,6 @@ class Site:
             b, q = bmap.get(f, {}), pb.get(f, {})
             name = b.get("name", "")
             link = self.racer_link(page, b.get("toban", ""))
-            if link:
-                link += f"#c{q.get('course', f)}"
             nm = f'<a href="{link}">{e(name)}</a>' if link else e(name)
             fl = f' <span class="pill lv1">F{b["f"]}</span>' if b.get("f") else ""
             nk = next((x for x in p.get("nokoshi") or [] if x["frame"] == f), None)
@@ -1836,7 +1841,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                                 '今節平均は参考表示のみ。F・Lは平均から除外。進入は展示、未取得時は枠なりを仮定し、本番で変わる場合があります。ばらつきは的中保証や信頼区間ではありません。</p>'
                                 + ('<p class="sub">参照走数が少ないため、目安の振れに注意してください。</p>' if timing['n'] < 12 else ''))
                     link = self.racer_link(page, b.get("toban", ""))
-                    nm = f'<a href="{link}#c{c}">{e(b.get("name", ""))}</a>' if link else e(b.get("name", ""))
+                    nm = f'<a href="{link}">{e(b.get("name", ""))}</a>' if link else e(b.get("name", ""))
                     cards.append(f'<section class="panel" style="display:grid;gap:6px"><h2>{bt(f)} {nm} <small>{c}コース・{e(b.get("class", ""))}</small></h2>'
                                  f'{self.st_chart(ps, c, exn)}{info}</section>')
                 body = (f'<section style="display:grid;gap:6px"><span class="eyebrow">{e(v["name"])} · {jdate(d)}</span>'
@@ -1931,7 +1936,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 for r in venue.get('races', []):
                     race = load_json(DATA / 'races' / today / f"{venue['jcd']}{r['rno']:02d}.json", {})
                     programmes.append([venue['jcd'], r['rno'], r.get('deadline'), race.get('racelist'), venue.get('cancelled'), r.get('cancelled')])
-            cache.phase(self, 'racers', [self.now.strftime('%Y%m%d'), today, SITE_URL, programmes],
+            cache.phase(self, 'racers', [self.now.strftime('%Y%m%d'), today, SITE_URL, programmes,
+                                         getattr(self, 'race_roster', {})],
                         self._racer_pages, racer=True)
         else:
             self._racer_pages()
@@ -1987,6 +1993,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         for t, xs in today.items():
             if not t:
                 continue
+            # Legacy path token consumed by the deployed favorite-morning function.
             out[t] = [[VENUES[j]["name"], rn, f"race/{d}/{SLUG[j]}-{rn}.html", dl[(j,rn)], f] for d, j, rn, f in sorted(xs, key=lambda x: dl.get((x[1], x[2]), "")) if (j,rn) in dl]
         self.put("fav-today.json", json.dumps({"date": self.idx.get("date", ""), "racers": out}, ensure_ascii=False, separators=(",", ":")))
 
@@ -2017,6 +2024,31 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 
     BRANCH_ORDER = ["群馬", "埼玉", "東京", "静岡", "愛知", "三重", "福井", "滋賀", "大阪", "兵庫", "徳島", "香川", "岡山", "広島", "山口", "福岡", "佐賀", "長崎"]
 
+    def racer_directory(self, listing):
+        """Publish every profile in a browseable, server-rendered directory."""
+        numbers = sorted(listing, key=int)
+        batches = [numbers[i:i + 100] for i in range(0, len(numbers), 100)]
+        directory_links = []
+        for n, batch in enumerate(batches, 1):
+            page = Page(f'racer/list/{n}.html')
+            label = f'{batch[0]}〜{batch[-1]}'
+            directory_links.append(f'<a href="{page.u(page.path)}">{label}</a>')
+            links = ''.join(
+                f'<a href="{page.u(f"racer/{t}.html")}">{t} {e(self.racers[t]["name"])}</a>'
+                for t in batch
+            )
+            prev_link = f'<a href="{page.u(f"racer/list/{n - 1}.html")}">← 前へ</a>' if n > 1 else ''
+            next_link = f'<a href="{page.u(f"racer/list/{n + 1}.html")}">次へ →</a>' if n < len(batches) else ''
+            body = (f'<link rel="stylesheet" href="{page.asset("racer.css")}">'
+                    f'<section class="panel"><h1>選手一覧 <small>{label}</small></h1>'
+                    f'<p class="sub">登録番号順 · 全{len(numbers):,}人</p><div class="racer-list">{links}</div>'
+                    f'<nav class="rd-pagination" aria-label="選手一覧のページ">{prev_link}'
+                    f'<span>{n} / {len(batches)}</span>{next_link}</nav></section>')
+            self.put(page.path, page.render(f'選手一覧 {label}｜{SITE_NAME}',
+                     f'登録番号{label}の選手データ一覧。各選手のコース別成績や出走履歴を確認できます。',
+                     body, [('racer/index.html#racer-directory', '選手一覧'), ('', label)]))
+        return ''.join(directory_links)
+
     def racer_index(self, listing, today):
         page = Page("racer/index.html")
         bo = {b: i for i, b in enumerate(self.BRANCH_ORDER)}
@@ -2027,10 +2059,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             tod = [[j, rn, f] for d, j, rn, f in today.get(t, [])]
             rj.append([t, info["name"], info.get("kana", ""), info.get("branch", ""), info.get("ki") or 0, info.get("class", ""),
                        info.get("win") if info.get("win") is not None else -1, 1 if info.get("lady") else 0, tod, bool(info.get('historical')), info.get('period','')])
-        by = defaultdict(list)
-        for t, info in rs:
-            by[info.get("branch", "")].append(f'<a href="{t}.html">{e(info["name"])}</a>')
-        seo = "".join(f'<h3>{e(b or "不明")}</h3><div class="racer-list">{"".join(v)}</div>' for b, v in by.items())
+        directory = self.racer_directory(listing)
         branches = [b for b in self.BRANCH_ORDER if any(i.get("branch") == b for _, i in rs)] + sorted({i.get("branch", "") for _, i in rs} - set(self.BRANCH_ORDER) - {""})
         kis = sorted({i["ki"] for _, i in rs if i.get("ki")}, reverse=True)
         has_ki = bool(kis)
@@ -2055,7 +2084,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 </div>
 <div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th></th><th>名前</th><th>級</th><th>支部</th>{'<th class="r">期</th>' if has_ki else ''}<th class="r">勝率</th><th>今日</th></tr></thead><tbody id="sx-rows"></tbody></table></div>
 <p class="sx-more" hidden><button type="button" class="btn" id="sx-more">もっと見る</button></p>
-<details class="panel"><summary class="sub">支部別の全選手一覧</summary>{seo}</details>
+<section class="panel" id="racer-directory"><h2>全選手一覧 <small>登録番号順</small></h2><div class="racer-list">{directory}</div></section>
 </section>
 <section class="tabp sx" id="sx-m" data-tab="m" hidden>
 <div class="sx-form panel">
@@ -2422,13 +2451,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         tg = [(v["name"], r["rno"], r["deadline"], c, b.get("name", ""), b.get("class", ""))
               for _, v, r, b, c, _ in self.target_items() if not r.get("result")]
         if tg:
-            cards.append(self.share_card("狙い目レーサー", share.targets(d, tg, f"{SITE_URL}/targets.html")))
+            cards.append(self.share_card("狙い目レーサー", share.targets(d, tg, f"{SITE_URL}/targets")))
         conf = sorted(((r["deadline"], v, r) for v in venues for r in v.get("races", [])
                        if (r.get("reco") or {}).get("verdict") == "自信あり" and not r.get("result")), key=lambda x: x[0])
         for _, v, r in conf[:3]:
             rc = r["reco"]
             cards.append(self.share_card(f"自信あり {v['name']}{r['rno']}R（締切{r['deadline']}）",
-                                         share.confident(v["name"], r["rno"], r["deadline"], rc["n"], float(rc["comp"]), f"{SITE_URL}/race/{d}/{SLUG[v['jcd']]}-{r['rno']}.html"),
+                                         share.confident(v["name"], r["rno"], r["deadline"], rc["n"], float(rc["comp"]), f"{SITE_URL}/race/{d}/{SLUG[v['jcd']]}-{r['rno']}"),
                                          "レースのリンクを貼ると、本線と1着の本命が入った画像が出ます。"))
         ba = [x for x in self.buff_all_today() if not x[2].get("result") and x[5] == "gold"]
         if ba:
@@ -2436,10 +2465,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                                          "4つ以上の強みがそろった艇。締切前のものだけ。"))
         hist = load_json(DATA / "history.json", {}) or {}
         if hist.get(d, {}).get("races"):
-            cards.append(self.share_card("今日の結果（夜に）", share.day_result(d, hist[d], f"{SITE_URL}/stats.html"), "ここまでに終わったレースの集計です。"))
+            cards.append(self.share_card("今日の結果（夜に）", share.day_result(d, hist[d], f"{SITE_URL}/stats"), "ここまでに終わったレースの集計です。"))
         wk = share.weeks(hist, d, 1)
         if wk:
-            cards.append(self.share_card("先週の成績（月曜に）", share.week_text(*wk[0], f"{SITE_URL}/weekly.html")))
+            cards.append(self.share_card("先週の成績（月曜に）", share.week_text(*wk[0], f"{SITE_URL}/weekly")))
         body = (f'<h1>Xに貼る文</h1><p class="sub">いまの予想から作った投稿文です（5分ごとに更新）。「コピー」か「Xで投稿」を押してください。'
                 f'このページは検索には出しません。</p>{"".join(cards)}'
                 '<script>document.querySelectorAll("[data-copy]").forEach(function(b){b.onclick=function(){var t=b.closest("section").querySelector("textarea");'
@@ -2655,6 +2684,19 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
         from .race_days import load_details
         today = self.idx.get('date') or self.now.strftime('%Y%m%d')
         self.day_races = load_details(DATA, today)
+        # A new or historical entrant may be missing from the current roster.
+        # Include those entrants so the race links have real profile pages.
+        self.race_roster = {}
+        for day in sorted(self.day_races, reverse=True):
+            for race in self.day_races[day]:
+                for boat in (race.get('racelist') or {}).get('boats', []):
+                    if not isinstance(boat, dict):
+                        continue
+                    toban = str(boat.get('toban') or '')
+                    if re.fullmatch(r'[0-9]{4}', toban) and toban not in self.racers and boat.get('name'):
+                        self.race_roster.setdefault(toban, {'name': boat['name'], 'historical': True})
+        if self.race_roster:
+            self.racers.update(self.race_roster)
         cache = getattr(self, 'build_cache', None)
         import hashlib
         for day, races in sorted(self.day_races.items()):
@@ -2730,16 +2772,29 @@ document.getElementById('add').onclick=function(){add()};document.getElementById
             self.put(path,page.render(f'{title}｜{SITE_NAME}',title+'を公式資料と保存データから確認。',content,crumbs))
 
     def sitemap(self):
-        # 検索に出さないページ（noindex）はサイトマップに入れない（Search Console の警告になる）
-        urls = [p for p in self.files if p.endswith(".html") and p != "404.html" and 'content="noindex"' not in self.files[p]]
-        today = self.now.strftime("%Y-%m-%d")
-
-        def lastmod(p):
-            # 過去のレースのページは、そのレースの日（結果が入ったあとは変わらない）
-            m = re.match(r"race/(\d{4})(\d{2})(\d{2})/", p)
-            return min(f"{m[1]}-{m[2]}-{m[3]}", today) if m else today
-        body = "".join(f"<url><loc>{SITE_URL}/{'' if p == 'index.html' else p}</loc><lastmod>{lastmod(p)}</lastmod></url>" for p in sorted(urls))
-        self.put("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>')
+        groups = defaultdict(list)
+        for path, markup in sorted(self.files.items()):
+            if not path.endswith('.html') or path == '404.html':
+                continue
+            if path in getattr(self, '_streamed', ()):
+                with (OUT / path).open(encoding='utf-8') as stream:
+                    markup = stream.read(8192)
+            if 'content="noindex"' in markup.partition('</head>')[0]:
+                continue
+            folder = path.split('/', 1)[0]
+            group = {'race': 'races', 'races': 'races', 'results': 'races',
+                     'racer': 'racers', 'venue': 'venues', 'database': 'database'}.get(folder, 'pages')
+            groups[group].append(e(SITE_URL + public_url('/' + path)))
+        xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        ns = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
+        children = []
+        for group, urls in sorted(groups.items()):
+            path = f'sitemap-{group}.xml'
+            # The build date is not a reliable content modification date.
+            entries = ''.join(f'<url><loc>{url}</loc></url>' for url in urls)
+            self.put(path, f'{xml}<urlset {ns}>{entries}</urlset>')
+            children.append(f'<sitemap><loc>{e(SITE_URL)}/{path}</loc></sitemap>')
+        self.put("sitemap.xml", f'{xml}<sitemapindex {ns}>{"".join(children)}</sitemapindex>')
         self.put("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
 
     def build(self, cache=None):

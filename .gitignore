@@ -9,6 +9,7 @@ site/stats.html
 site/logic.html
 site/targets.html
 site/sitemap.xml
+site/sitemap-*.xml
 site/robots.txt
 site/race/
 site/racer/

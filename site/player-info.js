@@ -10,7 +10,7 @@
   const date=s=>s?`${s.slice(0,4)}/${s.slice(4,6)}/${s.slice(6,8)}`:'未確認';
   const yen=n=>Number(n).toLocaleString('ja-JP')+'円';
   const gap=n=>n==null?'未確認':n===0?'基準額':(n>0?'+':'−')+yen(Math.abs(n));
-  const name=r=>`<a class="pi-name" href="racer/${esc(r.toban)}.html">${esc(r.name)}<small>${esc(r.toban)}${r.branch?' ／ '+esc(r.branch):''}</small></a>`;
+  const name=r=>`<a class="pi-name" href="racer/${esc(r.toban)}">${esc(r.name)}<small>${esc(r.toban)}${r.branch?' ／ '+esc(r.branch):''}</small></a>`;
   const safeSource=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['www.boatrace.jp','boatrace.jp','www.boatrace-tsu.com','www.boatrace-hamanako.jp','pic.omurakyotei.jp'].includes(x.hostname);}catch(_){return false;}};
   const leaveState=r=>r.leave_state||((r.rests||[]).some(s=>['scheduled','in_period','snapshot_unserved'].includes(s.status))?'unserved':'unknown');
   function fCard(r){
