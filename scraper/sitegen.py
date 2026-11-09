@@ -41,6 +41,7 @@ OUT = ROOT / "site"
 DATA = OUT / "data"
 SITE_NAME = "艇ろぐ"
 SITE_URL = __import__("os").environ.get("SITE_URL", "https://example.com").rstrip("/")
+X_PROFILE_LINK = '<a href="https://x.com/hanahana78787" rel="noopener" target="_blank">X（艇ろぐ速報）</a>'
 SLUG = {"01": "kiryu", "02": "toda", "03": "edogawa", "04": "heiwajima", "05": "tamagawa", "06": "hamanako", "07": "gamagori",
         "08": "tokoname", "09": "tsu", "10": "mikuni", "11": "biwako", "12": "suminoe", "13": "amagasaki", "14": "naruto",
         "15": "marugame", "16": "kojima", "17": "miyajima", "18": "tokuyama", "19": "shimonoseki", "20": "wakamatsu",
@@ -223,7 +224,7 @@ class Page:
 <footer><div class="wrap">
   <p>掲載している買い目・データは過去の公式データと直前情報にもとづく参考情報で、的中や利益を保証するものではありません。舟券の購入はご自身の判断と責任でお願いします。</p>
   <p>20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>
-  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a></p>
+  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a>　／　{X_PROFILE_LINK}</p>
   <p><a href="{self.u('install.html')}">ホーム画面に追加する方法</a></p>
 </div></footer>
 {script}
@@ -1211,6 +1212,7 @@ class Site:
                     content = self.slip_body(p, cells)
                 label = '確定' if selected.get('final') else '締切前は更新あり'
                 ai_rows = f'<section class="slip primary-{"ana" if ana else "standard"}"><div class="slip-h"><b>{hitp}{heading}</b><span>{len(selected["tickets"])}点・{label}</span></div><div class="slip-b">{content}</div></section>'
+                ai_rows += f'<p class="sub" style="margin:0">このレースの結果と検証は、夜にXへ投稿します。 {X_PROFILE_LINK}</p>'
                 alt_list = []
         inp = (p.get("course_stats") or {}).get("in")
         loss = ""
@@ -1546,7 +1548,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">{summary}{'　最終更新 ' + e((self.idx.get('updated_at') or '')[11:]) + '（5分ごとに自動更新）' if is_today else ''}</p>
 <p class="sub">3連単の組番・払戻金・人気。1万円以上（万舟）は赤字。「的中」は採用した予想券に入っていたレースです。一本化導入前は本線・押さえを対象とした旧判定を保持しています。組番をタップすると予想と結果へ。</p>
 {f'<p class="rnav">{nav}</p>' if nav else ''}</section>
-<div class="rgrid">{''.join(cards)}</div>"""
+<div class="rgrid">{''.join(cards)}</div>
+{f'<p class="sub" style="margin:0">外れたレースの検証も含めて、夜にXへ投稿しています。 {X_PROFILE_LINK}</p>' if is_today else ''}"""
         script = "<script>setTimeout(function(){location.reload()},300000)</script>" if is_today else ""
         title = f"{jdate(d)}のボートレース結果・払戻金一覧（全場3連単）｜{SITE_NAME}"
         desc = f"{jdate(d)}のボートレース全場の3連単の結果・払戻金・人気の一覧。万舟の数と、艇ろぐの予想の的中レースもひと目でわかります。"
