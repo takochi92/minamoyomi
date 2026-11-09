@@ -1,6 +1,16 @@
 {
-  "updated": "2026-11-09T02:41:27.478Z",
+  "updated": "2026-11-09T22:44:32.163Z",
   "posts": [
+    {
+      "id": "2026-11-09-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-11-09",
+      "slot": "evening",
+      "text": "【11/9（月）の結果】\nAI本線 132R中28的中\n最高配当 常滑5R 1-6-5 7,760円\n\n今日のフライング 2人（F後はスタート控えめになりがち）\n・多摩川9R 米丸 乃絵\n・常滑11R 岡田 憲行\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-11-09T22:44:32.163Z"
+    },
     {
       "id": "2026-11-09-teirogu-X-morning",
       "project": "teirogu",
@@ -422,16 +432,6 @@
       "created_at": "2026-10-28T00:14:12.613218+00:00"
     },
     {
-      "id": "2026-10-27-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-27",
-      "slot": "evening",
-      "text": "【10/27（火）の結果】\nAI本線 168R中39的中\n最高配当 大村12R 2-4-3 20,950円\n\n今日のフライング 3人（F後はスタート控えめになりがち）\n・津1R 井澤 聖奈\n・平和島9R 堀本 裕也\n・大村11R 永松 良教\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-27T18:19:55.751Z"
-    },
-    {
       "id": "2026-10-28-teirogu-X-notebook",
       "project": "teirogu",
       "channel": "X",
@@ -440,46 +440,6 @@
       "text": "艇ろぐのマイノートを使いやすくしました🚤\n\n📝選手・モーターメモはプルダウンで1件ずつ表示＆編集\n⭐モーターもお気に入り登録に対応（通知なし）\n📱コース成績はスマホで全列見やすく\n\nメモが増えても、探す・見返すをコンパクトに。\nhttps://teilog.com/mynote\n\n※20歳未満は購入不可。のめり込みに注意",
       "images": [],
       "created_at": "2026-10-27T16:04:51.696817+00:00"
-    },
-    {
-      "id": "2026-10-27-teirogu-X-prizestyle",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-27",
-      "slot": "prizestyle",
-      "text": "艇ろぐの年末ランキングを模様替え🚤\n\nグランプリは濃紺×ゴールド。\nクイーンズはシルバー×ローズゴールド。\n上位3人も金・銀・銅のプレートにしました。\n\n総合18位／女子12位の現在ラインと差額も確認できます。\nhttps://teilog.com/players\n\n※参考順位です。\n※20歳未満は購入不可。のめり込みに注意",
-      "images": [],
-      "created_at": "2026-10-27T14:09:18.128913+00:00"
-    },
-    {
-      "id": "2026-10-27-teirogu-X-playerinfo",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-27",
-      "slot": "playerinfo",
-      "text": "艇ろぐの「選手情報」を更新🚤\n\n・F本数と休み予定をコンパクトに\n・期末は「あと何走・何着」を確認\n・賞金上位3人を金銀銅で表示\n・総合18位／女子12位の現在ラインと差額も\n\n※Fの消化状況は公式資料で確認できた範囲です。\nhttps://teilog.com/players\n\n※20歳未満は購入不可。のめり込みに注意",
-      "images": [],
-      "created_at": "2026-10-27T12:54:55.614400+00:00"
-    },
-    {
-      "id": "2026-10-27-teirogu-X-improvements",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-27",
-      "slot": "improvements",
-      "text": "艇ろぐ、今日も改善しました🚤\n\n・自動更新を改善\n・お気に入り選手の出走を朝にまとめて通知\n・通知ON/OFF、枠番指定に対応\n・トップと重賞の結果・オッズを見やすく整理\n\n出走表・展示・モーター情報の確認に。\nhttps://teilog.com\n\n※20歳未満は購入不可。のめり込みに注意",
-      "images": [],
-      "created_at": "2026-10-27T11:09:49.607300+00:00"
-    },
-    {
-      "id": "2026-10-27-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-27",
-      "slot": "morning",
-      "text": "【10/27（火）の艇ろぐ】\n今日は14場で開催\n🏆尼崎 SG\n\nAIの自信が高いレース\n・唐津1R、三国1R、唐津2R\n\n昨日のAI本線：144レース中 22的中\n最高配当 桐生11R 3-2-4 4,350円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-27T02:03:21.854Z"
     }
   ]
 }
