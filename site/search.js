@@ -1,4 +1,4 @@
-// 選手・モーター検索（racer/index.html）。表の行はページに入っていて、ここでは絞りこみ・並べ替えだけをする
+// 選手・モーター検索。検索データから表を作り、絞り込み・並べ替えを行う。
 (function () {
   var ROOT = window.SITE_ROOT || "";
   var PAGE = 100;
@@ -33,11 +33,11 @@
   });
   var byT = {}; RS.forEach(function (r) { byT[r.t] = r; });
   function todChips(r) {
-    return r.tod.map(function (x) { return '<a class="chip tg" href="' + ROOT + "race/" + DATA.date + "/" + SL[x[0]] + "-" + x[1] + '.html"><span class="bt b' + x[2] + '">' + x[2] + "</span>" + esc(V[x[0]] || "") + x[1] + "R</a>"; }).join("");
+    return r.tod.map(function (x) { return '<a class="chip tg" href="' + ROOT + "race/" + DATA.date + "/" + SL[x[0]] + "-" + x[1] + '"><span class="bt b' + x[2] + '">' + x[2] + "</span>" + esc(V[x[0]] || "") + x[1] + "R</a>"; }).join("");
   }
   function rowH(r) {
     return '<tr data-t="' + r.t + '"' + (Fav.has(r.t) ? ' class="is-fav"' : "") + '><td><button type="button" class="fav-btn sm" data-toban="' + r.t + '" data-name="' + esc(r.n) + '">☆</button></td>' +
-      '<td><a href="' + r.t + '.html"><b>' + esc(r.n) + '</b></a><span class="sub rk"> ' + r.t + (r.l ? " 女子" : "") + (r.historical?' · 過去掲載':'') + "</span></td><td>" + esc(r.c) + "</td><td>" + esc(r.b) + '</td>' + (DATA.hasKi ? '<td class="r num">' + (r.ki || "-") + "</td>" : "") +
+      '<td><a href="' + ROOT + 'racer/' + r.t + '"><b>' + esc(r.n) + '</b></a><span class="sub rk"> ' + r.t + (r.l ? " 女子" : "") + (r.historical?' · 過去掲載':'') + "</span></td><td>" + esc(r.c) + "</td><td>" + esc(r.b) + '</td>' + (DATA.hasKi ? '<td class="r num">' + (r.ki || "-") + "</td>" : "") +
       '<td class="r num">' + (r.w >= 0 ? r.w.toFixed(2) : "-") + '</td><td class="tod">' + todChips(r) + "</td></tr>";
   }
   var shown = PAGE;
@@ -86,7 +86,7 @@
     hit.sort(function (a, b) { return key(a) - key(b) || (+a[0] * 1000 + a[1]) - (+b[0] * 1000 + b[1]); });
     var top = hit.slice(0, 200);
     body.innerHTML = top.length ? top.map(function (m) {
-      var href = ROOT + "venue/" + SL[m[0]] + "-motor.html#m" + m[1];
+      var href = ROOT + "venue/" + SL[m[0]] + "-motor#m" + m[1];
       return "<tr><td>" + esc(V[m[0]] || m[0]) + '</td><td class="r num"><a href="' + href + '"><b>' + m[1] + '</b>号機</a></td><td class="r num' + (m[3] >= 0.4 ? " best" : "") + '">' + pc(m[3]) +
         '</td><td class="r num">' + pc(m[4]) + '</td><td class="r num">' + m[2] + '</td><td class="r num">' + (m[5] || "-") + "</td><td>" + esc(m[6] || "-") + "</td><td>" + (m[7] ? "<b>" + esc(m[7]) + "</b>" : '<span class="sub">-</span>') + "</td></tr>";
     }).join("") : '<tr><td colspan="8" class="empty">' + (M.length ? "条件に合うモーターがありません。" : "モーターのデータを集めているところです。") + "</td></tr>";
@@ -111,9 +111,9 @@
       ts.sort(function (a, b) { return (R[b] ? 1 : 0) - (R[a] ? 1 : 0) || (+a) - (+b); });
       el.innerHTML = '<div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th></th><th>名前</th><th>級</th><th>支部</th><th class="r">勝率</th><th>今日</th></tr></thead><tbody>' + ts.map(function (t) {
         var x = byT[t] || {};
-        return '<tr><td><button type="button" class="fav-btn sm" data-toban="' + esc(t) + '" data-name="' + esc(F[t].name) + '">★</button></td><td><a href="' + esc(t) + '.html"><b>' + esc(F[t].name) + '</b></a><span class="sub rk"> ' + esc(t) + "</span></td><td>" + esc(x.c || "") + "</td><td>" + esc(x.b || "") +
+        return '<tr><td><button type="button" class="fav-btn sm" data-toban="' + esc(t) + '" data-name="' + esc(F[t].name) + '">★</button></td><td><a href="' + ROOT + 'racer/' + esc(t) + '"><b>' + esc(F[t].name) + '</b></a><span class="sub rk"> ' + esc(t) + "</span></td><td>" + esc(x.c || "") + "</td><td>" + esc(x.b || "") +
           '</td><td class="r num">' + (x.w >= 0 ? x.w.toFixed(2) : "-") + '</td><td class="tod">' + (Fav.chips(R[t]) || '<span class="sub">-</span>') + "</td></tr>";
-      }).join("") + "</tbody></table></div><p class=\"sub\">★を押すとお気に入りから外れます。保存先は<a href=\"" + ROOT + "mynote.html\">マイノート</a>のログイン状態で確認できます。ファイルへのバックアップも利用できます。</p>";
+      }).join("") + "</tbody></table></div><p class=\"sub\">★を押すとお気に入りから外れます。保存先は<a href=\"" + ROOT + "mynote\">マイノート</a>のログイン状態で確認できます。ファイルへのバックアップも利用できます。</p>";
       Fav.bind(el);
     });
   }

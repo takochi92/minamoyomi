@@ -76,8 +76,8 @@
           memoBox("racer", b.toban, "選手メモ（" + b.name + "）", { name: b.name }) +
           ((D.motor[b.motor] || {}).text ? '<p class="sub nb-mref">' + esc(mno) + "号機のメモ：" + esc(D.motor[b.motor].text) + "</p>" : "") + "</details>";
       }).join("");
-      el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote.html">マイノートへ</a></small></h2>' + warn +
-        (memo ? memo + '<p class="sub" style="margin:0">モーターのメモは<a href="' + ROOT + 'motor.html">モーター一覧</a>で書けます。</p>' : "");
+      el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote">マイノートへ</a></small></h2>' + warn +
+        (memo ? memo + '<p class="sub" style="margin:0">モーターのメモは<a href="' + ROOT + 'motor">モーター一覧</a>で書けます。</p>' : "");
       bindMemos(el); marks();
     }
     el.hidden = false; draw();
@@ -85,7 +85,7 @@
 
   // ---- 選手ページ
   function racerPanel(el) {
-    el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote.html">一覧へ</a></small></h2>' + warn + memoBox("racer", el.dataset.toban, "", { name: el.dataset.name });
+    el.innerHTML = '<h2>選手メモ <small>' + storageLabel() + '・<a href="' + ROOT + 'mynote">一覧へ</a></small></h2>' + warn + memoBox("racer", el.dataset.toban, "", { name: el.dataset.name });
     el.hidden = false; bindMemos(el);
   }
 
@@ -138,11 +138,11 @@
       bets.forEach(function (b) { var k = (b.date || "").slice(0, 6); (byM[k] = byM[k] || []).push(b); });
       var mrows = Object.keys(byM).sort().reverse().map(function (k) { var s = sum(byM[k]); return "<tr><td>" + (+k.slice(0, 4)) + "年" + (+k.slice(4)) + '月</td><td class="r num">' + s.n + '</td><td class="r num">' + yen(s.inv) + '</td><td class="r num">' + yen(s.ret) + '</td><td class="r num ' + (s.pl > 0 ? "plus" : s.pl < 0 ? "minus" : "") + '">' + yen(s.pl) + '</td><td class="r num">' + (s.roi == null ? "-" : Math.round(s.roi * 100) + "%") + "</td></tr>"; }).join("");
       var motorKeys = Object.keys(D.motor).sort();
-      function motorItem(k) { var m = D.motor[k], j = m.jcd || k.split('-')[0], no = m.no || k.split('-')[1]; return {key:k,name:(m.venue || venues[j] || j) + ' ' + no + '号機',href:slugs[j] ? ROOT + 'venue/' + slugs[j] + '-motor.html#m' + encodeURIComponent(no) : '',extra:{jcd:j,no:no,venue:m.venue || venues[j] || ''}}; }
+      function motorItem(k) { var m = D.motor[k], j = m.jcd || k.split('-')[0], no = m.no || k.split('-')[1]; return {key:k,name:(m.venue || venues[j] || j) + ' ' + no + '号機',href:slugs[j] ? ROOT + 'venue/' + slugs[j] + '-motor#m' + encodeURIComponent(no) : '',extra:{jcd:j,no:no,venue:m.venue || venues[j] || ''}}; }
       var picks = {
-        racer: Object.keys(D.racer).map(function (t) { return {key:t,name:D.racer[t].name || t,href:ROOT + 'racer/' + encodeURIComponent(t) + '.html'}; }),
+        racer: Object.keys(D.racer).map(function (t) { return {key:t,name:D.racer[t].name || t,href:ROOT + 'racer/' + encodeURIComponent(t)}; }),
         motor: motorKeys.filter(function (k) { return !!D.motor[k].text; }).map(motorItem),
-        fav: Object.keys(D.fav).map(function (t) { return {key:t,name:D.fav[t].name || t,href:ROOT + 'racer/' + encodeURIComponent(t) + '.html'}; }),
+        fav: Object.keys(D.fav).map(function (t) { return {key:t,name:D.fav[t].name || t,href:ROOT + 'racer/' + encodeURIComponent(t)}; }),
         motorFav: motorKeys.filter(function (k) { return !!D.motor[k].favorite; }).map(motorItem)
       };
       var vopt = Object.keys(venues).sort().map(function (j) { return '<option value="' + j + '">' + esc(venues[j]) + "</option>"; }).join("");
@@ -157,10 +157,10 @@
         '<div class="nb-add"><input type="date" class="nb-date" value="' + dflt + '"><input class="nb-inv num" inputmode="numeric" placeholder="購入額"><input class="nb-ret-in num" inputmode="numeric" placeholder="払戻"><input class="nb-memo-in" placeholder="メモ（任意：びわこ・大村など）"><button type="button" class="nb-go">記録</button></div>' +
         '<details><summary class="sub">全期間・月別を見る</summary>' + tiles(sa, "全期間の") + (mrows ? '<div class="tbl-wrap"><table><thead><tr><th>月</th><th class="r">件数</th><th class="r">購入</th><th class="r">払戻</th><th class="r">収支</th><th class="r">回収率</th></tr></thead><tbody>' + mrows + "</tbody></table></div>" : "") + "</details>" +
         '<p class="sub" style="margin:0">月の予算：<input class="nb-bud num" inputmode="numeric" value="' + (D.budget || "") + '" placeholder="例：10000" style="width:8em"> 円（決めておくと、超えたときに知らせます）</p></section>' +
-        picker('fav', 'お気に入り選手', picks.fav, '<a class="sub" href="' + ROOT + 'racer/index.html#fav">選手検索へ →</a>', '選手のページや検索で☆を押すと入ります。') +
-        picker('motorFav', 'お気に入りモーター', picks.motorFav, '<a class="sub" href="' + ROOT + 'motor.html">モーター一覧へ →</a>', 'モーターの欄で☆を押すと入ります。通知は送りません。') +
+        picker('fav', 'お気に入り選手', picks.fav, '<a class="sub" href="' + ROOT + 'racer/#fav">選手検索へ →</a>', '選手のページや検索で☆を押すと入ります。') +
+        picker('motorFav', 'お気に入りモーター', picks.motorFav, '<a class="sub" href="' + ROOT + 'motor">モーター一覧へ →</a>', 'モーターの欄で☆を押すと入ります。通知は送りません。') +
         picker('racer', '選手メモ', picks.racer, '', '選手のページ、またはレースページから書けます。') +
-        picker('motor', 'モーターメモ', picks.motor, '<a class="sub" href="' + ROOT + 'motor.html">モーター一覧へ →</a>', 'モーター一覧から書けます。') +
+        picker('motor', 'モーターメモ', picks.motor, '<a class="sub" href="' + ROOT + 'motor">モーター一覧へ →</a>', 'モーター一覧から書けます。') +
         '<section class="panel" style="display:grid;gap:8px"><h2>バックアップ</h2><p class="sub" style="margin:0">' + (Account.state().user ? '表示中のアカウントの記録をファイルに保存できます。読み込みでは異なる記録を勝手に上書きしません。' : '登録せずに使う記録は、この端末のブラウザに保存します。機種変更の前などにファイルへ保存してください。') + '</p><p class="sub nb-import-status" role="status"></p>' +
         '<div class="nb-add"><button type="button" class="nb-exp">ファイルに保存</button><label class="nb-imp-l">ファイルから読み込む<input type="file" class="nb-imp" accept="application/json,.json" hidden></label></div></section>';
 
@@ -269,7 +269,7 @@
   }
   function raceChips(xs) {
     return (xs || []).map(function (x) {
-      return '<a class="chip ' + (past(x[3]) ? "gc" : "tg") + '" href="' + ROOT + x[2] + '"><span class="bt b' + x[4] + '">' + x[4] + "</span>" + esc(x[0]) + " " + x[1] + "R" + (x[3] ? ' <small class="num">' + esc(x[3]) + "</small>" : "") + "</a>";
+      return '<a class="chip ' + (past(x[3]) ? "gc" : "tg") + '" href="' + ROOT + x[2].replace(/\.html$/, '') + '"><span class="bt b' + x[4] + '">' + x[4] + "</span>" + esc(x[0]) + " " + x[1] + "R" + (x[3] ? ' <small class="num">' + esc(x[3]) + "</small>" : "") + "</a>";
     }).join("");
   }
   function favToday(el) {
@@ -278,8 +278,8 @@
       var R = (d && d.racers) || {}, on = [];
       Object.keys(D.fav).forEach(function (t) { if (R[t]) on.push(t); });
       on.sort(function (a, b) { return (R[a][0][3] || "").localeCompare(R[b][0][3] || ""); });
-      el.innerHTML = '<h2>今日出走するお気に入り <small>' + on.length + "人／☆" + favN() + '人・<a href="' + ROOT + 'racer/index.html#fav">一覧</a></small></h2>' +
-        (on.length ? '<ul class="fav-ul">' + on.map(function (t) { return '<li><a href="' + ROOT + "racer/" + esc(t) + '.html"><b>★ ' + esc(D.fav[t].name) + "</b></a> " + raceChips(R[t]) + "</li>"; }).join("") + "</ul>"
+      el.innerHTML = '<h2>今日出走するお気に入り <small>' + on.length + "人／☆" + favN() + '人・<a href="' + ROOT + 'racer/#fav">一覧</a></small></h2>' +
+        (on.length ? '<ul class="fav-ul">' + on.map(function (t) { return '<li><a href="' + ROOT + "racer/" + esc(t) + '"><b>★ ' + esc(D.fav[t].name) + "</b></a> " + raceChips(R[t]) + "</li>"; }).join("") + "</ul>"
           : '<p class="sub" style="margin:0">今日はお気に入りの選手の出走はありません。</p>');
       el.hidden = false;
     });

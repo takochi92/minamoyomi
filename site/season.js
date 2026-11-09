@@ -42,7 +42,7 @@ if(typeof document!=='undefined')(() => {
   const clean=x=>String(x??'').normalize('NFKC').toLowerCase().replace(/\s/g,'');
   const hit=(p,q)=>!q||clean([p.name,p.kana,p.toban,p.branch].join(' ')).includes(clean(q));
   function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
-  function who(p){const a=el('a',p.name.replace(/\s/g,''),'sw-name');a.href=`../racer/${p.toban}.html`;return a;}
+  function who(p){const a=el('a',p.name.replace(/\s/g,''),'sw-name');a.href=`../racer/${p.toban}`;return a;}
   function detail(lines){const d=el('details',undefined,'sw-card-note');d.append(el('summary','詳しく'));for(const line of lines)if(line)d.append(el('p',line));return d;}
   function conditionBlock(p,target,tier){
     const box=el('div',undefined,'sw-condition'),context=data.conditions_context||{},c=p.condition||{};

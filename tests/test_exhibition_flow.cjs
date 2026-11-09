@@ -13,7 +13,7 @@ function boot(query='',overrides={}){
 }
 const ui=boot(),get=ui.node;
 assert.equal(get('ev-frame').src,'data/exhibition/20261026/04-1.html?mode=watch');
-assert.match(get('ev-back').href,/heiwajima-1\.html#tenji$/);
+assert.match(get('ev-back').href,/heiwajima-1#tenji$/);
 assert.equal(get('ev-review').href,'data/exhibition/20261026/04-1.html');
 ui.messages.message({source:{},data:{kind:'teilog-exhibition-height',height:600}});assert.equal(get('ev-frame').style.height,undefined);
 ui.messages.message({source:get('ev-frame').contentWindow,data:{kind:'teilog-exhibition-height',height:600}});assert.equal(get('ev-frame').style.height,'600px');

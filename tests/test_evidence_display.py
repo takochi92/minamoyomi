@@ -11,7 +11,7 @@ def test_old_prediction_display_uses_saved_facts_without_backfilling():
     result=Site.evidence_block(Page('race/20261010/kiryu-1.html'),race,p)
     assert p==original and '本人参照の数値は未保存' in result
     assert '今回は単独1位' in result and '&lt;根拠&gt;' in result and '<根拠>' not in result
-    assert 'href="../../venue/kiryu-motor.html#m7"' in result
+    assert 'href="/venue/kiryu-motor#m7"' in result
 
 
 def test_evidence_neutral_motor_is_not_displayed_as_strong():

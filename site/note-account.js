@@ -166,7 +166,7 @@
         (ownGuest && state.ready ? '<button type="button" data-account="import">この端末の記録を取り込む</button>' : '') :
         '<button type="button" data-account="login"' + (!client ? ' disabled' : '') + '>Googleでログイン</button>' +
         (state.mode === 'error' ? '<button type="button" data-account="reload">再読み込み</button>' : '')) + '</div>' : '') +
-      (configured && !user ? '<p class="sub">ログインにはGoogleの認証情報を使い、記録はSupabaseに保存します。<a href="' + (window.SITE_ROOT || '') + 'about.html">プライバシーポリシー</a></p>' : '') +
+      (configured && !user ? '<p class="sub">ログインにはGoogleの認証情報を使い、記録はSupabaseに保存します。<a href="' + (window.SITE_ROOT || '') + 'about">プライバシーポリシー</a></p>' : '') +
       (user ? '<p class="sub">ログイン中の編集は、このアカウントに保存します。端末内の記録は勝手に取り込みません。</p>' : '') +
       state.conflicts.map(function (c) { return '<div class="account-conflict"><strong>' + esc(label(c)) + '</strong><div class="account-compare"><div><small>別の端末の記録</small><p>' + esc(describe(c.remote)) + '</p><button type="button" data-choice="remote" data-key="' + esc(c.key) + '">こちらを残す</button></div><div><small>この端末の変更</small><p>' + esc(describe(c.local)) + '</p><button type="button" data-choice="local" data-key="' + esc(c.key) + '">こちらを残す</button></div></div></div>'; }).join('') +
       (user ? '<details class="account-settings"><summary>アカウントの管理</summary><p class="sub">削除すると、このアカウントと同期済みの記録が消えます。必要な記録は先にファイルへ保存してください。</p><button type="button" data-account="delete">アカウントを削除</button></details>' : '') +

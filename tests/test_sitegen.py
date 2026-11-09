@@ -3,6 +3,8 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
+from xml.etree import ElementTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -100,16 +102,13 @@ def test_pages_and_links(tmp_path):
     assert 'window.__ROUTE__="stats"' in stats and 'app.js?v=' in stats
     assert 'window.__ROUTE__="stats"' in logic and 'window.__OPEN_LOGIC__=true' in logic
     assert 'content="noindex"' in logic
-    # 相対リンクがすべて生成済みのページを指している（外部・data・アンカーは除く）
+    # Public page links go directly to generated routes.
+    routes = {sitegen.public_url('/' + path) for path in files if path.endswith('.html')}
     for path in ["index.html", "race/20260925/kiryu-12.html", "targets.html", "venue/kiryu.html"]:
-        base = Path(path).parent
-        for href in re.findall(r'href="([^"#:]+\.html)"', files[path]):
-            target = (base / href).as_posix()
-            while "/../" in "/" + target:
-                parts = target.split("/")
-                i = parts.index("..")
-                target = "/".join(parts[:i - 1] + parts[i + 1:])
-            assert target in files or target in ("about.html",), (path, href)
+        for href in re.findall(r'<a\b[^>]*\shref="(/[^"]*)"', files[path]):
+            target = urlsplit(href).path
+            assert target in routes or target == '/about', (path, href)
+    assert 'href="/racer/4872">山下 流心</a>' in race_html
 
 
 def test_st_page_uses_saved_local_estimate_and_separates_meeting(tmp_path):
@@ -178,10 +177,35 @@ def test_seo_basics(tmp_path):
     assert "<title>桐生12R 予想" in page and 'rel="canonical"' in page and "BreadcrumbList" in page
     assert "20歳未満" in page and "保証するものではありません" in page
     assert "山下 流心" in page
-    sm = files["sitemap.xml"]
-    assert sm.count("<url>") == len([p for p in files if p.endswith(".html") and p != "404.html" and 'content="noindex"' not in files[p]])
-    assert "mynote.html" not in sm and "share.html" not in sm and "<lastmod>2026-09-25</lastmod>" in sm
-    assert "Sitemap:" in files["robots.txt"]
+    canonical = sitegen.SITE_URL + '/race/20260925/kiryu-12'
+    assert f'<link rel="canonical" href="{canonical}">' in page
+    assert f'<meta property="og:url" content="{canonical}">' in page
+    assert '<meta name="google-site-verification" content="u6sE4KPLKHHUt4FLbl3alvE1NNQr2HX5pfEkxxjivM8"' in files['index.html']
+    ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+    children = [loc.text.rsplit('/', 1)[1]
+                for loc in ElementTree.fromstring(files['sitemap.xml']).findall('s:sitemap/s:loc', ns)]
+    assert {'sitemap-races.xml', 'sitemap-racers.xml', 'sitemap-venues.xml'} <= set(children)
+    entries = [loc.text for child in children
+               for loc in ElementTree.fromstring(files[child]).findall('s:url/s:loc', ns)]
+    assert len(entries) == len(set(entries))
+    expected = {sitegen.SITE_URL + sitegen.public_url('/' + p)
+                for p, markup in files.items()
+                if p.endswith('.html') and p != '404.html' and 'content="noindex"' not in markup}
+    assert set(entries) == expected
+    assert sitegen.SITE_URL + '/guide/' in entries
+    assert all(not urlsplit(url).path.endswith('.html') for url in entries)
+    assert '/mynote' not in {urlsplit(url).path for url in entries}
+    assert all('<lastmod>' not in files[child] for child in children)
+    assert f'Sitemap: {sitegen.SITE_URL}/sitemap.xml' in files['robots.txt']
+
+    directory = set(re.findall(r'href="(/racer/list/\d+)"', files['racer/index.html']))
+    profiles = {sitegen.public_url('/' + p) for p in files if re.fullmatch(r'racer/\d+\.html', p)}
+    found = []
+    for route in directory:
+        links = re.findall(r'href="(/racer/\d+)"', files[route[1:] + '.html'])
+        assert 1 <= len(links) <= 100
+        found.extend(links)
+    assert len(found) == len(profiles) and set(found) == profiles
 
 
 def test_fan_parse():
@@ -242,7 +266,7 @@ def test_fan_ki_and_lady():
 def test_racer_search_and_fav(tmp_path):
     _, files = _site(tmp_path)
     page = files["racer/index.html"]
-    assert 'id="sx-data"' in page and "search.js" in page and "支部別の全選手一覧" in page
+    assert 'id="sx-data"' in page and "search.js" in page and 'id="racer-directory"' in page
     data = json.loads(re.search(r'<script id="sx-data" type="application/json">(.*?)</script>', page, re.S).group(1))
     assert len(data["racers"]) > 1000 and data["date"] == "20260925"
     fav = json.loads(files["fav-today.json"])
@@ -315,7 +339,7 @@ def test_grade_page(tmp_path):
     assert "grade.html" in files and "今日は重賞の開催がありません" in files["grade.html"]
     s.idx["venues"][0]["grade"] = "G1"
     s.grade_page()
-    assert "今日のG1 結果" in s.files["grade.html"] and "kiryu-12.html" in s.files["grade.html"]
+    assert "今日のG1 結果" in s.files["grade.html"] and 'href="/race/20260925/kiryu-12' in s.files["grade.html"]
     r = s.idx['venues'][0]['races'][0]
     r.update(result='1-3-2', payout=2460, honmei=['6-5-4'], confidence='本命')
     s.grade_page()
