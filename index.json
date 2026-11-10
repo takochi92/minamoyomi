@@ -1,6 +1,16 @@
 {
-  "updated": "2026-11-10T04:38:58.360Z",
+  "updated": "2026-11-10T20:02:34.737Z",
   "posts": [
+    {
+      "id": "2026-11-10-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-11-10",
+      "slot": "evening",
+      "text": "【11/10（火）の結果】\nAI本線 156R中27的中\n最高配当 下関8R 3-4-1 8,030円\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-11-10T20:02:34.737Z"
+    },
     {
       "id": "2026-11-10-teirogu-X-morning",
       "project": "teirogu",
@@ -372,16 +382,6 @@
       "created_at": "2026-10-29T02:26:08.650Z"
     },
     {
-      "id": "2026-10-28-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "evening",
-      "text": "【10/28（水）の結果】\nAI本線 124R中14的中\n最高配当 桐生10R 4-1-2 20,280円\n\n今日のフライング 1人（F後はスタート控えめになりがち）\n・唐津9R 前出 達吉\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-28T18:32:19.336Z"
-    },
-    {
       "id": "2026-10-29-teirogu-X-setsukancards",
       "project": "teirogu",
       "channel": "X",
@@ -390,66 +390,6 @@
       "text": "会場のレース一覧に「節間」の入口を追加しました。\n\n予想 → 節間 → 展示 → オッズ → 結果\n\n一覧の「節間」をタップすると、そのレースの節間データへ直接移動できます。スマホでも5つの入口が1行に収まるように整理しました。\n\nhttps://teilog.com/\n#ボートレース #艇ろぐ",
       "images": [],
       "created_at": "2026-10-28T15:49:03.530239+00:00"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-raceentry",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "raceentry",
-      "text": "艇ろぐのスマホ出走表を見やすくしました。\n\n選手名・級別・支部／出身地を上段に、コース・勝率・モーター情報を下段に整理。\n「広島／広島」が途中で折れて読みにくくなる表示も修正しました。\n\n各レースの出走表から確認できます。\nhttps://teilog.com/\n\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-28T13:07:46.159613+00:00"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-meetingcompact",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "meetingcompact",
-      "text": "艇ろぐの「今節成績」を見やすく整理しました🚤\n\n大きなレース別カードから、日付×6艇のコンパクトな着順表へ。\n今節の流れをまとめて比較できます。小さなR番号・着順をタップすれば、そのレースの結果へ。\n\nレース画面の「節間」からどうぞ。\nhttps://teilog.com\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-28T04:32:38.130817+00:00"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-meeting",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "meeting",
-      "text": "艇ろぐの「節間」を整理しました🚤\n\n全国24場で、前検・展示タイム・本番ST・着順の公式取得先を実データで確認。\n\n平均展示／前検／平均ST／ST順位と今節成績を比較できます。場によって取得状況が異なる得点率列はいったん外しました。\n\n過去分は順次補完。平均には集計数を表示します。\n\nhttps://teilog.com\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-28T02:52:08.213137+00:00"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "morning",
-      "text": "【10/28（水）の艇ろぐ】\n今日は11場で開催\n🏆尼崎 SG\n\nAIの自信が高いレース\n・唐津1R、三国1R、唐津3R\n\n昨日のAI本線：168レース中 39的中\n最高配当 大村12R 2-4-3 20,950円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-28T02:12:39.192Z"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-oddsstyle",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "oddsstyle",
-      "text": "艇ろぐのオッズ表を見やすくしました🚤\n\n🎨艇番の色で1・2・3着を区切り\n👆1着を選んで20通りを表示\n✓選んだ買い目を強調\n📱全120通りの比較もOK\n\n各レースの「オッズ」タブへ👇\nhttps://teilog.com/\n\n※20歳未満は購入不可。のめり込みに注意",
-      "images": [],
-      "created_at": "2026-10-28T00:14:12.613218+00:00"
-    },
-    {
-      "id": "2026-10-28-teirogu-X-notebook",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-28",
-      "slot": "notebook",
-      "text": "艇ろぐのマイノートを使いやすくしました🚤\n\n📝選手・モーターメモはプルダウンで1件ずつ表示＆編集\n⭐モーターもお気に入り登録に対応（通知なし）\n📱コース成績はスマホで全列見やすく\n\nメモが増えても、探す・見返すをコンパクトに。\nhttps://teilog.com/mynote\n\n※20歳未満は購入不可。のめり込みに注意",
-      "images": [],
-      "created_at": "2026-10-27T16:04:51.696817+00:00"
     }
   ]
 }
