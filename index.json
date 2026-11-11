@@ -1,6 +1,16 @@
 {
-  "updated": "2026-11-11T02:47:55.455Z",
+  "updated": "2026-11-11T19:53:29.621Z",
   "posts": [
+    {
+      "id": "2026-11-11-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-11-11",
+      "slot": "evening",
+      "text": "【11/11（水）の結果】\nAI本線 144R中28的中\n最高配当 鳴門12R 6-1-4 25,440円\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-11-11T19:53:29.621Z"
+    },
     {
       "id": "2026-11-11-teirogu-X-morning",
       "project": "teirogu",
@@ -322,16 +332,6 @@
       "created_at": "2026-10-30T02:36:46.437Z"
     },
     {
-      "id": "2026-10-29-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "evening",
-      "text": "【10/29（木）の結果】\nAI本線 120R中17的中\n最高配当 唐津2R 1-4-3 4,860円\n\n今日のフライング 2人（F後はスタート控えめになりがち）\n・江戸川3R 山戸 信二\n・蒲郡5R 豊田 祥生\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-29T18:40:48.590Z"
-    },
-    {
       "id": "2026-10-30-teirogu-X-racemonth",
       "project": "teirogu",
       "channel": "X",
@@ -340,66 +340,6 @@
       "text": "日付を選んで、前のレースも見られるようにしました。\n\n見られるのは1か月前まで。保存がある日は、その時の予想・展示・オッズも見返せます。\nこれからの分も残していくので、「昨日のあのレースどうだったっけ」って時にどうぞ。\n\nhttps://teilog.com/\n#ボートレース #艇ろぐ",
       "images": [],
       "created_at": "2026-10-29T15:14:51.387477+00:00"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-warmpipe-research",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "warmpipe-research",
-      "text": "温水パイプ付いたらモーターの良し悪しって変わるんかな、と思って調べてみた。\n\n4場・2,172レース分のデータで比べたけど、乗り手もコースも違うし、連対率が落ちたからってモーターが悪くなったとは言えんね。\n\n付く前と後を両方見られたらおもろそう。もうちょい調べます。",
-      "images": [],
-      "created_at": "2026-10-29T12:39:09.409950+00:00"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-warmpipe-research-thread",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "warmpipe-research-thread",
-      "text": "1/6\n温水パイプ付いたらモーターの良し悪しって変わるんかな、と思って調べてみた。\n\n4場・2,172レース分のデータで比べたけど、乗り手もコースも違うし、連対率が落ちたからってモーターが悪くなったとは言えんね。\n\n付く前と後を両方見られたらおもろそう。もうちょい調べます。\n\n---\n\n2/6\n例えばびわこの52号機。\n2連対率は59.1%から20.0%まで落ちてた。\n\nでも、付く前は全走A1の選手が乗ってて、付いた後はA1なし。1コースも少なくなってた。\n展示は同じレースの他の艇と比べると、むしろ少し良くなってる。\n\nこれを数字だけ見て「悪いモーターになった」とは言えんよね。\n\n---\n\n3/6\nなので、乗る選手の成績や級別、コース、風なんかも入れて比べてみた。\nびわこは気温や水温、体重、チルトも。\n\nとはいえ、湿度とか安定板とか、揃わんデータもある。\n寒くなった影響もあるだろうし、これでパイプの影響だけが分かる、とはまだ言えん。\n\n---\n\n4/6\n今までの成績を捨てて、付いた後の成績だけで次の開催を予測したらどうなるかも試してみた。\n\n少なくとも今回の28日分では、その方が良いとは言えんかった。\n過去の成績も少し残す方法はちょっと良さそうだったけど、期間を変えると結果も変わる。\nもう少し見ていきたい。\n\n---\n\n5/6\n今までの成績と、温水パイプ付いてからの成績。\nどっちかだけじゃなく、両方見られたらおもろそうだなと思ってる。\n\n「付いたからこのモーターは上がる！」みたいなことはまだ言えんけど、調べていくといろいろ気付くことがあるね。\nhttps://teilog.com/motor\n\n---\n\n6/6\n装着した日は、ここの公式のお知らせを見て調べました。\nびわこ2025\nhttps://boatrace-biwako.jp/modules/news/?kind=1&storyid=2135\nびわこ2026\nhttps://boatrace-biwako.jp/modules/news/?kind=1&storyid=2372\n蒲郡2025\nhttps://www.gamagori-kyotei.com/asp/gamagori/contents/info/info.php?year=2025\n福岡2025\nhttps://www.boatrace.jp/owsp/sp/extra/race/22_20251125/monthly/monthly_sp.pdf\n大村2025\nhttps://www.boatrace.jp/owsp/sp/extra/race/24_20251226/monthly/monthly_sp.pdf",
-      "images": [],
-      "created_at": "2026-10-29T12:39:09.409950+00:00"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-motorsort",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "motorsort",
-      "text": "モーター一覧に「並び替え」を追加しました。\n\n・2連対率／3連対率\n・優出回数／優勝回数\n・出走回数／号機順\n\n見たい指標を選ぶだけ。選んだ並び順は次に開く場でも引き継ぎます。\n優出・優勝の回数も一覧に表示。気になる号機は、そのまま使用履歴を確認できます。\n※優出・優勝は保存済みの公式記録から集計。\n\nhttps://teilog.com/motor\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-29T09:05:47.289614+00:00"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-motorfinals",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "motorfinals",
-      "text": "モーター履歴に「優出」「★優勝」の目印を追加しました。\n\n🔵 優出は青\n🏆 優勝は金\n\n使用期間の見出しと、該当するレースの着順に表示します。\nその優勝戦で実際に使われた号機・選手を公式結果と照合。過去の使用者とレース実績を見比べやすくしました。\n\n各場のモーター一覧から確認できます。\nhttps://teilog.com/motor\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-29T08:44:31.444314+00:00"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "morning",
-      "text": "【10/29（木）の艇ろぐ】\n今日は10場で開催\n🏆尼崎 SG\n🏆徳山 G3\n\nAIの自信が高いレース\n・鳴門1R、唐津1R\n\n昨日のAI本線：124レース中 14的中\n最高配当 桐生10R 4-1-2 20,280円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-10-29T02:26:08.650Z"
-    },
-    {
-      "id": "2026-10-29-teirogu-X-setsukancards",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-10-29",
-      "slot": "setsukancards",
-      "text": "会場のレース一覧に「節間」の入口を追加しました。\n\n予想 → 節間 → 展示 → オッズ → 結果\n\n一覧の「節間」をタップすると、そのレースの節間データへ直接移動できます。スマホでも5つの入口が1行に収まるように整理しました。\n\nhttps://teilog.com/\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-10-28T15:49:03.530239+00:00"
     }
   ]
 }
