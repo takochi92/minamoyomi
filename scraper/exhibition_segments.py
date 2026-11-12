@@ -127,11 +127,11 @@ def frame_loader(directory, size, frames, *, image_mode="L"):
     return load
 
 
-def camera_check(load, reference, anchors):
-    """Check small textured patches on three fixed landmarks within the shot."""
+def camera_check(load, reference_image, anchors):
+    """Match every frame against the calibration shot, not a frame from this run."""
     radius = 10
-    ref = load(reference)
-    patches = [ref.crop((x - radius, y - radius, x + radius + 1, y + radius + 1)) for x, y in anchors]
+    patches = [reference_image.crop((x - radius, y - radius, x + radius + 1, y + radius + 1))
+               for x, y in anchors]
     if any(ImageStat.Stat(patch).stddev[0] < 10 for patch in patches):
         raise ValueError("fixed_landmark_texture_too_low")
 
@@ -154,6 +154,14 @@ def camera_check(load, reference, anchors):
     return check
 
 
+def calibration_image(profile, size, path):
+    sha = profile.get("calibration_sha256")
+    if not isinstance(sha, str) or not SHA256.fullmatch(sha) or path is None:
+        raise ValueError("pinned_camera_calibration_required")
+    path = Path(path)
+    return frame_loader(path.parent, size, {path.name: {"sha256": sha}})(path.name)
+
+
 def read_track(observations, size, frames, window):
     """Keep unusable observations as barriers instead of bridging missing frames."""
     rows = []
@@ -172,14 +180,41 @@ def read_track(observations, size, frames, window):
     return rows
 
 
-def find_crossings(track, gates, check_camera):
+def fit_crossing(support, a, b, gate, max_residual, max_speed, frame_order):
+    if len(support) < 5 or any(row is None for row in support):
+        return None
+    for left, right in zip(support, support[1:]):
+        elapsed = right["time"] - left["time"]
+        if (elapsed > MAX_GAP_SECONDS or frame_order[right["file"]] - frame_order[left["file"]] != 1
+                or math.hypot(right["x"] - left["x"], right["y"] - left["y"]) > max_speed * elapsed):
+            return None
+    time = [row["time"] - a["time"] for row in support]
+    position = [row[gate["axis"]] for row in support]
+    t_mean, p_mean = sum(time) / len(time), sum(position) / len(position)
+    slope = (sum((t - t_mean) * (p - p_mean) for t, p in zip(time, position)) /
+             sum((t - t_mean) ** 2 for t in time))
+    if slope * gate["direction"] <= 0:
+        return None
+    residual = max(abs(p - (p_mean + slope * (t - t_mean))) for t, p in zip(time, position))
+    when = a["time"] + t_mean + (gate["value"] - p_mean) / slope
+    if residual > max_residual or not a["time"] - 1e-9 <= when <= b["time"] + 1e-9:
+        return None
+    when = min(max(when, a["time"]), b["time"])
+    other = "y" if gate["axis"] == "x" else "x"
+    fraction = (when - a["time"]) / (b["time"] - a["time"])
+    at_crossing = a[other] + fraction * (b[other] - a[other])
+    if not gate["segment"][0] <= at_crossing <= gate["segment"][1]:
+        return None
+    return when, residual
+
+
+def find_crossings(track, gates, check_camera, max_residual, max_speed, frame_order):
     events, uncertain = defaultdict(list), defaultdict(set)
-    for a, b in zip(track, track[1:]):
+    for i, (a, b) in enumerate(zip(track, track[1:])):
         if a is None or b is None:
             continue
         for label, gate in gates.items():
-            when = crossing(a, b, gate)
-            if when is None:
+            if crossing(a, b, gate) is None:
                 continue
             if b["time"] - a["time"] > MAX_GAP_SECONDS:
                 uncertain[label].add("frame_gap_too_wide")
@@ -192,9 +227,25 @@ def find_crossings(track, gates, check_camera):
             if not verified:
                 uncertain[label].add("camera_landmark_changed")
                 continue
+            offset = max(0, min(i - 1, len(track) - 5))
+            support = track[offset:offset + 5]
+            fit = fit_crossing(support, a, b, gate, max_residual, max_speed, frame_order)
+            if fit is None:
+                uncertain[label].add("unstable_or_insufficient_crossing_track")
+                continue
+            try:
+                if not all(check_camera(row["file"]) for row in support):
+                    uncertain[label].add("camera_landmark_changed")
+                    continue
+            except ValueError as error:
+                uncertain[label].add(str(error))
+                continue
+            when, residual = fit
             events[label].append({
                 "seconds": when, "bracket": [a["time"], b["time"]],
                 "frames": [a["file"], b["file"]],
+                "fit_frames": [row["file"] for row in support],
+                "max_fit_residual_pixels": round(residual, 3),
             })
     found, missing = {}, {}
     for label in gates:
@@ -210,8 +261,9 @@ def find_crossings(track, gates, check_camera):
     return found, missing
 
 
-def section_times(events, gates, frame_sequence, check_camera):
+def section_times(events, gates, frame_sequence, check_camera, track, max_speed):
     sections = {}
+    positions = {row["file"]: row for row in track if row is not None}
     for name, (start, end) in SEGMENTS.items():
         if start not in gates or end not in gates:
             sections[name] = {"status": "gate_not_configured"}
@@ -237,13 +289,36 @@ def section_times(events, gates, frame_sequence, check_camera):
         if not stable:
             sections[name] = {"status": "camera_landmark_changed_in_section"}
             continue
+        if any(frame not in positions for _, frame in span):
+            sections[name] = {"status": "bow_track_missing_in_section"}
+            continue
+        points = [positions[frame] for _, frame in span]
+        if any(math.hypot(b["x"] - a["x"], b["y"] - a["y"]) > max_speed * (b["time"] - a["time"])
+               for a, b in zip(points, points[1:])):
+            sections[name] = {"status": "bow_track_jump_in_section"}
+            continue
         sections[name] = {"status": "reference",
                           "video_seconds": round(b["seconds"] - a["seconds"], 3),
                           "bracket_range_video_seconds": [round(earliest, 3), round(latest, 3)]}
     return sections
 
 
-def measure(manifest, profile, review, directory, *, manifest_sha256):
+def overlapping_tracks(tracks):
+    claims = defaultdict(list)
+    for boat, track in tracks.items():
+        for row in track:
+            if row is not None:
+                claims[row["file"]].append((boat, row["x"], row["y"]))
+    conflicts = defaultdict(int)
+    for claims_in_frame in claims.values():
+        for i, (boat, x, y) in enumerate(claims_in_frame):
+            for other, x2, y2 in claims_in_frame[i + 1:]:
+                if math.hypot(x - x2, y - y2) <= 3:
+                    conflicts[tuple(sorted((boat, other)))] += 1
+    return {boat for pair, count in conflicts.items() if count >= 2 for boat in pair}
+
+
+def measure(manifest, profile, review, directory, *, manifest_sha256, calibration=None):
     day, venue, race = race_identity(manifest)
     size, gates, anchors = profile_geometry(profile)
     gates = dict(sorted(gates.items()))
@@ -265,21 +340,51 @@ def measure(manifest, profile, review, directory, *, manifest_sha256):
     tracks = review.get("boats") or {}
     if not isinstance(tracks, dict) or not set(tracks) <= {str(i) for i in range(1, 7)}:
         raise ValueError("invalid_boat_numbers")
-    check_camera = camera_check(frame_loader(directory, size, frames), reference, anchors)
+    image = calibration_image(profile, size, calibration)
+    max_speed = profile.get("max_bow_pixels_per_video_second")
+    if not finite(max_speed) or max_speed <= 0:
+        raise ValueError("bow_speed_limit_required")
+    max_residual = profile.get("max_crossing_fit_residual_pixels")
+    if not finite(max_residual) or max_residual <= 0:
+        raise ValueError("crossing_fit_residual_limit_required")
+    check_camera = camera_check(frame_loader(directory, size, frames), image, anchors)
+    if not check_camera(reference):
+        raise ValueError("capture_does_not_match_camera_calibration")
     frame_sequence = sorted((row["time"], name) for name, row in frames.items())
+    frame_order = {name: i for i, (_, name) in enumerate(frame_sequence)}
+    identity = review.get("identity") or {}
+    checked, reasons = {}, {}
+    for boat, observations in tracks.items():
+        try:
+            checked[boat] = read_track(observations, size, frames, window)
+        except ValueError as error:
+            reasons[boat] = str(error)
+    duplicates = overlapping_tracks(checked)
     boats = []
     for boat in range(1, 7):
-        observations = tracks.get(str(boat), [])
-        try:
-            events, missing = find_crossings(read_track(observations, size, frames, window), gates, check_camera)
-        except ValueError as error:
-            events, missing = {}, {k: [str(error)] for k in gates}
+        key = str(boat)
+        track = checked.get(key, [])
+        evidence = identity.get(key) or {}
+        reason = reasons.get(key)
+        if key in duplicates:
+            reason = "overlapping_boat_tracks"
+        elif track and (type(evidence.get("boat")) is not int or evidence["boat"] != boat
+                        or evidence.get("method") not in ("boat_color", "visible_number")
+                        or evidence.get("file") not in {row["file"] for row in track if row is not None}):
+            reason = "boat_identity_evidence_required"
+        if reason:
+            events, missing = {}, {k: [reason] for k in gates}
+        else:
+            events, missing = find_crossings(track, gates, check_camera, max_residual, max_speed, frame_order)
         boats.append({"boat": boat, "crossings": events, "missing_crossings": missing,
-                      "segments": section_times(events, gates, frame_sequence, check_camera)})
+                      "identity": None if reason or not track else {k: evidence[k] for k in ("boat", "method", "file")},
+                      "observations": [row for row in track if row is not None],
+                      "segments": section_times(events, gates, frame_sequence, check_camera, track, max_speed)})
     return {
         "schema": 1, "date": day, "venue": venue, "race": race, "lap": profile["lap"],
         "profile_id": profile["id"], "manifest_sha256": manifest_sha256,
         "profile_sha256": digest(profile), "review_sha256": digest(review),
+        "quality_checks": "pinned_camera_and_continuous_track_v2",
         "time_basis": "browser_presented_frame_media_time",
         "full_backstretch_verified": False, "real_time_scale_verified": False,
         "measurement_mode": "reviewed_or_imported_bow_track",

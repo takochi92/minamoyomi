@@ -13,24 +13,28 @@
 | 直線前半・後半 | D–E、E–F | 同じ線の間を通る時間の比較 |
 | 直線 | D–F | 画角内で観測した直線区間 |
 
-各タイムは艇首の通過前後の表示フレーム時刻から補間する。出力に前後のフレームと区間時間の取り得る範囲を保存する。この範囲には、艇首を読み取る人の違いやリプレイの再生倍率による誤差は含まれない。現時点の出力単位はリプレイ上の秒。直線前半・後半の長さが同じか、バックストレッチの全長が映っているかは別途確認が必要。
+各タイムは艇首が基準線をはさむ前後のコマを見つけ、近くの連続5コマの軌跡を直線に当てはめて求める。当てはめの残差が設定を超えた場合や、推定時刻が前後のコマの範囲を外れた場合は欠測にする。出力に各コマの時刻・座標・残差と、区間時間の取り得る範囲を保存する。この範囲には、艇首を読み取る人の違いやリプレイの再生倍率による誤差は含まれない。出力単位はリプレイ上の秒。直線前半・後半の長さ、バックストレッチ全長、撮影位置による遠近の差は別途確認が必要。
+
+2026年11月12日の平和島12RのJSONは、レビュー対象になった旧方式の参考値。元の一時画像は削除済み。新しい計測を通すには校正画像を取得し直し、軌跡を再採点する。現行キャプチャでは画面全体の座標を使うため、Chromeの画面サイズが変わった場合は計測を拒否する。映像領域の座標への切り替えにはキャプチャ側で領域を記録する対応が必要。
 
 ## 実行手順
 
 1. homesv の作業専用ユーザーから PR #68 の通常再生キャプチャを使う。最初に粗い間隔で固定画角の候補を探し、候補区間を 0.1 秒間隔で取り直す。外部への成果物は数値だけを使う。
-2. `exhibition_profiles/` に、場・周回・画像サイズ、物理的な固定物3点、基準線A〜Fの方向と有効範囲を設定する。A〜Cは必須。カメラに映る範囲に応じてD〜Fを設定する。リプレイ時刻とカメラはレースごとに照合する。
-3. レビュー用JSONを生成し、固定画角の開始・終了時刻、基準フレーム、艇番ごとの艇首座標を記録する。各線をはさむフレームの座標が必要。物理的な固定物と基準線がこの映像にも合うことを確認してから `camera_layout_reviewed` を `true` にする。
-4. 計測を実行する。重複、フレーム欠落、ハッシュの違い、座標や通過順の不整合、画角の変化は、理由付きの欠測として記録する。判定対象の区間中も映像を確認する。
+2. 場・周回・画像サイズ、物理的な固定物3点、基準線A〜Fの方向と有効範囲を設定する。A〜Cは必須。基準線を設定したPNGを作業専用領域に保管し、SHA-256を `calibration_sha256` に記録する。 `max_bow_pixels_per_video_second` と `max_crossing_fit_residual_pixels` はその画角の試験で決める。
+3. レビュー用JSONを生成し、固定画角の開始・終了時刻、基準フレーム、艇番ごとの艇首座標を記録する。各区間内の採用可能な全コマと、各通過点周辺の連続5コマが必要。色または艇番を確認できたコマを `identity` に記録する。形式は `{"1":{"boat":1,"method":"boat_color","file":"f_0248s.png"}}`。艇番を画面で読めた場合は `visible_number` を使う。固定物と基準線を確認してから `camera_layout_reviewed` を `true` にする。
+4. 計測を実行する。重複、フレーム欠落、ハッシュの違い、急な座標の飛び、同じ軌跡への複数艇の割り当て、画角の変化を検査する。艇の色・番号は人が確認する。
 
 ```sh
 python -m tools.exhibition_review_sheet --manifest PRIVATE/manifest.json --start 247.7 --end 253.5 --scale 0.30 --output PRIVATE/sheets
 python -m tools.measure_exhibition template --manifest PRIVATE/manifest.json --profile PROFILE.json --output PRIVATE/review.json
-python -m tools.measure_exhibition measure --manifest PRIVATE/manifest.json --profile PROFILE.json --review PRIVATE/review.json --output PRIVATE/result.json
-python -m tools.measure_exhibition inventory --stadiums PRIVATE/stadiums.json --profiles research/improvements/exhibition_profiles --output PRIVATE/coverage.json
+python -m tools.measure_exhibition measure --manifest PRIVATE/manifest.json --profile PROFILE.json --review PRIVATE/review.json --calibration PRIVATE/calibration.png --output PRIVATE/result.json
+python -m tools.measure_exhibition inventory --stadiums PRIVATE/stadiums.json --profiles research/improvements/exhibition_profiles --result PRIVATE/result.json --output PRIVATE/coverage.json
 python -m tools.measure_exhibition batch --index PRIVATE/queue.json --output PRIVATE/measurements
 ```
 
-`queue.json` は `{"jobs":[{"date":"20261112","venue":"04","race":12,"manifest":"manifest.json","profile":"PROFILE.json","review":"review.json"}]}` の形式。相対パスはキューファイルを基準にする。未準備のレースは日付・場・レース番号だけで登録できる。1回の実行で各レースの結果と集計を保存する。書き込みは排他・一時ファイル経由で、既存の計測済みの艇・区間が減る再計測結果は上書きしない。映像の取得・艇首追跡・定期実行は現在のバッチの外で行う。
+`queue.json` は `{"jobs":[{"date":"20261112","venue":"04","race":12,"manifest":"manifest.json","profile":"PROFILE.json","review":"review.json","calibration":"calibration.png"}]}` の形式。相対パスはキューファイルを基準にする。未準備のレースは日付・場・レース番号だけで登録できる。
+
+単発・一括とも結果の書き込みは排他・一時ファイル経由。採用済みの結果と異なる場合は候補版と区間差分を保存し、採用中の結果を維持する。採用を変更するには候補のハッシュと理由を指定する。単発は `--replacement-version` と `--replacement-reason`、一括は各レースの `replacement_version` と `replacement_reason`。誤りの撤回で区間が減る場合も、同じ手順で更新できる。版は出力先の `.exhibition-versions/` に保存する。同時実行は「実行中」を返し、読み込めないレースは理由付きで記録して次のレースへ進む。映像の取得・艇首追跡・定期実行は現在のバッチの外で行う。
 
 ## A〜D評価に必要な確認
 

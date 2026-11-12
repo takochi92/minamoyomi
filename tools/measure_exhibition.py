@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from contextlib import ExitStack, contextmanager
+import errno
 import hashlib
 import json
 import os
@@ -49,9 +51,10 @@ def manifest_at(path):
     return path, json.loads(raw.decode("utf-8-sig")), hashlib.sha256(raw).hexdigest()
 
 
-def measure_files(manifest, profile, review):
+def measure_files(manifest, profile, review, calibration=None):
     path, data, sha = manifest_at(manifest)
-    return measure(data, read(profile), read(review), path.parent, manifest_sha256=sha)
+    return measure(data, read(profile), read(review), path.parent, manifest_sha256=sha,
+                   calibration=private(calibration) if calibration is not None else None)
 
 
 def template(manifest, profile):
@@ -67,18 +70,31 @@ def template(manifest, profile):
         "race": {"date": day, "venue": venue, "race": race},
         "window": [], "camera_reference": None, "camera_layout_reviewed": False,
         "boats": {str(i): [] for i in range(1, 7)},
+        "identity": {},
         "available_frames": [{"file": k, "mediaTime": v["time"]} for k, v in
                              sorted(frames.items(), key=lambda p: p[1]["time"])],
     }
 
 
-def inventory(stadiums, directory):
+def inventory(stadiums, directory, results=()):
     stadium_map = read(stadiums).get("stadiums", {})
     profiles = defaultdict(list)
     for path in sorted(Path(directory).glob("*.json")):
         profile = read(path)
         profile_geometry(profile)
         profiles[profile["venue"]].append(profile["id"])
+    measured = defaultdict(list)
+    for path in results:
+        data = read(path)
+        result = data.get("result", data)
+        code = result["venue"]
+        if code not in VENUES or result["profile_id"] not in profiles[code]:
+            raise ValueError("result_profile_not_in_inventory")
+        measured[code].append({"date": result["date"], "race": result["race"],
+                               "pinned_calibration_matched": result.get("quality_checks") ==
+                               "pinned_camera_and_continuous_track_v2",
+                               "all_six_required_sections": all(result["coverage"].get(name) == 6
+                                                               for name in ("turn_entry", "turn_exit", "back_stretch"))})
     venues = []
     for code in sorted(VENUES):
         registered = stadium_map.get(code, {})
@@ -87,11 +103,79 @@ def inventory(stadiums, directory):
                        "playback_evidence": registered.get("evidence"),
                        "replay_sample": sample if all(sample.values()) else None,
                        "camera_profiles": profiles[code],
+                       "measurement_samples": measured[code],
                        "state": "profile_available" if profiles[code] else "camera_profile_needed"})
     return {"venue_count": len(venues),
             "playback_verified_venues": sum(v["playback_evidence"] == "pr-tool-homesv" for v in venues),
             "camera_profile_venues": sum(bool(v["camera_profiles"]) for v in venues),
             "venues": venues}
+
+
+@contextmanager
+def output_lock(root):
+    path = root / ".exhibition-batch.lock"
+    with ExitStack() as stack:
+        try:
+            stack.enter_context(exclusive(path))
+        except OSError as error:
+            if error.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK) or not path.is_file():
+                raise
+            yield False
+            return
+        yield True
+
+
+def revision(result):
+    return digest({key: value for key, value in result.items() if key != "revision"})
+
+
+def store_result(path, result, reason=None, replacement_version=None):
+    """Save immutable candidates and change the selected result only with a reason."""
+    if reason is not None and (not isinstance(reason, str) or not reason.strip() or len(reason) > 500):
+        raise ValueError("invalid_replacement_reason")
+    prior = read(path) if path.exists() else None
+    if path.exists() and not isinstance(prior, dict):
+        raise ValueError("invalid_existing_result")
+    keys = ("date", "venue", "race", "lap")
+    if prior is not None and tuple(prior[key] for key in keys) != tuple(result[key] for key in keys):
+        raise ValueError("output_belongs_to_different_race")
+    versions = path.parent / ".exhibition-versions" / path.name
+    new = revision(result)
+    if (reason is None) != (replacement_version is None) or (reason is not None and replacement_version != new):
+        raise ValueError("replacement_must_name_exact_candidate_version")
+    old = revision(prior) if prior is not None else None
+
+    def archive(value, version):
+        target = versions / f"{version}.json"
+        body = {k: v for k, v in value.items() if k != "revision"}
+        if target.exists():
+            if read(target) != body:
+                raise ValueError("archive_integrity_mismatch")
+        else:
+            write(target, body)
+
+    archive(result, new)
+    status = "reference" if any(result["coverage"].values()) else "no_usable_sections"
+    saved = {"status": status, "version": new, "coverage": result["coverage"]}
+    if old == new:
+        return saved
+    if prior is not None:
+        archive(prior, old)
+        before, after = measured_sections(prior), measured_sections(result)
+        changed = sorted(key for key in before.keys() & after.keys() if before[key] != after[key])
+        difference = {"added": sorted(after.keys() - before.keys()),
+                      "removed": sorted(before.keys() - after.keys()), "changed": changed}
+        if reason is None:
+            return {"status": "candidate_saved", "version": old, "candidate_version": new,
+                    "coverage": prior["coverage"], "candidate_coverage": result["coverage"],
+                    "section_difference": difference}
+        event = {"version": new, "previous_version": old, "replacement_reason": reason.strip(),
+                 "section_difference": difference}
+        history = (prior.get("revision") or {}).get("history", [])
+        result = {**result, "revision": {"history": [*history, event]}}
+        saved.update(previous_version=old, section_difference=difference)
+    write(path, result)
+    return saved
 
 
 def run_batch(index, output):
@@ -105,29 +189,26 @@ def run_batch(index, output):
     if len(expected) != len(set(expected)):
         raise ValueError("duplicate_race_in_batch")
     rows = []
-    with exclusive(root / ".exhibition-batch.lock"):
+    with output_lock(root) as acquired:
+        if not acquired:
+            return {"status_counts": {"already_running": 1}}
         for key, job in sorted(zip(expected, jobs)):
             day, venue, race = key
             row = {"date": day, "venue": venue, "race": race}
             path = root / f"{day}-{venue}-{race:02}.json"
-            if not all(job.get(k) for k in ("manifest", "profile", "review")):
-                row.update(status="input_pending", missing=[k for k in ("manifest", "profile", "review") if not job.get(k)])
+            inputs = ("manifest", "profile", "review", "calibration")
+            if not all(job.get(k) for k in inputs):
+                row.update(status="input_pending", missing=[k for k in inputs if not job.get(k)])
             else:
                 try:
-                    result = measure_files(*(index.parent / job[k] for k in ("manifest", "profile", "review")))
+                    result = measure_files(*(index.parent / job[k] for k in inputs))
                     if key != (result["date"], result["venue"], result["race"]):
                         raise ValueError("queue_and_manifest_race_mismatch")
-                    prior = read(path) if path.exists() else None
-                    if prior and not measured_sections(prior) <= measured_sections(result):
-                        row.update(status="prior_result_kept", coverage=prior["coverage"],
-                                   candidate_coverage=result["coverage"])
-                    else:
-                        if prior != result:
-                            write(path, result)
-                        row.update(status="reference" if any(result["coverage"].values()) else "no_usable_sections",
-                                   coverage=result["coverage"])
+                    row.update(store_result(path, result, job.get("replacement_reason"), job.get("replacement_version")))
                 except FileNotFoundError:
                     row.update(status="input_pending", missing=["file"])
+                except OSError:
+                    row.update(status="input_io_error")
                 except (AttributeError, TypeError, KeyError, ValueError) as error:
                     detail = str(error)
                     row.update(status="invalid_input", reason=detail if detail.isidentifier() else "invalid_format")
@@ -139,7 +220,7 @@ def run_batch(index, output):
 
 
 def measured_sections(result):
-    return {(boat["boat"], name) for boat in result["boats"]
+    return {(boat["boat"], name): section for boat in result["boats"]
             for name, section in boat["segments"].items() if section["status"] == "reference"}
 
 
@@ -147,7 +228,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     for command, arguments in (
-        ("measure", ("manifest", "profile", "review", "output")),
+        ("measure", ("manifest", "profile", "review", "calibration", "output")),
         ("template", ("manifest", "profile", "output")),
         ("inventory", ("stadiums", "profiles", "output")),
         ("batch", ("index", "output")),
@@ -155,15 +236,28 @@ def main():
         p = sub.add_parser(command)
         for argument in arguments:
             p.add_argument("--" + argument, required=True, type=Path)
+        if command == "measure":
+            p.add_argument("--replacement-reason")
+            p.add_argument("--replacement-version")
+        if command == "inventory":
+            p.add_argument("--result", type=Path, action="append", default=[])
     args = parser.parse_args()
     if args.command == "measure":
-        result = measure_files(args.manifest, args.profile, args.review)
-        write(args.output, result)
-        print(json.dumps(result["coverage"]))
+        output = private(args.output)
+        if output.name.lower() == "summary.json" or output.suffix.lower() != ".json" or ".exhibition-versions" in output.parts:
+            parser.error("output must be a result JSON outside the version archive")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output_lock(output.parent) as acquired:
+            if not acquired:
+                print('{"status":"already_running"}')
+                return
+            result = measure_files(args.manifest, args.profile, args.review, args.calibration)
+            print(json.dumps(store_result(output, result, args.replacement_reason, args.replacement_version),
+                             ensure_ascii=False))
     elif args.command == "template":
         write(args.output, template(args.manifest, args.profile))
     elif args.command == "inventory":
-        result = inventory(args.stadiums, args.profiles)
+        result = inventory(args.stadiums, args.profiles, args.result)
         write(args.output, result)
         print(f"{result['playback_verified_venues']}/24 replay routes; "
               f"{result['camera_profile_venues']}/24 venues with a camera profile")

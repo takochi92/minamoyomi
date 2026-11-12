@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import math
 from pathlib import Path
+import tempfile
 
 from PIL import Image, ImageDraw
 
@@ -35,6 +36,7 @@ def build_sheets(manifest_path, output, start, end, crop, stride, scale):
     columns = min(4, 1600 // tile_width)
     load = frame_loader(path.parent, (width, height), frames, image_mode="RGB")
     output.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix="run-", dir=output))
     page_size = columns * 4
     for offset in range(0, len(names), page_size):
         group = names[offset:offset + page_size]
@@ -49,7 +51,7 @@ def build_sheets(manifest_path, output, start, end, crop, stride, scale):
             labels.text((x + 3, y + tile_height + 3), f"{frames[name]['time']:.3f}s  ({x1},{y1})")
         with (output / f"sheet-{page:03}.jpg").open("xb") as f:
             sheet.save(f, format="JPEG", quality=90)
-    return len(names)
+    return len(names), output
 
 
 def main():
@@ -62,7 +64,9 @@ def main():
     parser.add_argument("--stride", type=int, default=1, choices=range(1, 61))
     parser.add_argument("--scale", type=float, default=.3)
     args = parser.parse_args()
-    print(f"{build_sheets(args.manifest, args.output, args.start, args.end, args.crop, args.stride, args.scale)} frames")
+    count, directory = build_sheets(args.manifest, args.output, args.start, args.end,
+                                    args.crop, args.stride, args.scale)
+    print(f"{count} frames: {directory}")
 
 
 if __name__ == "__main__":

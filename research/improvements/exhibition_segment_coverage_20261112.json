@@ -12,6 +12,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -23,6 +24,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -34,6 +36,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -47,6 +50,14 @@
       "camera_profiles": [
         "04-heiwajima-first-turn-replay-v1"
       ],
+      "measurement_samples": [
+        {
+          "date": "20261112",
+          "race": 12,
+          "pinned_calibration_matched": false,
+          "all_six_required_sections": true
+        }
+      ],
       "state": "profile_available"
     },
     {
@@ -58,6 +69,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -69,6 +81,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -80,6 +93,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -91,6 +105,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -102,6 +117,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -113,6 +129,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -124,6 +141,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -135,6 +153,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -146,6 +165,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -157,6 +177,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -168,6 +189,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -179,6 +201,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -190,6 +213,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -201,6 +225,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -212,6 +237,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -223,6 +249,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -234,6 +261,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -245,6 +273,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -256,6 +285,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     },
     {
@@ -267,6 +297,7 @@
         "race": 1
       },
       "camera_profiles": [],
+      "measurement_samples": [],
       "state": "camera_profile_needed"
     }
   ]
