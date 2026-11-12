@@ -11,7 +11,11 @@ python -m scraper.premium_motor --output private/premium.json
 python -m scraper.premium_motor --publish
 ```
 
-2番目は、既存の日次履歴更新の成功後に実行します。環境変数 `TEILOG_PREMIUM_FUNCTION_URL` は既存のSupabaseプロジェクトの `/functions/v1/premium` URL、`TEILOG_PREMIUM_PUBLISH_KEY` は64文字のランダムな16進文字列です。後者は実行元とEdge Function双方の秘密設定に登録してください。公開された履歴から計算するため、映像・個人ノートは使いません。
+2番目は、既存の日次履歴更新の成功後に実行します。直前の日付の各場で予定レースの9割以上に確定結果が必要です。件数不足は失敗として報告し、再試行します。保存済みと同一の送信は成功扱いになります。別の内容で同日を置き換えたり、古い版で最新を上書きしたりする操作は拒否されます。35日前までの日次版を保持し、各レースではその日より前の版を使います。
+
+環境変数 `TEILOG_PREMIUM_FUNCTION_URL` は既存のSupabaseプロジェクトの `/functions/v1/premium` URL、`TEILOG_PREMIUM_PUBLISH_KEY` は64文字のランダムな16進文字列です。後者は実行元とEdge Function双方の秘密設定に登録してください。公開履歴から計算するため、映像・個人ノートは使いません。
+
+試用配備後の定期運転には、homesvの作業専用アカウントに独立した浅いチェックアウトを置き、`bash tools/publish_premium_daily.sh` を実行します。午前8時から数回再実行できるようにすると、日次履歴が遅れた日も拾えます。同じ締め日の更新が成功した場合、それ以降の定期実行は送信を省略します。環境変数は作業用アカウントだけが読める設定で渡し、ログには終了結果だけを残します。公開先・鍵を登録するまでは手動の `--output` で検査します。
 
 ## 別の乗り手での試験
 
@@ -19,7 +23,7 @@ python -m scraper.premium_motor --publish
 
 ## Supabaseと決済
 
-専用マイグレーションを適用し、Edge Function `premium` を配備します。関数はリクエスト内で本人の認証または専用の更新鍵を検証します。Supabaseの配備で関数の組み込みJWT検証を無効にする場合も、コード内の認証を有効にしたままにします。
+既存の会員対応マイグレーションに続けて日次版用マイグレーションを適用し、Edge Function `premium` を配備します。関数はリクエスト内で本人の認証または専用の更新鍵を検証します。Supabaseの配備で関数の組み込みJWT検証を無効にする場合も、コード内の認証を有効にしたままにします。
 
 | 秘密設定 | 用途 |
 | --- | --- |
@@ -28,7 +32,10 @@ python -m scraper.premium_motor --publish
 | `TEILOG_STRIPE_SECRET_KEY` | Stripeの秘密鍵 |
 | `TEILOG_PREMIUM_LIVE_APPROVED` | 本番販売の確認がそろった後だけ `true` |
 | `TEILOG_STRIPE_PRICE_ID` | JPY月額プランのStripe価格ID |
+| `TEILOG_STRIPE_PREVIOUS_PRICE_IDS` | 旧料金の有効な契約を認める場合の価格ID。複数はカンマ区切り |
 
-試験では、招待したアカウントのみStripeのテスト画面を開けます。契約は画面を開くたびにStripeで照合するため、申込画面から戻るURLだけでは会員になりません。支払い設定と解約はStripeの会員ページを使います。
+決済未設定のときは招待アカウントが試用できます。テスト決済モードでは、招待アカウントだけがテスト画面を開けます。テストで支払いに失敗した場合は会員権限が付きません。契約は画面を開くたびにStripeで照合するため、申込画面から戻るURLだけでは会員になりません。支払い設定と解約はStripeの会員ページを使います。
+
+別期間の検証は `python -m scraper.premium_validate --window <締め日> <検証最終日>` で再現できます。締め日までにその号機を使用していない選手の後日成績を比較します。
 
 実際に受付を始める前に、決済の取扱可否・最終料金・事業者表示を確定します。無料ログインと試用アカウントで公開ページと会員向けAPIの見え方を検査し、テスト決済の申込・失敗・解約・会員解除を確認します。

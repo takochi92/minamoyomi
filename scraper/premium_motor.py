@@ -6,11 +6,16 @@ import gzip
 import json
 import math
 import os
-from collections import defaultdict
+import re
+import time
+from tempfile import NamedTemporaryFile
+from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from statistics import median
-from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from .research_snapshot import ROOT, archived_records
 
@@ -22,6 +27,8 @@ TRIAL_RATINGS = ("exhibition", "straight")
 
 
 def day(value):
+    if not re.fullmatch(r"20[0-9]{6}", value):
+        raise ValueError("expected YYYYMMDD")
     return date(int(value[:4]), int(value[4:6]), int(value[6:8]))
 
 
@@ -29,10 +36,10 @@ def observations(race):
     boats = (race.get("racelist") or {}).get("boats") or []
     entries = {b["frame"]: b for b in boats if b.get("motor_no") and b.get("toban")}
     lanes = set(range(1, 7))
-    if entries.keys() != lanes or len(boats) != 6:
+    if entries.keys() != lanes or len(boats) != 6 or len({b["motor_no"] for b in entries.values()}) != 6:
         return
     before = (race.get("before") or {}).get("boats") or []
-    exhibition = {b["frame"]: b.get("exhibit_time") for b in before}
+    exhibition = {b["frame"]: b.get("exhibit_time") for b in before} if len(before) == 6 else {}
     ori = race.get("oriten") or {}
     labels, rows = ori.get("items", []), ori.get("rows", {})
     for key, label in METRICS.items():
@@ -57,13 +64,13 @@ def profile(samples, as_of):
     weights = [2 ** (-(as_of - s[0]).days / HALF_LIFE) for s in samples]
     avg = sum(s[3] * w for s, w in zip(samples, weights)) / sum(weights)
     # Whole meetings are the replication unit, not individual races from a single day.
-    meets = defaultdict(list)
+    by_meet_rider = defaultdict(list)
     for _, meet, rider, delta in samples:
-        meets[meet].append((rider, delta))
-    replication = [(set(r for r, _ in xs), sum(x for _, x in xs) / len(xs))
-                   for xs in meets.values() if len(xs) >= 2]
+        by_meet_rider[meet, rider].append(delta)
+    replication = [(meet, rider, sum(deltas) / len(deltas))
+                   for (meet, rider), deltas in by_meet_rider.items() if len(deltas) >= 2]
     return {"runs": len(samples), "through": max(days).strftime("%Y%m%d"),
-            "meetings": len(meets), "delta": round(avg, 4)}, replication
+            "meetings": len({meet for meet, _ in by_meet_rider}), "delta": round(avg, 4)}, replication
 
 
 def rank_field(candidates, gap):
@@ -76,9 +83,10 @@ def rank_field(candidates, gap):
         value = p["delta"]
         percentile = (sum(x < value for x in scores) + (scores.count(value) - 1) / 2) / (len(scores) - 1)
         grade = "A" if percentile <= .20 else "B" if percentile <= .50 else "C" if percentile <= .80 else "D"
-        reproducible = [(riders, delta) for riders, delta in replication if delta <= middle - gap]
+        reproducible = [(meet, rider) for meet, rider, delta in replication if delta <= middle - gap]
         if (percentile <= .05 and value <= middle - gap and len(reproducible) >= 2
-                and len(set.union(*(riders for riders, _ in reproducible))) >= 2):
+                and len({meet for meet, _ in reproducible}) >= 2
+                and len({rider for _, rider in reproducible}) >= 2):
             grade = "S"
         ranked[motor] = {**p, "grade": grade, "field": len(scores), "venue_delta": round(value - middle, 4)}
     return ranked
@@ -144,6 +152,76 @@ def build(records, motor_history, through, meeting_dates=None):
     return {"version": 1, "through": through, "venues": output}
 
 
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def write_private(out, payload):
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(dir=out.parent, suffix=".tmp", delete=False) as f:
+        temporary = Path(f.name)
+    try:
+        temporary.write_text(payload, encoding="utf-8")
+        temporary.replace(out)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def publish_snapshot(payload, base, secret, opener=None, sleep=time.sleep):
+    url = urlsplit(base)
+    if (url.scheme != "https" or not re.fullmatch(r"[a-z0-9]+\.supabase\.co", url.netloc)
+            or url.path != "/functions/v1/premium" or url.query or url.fragment):
+        raise ValueError("invalid premium function URL")
+    if not re.fullmatch(r"[a-f0-9]{64}", secret):
+        raise ValueError("invalid premium publish key")
+    opener = opener or build_opener(NoRedirect()).open
+    req = Request(base, payload.encode(), {"Content-Type": "application/json", "X-Premium-Publish-Key": secret})
+    for attempt in range(3):
+        try:
+            with opener(req, timeout=45) as resp:
+                if json.load(resp).get("stored") is not True:
+                    raise RuntimeError("snapshot rejected")
+                return
+        except HTTPError as err:
+            if err.code not in (429, 500, 502, 503, 504) or attempt == 2:
+                raise RuntimeError(f"premium publish failed (HTTP {err.code})") from None
+        except (URLError, TimeoutError):
+            if attempt == 2:
+                raise RuntimeError("premium publish timed out") from None
+        sleep(2 ** attempt)
+
+
+def check_publish_inputs(records, through, today, races_dir):
+    if (today - day(through)).days not in range(1, 4):
+        raise ValueError("refusing to publish a stale or future cutoff")
+    expected = Counter()
+    available = Counter()
+    for path in (races_dir / through).glob("*.json"):
+        if not re.fullmatch(r"(0[1-9]|1[0-9]|2[0-4])(0[1-9]|1[0-2])", path.stem):
+            continue
+        venue, race = path.stem[:2], int(path.stem[2:])
+        expected[venue] += 1
+        archived = records.get((through, venue, race), {})
+        if (archived.get("result") or {}).get("finished"):
+            available[venue] += 1
+    if not expected:
+        raise ValueError("no scheduled race files on the requested cutoff")
+    incomplete = [venue for venue, count in expected.items() if available[venue] * 10 < count * 9]
+    if incomplete:
+        raise ValueError("incomplete official archive for " + through + ": " + ", ".join(sorted(incomplete)))
+
+
+def load_inputs():
+    with gzip.open(ROOT / "scraper" / "motor.json.gz", "rt", encoding="utf-8") as f:
+        history = json.load(f)
+    schedules = defaultdict(lambda: defaultdict(dict))
+    for path in (ROOT / "site" / "data" / "meetings").glob("*.json"):
+        m = json.loads(path.read_text(encoding="utf-8"))
+        schedules[m["jcd"]][m["title"].strip()][m["start"]] = m["end"]
+    return archived_records(), history, schedules
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--through", help="Last included race date in JST, YYYYMMDD")
@@ -154,37 +232,26 @@ def main():
         ap.error("choose --output or --publish")
     today = datetime.now(timezone(timedelta(hours=9))).date()
     through = args.through or (today - timedelta(days=1)).strftime("%Y%m%d")
-    if day(through) >= today:
-        ap.error("only past dates are accepted")
-    with gzip.open(ROOT / "scraper" / "motor.json.gz", "rt", encoding="utf-8") as f:
-        history = json.load(f)
-    schedules = defaultdict(lambda: defaultdict(dict))
-    for path in (ROOT / "site" / "data" / "meetings").glob("*.json"):
-        m = json.loads(path.read_text(encoding="utf-8"))
-        schedules[m["jcd"]][m["title"].strip()][m["start"]] = m["end"]
-    result = build(archived_records(), history, through, schedules)
-    if not result["venues"]:
-        ap.error("No eligible venue data. The stored snapshot was left intact.")
-    if (today - day(through)).days > 3 and args.publish:
-        ap.error("refusing to publish stale input")
-    payload = json.dumps(result, ensure_ascii=False, separators=(",", ":"))
-    if args.output:
-        out = args.output.resolve()
-        if out.is_relative_to(ROOT / "site"):
-            ap.error("premium data cannot be written in site/")
-        out.parent.mkdir(parents=True, exist_ok=True)
-        temp = out.with_suffix(out.suffix + ".tmp")
-        temp.write_text(payload, encoding="utf-8")
-        temp.replace(out)
-    if args.publish:
-        secret = os.environ["TEILOG_PREMIUM_PUBLISH_KEY"]
-        base = os.environ["TEILOG_PREMIUM_FUNCTION_URL"].rstrip("/")
-        if not base.startswith("https://") or not base.endswith(".supabase.co/functions/v1/premium"):
-            ap.error("invalid premium function URL")
-        req = Request(base, payload.encode(), {"Content-Type": "application/json", "X-Premium-Publish-Key": secret})
-        with urlopen(req, timeout=45) as resp:
-            if not json.load(resp).get("stored"):
-                raise SystemExit("Premium snapshot was not stored.")
+    try:
+        if day(through) >= today:
+            ap.error("only past dates are accepted")
+        records, history, schedules = load_inputs()
+        if args.publish:
+            check_publish_inputs(records, through, today, ROOT / "site" / "data" / "races")
+        result = build(records, history, through, schedules)
+        if not result["venues"]:
+            ap.error("No eligible venue data. The stored snapshot was left intact.")
+        payload = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+        if args.output:
+            out = args.output.resolve()
+            if out.is_relative_to(ROOT / "site"):
+                ap.error("premium data cannot be written in site/")
+            write_private(out, payload)
+        if args.publish:
+            publish_snapshot(payload, os.environ.get("TEILOG_PREMIUM_FUNCTION_URL", "").rstrip("/"),
+                             os.environ.get("TEILOG_PREMIUM_PUBLISH_KEY", ""))
+    except (ValueError, RuntimeError) as exc:
+        ap.error(str(exc))
     print("Premium snapshot", through, "venues", len(result["venues"]),
           "motors", sum(len(v["motors"]) for v in result["venues"].values()))
 

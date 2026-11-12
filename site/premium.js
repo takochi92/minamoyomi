@@ -30,7 +30,7 @@
   var root = document.querySelector('[data-premium-race], [data-premium-chart], [data-premium-plan]');
   if (!root) return;
   var account = window.TeiNoteAccount, box = root.querySelector('.premium-content');
-  var preview = box.innerHTML, selected = 'month', epoch = 0, status, checkedAt = 0;
+  var preview = box.innerHTML, selected = 'month', epoch = 0, status;
   var dateFormat = new Intl.DateTimeFormat('ja-JP', {timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
   var price = new Intl.NumberFormat('ja-JP', {style:'currency',currency:'JPY',signDisplay:'exceptZero'});
   var metrics = ['exhibition','straight','turn','acceleration','overall'];
@@ -71,7 +71,7 @@
     } else if (state?.member) {
       box.append(el('p',state.tester ? 'プレミアムの試用中です。' : 'プレミアム会員です。'),link('収支グラフを開く','/mynote#premium-chart'));
     } else if (finished) {
-      box.append(el('p','会員状態の反映を確認しています。'),button('会員状態を確認',function(){load(true);}));
+      box.append(el('p','会員状態の反映を確認しています。'),button('会員状態を確認',function(){load();}));
     } else if (!state?.checkout) {
       box.append(el('p','申込の受付は準備中です。'));
     }
@@ -124,19 +124,18 @@
     });
     box.replaceChildren(nav,el('p',selected==='week'?'直近8週・月曜始まり':selected==='month'?'直近12か月':'直近5年'),list);
   }
-  async function load(force) {
+  async function load() {
     if (root.hasAttribute('data-premium-race') && root.closest('.tabp').hidden) return;
     var id=account.identity(), ticket=++epoch;
     if (!id) {
-      status=null; checkedAt=0; box.innerHTML=preview;
+      status=null; box.innerHTML=preview;
       if (root.hasAttribute('data-premium-plan') && account.state().mode !== 'loading') plan(null);
       return;
     }
-    if (!force && status && Date.now()-checkedAt<60000) { if (root.hasAttribute('data-premium-chart')) chart(); return; }
     try {
       var state=await account.premiumCall('status');
       if (ticket!==epoch || id!==account.identity()) return;
-      status=state; checkedAt=Date.now();
+      status=state;
       if (root.hasAttribute('data-premium-plan')) plan(state);
       else if (!state.member) box.innerHTML=preview;
       else if (root.hasAttribute('data-premium-chart')) chart();
@@ -147,23 +146,23 @@
       }
     } catch (_) {
       if (ticket!==epoch) return;
-      status=null; checkedAt=0; box.innerHTML=preview;
-      if (root.hasAttribute('data-premium-plan') || root.hasAttribute('data-premium-race')) {
-        box.append(button('もう一度確認',function(){load(true);}));
-      }
+      status=null; box.innerHTML=preview;
+      box.append(button('もう一度確認',function(){load();}));
     }
   }
   function init() {
     if (root.hasAttribute('data-premium-race')) {
       var tab=root.closest('.tabp');
-      new MutationObserver(function(){if(!tab.hidden) load(true);}).observe(tab,{attributes:true,attributeFilter:['hidden']});
+      new MutationObserver(function(){if(!tab.hidden) load();}).observe(tab,{attributes:true,attributeFilter:['hidden']});
     }
     account.subscribe(function(reason) {
-      if (reason==='identity') { ++epoch; status=null; checkedAt=0; box.innerHTML=preview; load(true); }
+      if (reason==='identity') { ++epoch; status=null; box.innerHTML=preview; load(); }
       else if (root.hasAttribute('data-premium-chart') && status?.member) chart();
     });
-    document.addEventListener('visibilitychange',function(){if(!document.hidden) load(true);});
-    load(false);
+    // Recheck entitlements even when the page stays open after a cancellation or expiry.
+    setInterval(function(){if(!document.hidden) load();},60000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden) load();});
+    load();
   }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();

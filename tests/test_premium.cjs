@@ -4,11 +4,11 @@ const {buckets} = require('../site/premium.js');
 (async function () {
   const {paidSubscription,raceEvaluation} = await import('../supabase/functions/premium/logic.mjs');
   const sub = {status:'active',items:{data:[{price:{id:'price_1'},current_period_end:101}]}};
-  assert.equal(paidSubscription([sub],'price_1',100),true);
-  assert.equal(paidSubscription([sub],'price_other',100),false);
-  assert.equal(paidSubscription([sub],'price_1',101),false);
-  assert.equal(paidSubscription([{...sub,status:'past_due'}],'price_1',100),false);
-  assert.equal(paidSubscription([{...sub,cancel_at:100}],'price_1',100),false);
+  assert.equal(paidSubscription([sub],['price_1'],100),true);
+  assert.equal(paidSubscription([sub],['price_other'],100),false);
+  assert.equal(paidSubscription([sub],['price_1'],101),false);
+  assert.equal(paidSubscription([{...sub,status:'past_due'}],['price_1'],100),false);
+  assert.equal(paidSubscription([{...sub,cancel_at:100}],['price_1'],100),false);
   const field={through:'20261112',venues:{'04':{motors:{'20':{straight:{grade:'S'}}}}}};
   const lanes=[{frame:1,motor:20},{frame:2,motor:22}];
   assert.equal(raceEvaluation(field,'20261112','04',lanes),null);
