@@ -1,0 +1,948 @@
+{
+  "venue": "04",
+  "same_pixel_gate_geometry": true,
+  "same_physical_distances_verified": false,
+  "independent_reread_verified": false,
+  "same_motor_overlap": [],
+  "rating_ready": false,
+  "samples": [
+    {
+      "date": "20261111",
+      "race": 11,
+      "usable_frames": 311,
+      "coverage": {
+        "entry": 6,
+        "rotation": 4,
+        "exit": 4,
+        "turn_total": 3
+      },
+      "official": [
+        {
+          "boat": 1,
+          "racer_id": "4365",
+          "motor": 57,
+          "official_turn_seconds": 5.97
+        },
+        {
+          "boat": 2,
+          "racer_id": "4383",
+          "motor": 24,
+          "official_turn_seconds": 5.94
+        },
+        {
+          "boat": 3,
+          "racer_id": "4456",
+          "motor": 59,
+          "official_turn_seconds": 5.93
+        },
+        {
+          "boat": 4,
+          "racer_id": "3647",
+          "motor": 53,
+          "official_turn_seconds": 5.9
+        },
+        {
+          "boat": 5,
+          "racer_id": "3921",
+          "motor": 61,
+          "official_turn_seconds": 5.86
+        },
+        {
+          "boat": 6,
+          "racer_id": "4199",
+          "motor": 23,
+          "official_turn_seconds": 6.07
+        }
+      ],
+      "official_sha256": "aa7157ec90bbf7899c0c6567ea4679d578ac37bbdb610360dae375a7ee15c6bd",
+      "racelist_sha256": "8f4111ccfad3ee97f66fbf697a7f2b118c8c2bf2da53019c9fca90a08d8bb1ed"
+    },
+    {
+      "date": "20261112",
+      "race": 11,
+      "usable_frames": 257,
+      "coverage": {
+        "entry": 6,
+        "rotation": 6,
+        "exit": 6,
+        "turn_total": 6
+      },
+      "official": [
+        {
+          "boat": 1,
+          "racer_id": "4570",
+          "motor": 74,
+          "official_turn_seconds": 5.53
+        },
+        {
+          "boat": 2,
+          "racer_id": "4640",
+          "motor": 37,
+          "official_turn_seconds": 5.53
+        },
+        {
+          "boat": 3,
+          "racer_id": "3474",
+          "motor": 38,
+          "official_turn_seconds": 5.93
+        },
+        {
+          "boat": 4,
+          "racer_id": "5141",
+          "motor": 70,
+          "official_turn_seconds": 5.74
+        },
+        {
+          "boat": 5,
+          "racer_id": "3920",
+          "motor": 31,
+          "official_turn_seconds": 5.9
+        },
+        {
+          "boat": 6,
+          "racer_id": "4630",
+          "motor": 20,
+          "official_turn_seconds": 5.97
+        }
+      ],
+      "official_sha256": "70ae36d0956099ae4a8f3808a8db934e3097ea707015b9f145ffeaf400d54978",
+      "racelist_sha256": "6463eaea5226bf541e63d2dbb8bf831171316cc41b13a22da09cc635b1b9d164"
+    }
+  ],
+  "cross_date_calibration_reuse_test": [
+    {
+      "sample": "same_date_253",
+      "per_anchor_difference_and_offset": [
+        [
+          0.029,
+          0,
+          0
+        ],
+        [
+          0.0,
+          0,
+          0
+        ],
+        [
+          0.385,
+          0,
+          0
+        ]
+      ],
+      "match": true
+    },
+    {
+      "sample": "same_date_257",
+      "per_anchor_difference_and_offset": [
+        [
+          2.231,
+          0,
+          0
+        ],
+        [
+          2.823,
+          1,
+          0
+        ],
+        [
+          4.048,
+          0,
+          0
+        ]
+      ],
+      "match": true
+    },
+    {
+      "sample": "other_date_251",
+      "per_anchor_difference_and_offset": [
+        [
+          5.245,
+          -1,
+          -4
+        ],
+        [
+          11.977,
+          -1,
+          -4
+        ],
+        [
+          9.0,
+          0,
+          -3
+        ]
+      ],
+      "match": false
+    },
+    {
+      "sample": "other_date_261",
+      "per_anchor_difference_and_offset": [
+        [
+          7.526,
+          -2,
+          -4
+        ],
+        [
+          12.558,
+          -1,
+          -4
+        ],
+        [
+          8.49,
+          1,
+          -4
+        ]
+      ],
+      "match": false
+    },
+    {
+      "sample": "other_date_271",
+      "per_anchor_difference_and_offset": [
+        [
+          6.846,
+          -2,
+          -4
+        ],
+        [
+          12.227,
+          -3,
+          -4
+        ],
+        [
+          10.603,
+          0,
+          -4
+        ]
+      ],
+      "match": false
+    }
+  ],
+  "second_date_rejected_anchors": [
+    {
+      "boat": 1,
+      "failed_anchors": []
+    },
+    {
+      "boat": 2,
+      "failed_anchors": []
+    },
+    {
+      "boat": 3,
+      "failed_anchors": [
+        {
+          "anchor": [
+            30,
+            78
+          ],
+          "rejected": [
+            {
+              "time": 258,
+              "difference": 2.905,
+              "offset": [
+                3,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "boat": 4,
+      "failed_anchors": [
+        {
+          "anchor": [
+            30,
+            78
+          ],
+          "rejected": [
+            {
+              "time": 258,
+              "difference": 2.905,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.1,
+              "difference": 2.905,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.2,
+              "difference": 2.914,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.3,
+              "difference": 2.914,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.366667,
+              "difference": 2.914,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.5,
+              "difference": 2.914,
+              "offset": [
+                3,
+                1
+              ]
+            },
+            {
+              "time": 258.6,
+              "difference": 2.914,
+              "offset": [
+                3,
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "boat": 5,
+      "failed_anchors": []
+    },
+    {
+      "boat": 6,
+      "failed_anchors": [
+        {
+          "anchor": [
+            704,
+            83
+          ],
+          "rejected": [
+            {
+              "time": 264.5,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 264.6,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 264.7,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 264.8,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 264.866667,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265.1,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265.2,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265.3,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265.366667,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            },
+            {
+              "time": 265.5,
+              "difference": 4.091,
+              "offset": [
+                -3,
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "second_date_measurement": {
+    "date": "20261111",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "manifest_sha256": "a4ad0ecec024675497ab7f5080bbd08b1636ec24d66b10255b082f39cc57cd81",
+    "profile_sha256": "7cc072ee6e10120edaeb3766f9df61bc363afbc36b0d8d358b3200141295c0f3",
+    "profile": {
+      "schema": 1,
+      "id": "04-heiwajima-20261111-11r-four-gates",
+      "venue": "04",
+      "lap": 1,
+      "image_size": [
+        1280,
+        813
+      ],
+      "anchors": [
+        [
+          30,
+          78
+        ],
+        [
+          704,
+          83
+        ],
+        [
+          834,
+          90
+        ]
+      ],
+      "calibration_sha256": "b5a1cfd9132c44d7fdd736df56a62b21558266b47562d0f06b52f913298206c5",
+      "gates": {
+        "A": {
+          "axis": "x",
+          "value": 500,
+          "direction": 1,
+          "segment": [
+            490,
+            685
+          ]
+        },
+        "B": {
+          "axis": "y",
+          "value": 480,
+          "direction": -1,
+          "segment": [
+            695,
+            930
+          ]
+        },
+        "C": {
+          "axis": "y",
+          "value": 351,
+          "direction": -1,
+          "segment": [
+            720,
+            960
+          ]
+        },
+        "D": {
+          "axis": "x",
+          "value": 535,
+          "direction": -1,
+          "segment": [
+            237,
+            322
+          ]
+        }
+      }
+    },
+    "time_basis": "browser_presented_frame_media_time",
+    "measurement_method": "manual_visual_gate_brackets_midpoint",
+    "independent_readers": 1,
+    "continuous_bow_track_verified": false,
+    "rating_ready": false,
+    "usable_frames": 311,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0247p3s.png",
+              "f_0247p4s.png"
+            ],
+            "bracket": [
+              247.3,
+              247.4
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0248p8s.png",
+              "f_0248p9s.png"
+            ],
+            "bracket": [
+              248.8,
+              248.9
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0250p2s.png",
+              "f_0250p4s.png"
+            ],
+            "bracket": [
+              250.2,
+              250.4
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0251p4s.png",
+              "f_0251p5s.png"
+            ],
+            "bracket": [
+              251.4,
+              251.5
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.5,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.45,
+            "bracket_range_video_seconds": [
+              1.3,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.15,
+            "bracket_range_video_seconds": [
+              1.0,
+              1.3
+            ],
+            "checked_frame_count": 14
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.1,
+            "bracket_range_video_seconds": [
+              4.0,
+              4.2
+            ],
+            "checked_frame_count": 43
+          }
+        }
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0250p4s.png",
+              "f_0250p5s.png"
+            ],
+            "bracket": [
+              250.4,
+              250.5
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0251p9s.png",
+              "f_0252s.png"
+            ],
+            "bracket": [
+              251.9,
+              252
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0253p2s.png",
+              "f_0253p3s.png"
+            ],
+            "bracket": [
+              253.2,
+              253.3
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0254p8s.png",
+              "f_0254p9s.png"
+            ],
+            "bracket": [
+              254.8,
+              254.9
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.5,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.3,
+            "bracket_range_video_seconds": [
+              1.2,
+              1.4
+            ],
+            "checked_frame_count": 15
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.6,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.7
+            ],
+            "checked_frame_count": 18
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.4,
+            "bracket_range_video_seconds": [
+              4.3,
+              4.5
+            ],
+            "checked_frame_count": 46
+          }
+        }
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0253p4s.png",
+              "f_0253p5s.png"
+            ],
+            "bracket": [
+              253.4,
+              253.5
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0254p9s.png",
+              "f_0255s.png"
+            ],
+            "bracket": [
+              254.9,
+              255
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0256p3s.png",
+              "f_0256p5s.png"
+            ],
+            "bracket": [
+              256.3,
+              256.5
+            ]
+          }
+        },
+        "missing_crossings": {
+          "D": "crossing_camera_mismatch"
+        },
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.5,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.45,
+            "bracket_range_video_seconds": [
+              1.3,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          }
+        }
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0255p6s.png",
+              "f_0255p7s.png"
+            ],
+            "bracket": [
+              255.6,
+              255.7
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0257p2s.png",
+              "f_0257p4s.png"
+            ],
+            "bracket": [
+              257.2,
+              257.366667
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0258p7s.png",
+              "f_0258p9s.png"
+            ],
+            "bracket": [
+              258.7,
+              258.866667
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0260p1s.png",
+              "f_0260p2s.png"
+            ],
+            "bracket": [
+              260.1,
+              260.2
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.633,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.767
+            ],
+            "checked_frame_count": 19
+          },
+          "rotation": {
+            "status": "camera_mismatch_in_section"
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.367,
+            "bracket_range_video_seconds": [
+              1.233,
+              1.5
+            ],
+            "checked_frame_count": 16
+          },
+          "turn_total": {
+            "status": "camera_mismatch_in_section"
+          }
+        }
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0259p1s.png",
+              "f_0259p2s.png"
+            ],
+            "bracket": [
+              259.1,
+              259.2
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0260p6s.png",
+              "f_0260p7s.png"
+            ],
+            "bracket": [
+              260.6,
+              260.7
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0262p1s.png",
+              "f_0262p3s.png"
+            ],
+            "bracket": [
+              262.1,
+              262.3
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0263p5s.png",
+              "f_0263p6s.png"
+            ],
+            "bracket": [
+              263.5,
+              263.6
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.5,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.55,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.7
+            ],
+            "checked_frame_count": 18
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.35,
+            "bracket_range_video_seconds": [
+              1.2,
+              1.5
+            ],
+            "checked_frame_count": 16
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.4,
+            "bracket_range_video_seconds": [
+              4.3,
+              4.5
+            ],
+            "checked_frame_count": 46
+          }
+        }
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0261p5s.png",
+              "f_0261p6s.png"
+            ],
+            "bracket": [
+              261.5,
+              261.6
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0263s.png",
+              "f_0263p1s.png"
+            ],
+            "bracket": [
+              263,
+              263.1
+            ]
+          }
+        },
+        "missing_crossings": {
+          "C": "crossing_camera_mismatch",
+          "D": "crossing_camera_mismatch"
+        },
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.5,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "crossing_missing"
+          },
+          "exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          }
+        }
+      }
+    ],
+    "coverage": {
+      "entry": 6,
+      "rotation": 4,
+      "exit": 4,
+      "turn_total": 3
+    },
+    "review_notes_sha256": "e3f8a85c30b0e23bb69f477440d1158d63ddc4b7cc9472ec6335c36dd5a4db3d"
+  },
+  "original_measurement": "exhibition_first_mark_20261112.json"
+}

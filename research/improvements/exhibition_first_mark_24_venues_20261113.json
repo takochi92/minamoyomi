@@ -1,0 +1,430 @@
+{
+  "scope": "one_replay_per_venue_visual_spot_check",
+  "sampled_venues": 24,
+  "fixed_first_mark_candidates": 24,
+  "camera_orientation_counts": {
+    "mark_right": 24
+  },
+  "condition_counts": {
+    "reflection": 6,
+    "shore": 10,
+    "water": 8
+  },
+  "venues": [
+    {
+      "venue": "01",
+      "name": "桐生",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        264,
+        275,
+        285,
+        296
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "暗い水面。上部に対岸。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "02",
+      "name": "戸田",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        257,
+        268,
+        279
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "対岸の建物が見え、ブイは画面中央より右。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "03",
+      "name": "江戸川",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "partial",
+      "first_lap_fixed_view_sample_seconds": [
+        251,
+        261,
+        271
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "対岸の護岸。終盤の出走表の同一画像2枚を除外。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "04",
+      "name": "平和島",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        251,
+        261,
+        271
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "近めの斜俯瞰。日によって固定物の位置が変わる。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false,
+      "separate_timing_sample": "exhibition_first_mark_repeatability_20261113.json"
+    },
+    {
+      "venue": "05",
+      "name": "多摩川",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        236,
+        246,
+        257
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "水面の反射が左に強く出る。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "06",
+      "name": "浜名湖",
+      "date": "20261103",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        246,
+        257,
+        267,
+        277
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "右に寄った旋回。周回字幕が下端。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "07",
+      "name": "蒲郡",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        264,
+        275,
+        285,
+        296
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "水面中心。周回字幕が右下。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "08",
+      "name": "常滑",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        253,
+        264,
+        275
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "入口から出口まで反射が強い。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "09",
+      "name": "津",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        242,
+        257,
+        268
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "旋回が右寄り。対岸は上端。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "10",
+      "name": "三国",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        255,
+        266,
+        276
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "水面中心。旋回後の航跡を視認。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "11",
+      "name": "びわこ",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        257,
+        268,
+        279
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "ブイ列が右上がり。反射と白い航跡。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "12",
+      "name": "住之江",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        238,
+        248,
+        257,
+        267
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "比較的広い画角。出走情報が上部。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "13",
+      "name": "尼崎",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        252,
+        262,
+        272
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "白い反射がターンと重なる。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "14",
+      "name": "鳴門",
+      "date": "20261108",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        242,
+        252,
+        262,
+        272
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "広い画角。周回字幕は上部。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "15",
+      "name": "丸亀",
+      "date": "20261103",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        250,
+        265,
+        276
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "水面の白飛びが強く、艇首の読み取りを要検証。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "16",
+      "name": "児島",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        253,
+        264,
+        275
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "上下に情報帯。出口側の表示重なりを要検証。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "17",
+      "name": "宮島",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        264,
+        275,
+        285
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "対岸が上端に映る。白い反射が出口にかかる。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "18",
+      "name": "徳山",
+      "date": "20261103",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        259,
+        270,
+        281
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "水面中心。ブイ列が右下がり。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "19",
+      "name": "下関",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        257,
+        268,
+        279
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "暗い水面。ブイと旋回が中央付近。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "20",
+      "name": "若松",
+      "date": "20261024",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        246,
+        257,
+        267,
+        277
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "ナイターの強い反射がブイ付近にある。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "21",
+      "name": "芦屋",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        242,
+        252,
+        262
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "対岸と樹木が上端に見える。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "22",
+      "name": "福岡",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        257,
+        267,
+        277
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "water",
+      "notes": "水面中心でブイ列が右上がり。周回字幕は左上。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "23",
+      "name": "唐津",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        257,
+        267,
+        277
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "reflection",
+      "notes": "照り返しが中央付近に強い。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    },
+    {
+      "venue": "24",
+      "name": "大村",
+      "date": "20261112",
+      "race": 1,
+      "capture_status": "ok",
+      "first_lap_fixed_view_sample_seconds": [
+        248,
+        259,
+        270
+      ],
+      "camera_orientation": "mark_right",
+      "primary_condition": "shore",
+      "notes": "上部に護岸。赤白のブイ列。",
+      "gate_calibration_verified": false,
+      "six_boat_timing_verified_in_this_sample": false
+    }
+  ]
+}
