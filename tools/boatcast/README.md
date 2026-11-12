@@ -7,6 +7,19 @@
 - 対象は「再生・フレーム取得・記録」まで。**動画ファイルそのもののダウンロード・再配布はしません**。
 - 外部の npm 依存はありません（Node v22 の標準機能 `fetch` / `WebSocket` / `node:test` だけ）。
 
+## いちばん簡単な使い方（受け入れ検査）
+
+homesv に置いたあと、これ1本を実行します。最後に「総合: 合格」と出れば、正式運用してよい状態です。
+「不合格」のときは、表示された「不合格」の行をそのまま報告してください。
+
+```bash
+cd /home/work/boatcast-check/claude-code/boatcast
+node accept.mjs --date 20261112        # リプレイが見られる日付を指定（省略すると今日）
+```
+
+中身は、ユニットテスト → 自己点検（verify）→ 近い2つの秒（12R の 248.167 / 248.197）→ 離れた秒（1R の 10 / 60 / 120）の4つです。
+結果は `captures/acceptance-<日時>/acceptance-report.json` にも残ります。
+
 ## 確認の出どころ（混ぜない）
 
 | 出どころ | 内容 |
@@ -21,6 +34,7 @@
 |---|---|
 | `capture.mjs` | **本体**。Chrome 起動 → 再生 → フレーム確認 → PNG 保存 → manifest.json 記録 → 自分の Chrome だけ終了 |
 | `verify.mjs` | 自己点検。9項目を `PASS` / `FAIL` で1行ずつ出す |
+| `accept.mjs` | **受け入れ検査**。1コマンドで 合格 / 不合格 を出す |
 | `report.mjs` | manifest.json を表にして、計測に使える画像・同じコマの重複・要確認を出す（実機確認用。ブラウザ不要） |
 | `frames.mjs` | 「撮った画像が、どのフレームか」の判定と、同じコマのまとめ（純粋なロジック） |
 | `player.mjs` | プレイヤー操作：video 待ち、再生確認、**表示フレーム時刻の監視（requestVideoFrameCallback）**、シーク＆撮影 |

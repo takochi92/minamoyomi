@@ -236,6 +236,17 @@ try {
   assert.match(x.out, /\[cdp\]/);
   assert.match(x.out, /--port/);
 
+  // 受け入れ検査（accept.mjs）：1コマンドで 合格 が出ること
+  const acc = await runAsync('accept.mjs', ['--date', '20261112', '--pair', '10.02,10.1', '--spread', '3,10,20', '--port', port, '--player-url', U('slow.html')]);
+  console.log(acc.out.split('\n').slice(-12).join('\n'));
+  assert.equal(acc.code, 0, 'accept が不合格');
+  assert.match(acc.out, /総合: 合格/);
+  assert.match(acc.out, /同じコマでした/);
+  noSecret(acc.out);
+  const bad = await runAsync('accept.mjs', ['--date', '20261112', '--pair', '5,12', '--spread', '3,10', '--port', port, '--player-url', U('noframe.html')]);
+  assert.notEqual(bad.code, 0);
+  assert.match(bad.out, /総合: 不合格/);
+
   console.log('E2E OK');
 } finally {
   server.close();

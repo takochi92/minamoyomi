@@ -10,6 +10,7 @@
     "smoke": "node test/e2e-local.smoke.mjs",
     "verify": "node verify.mjs",
     "capture": "node capture.mjs",
-    "report": "node report.mjs"
+    "report": "node report.mjs",
+    "accept": "node accept.mjs"
   }
 }
