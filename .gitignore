@@ -41,3 +41,4 @@ scraper/exhibition_model/*.onnx
 private/
 .wrangler/
 supabase/.temp/
+site/premium.html

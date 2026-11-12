@@ -92,6 +92,10 @@ def test_pages_and_links(tmp_path):
     assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
     assert race_html.index('data-t="yoso"') < race_html.index('data-t="setsukan"') < race_html.index('data-t="tenji"')
     assert 'data-p="setsukan"' in race_html
+    assert 'data-t="premium"' in race_html and 'data-p="premium" hidden' in race_html
+    assert 'href="/premium"' in race_html
+    assert 'data-premium-plan' in files['premium.html']
+    assert 'id="premium-chart" data-premium-chart' in files['mynote.html']
     assert len([p for p in files if p.startswith("racer/")]) > 1000
     assert 'id="page-freshness"' in files['venue/kiryu.html']
     assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']

@@ -206,6 +206,7 @@ class Page:
 <script src="{self.asset('note-store.js')}" defer></script>
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
+{f'<script src="{self.asset("premium.js")}" defer></script>' if self.path.startswith('race/') or self.path in ('mynote.html', 'premium.html') else ''}
 <script src="{self.asset('race-notifications.js')}" defer></script>
 <script src="{self.asset('pwa.js')}" defer></script>
 <script src="{self.asset('freshness.js')}" defer></script>
@@ -1226,7 +1227,7 @@ class Site:
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 {self.freshness_block(page, race.get('updated_at', ''), f'{d}-{jcd}-{rno}') if d == self.idx.get('date') and not res else ''}
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
+<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button><button data-t="premium" role="tab">プレミアム</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
@@ -1260,9 +1261,18 @@ class Site:
 <div class="tabp" data-p="kekka" style="display:grid;gap:16px;min-width:0" hidden>
 {self.result_block(d, race, p, res, page) or '<section class="panel"><p class="sub" style="margin:0">レースが終わると、着順・払戻・本番のスタートをここに表示します（締切の15分後ごろ）。</p></section>'}
 </div>
+<div class="tabp" data-p="premium" hidden>
+<section class="panel premium-panel" data-premium-race data-date="{e(d)}" data-venue="{e(jcd)}" data-race="{int(rno)}">
+<h2>モーター評価</h2>
+<div class="premium-content" aria-live="polite">
+<div class="premium-sample" aria-hidden="true">{''.join(f'<span>{label}<b>—</b></span>' for label in ('展示', '伸び', 'まわり足'))}</div>
+<p>直近3節をもとに、6艇のモーター評価と場内での順位と秒差が見られます。</p>
+<a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a>
+</div></section>
+</div>
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka','premium'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
@@ -2606,9 +2616,20 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = f"""<h1>マイノート</h1>
 <p class="sub">収支表・選手メモ・モーターメモ。登録せずにも使えます。保存先は、下のログイン状態と案内を確認してください。</p>
 <div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
+<section class="panel premium-panel" id="premium-chart" data-premium-chart><h2>収支グラフ</h2><div class="premium-content"><p>収支の推移を週・月・年で見られます。</p><a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a></div></section>
 <section class="panel" id="race-notifications" aria-live="polite"></section>
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
+        page = Page("premium.html")
+        body = """<h1>艇ろぐ プレミアム</h1>
+<section class="panel premium-panel" data-premium-plan>
+<h2>モーター評価と収支グラフ</h2>
+<ul><li>レースごとに6艇の展示・伸び・まわり足を比較</li>
+<li>マイノートの収支を週・月・年のグラフで確認</li></ul>
+<p class="sub">計測や比較に必要なデータが少ない項目は評価保留になります。</p>
+<div class="premium-content" aria-live="polite"><p>申込の受付は準備中です。</p></div>
+</section>"""
+        self.put(page.path, page.render(f"プレミアム｜{SITE_NAME}", "モーター評価とマイノートの収支グラフ。", body, [("", "プレミアム")], noindex=True))
         page = Page("tools/composite.html")
         body = """<h1>合成オッズ計算ツール</h1>
 <p>複数の買い目のオッズを入れると、合成オッズと「どれが当たっても払戻がほぼ同じになる配分（100円単位）」を計算します。</p>
