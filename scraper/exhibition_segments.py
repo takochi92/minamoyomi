@@ -48,9 +48,12 @@ def race_identity(manifest):
 
 def profile_geometry(profile):
     if (profile.get("schema") != 1 or profile.get("venue") not in VENUES
-            or profile.get("lap") not in (1, 2) or not isinstance(profile.get("id"), str)
+            or type(profile.get("lap")) is not int or profile["lap"] not in (1, 2)
+            or not isinstance(profile.get("id"), str)
             or not profile["id"].strip()):
         raise ValueError("invalid_profile")
+    if profile.get("coordinate_space", "screenshot") not in ("screenshot", "video"):
+        raise ValueError("invalid_coordinate_space")
     size = profile.get("image_size")
     if not isinstance(size, list) or len(size) != 2 or any(type(n) is not int or not 64 <= n <= 4096 for n in size):
         raise ValueError("invalid_profile_image_size")
@@ -97,14 +100,31 @@ def usable_frames(manifest):
         if (row.get("measurable") is True and row.get("stable") is True and row.get("paused") is True
                 and row.get("seeked") is True and not row.get("duplicateOf") and name not in rejected
                 and finite(t) and t >= 0 and isinstance(sha, str) and SHA256.fullmatch(sha)):
-            frames[name] = {"time": t, "sha256": sha}
+            frames[name] = {"time": t, "sha256": sha, "video_layout": row.get("videoLayout")}
     counts = defaultdict(int)
     for row in frames.values():
         counts[row["time"]] += 1
     return {name: row for name, row in frames.items() if counts[row["time"]] == 1}
 
 
-def frame_loader(directory, size, frames, *, image_mode="L"):
+def video_box(layout, screenshot_size, native_size):
+    if not isinstance(layout, dict):
+        raise ValueError("video_layout_required")
+    if layout.get("viewport") != list(screenshot_size) or layout.get("native") != list(native_size):
+        raise ValueError("video_layout_dimensions_mismatch")
+    box = layout.get("box")
+    if not isinstance(box, list) or len(box) != 4 or not all(finite(x) for x in box):
+        raise ValueError("invalid_video_box")
+    left, top, right, bottom = box
+    width, height = screenshot_size
+    if not 0 <= left < right <= width or not 0 <= top < bottom <= height:
+        raise ValueError("invalid_video_box")
+    if abs((right - left) - (bottom - top) * native_size[0] / native_size[1]) > 2:
+        raise ValueError("video_box_aspect_mismatch")
+    return tuple(box)
+
+
+def frame_loader(directory, size, frames, *, image_mode="L", coordinate_space="screenshot"):
     directory = Path(directory).resolve()
 
     @lru_cache(maxsize=12)
@@ -118,6 +138,9 @@ def frame_loader(directory, size, frames, *, image_mode="L"):
                     raise ValueError("frame_sha256_mismatch")
                 f.seek(0)
                 with Image.open(f, formats=["PNG"]) as im:
+                    if coordinate_space == "video":
+                        box = video_box(frames[name]["video_layout"], im.size, size)
+                        return im.convert(image_mode).resize(size, Image.Resampling.BILINEAR, box)
                     if im.size != size:
                         raise ValueError("frame_dimensions_mismatch")
                     return im.convert(image_mode)
@@ -182,30 +205,49 @@ def read_track(observations, size, frames, window):
 
 def fit_crossing(support, a, b, gate, max_residual, max_speed, frame_order):
     if len(support) < 5 or any(row is None for row in support):
-        return None
+        raise ValueError("crossing_support_missing")
     for left, right in zip(support, support[1:]):
         elapsed = right["time"] - left["time"]
-        if (elapsed > MAX_GAP_SECONDS or frame_order[right["file"]] - frame_order[left["file"]] != 1
-                or math.hypot(right["x"] - left["x"], right["y"] - left["y"]) > max_speed * elapsed):
-            return None
+        if elapsed > MAX_GAP_SECONDS or frame_order[right["file"]] - frame_order[left["file"]] != 1:
+            raise ValueError("crossing_support_not_contiguous")
+        if math.hypot(right["x"] - left["x"], right["y"] - left["y"]) > max_speed * elapsed:
+            raise ValueError("crossing_support_jump")
     time = [row["time"] - a["time"] for row in support]
     position = [row[gate["axis"]] for row in support]
     t_mean, p_mean = sum(time) / len(time), sum(position) / len(position)
     slope = (sum((t - t_mean) * (p - p_mean) for t, p in zip(time, position)) /
              sum((t - t_mean) ** 2 for t in time))
     if slope * gate["direction"] <= 0:
-        return None
+        raise ValueError("crossing_fit_direction_mismatch")
     residual = max(abs(p - (p_mean + slope * (t - t_mean))) for t, p in zip(time, position))
+    if residual > max_residual:
+        raise ValueError("crossing_fit_residual_too_high")
     when = a["time"] + t_mean + (gate["value"] - p_mean) / slope
-    if residual > max_residual or not a["time"] - 1e-9 <= when <= b["time"] + 1e-9:
-        return None
-    when = min(max(when, a["time"]), b["time"])
+    left, right = a, b
+    if not a["time"] - 1e-9 <= when <= b["time"] + 1e-9:
+        # A small disagreement can be reported with a wider observed bracket.
+        # Require independently observed positions on both sides of the line.
+        discrepancy = max(a["time"] - when, when - b["time"])
+        if discrepancy > residual / abs(slope):
+            raise ValueError("crossing_fit_outside_observed_bracket")
+        direction = gate["direction"]
+        before = [row for row in support if row["time"] <= when
+                  and direction * (row[gate["axis"]] - gate["value"]) < -residual]
+        after = [row for row in support if row["time"] >= when
+                 and direction * (row[gate["axis"]] - gate["value"]) > residual]
+        if not before or not after:
+            raise ValueError("crossing_fit_outside_observed_bracket")
+        left = min(a, before[-1], key=lambda row: row["time"])
+        right = max(b, after[0], key=lambda row: row["time"])
+        if right["time"] - left["time"] > 2 * MAX_GAP_SECONDS:
+            raise ValueError("crossing_fit_bracket_too_wide")
+    when = min(max(when, left["time"]), right["time"])
     other = "y" if gate["axis"] == "x" else "x"
-    fraction = (when - a["time"]) / (b["time"] - a["time"])
-    at_crossing = a[other] + fraction * (b[other] - a[other])
+    fraction = (when - left["time"]) / (right["time"] - left["time"])
+    at_crossing = left[other] + fraction * (right[other] - left[other])
     if not gate["segment"][0] <= at_crossing <= gate["segment"][1]:
-        return None
-    return when, residual
+        raise ValueError("crossing_fit_outside_gate_extent")
+    return when, residual, left, right
 
 
 def find_crossings(track, gates, check_camera, max_residual, max_speed, frame_order):
@@ -229,21 +271,18 @@ def find_crossings(track, gates, check_camera, max_residual, max_speed, frame_or
                 continue
             offset = max(0, min(i - 1, len(track) - 5))
             support = track[offset:offset + 5]
-            fit = fit_crossing(support, a, b, gate, max_residual, max_speed, frame_order)
-            if fit is None:
-                uncertain[label].add("unstable_or_insufficient_crossing_track")
-                continue
             try:
+                when, residual, left, right = fit_crossing(support, a, b, gate, max_residual, max_speed, frame_order)
                 if not all(check_camera(row["file"]) for row in support):
                     uncertain[label].add("camera_landmark_changed")
                     continue
             except ValueError as error:
                 uncertain[label].add(str(error))
                 continue
-            when, residual = fit
             events[label].append({
-                "seconds": when, "bracket": [a["time"], b["time"]],
-                "frames": [a["file"], b["file"]],
+                "seconds": when, "bracket": [left["time"], right["time"]],
+                "frames": [left["file"], right["file"]],
+                "raw_bracket": [a["time"], b["time"]],
                 "fit_frames": [row["file"] for row in support],
                 "max_fit_residual_pixels": round(residual, 3),
             })
@@ -347,9 +386,17 @@ def measure(manifest, profile, review, directory, *, manifest_sha256, calibratio
     max_residual = profile.get("max_crossing_fit_residual_pixels")
     if not finite(max_residual) or max_residual <= 0:
         raise ValueError("crossing_fit_residual_limit_required")
-    check_camera = camera_check(frame_loader(directory, size, frames), image, anchors)
+    check_camera = camera_check(frame_loader(directory, size, frames,
+                                            coordinate_space=profile.get("coordinate_space", "screenshot")),
+                                image, anchors)
     if not check_camera(reference):
         raise ValueError("capture_does_not_match_camera_calibration")
+    lap_evidence = review.get("lap_evidence") or {}
+    lap_frame = lap_evidence.get("file")
+    if (type(lap_evidence.get("lap")) is not int or lap_evidence["lap"] != profile["lap"]
+            or lap_evidence.get("method") != "broadcast_caption" or lap_frame not in frames
+            or not window[0] <= frames[lap_frame]["time"] <= window[1] or not check_camera(lap_frame)):
+        raise ValueError("lap_caption_evidence_required")
     frame_sequence = sorted((row["time"], name) for name, row in frames.items())
     frame_order = {name: i for i, (_, name) in enumerate(frame_sequence)}
     identity = review.get("identity") or {}
@@ -384,6 +431,7 @@ def measure(manifest, profile, review, directory, *, manifest_sha256, calibratio
         "schema": 1, "date": day, "venue": venue, "race": race, "lap": profile["lap"],
         "profile_id": profile["id"], "manifest_sha256": manifest_sha256,
         "profile_sha256": digest(profile), "review_sha256": digest(review),
+        "lap_evidence": {key: lap_evidence[key] for key in ("lap", "file", "method")},
         "quality_checks": "pinned_camera_and_continuous_track_v2",
         "time_basis": "browser_presented_frame_media_time",
         "full_backstretch_verified": False, "real_time_scale_verified": False,

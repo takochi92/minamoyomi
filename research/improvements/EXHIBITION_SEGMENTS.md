@@ -13,19 +13,29 @@
 | 直線前半・後半 | D–E、E–F | 同じ線の間を通る時間の比較 |
 | 直線 | D–F | 画角内で観測した直線区間 |
 
-各タイムは艇首が基準線をはさむ前後のコマを見つけ、近くの連続5コマの軌跡を直線に当てはめて求める。当てはめの残差が設定を超えた場合や、推定時刻が前後のコマの範囲を外れた場合は欠測にする。出力に各コマの時刻・座標・残差と、区間時間の取り得る範囲を保存する。この範囲には、艇首を読み取る人の違いやリプレイの再生倍率による誤差は含まれない。出力単位はリプレイ上の秒。直線前半・後半の長さ、バックストレッチ全長、撮影位置による遠近の差は別途確認が必要。
+各タイムは艇首が基準線をはさむ前後のコマを見つけ、近くの連続5コマの軌跡を直線に当てはめて求める。当てはめの残差が設定を超えた場合は欠測にする。推定時刻が最初の通過幅をわずかに外れた場合は、基準線の両側に残差より遠い実測点があるときに限り、観測幅を広げ、最初の範囲も残す。区間内で艇首を見失った場合は欠測のままにする。出力に各コマの時刻・座標・残差と、区間時間の取り得る範囲を保存する。この範囲には、艇首を読み取る人の違いやリプレイの再生倍率による誤差は含まれない。出力単位はリプレイ上の秒。直線前半・後半の長さ、バックストレッチ全長、撮影位置による遠近の差は別途確認が必要。
 
-2026年11月12日の平和島12RのJSONは、レビュー対象になった旧方式の参考値。元の一時画像は削除済み。新しい計測を通すには校正画像を取得し直し、軌跡を再採点する。現行キャプチャでは画面全体の座標を使うため、Chromeの画面サイズが変わった場合は計測を拒否する。映像領域の座標への切り替えにはキャプチャ側で領域を記録する対応が必要。
+2026年11月12日の平和島12Rの `exhibition_segment_sample_20261112.json` は、レビュー対象になった旧方式の参考値。新しい方式の試験は `exhibition_segment_followup_20261112.json` に記録した。再採点は1号艇のみで、旧結果とは別の参考値として扱う。
+
+Chromeの窓サイズを変える運用では、PR #68のキャプチャを別の作業先に用意し、撮影の直前・直後で映像領域が一致した場合だけ、各コマに `videoLayout` を記録する。
+
+```sh
+python -m tools.prepare_boatcast_layout --source PRIVATE/pr68/tools/boatcast --output PRIVATE/layout-capture
+node PRIVATE/layout-capture/capture.mjs --date 20261112 --venue 04 --race 12 --seconds 248,250,252
+```
+
+映像内の座標を使う設定は `coordinate_space: "video"` を指定し、`image_size` に映像の解像度を入れる。基準線・固定物・艇首もこの座標にそろえ、校正PNGは同じ解像度に切り出す。確認用シートにも同じ `--profile` を渡せる。領域の情報が欠けたコマや、画面サイズ・映像サイズが合わないコマは拒否する。平和島12Rの3コマを2種類の窓サイズから854×480にそろえ、固定物が一致した。別の場・画角への適用は個別に確認する。
 
 ## 実行手順
 
 1. homesv の作業専用ユーザーから PR #68 の通常再生キャプチャを使う。最初に粗い間隔で固定画角の候補を探し、候補区間を 0.1 秒間隔で取り直す。外部への成果物は数値だけを使う。
 2. 場・周回・画像サイズ、物理的な固定物3点、基準線A〜Fの方向と有効範囲を設定する。A〜Cは必須。基準線を設定したPNGを作業専用領域に保管し、SHA-256を `calibration_sha256` に記録する。 `max_bow_pixels_per_video_second` と `max_crossing_fit_residual_pixels` はその画角の試験で決める。
-3. レビュー用JSONを生成し、固定画角の開始・終了時刻、基準フレーム、艇番ごとの艇首座標を記録する。各区間内の採用可能な全コマと、各通過点周辺の連続5コマが必要。色または艇番を確認できたコマを `identity` に記録する。形式は `{"1":{"boat":1,"method":"boat_color","file":"f_0248s.png"}}`。艇番を画面で読めた場合は `visible_number` を使う。固定物と基準線を確認してから `camera_layout_reviewed` を `true` にする。
+3. レビュー用JSONを生成し、固定画角の開始・終了時刻、基準フレーム、艇番ごとの艇首座標を記録する。各区間内の採用可能な全コマと、各通過点周辺の連続5コマが必要。色または艇番を確認できたコマを `identity` に記録する。形式は `{"1":{"boat":1,"method":"boat_color","file":"f_0248s.png"}}`。艇番を画面で読めた場合は `visible_number` を使う。固定物と基準線を確認してから `camera_layout_reviewed` を `true` にする。1周目と2周目の両方で固定物が一致することがあるため、周回の字幕を確認したコマを `lap_evidence` に記録する。形式は `{"lap":1,"method":"broadcast_caption","file":"f_0248s.png"}`。
 4. 計測を実行する。重複、フレーム欠落、ハッシュの違い、急な座標の飛び、同じ軌跡への複数艇の割り当て、画角の変化を検査する。艇の色・番号は人が確認する。
 
 ```sh
 python -m tools.exhibition_review_sheet --manifest PRIVATE/manifest.json --start 247.7 --end 253.5 --scale 0.30 --output PRIVATE/sheets
+python -m tools.measure_exhibition scan-camera --manifest PRIVATE/manifest.json --profile PROFILE.json --calibration PRIVATE/calibration.png --output PRIVATE/camera-scan.json
 python -m tools.measure_exhibition template --manifest PRIVATE/manifest.json --profile PROFILE.json --output PRIVATE/review.json
 python -m tools.measure_exhibition measure --manifest PRIVATE/manifest.json --profile PROFILE.json --review PRIVATE/review.json --calibration PRIVATE/calibration.png --output PRIVATE/result.json
 python -m tools.measure_exhibition inventory --stadiums PRIVATE/stadiums.json --profiles research/improvements/exhibition_profiles --result PRIVATE/result.json --output PRIVATE/coverage.json

@@ -6,10 +6,13 @@ import sys
 from PIL import Image
 import pytest
 
-from scraper.exhibition_segments import SEGMENTS, measure, usable_frames
+from scraper.exhibition_segments import SEGMENTS, fit_crossing, frame_loader, measure, usable_frames
 from scraper.turn_measurement import digest
-from tools.measure_exhibition import inventory, main, output_lock, run_batch, template
+from tools.measure_exhibition import inventory, main, output_lock, run_batch, scan_camera, template
 from tools.exhibition_review_sheet import build_sheets
+
+
+LAP_EVIDENCE = {"lap": 1, "file": "f_000.png", "method": "broadcast_caption"}
 
 
 def setup_capture(tmp_path):
@@ -53,6 +56,7 @@ def test_fixed_shot_times_and_safe_batch_rerun(tmp_path, monkeypatch):
     profile_path = write_json(tmp_path / "profile.json", profile)
     review = template(manifest_path, profile_path)
     review.update(window=[199, 203], camera_reference="f_000.png", camera_layout_reviewed=True,
+                  lap_evidence=LAP_EVIDENCE,
                   boats={"1": observations},
                   identity={"1": {"boat": 1, "method": "boat_color", "file": "f_000.png"}})
     write_json(tmp_path / "review.json", review)
@@ -104,6 +108,7 @@ def test_camera_cut_inside_section_and_duplicate_time(tmp_path):
     manifest, profile, observations = setup_capture(tmp_path)
     review = {"schema": 1, "manifest_sha256": "test", "profile_sha256": digest(profile),
               "camera_layout_reviewed": True,
+              "lap_evidence": LAP_EVIDENCE,
               "camera_reference": "f_000.png", "window": [199, 203], "boats": {"1": observations},
               "identity": {"1": {"boat": 1, "method": "visible_number", "file": "f_000.png"}}}
     options = {"manifest_sha256": "test", "calibration": tmp_path / "calibration.png"}
@@ -125,8 +130,12 @@ def test_unrelated_calibration_duplicate_and_sparse_tracks_are_rejected(tmp_path
     evidence = {"boat": 1, "method": "visible_number", "file": "f_000.png"}
     review = {"schema": 1, "manifest_sha256": "test", "profile_sha256": digest(profile),
               "camera_layout_reviewed": True, "camera_reference": "f_000.png", "window": [199, 203],
+              "lap_evidence": LAP_EVIDENCE,
               "boats": {"1": observations, "2": observations}, "identity": {"1": evidence}}
     options = {"manifest_sha256": "test", "calibration": tmp_path / "calibration.png"}
+    with pytest.raises(ValueError, match="lap_caption_evidence_required"):
+        measure(manifest, profile, {**review, "lap_evidence": {**LAP_EVIDENCE, "lap": 2}},
+                tmp_path, **options)
     result = measure(manifest, profile, review, tmp_path, **options)
     assert all(b["missing_crossings"]["A"] == ["overlapping_boat_tracks"] for b in result["boats"][:2])
     review["boats"] = {"1": [r for i, r in enumerate(observations) if i != 6]}
@@ -169,6 +178,15 @@ def test_io_error_does_not_block_other_jobs_and_sheet_can_be_repeated(tmp_path, 
     }
 
 
+def test_camera_scan_reports_matching_and_tampered_frames(tmp_path):
+    manifest, profile, _ = setup_capture(tmp_path)
+    manifest_path = write_json(tmp_path / "manifest.json", manifest)
+    profile_path = write_json(tmp_path / "profile.json", profile)
+    Image.new("L", (96, 96), 0).save(tmp_path / "f_006.png")
+    result = scan_camera(manifest_path, profile_path, tmp_path / "calibration.png")
+    assert result["status_counts"] == {"match": 22, "frame_sha256_mismatch": 1}
+
+
 def test_venue_inventory_distinguishes_replay_from_calibration(tmp_path):
     _, profile, _ = setup_capture(tmp_path)
     profiles = tmp_path / "profiles"
@@ -182,3 +200,42 @@ def test_venue_inventory_distinguishes_replay_from_calibration(tmp_path):
     assert result["camera_profile_venues"] == 1
     assert result["venues"][3]["state"] == "profile_available"
     assert result["venues"][-1]["state"] == "camera_profile_needed"
+
+
+def test_video_coordinate_space_accepts_two_viewports_and_rejects_wrong_metadata(tmp_path):
+    size = (96, 96)
+    video = Image.new("L", size, 50)
+    video.paste(200, (24, 24, 72, 72))
+    captures = {}
+    for i, (viewport, offset) in enumerate([((106, 110), (5, 7)), ((124, 108), (14, 6))]):
+        frame = Image.new("L", viewport)
+        frame.paste(video, offset)
+        name = f"f_{i:03}.png"
+        path = tmp_path / name
+        frame.save(path)
+        x, y = offset
+        captures[name] = {"sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                          "video_layout": {"viewport": list(viewport), "native": list(size),
+                                           "box": [x, y, x + size[0], y + size[1]]}}
+    load = frame_loader(tmp_path, size, captures, coordinate_space="video")
+    assert all(load(name).tobytes() == video.tobytes() for name in captures)
+    captures["f_000.png"]["video_layout"]["viewport"][0] += 1
+    with pytest.raises(ValueError, match="video_layout_dimensions_mismatch"):
+        frame_loader(tmp_path, size, captures, coordinate_space="video")("f_000.png")
+
+
+def test_crossing_fit_preserves_wider_observation_bracket_for_small_disagreement():
+    points = [
+        {"file": str(i), "time": t, "x": x, "y": y}
+        for i, (t, x, y) in enumerate([(250.466667, 752.5, 361), (250.5, 741.5, 357),
+                                       (250.6, 733.5, 350), (250.666667, 730.5, 347),
+                                       (250.7, 727.5, 345.5)])
+    ]
+    order = {point["file"]: i for i, point in enumerate(points)}
+    gate = {"axis": "y", "value": 351, "direction": -1, "segment": [700, 935]}
+    when, residual, left, right = fit_crossing(points, points[1], points[2], gate, 4, 900, order)
+    assert when == pytest.approx(250.603653)
+    assert (left["time"], right["time"]) == (250.5, 250.666667)
+    assert residual == pytest.approx(1.237, abs=.001)
+    with pytest.raises(ValueError, match="crossing_fit_residual_too_high"):
+        fit_crossing(points, points[1], points[2], gate, 1, 900, order)

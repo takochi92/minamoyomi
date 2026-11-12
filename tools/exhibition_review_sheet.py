@@ -8,11 +8,11 @@ import tempfile
 
 from PIL import Image, ImageDraw
 
-from scraper.exhibition_segments import frame_loader, usable_frames
-from tools.measure_exhibition import manifest_at, private
+from scraper.exhibition_segments import frame_loader, profile_geometry, usable_frames
+from tools.measure_exhibition import manifest_at, private, read
 
 
-def build_sheets(manifest_path, output, start, end, crop, stride, scale):
+def build_sheets(manifest_path, output, start, end, crop, stride, scale, profile_path=None):
     if not math.isfinite(start) or not math.isfinite(end) or not 0 <= start <= end:
         raise ValueError("invalid_time_window")
     if not math.isfinite(scale) or not 0 < scale <= 5 or not 1 <= stride <= 60:
@@ -24,8 +24,14 @@ def build_sheets(manifest_path, output, start, end, crop, stride, scale):
              if start <= row["time"] <= end][::stride]
     if not names:
         raise ValueError("no_usable_frames_in_window")
-    size = next(row["screenshot"] for row in manifest["frames"] if row["file"] == names[0])
-    width, height = size["width"], size["height"]
+    if profile_path is not None:
+        profile = read(profile_path)
+        (width, height), _, _ = profile_geometry(profile)
+        coordinate_space = profile.get("coordinate_space", "screenshot")
+    else:
+        size = next(row["screenshot"] for row in manifest["frames"] if row["file"] == names[0])
+        width, height = size["width"], size["height"]
+        coordinate_space = "screenshot"
     x1, y1, x2, y2 = crop or (0, 0, width, height)
     if not 0 <= x1 < x2 <= width or not 0 <= y1 < y2 <= height:
         raise ValueError("crop_outside_frame")
@@ -34,7 +40,8 @@ def build_sheets(manifest_path, output, start, end, crop, stride, scale):
     if not 150 <= tile_width <= 1280 or not 50 <= tile_height <= 850:
         raise ValueError("use_crop_or_scale_to_fit_sheet")
     columns = min(4, 1600 // tile_width)
-    load = frame_loader(path.parent, (width, height), frames, image_mode="RGB")
+    load = frame_loader(path.parent, (width, height), frames, image_mode="RGB",
+                        coordinate_space=coordinate_space)
     output.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix="run-", dir=output))
     page_size = columns * 4
@@ -63,9 +70,10 @@ def main():
     parser.add_argument("--crop", type=int, nargs=4, metavar=("LEFT", "TOP", "RIGHT", "BOTTOM"))
     parser.add_argument("--stride", type=int, default=1, choices=range(1, 61))
     parser.add_argument("--scale", type=float, default=.3)
+    parser.add_argument("--profile", type=Path, help="Use the same coordinate space as the measuring profile")
     args = parser.parse_args()
     count, directory = build_sheets(args.manifest, args.output, args.start, args.end,
-                                    args.crop, args.stride, args.scale)
+                                    args.crop, args.stride, args.scale, args.profile)
     print(f"{count} frames: {directory}")
 
 

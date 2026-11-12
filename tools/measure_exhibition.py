@@ -12,7 +12,8 @@ from pathlib import Path
 import tempfile
 
 from scraper.exhibition_segments import (
-    SEGMENTS, VENUES, measure, profile_geometry, race_identity, usable_frames,
+    SEGMENTS, VENUES, calibration_image, camera_check, frame_loader, measure, profile_geometry,
+    race_identity, usable_frames,
 )
 from scraper.turn_measurement import digest
 from tools.exhibition_pipeline import exclusive
@@ -69,11 +70,34 @@ def template(manifest, profile):
         "schema": 1, "manifest_sha256": sha, "profile_sha256": digest(config),
         "race": {"date": day, "venue": venue, "race": race},
         "window": [], "camera_reference": None, "camera_layout_reviewed": False,
+        "lap_evidence": {},
         "boats": {str(i): [] for i in range(1, 7)},
         "identity": {},
         "available_frames": [{"file": k, "mediaTime": v["time"]} for k, v in
                              sorted(frames.items(), key=lambda p: p[1]["time"])],
     }
+
+
+def scan_camera(manifest, profile, calibration):
+    path, data, sha = manifest_at(manifest)
+    config = read(profile)
+    day, venue, race = race_identity(data)
+    size, _, anchors = profile_geometry(config)
+    if config["venue"] != venue:
+        raise ValueError("profile_venue_mismatch")
+    frames = usable_frames(data)
+    load = frame_loader(path.parent, size, frames, coordinate_space=config.get("coordinate_space", "screenshot"))
+    check = camera_check(load, calibration_image(config, size, private(calibration)), anchors)
+    rows = []
+    for name, frame in sorted(frames.items(), key=lambda entry: entry[1]["time"]):
+        try:
+            status = "match" if check(name) else "landmarks_changed"
+        except ValueError as error:
+            status = str(error)
+        rows.append({"file": name, "media_time": frame["time"], "status": status})
+    return {"date": day, "venue": venue, "race": race, "profile_id": config["id"],
+            "manifest_sha256": sha, "profile_sha256": digest(config),
+            "status_counts": dict(Counter(row["status"] for row in rows)), "frames": rows}
 
 
 def inventory(stadiums, directory, results=()):
@@ -200,15 +224,20 @@ def run_batch(index, output):
             if not all(job.get(k) for k in inputs):
                 row.update(status="input_pending", missing=[k for k in inputs if not job.get(k)])
             else:
+                stage = "input"
                 try:
                     result = measure_files(*(index.parent / job[k] for k in inputs))
                     if key != (result["date"], result["venue"], result["race"]):
                         raise ValueError("queue_and_manifest_race_mismatch")
+                    stage = "result"
                     row.update(store_result(path, result, job.get("replacement_reason"), job.get("replacement_version")))
                 except FileNotFoundError:
-                    row.update(status="input_pending", missing=["file"])
+                    if stage == "input":
+                        row.update(status="input_pending", missing=["file"])
+                    else:
+                        row.update(status="result_io_error")
                 except OSError:
-                    row.update(status="input_io_error")
+                    row.update(status=f"{stage}_io_error")
                 except (AttributeError, TypeError, KeyError, ValueError) as error:
                     detail = str(error)
                     row.update(status="invalid_input", reason=detail if detail.isidentifier() else "invalid_format")
@@ -230,6 +259,7 @@ def main():
     for command, arguments in (
         ("measure", ("manifest", "profile", "review", "calibration", "output")),
         ("template", ("manifest", "profile", "output")),
+        ("scan-camera", ("manifest", "profile", "calibration", "output")),
         ("inventory", ("stadiums", "profiles", "output")),
         ("batch", ("index", "output")),
     ):
@@ -256,6 +286,18 @@ def main():
                              ensure_ascii=False))
     elif args.command == "template":
         write(args.output, template(args.manifest, args.profile))
+    elif args.command == "scan-camera":
+        output = private(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        result = scan_camera(args.manifest, args.profile, args.calibration)
+        with output_lock(output.parent) as acquired:
+            if not acquired:
+                print('{"status":"already_running"}')
+                return
+            if output.exists():
+                parser.error("scan-camera requires a new output file")
+            write(output, result)
+        print(json.dumps(result["status_counts"]))
     elif args.command == "inventory":
         result = inventory(args.stadiums, args.profiles, args.result)
         write(args.output, result)
