@@ -1,0 +1,904 @@
+{
+  "scope": "heiwajima_same_day_two_race_pilot",
+  "official_measurement_guide": "https://www.heiwajima.gr.jp/sp/help/images/point.gif",
+  "official_straight_pairs_both_races": {
+    "confirmed_same_direction": 0,
+    "confirmed_opposite_direction": 1,
+    "video_bounds_overlap": 26,
+    "official_tie": 3
+  },
+  "race11": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "video_time_basis": "browser_presented_frame_media_time",
+    "official_and_video_same_distance_verified": false,
+    "video_measurement_method": "manual_visual_gate_brackets_midpoint_refined",
+    "rows": [
+      {
+        "boat": 1,
+        "name": "前田 聖文",
+        "racer_id": "4570",
+        "motor": 74,
+        "official_straight_seconds": 7.43,
+        "official_exhibition_seconds": 6.8,
+        "video_seconds": 1.6,
+        "video_frame_bounds": [
+          1.533,
+          1.667
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 2,
+        "name": "山ノ内 雅人",
+        "racer_id": "4640",
+        "motor": 37,
+        "official_straight_seconds": 7.57,
+        "official_exhibition_seconds": 6.77,
+        "video_seconds": 1.517,
+        "video_frame_bounds": [
+          1.467,
+          1.567
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 3,
+        "name": "松瀬 弘美",
+        "racer_id": "3474",
+        "motor": 38,
+        "official_straight_seconds": 7.47,
+        "official_exhibition_seconds": 6.76,
+        "video_seconds": 1.534,
+        "video_frame_bounds": [
+          1.467,
+          1.6
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 4,
+        "name": "大澤 風葵",
+        "racer_id": "5141",
+        "motor": 70,
+        "official_straight_seconds": 7.47,
+        "official_exhibition_seconds": 6.77,
+        "video_seconds": 1.55,
+        "video_frame_bounds": [
+          1.467,
+          1.633
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 5,
+        "name": "正木 聖賢",
+        "racer_id": "3920",
+        "motor": 31,
+        "official_straight_seconds": 7.48,
+        "official_exhibition_seconds": 6.6,
+        "video_seconds": 1.417,
+        "video_frame_bounds": [
+          1.333,
+          1.5
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 6,
+        "name": "岩永 雅人",
+        "racer_id": "4630",
+        "motor": 20,
+        "official_straight_seconds": 7.3,
+        "official_exhibition_seconds": 6.61,
+        "video_seconds": 1.567,
+        "video_frame_bounds": [
+          1.5,
+          1.633
+        ],
+        "video_status": "reference"
+      }
+    ],
+    "comparison": {
+      "official_straight_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": -0.87,
+        "confirmed_same_direction": 0,
+        "confirmed_opposite_direction": 1,
+        "video_bounds_overlap": 13,
+        "official_tie": 1
+      },
+      "official_exhibition_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": 0.551,
+        "confirmed_same_direction": 1,
+        "confirmed_opposite_direction": 0,
+        "video_bounds_overlap": 13,
+        "official_tie": 1
+      }
+    },
+    "rating_ready": false,
+    "official_sources": {
+      "straight": "https://race.boatcast.jp/txt/04/bc_oriten_20261112_04_11.txt",
+      "exhibition": "https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=11&jcd=04&hd=20261112",
+      "entrants": "https://www.boatrace.jp/owpc/pc/race/racelist?rno=11&jcd=04&hd=20261112"
+    },
+    "input_sha256": {
+      "result": "b6141f3237f5e9bb4b22fb6bbe9193dc5f6bd9b6d819c6fcfc9c20dd228d1b5c",
+      "original": "70ae36d0956099ae4a8f3808a8db934e3097ea707015b9f145ffeaf400d54978",
+      "before": "4244c93360c0ea3280ac2eca88720a283fba09e88aa02de58ba0304b7c951a73",
+      "racelist": "8a9397c8d4c8c2ddd2a289cecef0b7a5dd1ece4671ebe82d1060b85f4d110aac"
+    }
+  },
+  "race12": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 12,
+    "lap": 1,
+    "video_time_basis": "browser_presented_frame_media_time",
+    "official_and_video_same_distance_verified": false,
+    "video_measurement_method": "reviewed_or_imported_bow_track",
+    "rows": [
+      {
+        "boat": 1,
+        "name": "砂長 知輝",
+        "racer_id": "5112",
+        "motor": 44,
+        "official_straight_seconds": 7.43,
+        "official_exhibition_seconds": 6.67,
+        "video_seconds": 0.923,
+        "video_frame_bounds": [
+          0.8,
+          1.0
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 2,
+        "name": "北川 潤二",
+        "racer_id": "4199",
+        "motor": 23,
+        "official_straight_seconds": 7.67,
+        "official_exhibition_seconds": 6.63,
+        "video_seconds": 0.836,
+        "video_frame_bounds": [
+          0.8,
+          1.0
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 3,
+        "name": "吉田 慎二郎",
+        "racer_id": "4228",
+        "motor": 14,
+        "official_straight_seconds": 7.6,
+        "official_exhibition_seconds": 6.65,
+        "video_seconds": 0.84,
+        "video_frame_bounds": [
+          0.767,
+          1
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 4,
+        "name": "赤池 修平",
+        "racer_id": "4636",
+        "motor": 66,
+        "official_straight_seconds": 7.53,
+        "official_exhibition_seconds": 6.72,
+        "video_seconds": 0.856,
+        "video_frame_bounds": [
+          0.8,
+          1.0
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 5,
+        "name": "橋本 久和",
+        "racer_id": "3475",
+        "motor": 33,
+        "official_straight_seconds": 7.43,
+        "official_exhibition_seconds": 6.73,
+        "video_seconds": 0.894,
+        "video_frame_bounds": [
+          0.833,
+          1.0
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 6,
+        "name": "盛本 真輔",
+        "racer_id": "4365",
+        "motor": 57,
+        "official_straight_seconds": 7.6,
+        "official_exhibition_seconds": 6.84,
+        "video_seconds": 0.795,
+        "video_frame_bounds": [
+          0.7,
+          0.9
+        ],
+        "video_status": "reference"
+      }
+    ],
+    "comparison": {
+      "official_straight_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": -0.883,
+        "confirmed_same_direction": 0,
+        "confirmed_opposite_direction": 0,
+        "video_bounds_overlap": 13,
+        "official_tie": 2
+      },
+      "official_exhibition_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": -0.029,
+        "confirmed_same_direction": 0,
+        "confirmed_opposite_direction": 0,
+        "video_bounds_overlap": 15,
+        "official_tie": 0
+      }
+    },
+    "rating_ready": false,
+    "official_sources": {
+      "straight": "https://race.boatcast.jp/txt/04/bc_oriten_20261112_04_12.txt",
+      "exhibition": "https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=12&jcd=04&hd=20261112",
+      "entrants": "https://www.boatrace.jp/owpc/pc/race/racelist?rno=12&jcd=04&hd=20261112"
+    },
+    "input_sha256": {
+      "result": "f9b42b2eb547d5aa3ddafbfd48a86a8c5c8c1fbb74452c921120833ad2fe0b69",
+      "original": "76ca8da97b8f99aad0287620682d43670cd84c1dd1cb0a9a63d4a6ec726ad319",
+      "before": "34b4f69b3b9d20b16b6ee821a4e9655c42ec4aa9049e123100cc0d0a15d128b8",
+      "racelist": "bf5112981ef483fd0fd581147e69a5e94acbb88f24bb1b8490d5d6152ab31460"
+    }
+  },
+  "race11_coarse_comparison": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "video_time_basis": "browser_presented_frame_media_time",
+    "official_and_video_same_distance_verified": false,
+    "video_measurement_method": "manual_visual_gate_brackets_midpoint",
+    "rows": [
+      {
+        "boat": 1,
+        "name": "前田 聖文",
+        "racer_id": "4570",
+        "motor": 74,
+        "official_straight_seconds": 7.43,
+        "official_exhibition_seconds": 6.8,
+        "video_seconds": 1.6,
+        "video_frame_bounds": [
+          1.5,
+          1.7
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 2,
+        "name": "山ノ内 雅人",
+        "racer_id": "4640",
+        "motor": 37,
+        "official_straight_seconds": 7.57,
+        "official_exhibition_seconds": 6.77,
+        "video_seconds": 1.567,
+        "video_frame_bounds": [
+          1.433,
+          1.7
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 3,
+        "name": "松瀬 弘美",
+        "racer_id": "3474",
+        "motor": 38,
+        "official_straight_seconds": 7.47,
+        "official_exhibition_seconds": 6.76,
+        "video_seconds": 1.534,
+        "video_frame_bounds": [
+          1.4,
+          1.667
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 4,
+        "name": "大澤 風葵",
+        "racer_id": "5141",
+        "motor": 70,
+        "official_straight_seconds": 7.47,
+        "official_exhibition_seconds": 6.77,
+        "video_seconds": 1.55,
+        "video_frame_bounds": [
+          1.4,
+          1.7
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 5,
+        "name": "正木 聖賢",
+        "racer_id": "3920",
+        "motor": 31,
+        "official_straight_seconds": 7.48,
+        "official_exhibition_seconds": 6.6,
+        "video_seconds": 1.45,
+        "video_frame_bounds": [
+          1.3,
+          1.6
+        ],
+        "video_status": "reference"
+      },
+      {
+        "boat": 6,
+        "name": "岩永 雅人",
+        "racer_id": "4630",
+        "motor": 20,
+        "official_straight_seconds": 7.3,
+        "official_exhibition_seconds": 6.61,
+        "video_seconds": 1.55,
+        "video_frame_bounds": [
+          1.4,
+          1.7
+        ],
+        "video_status": "reference"
+      }
+    ],
+    "comparison": {
+      "official_straight_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": -0.221,
+        "confirmed_same_direction": 0,
+        "confirmed_opposite_direction": 0,
+        "video_bounds_overlap": 14,
+        "official_tie": 1
+      },
+      "official_exhibition_seconds": {
+        "paired_boats": 6,
+        "point_estimate_spearman": 0.868,
+        "confirmed_same_direction": 0,
+        "confirmed_opposite_direction": 0,
+        "video_bounds_overlap": 14,
+        "official_tie": 1
+      }
+    },
+    "rating_ready": false,
+    "official_sources": {
+      "straight": "https://race.boatcast.jp/txt/04/bc_oriten_20261112_04_11.txt",
+      "exhibition": "https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=11&jcd=04&hd=20261112",
+      "entrants": "https://www.boatrace.jp/owpc/pc/race/racelist?rno=11&jcd=04&hd=20261112"
+    },
+    "input_sha256": {
+      "result": "671a5313981581fc44ed153476524891e6966c6b3ff34182ef27c948a8853bbf",
+      "original": "70ae36d0956099ae4a8f3808a8db934e3097ea707015b9f145ffeaf400d54978",
+      "before": "4244c93360c0ea3280ac2eca88720a283fba09e88aa02de58ba0304b7c951a73",
+      "racelist": "8a9397c8d4c8c2ddd2a289cecef0b7a5dd1ece4671ebe82d1060b85f4d110aac"
+    }
+  },
+  "race11_coarse_measurement": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "measurement_method": "manual_visual_gate_brackets_midpoint",
+    "time_basis": "browser_presented_frame_media_time",
+    "capture_sha256": "8d9c3cfcc6c37add096a1b2eda5d1f26539f3722b13ca3f87324a8ac95b8db22",
+    "capture_usable_frames": 297,
+    "screenshot_size": [
+      1280,
+      813
+    ],
+    "anchors": [
+      [
+        30,
+        78
+      ],
+      [
+        704,
+        83
+      ],
+      [
+        834,
+        90
+      ]
+    ],
+    "camera_reference": "f_0252s.png",
+    "gate_x_pixels": {
+      "D": 535,
+      "F": 110
+    },
+    "independent_reviewers": 1,
+    "continuous_bow_track_verified": false,
+    "rating_ready": false,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0256p1s.png",
+              "f_0256p2s.png"
+            ],
+            "bracket": [
+              256.1,
+              256.2
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0257p7s.png",
+              "f_0257p8s.png"
+            ],
+            "bracket": [
+              257.7,
+              257.8
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.6,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.7
+            ]
+          }
+        },
+        "frames_checked_in_span": 18,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0259p8s.png",
+              "f_0259p9s.png"
+            ],
+            "bracket": [
+              259.8,
+              259.866667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0261p3s.png",
+              "f_0261p5s.png"
+            ],
+            "bracket": [
+              261.3,
+              261.5
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.567,
+            "bracket_range_video_seconds": [
+              1.433,
+              1.7
+            ]
+          }
+        },
+        "frames_checked_in_span": 18,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0263p7s.png",
+              "f_0263p8s.png"
+            ],
+            "bracket": [
+              263.7,
+              263.8
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0265p2s.png",
+              "f_0265p4s.png"
+            ],
+            "bracket": [
+              265.2,
+              265.366667
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.534,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.667
+            ]
+          }
+        },
+        "frames_checked_in_span": 18,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0268p2s.png",
+              "f_0268p3s.png"
+            ],
+            "bracket": [
+              268.2,
+              268.3
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0269p7s.png",
+              "f_0269p9s.png"
+            ],
+            "bracket": [
+              269.7,
+              269.9
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.55,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.7
+            ]
+          }
+        },
+        "frames_checked_in_span": 18,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0272p4s.png",
+              "f_0272p5s.png"
+            ],
+            "bracket": [
+              272.4,
+              272.5
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0273p8s.png",
+              "f_0274s.png"
+            ],
+            "bracket": [
+              273.8,
+              274
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.45,
+            "bracket_range_video_seconds": [
+              1.3,
+              1.6
+            ]
+          }
+        },
+        "frames_checked_in_span": 17,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0275p9s.png",
+              "f_0276s.png"
+            ],
+            "bracket": [
+              275.9,
+              276
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0277p4s.png",
+              "f_0277p6s.png"
+            ],
+            "bracket": [
+              277.4,
+              277.6
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.55,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.7
+            ]
+          }
+        },
+        "frames_checked_in_span": 18,
+        "camera_mismatches": [],
+        "frame_gaps": []
+      }
+    ]
+  },
+  "race11_refined_measurement": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "measurement_method": "manual_visual_gate_brackets_midpoint_refined",
+    "time_basis": "browser_presented_frame_media_time",
+    "capture_sha256": "78a334ec8335060ec7b7538844ffd1fa6ae410d750f5e55895d84f513d53f9f8",
+    "capture_usable_frames": 85,
+    "coarse_capture_sha256": "8d9c3cfcc6c37add096a1b2eda5d1f26539f3722b13ca3f87324a8ac95b8db22",
+    "coarse_usable_frames": 297,
+    "screenshot_size": [
+      1280,
+      813
+    ],
+    "anchors": [
+      [
+        30,
+        78
+      ],
+      [
+        704,
+        83
+      ],
+      [
+        834,
+        90
+      ]
+    ],
+    "camera_reference": "f_0252s.png",
+    "gate_x_pixels": {
+      "D": 535,
+      "F": 110
+    },
+    "independent_reviewers": 1,
+    "continuous_bow_track_verified": false,
+    "rating_ready": false,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0256p112s.png",
+              "f_0256p179s.png"
+            ],
+            "bracket": [
+              256.1,
+              256.166667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0257p712s.png",
+              "f_0257p779s.png"
+            ],
+            "bracket": [
+              257.7,
+              257.766667
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.6,
+            "bracket_range_video_seconds": [
+              1.533,
+              1.667
+            ]
+          }
+        }
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0259p845s.png",
+              "f_0259p879s.png"
+            ],
+            "bracket": [
+              259.833334,
+              259.866667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0261p345s.png",
+              "f_0261p412s.png"
+            ],
+            "bracket": [
+              261.333334,
+              261.4
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.517,
+            "bracket_range_video_seconds": [
+              1.467,
+              1.567
+            ]
+          }
+        }
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0263p712s.png",
+              "f_0263p779s.png"
+            ],
+            "bracket": [
+              263.7,
+              263.766667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0265p245s.png",
+              "f_0265p312s.png"
+            ],
+            "bracket": [
+              265.233334,
+              265.3
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.534,
+            "bracket_range_video_seconds": [
+              1.467,
+              1.6
+            ]
+          }
+        }
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0268p212s.png",
+              "f_0268p279s.png"
+            ],
+            "bracket": [
+              268.2,
+              268.266667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0269p745s.png",
+              "f_0269p845s.png"
+            ],
+            "bracket": [
+              269.733334,
+              269.833334
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.55,
+            "bracket_range_video_seconds": [
+              1.467,
+              1.633
+            ]
+          }
+        }
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0272p412s.png",
+              "f_0272p479s.png"
+            ],
+            "bracket": [
+              272.4,
+              272.466667
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0273p812s.png",
+              "f_0273p912s.png"
+            ],
+            "bracket": [
+              273.8,
+              273.9
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.417,
+            "bracket_range_video_seconds": [
+              1.333,
+              1.5
+            ]
+          }
+        }
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "D": {
+            "frames": [
+              "f_0275p879s.png",
+              "f_0275p945s.png"
+            ],
+            "bracket": [
+              275.866667,
+              275.933334
+            ]
+          },
+          "F": {
+            "frames": [
+              "f_0277p445s.png",
+              "f_0277p512s.png"
+            ],
+            "bracket": [
+              277.433334,
+              277.5
+            ]
+          }
+        },
+        "segments": {
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 1.567,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.633
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "race12_measurement": "exhibition_segment_six_boat_20261112.json",
+  "publication_ready": false,
+  "rating_ready": false
+}
