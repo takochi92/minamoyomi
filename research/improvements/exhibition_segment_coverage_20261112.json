@@ -1,0 +1,273 @@
+{
+  "venue_count": 24,
+  "playback_verified_venues": 24,
+  "camera_profile_venues": 1,
+  "venues": [
+    {
+      "venue": "01",
+      "name": "桐生",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "02",
+      "name": "戸田",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "03",
+      "name": "江戸川",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "04",
+      "name": "平和島",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [
+        "04-heiwajima-first-turn-replay-v1"
+      ],
+      "state": "profile_available"
+    },
+    {
+      "venue": "05",
+      "name": "多摩川",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "06",
+      "name": "浜名湖",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261103",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "07",
+      "name": "蒲郡",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "08",
+      "name": "常滑",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "09",
+      "name": "津",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "10",
+      "name": "三国",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "11",
+      "name": "びわこ",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "12",
+      "name": "住之江",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "13",
+      "name": "尼崎",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "14",
+      "name": "鳴門",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261108",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "15",
+      "name": "丸亀",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261103",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "16",
+      "name": "児島",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "17",
+      "name": "宮島",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "18",
+      "name": "徳山",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261103",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "19",
+      "name": "下関",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "20",
+      "name": "若松",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261024",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "21",
+      "name": "芦屋",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "22",
+      "name": "福岡",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "23",
+      "name": "唐津",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    },
+    {
+      "venue": "24",
+      "name": "大村",
+      "playback_evidence": "pr-tool-homesv",
+      "replay_sample": {
+        "date": "20261112",
+        "race": 1
+      },
+      "camera_profiles": [],
+      "state": "camera_profile_needed"
+    }
+  ]
+}

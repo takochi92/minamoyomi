@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "04-heiwajima-first-turn-replay-v1",
+  "venue": "04",
+  "lap": 1,
+  "image_size": [1280, 813],
+  "anchors": [[30, 63], [834, 90], [997, 55]],
+  "gates": {
+    "A": {"axis": "x", "value": 500, "direction": 1, "segment": [490, 710]},
+    "B": {"axis": "y", "value": 351, "direction": -1, "segment": [700, 935]},
+    "C": {"axis": "x", "value": 530, "direction": -1, "segment": [145, 340]},
+    "D": {"axis": "x", "value": 425, "direction": -1, "segment": [145, 335]},
+    "E": {"axis": "x", "value": 300, "direction": -1, "segment": [145, 335]},
+    "F": {"axis": "x", "value": 183, "direction": -1, "segment": [145, 335]}
+  }
+}

@@ -1,0 +1,1390 @@
+{
+  "result": {
+    "schema": 1,
+    "date": "20261112",
+    "venue": "04",
+    "race": 12,
+    "lap": 1,
+    "profile_id": "04-heiwajima-first-turn-replay-v1",
+    "manifest_sha256": "aee3ce3a264fcd025448cf5fb50592c7adac0c172128143e3b1ba07a614b4e7a",
+    "profile_sha256": "f384106ea9bb4517df5bc9770dc425903aa626b918ae3ce79b763edb09b971b8",
+    "review_sha256": "acc93fe20bc75ab5bde616fab7af19531629922e14331811f03e5b0a8e3ceef9",
+    "time_basis": "browser_presented_frame_media_time",
+    "full_backstretch_verified": false,
+    "real_time_scale_verified": false,
+    "measurement_mode": "reviewed_or_imported_bow_track",
+    "publication_ready": false,
+    "rating_eligible": false,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "A": {
+            "seconds": 248.05,
+            "bracket": [
+              248,
+              248.1
+            ],
+            "frames": [
+              "f_0248s.png",
+              "f_0248p1s.png"
+            ]
+          },
+          "B": {
+            "seconds": 250.55555555555554,
+            "bracket": [
+              250.5,
+              250.6
+            ],
+            "frames": [
+              "f_0250p5s.png",
+              "f_0250p6s.png"
+            ]
+          },
+          "C": {
+            "seconds": 251.756,
+            "bracket": [
+              251.7,
+              251.8
+            ],
+            "frames": [
+              "f_0251p7s.png",
+              "f_0251p8s.png"
+            ]
+          },
+          "D": {
+            "seconds": 252.14827586206897,
+            "bracket": [
+              252.1,
+              252.2
+            ],
+            "frames": [
+              "f_0252p1s.png",
+              "f_0252p2s.png"
+            ]
+          },
+          "E": {
+            "seconds": 252.65666666666667,
+            "bracket": [
+              252.6,
+              252.7
+            ],
+            "frames": [
+              "f_0252p6s.png",
+              "f_0252p7s.png"
+            ]
+          },
+          "F": {
+            "seconds": 253.05,
+            "bracket": [
+              253,
+              253.1
+            ],
+            "frames": [
+              "f_0253s.png",
+              "f_0253p1s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 2.506,
+            "bracket_range_video_seconds": [
+              2.4,
+              2.6
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 1.2,
+            "bracket_range_video_seconds": [
+              1.1,
+              1.3
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.706,
+            "bracket_range_video_seconds": [
+              3.6,
+              3.8
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.392,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.508,
+            "bracket_range_video_seconds": [
+              0.4,
+              0.6
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.393,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.902,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "A": {
+            "seconds": 250.44117647058823,
+            "bracket": [
+              250.4,
+              250.5
+            ],
+            "frames": [
+              "f_0250p4s.png",
+              "f_0250p5s.png"
+            ]
+          },
+          "B": {
+            "seconds": 253.26153846153846,
+            "bracket": [
+              253.2,
+              253.3
+            ],
+            "frames": [
+              "f_0253p2s.png",
+              "f_0253p3s.png"
+            ]
+          },
+          "C": {
+            "seconds": 254.20999999999998,
+            "bracket": [
+              254.2,
+              254.3
+            ],
+            "frames": [
+              "f_0254p2s.png",
+              "f_0254p3s.png"
+            ]
+          },
+          "D": {
+            "seconds": 254.6179487179487,
+            "bracket": [
+              254.6,
+              254.7
+            ],
+            "frames": [
+              "f_0254p6s.png",
+              "f_0254p7s.png"
+            ]
+          },
+          "E": {
+            "seconds": 255.0758620689655,
+            "bracket": [
+              255,
+              255.1
+            ],
+            "frames": [
+              "f_0255s.png",
+              "f_0255p1s.png"
+            ]
+          },
+          "F": {
+            "seconds": 255.44411764705882,
+            "bracket": [
+              255.4,
+              255.5
+            ],
+            "frames": [
+              "f_0255p4s.png",
+              "f_0255p5s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 2.82,
+            "bracket_range_video_seconds": [
+              2.7,
+              2.9
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 0.948,
+            "bracket_range_video_seconds": [
+              0.9,
+              1.1
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.769,
+            "bracket_range_video_seconds": [
+              3.7,
+              3.9
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.408,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.458,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.368,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.826,
+            "bracket_range_video_seconds": [
+              0.7,
+              0.9
+            ]
+          }
+        }
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "A": {
+            "seconds": 255.7608695652174,
+            "bracket": [
+              255.7,
+              255.8
+            ],
+            "frames": [
+              "f_0255p7s.png",
+              "f_0255p8s.png"
+            ]
+          },
+          "B": {
+            "seconds": 258.57272727272726,
+            "bracket": [
+              258.5,
+              258.6
+            ],
+            "frames": [
+              "f_0258p5s.png",
+              "f_0258p6s.png"
+            ]
+          },
+          "C": {
+            "seconds": 259.7064516129032,
+            "bracket": [
+              259.7,
+              259.8
+            ],
+            "frames": [
+              "f_0259p7s.png",
+              "f_0259p8s.png"
+            ]
+          },
+          "D": {
+            "seconds": 260.1264705882353,
+            "bracket": [
+              260.1,
+              260.2
+            ],
+            "frames": [
+              "f_0260p1s.png",
+              "f_0260p2s.png"
+            ]
+          },
+          "E": {
+            "seconds": 260.56,
+            "bracket": [
+              260.5,
+              260.6
+            ],
+            "frames": [
+              "f_0260p5s.png",
+              "f_0260p6s.png"
+            ]
+          },
+          "F": {
+            "seconds": 261.03333333333336,
+            "bracket": [
+              261,
+              261.1
+            ],
+            "frames": [
+              "f_0261s.png",
+              "f_0261p1s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 2.812,
+            "bracket_range_video_seconds": [
+              2.7,
+              2.9
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 1.134,
+            "bracket_range_video_seconds": [
+              1.1,
+              1.3
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.946,
+            "bracket_range_video_seconds": [
+              3.9,
+              4.1
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.42,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.434,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.473,
+            "bracket_range_video_seconds": [
+              0.4,
+              0.6
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.907,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "A": {
+            "seconds": 260.0529411764706,
+            "bracket": [
+              260,
+              260.1
+            ],
+            "frames": [
+              "f_0260s.png",
+              "f_0260p1s.png"
+            ]
+          },
+          "B": {
+            "seconds": 263.0625,
+            "bracket": [
+              263,
+              263.1
+            ],
+            "frames": [
+              "f_0263s.png",
+              "f_0263p1s.png"
+            ]
+          },
+          "C": {
+            "seconds": 264.124,
+            "bracket": [
+              264.1,
+              264.2
+            ],
+            "frames": [
+              "f_0264p1s.png",
+              "f_0264p2s.png"
+            ]
+          },
+          "D": {
+            "seconds": 264.5212121212121,
+            "bracket": [
+              264.5,
+              264.6
+            ],
+            "frames": [
+              "f_0264p5s.png",
+              "f_0264p6s.png"
+            ]
+          },
+          "E": {
+            "seconds": 264.9809524285714,
+            "bracket": [
+              264.866667,
+              265
+            ],
+            "frames": [
+              "f_0264p9s.png",
+              "f_0265s.png"
+            ]
+          },
+          "F": {
+            "seconds": 265.4272729090909,
+            "bracket": [
+              265.366667,
+              265.5
+            ],
+            "frames": [
+              "f_0265p4s.png",
+              "f_0265p5s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 3.01,
+            "bracket_range_video_seconds": [
+              2.9,
+              3.1
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 1.062,
+            "bracket_range_video_seconds": [
+              1.0,
+              1.2
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.071,
+            "bracket_range_video_seconds": [
+              4.0,
+              4.2
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.397,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.46,
+            "bracket_range_video_seconds": [
+              0.267,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.446,
+            "bracket_range_video_seconds": [
+              0.367,
+              0.633
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.906,
+            "bracket_range_video_seconds": [
+              0.767,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "A": {
+            "seconds": 263.11428571428576,
+            "bracket": [
+              263.1,
+              263.2
+            ],
+            "frames": [
+              "f_0263p1s.png",
+              "f_0263p2s.png"
+            ]
+          },
+          "B": {
+            "seconds": 265.95555566666667,
+            "bracket": [
+              265.866667,
+              266
+            ],
+            "frames": [
+              "f_0265p9s.png",
+              "f_0266s.png"
+            ]
+          },
+          "C": {
+            "seconds": 266.9387388918919,
+            "bracket": [
+              266.866667,
+              267
+            ],
+            "frames": [
+              "f_0266p9s.png",
+              "f_0267s.png"
+            ]
+          },
+          "D": {
+            "seconds": 267.3735045897436,
+            "bracket": [
+              267.366667,
+              267.5
+            ],
+            "frames": [
+              "f_0267p4s.png",
+              "f_0267p5s.png"
+            ]
+          },
+          "E": {
+            "seconds": 267.82745111764706,
+            "bracket": [
+              267.8,
+              267.866667
+            ],
+            "frames": [
+              "f_0267p8s.png",
+              "f_0267p9s.png"
+            ]
+          },
+          "F": {
+            "seconds": 268.33100790697677,
+            "bracket": [
+              268.3,
+              268.366667
+            ],
+            "frames": [
+              "f_0268p3s.png",
+              "f_0268p4s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 2.841,
+            "bracket_range_video_seconds": [
+              2.667,
+              2.9
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 0.983,
+            "bracket_range_video_seconds": [
+              0.867,
+              1.133
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.824,
+            "bracket_range_video_seconds": [
+              3.667,
+              3.9
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.435,
+            "bracket_range_video_seconds": [
+              0.367,
+              0.633
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.454,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.504,
+            "bracket_range_video_seconds": [
+              0.433,
+              0.567
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.958,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "A": {
+            "seconds": 267.1279069767442,
+            "bracket": [
+              267.1,
+              267.2
+            ],
+            "frames": [
+              "f_0267p1s.png",
+              "f_0267p2s.png"
+            ]
+          },
+          "B": {
+            "seconds": 270.46999999999997,
+            "bracket": [
+              270.4,
+              270.5
+            ],
+            "frames": [
+              "f_0270p4s.png",
+              "f_0270p5s.png"
+            ]
+          },
+          "C": {
+            "seconds": 271.31666666666666,
+            "bracket": [
+              271.3,
+              271.4
+            ],
+            "frames": [
+              "f_0271p3s.png",
+              "f_0271p4s.png"
+            ]
+          },
+          "D": {
+            "seconds": 271.72926829268295,
+            "bracket": [
+              271.7,
+              271.8
+            ],
+            "frames": [
+              "f_0271p7s.png",
+              "f_0271p8s.png"
+            ]
+          },
+          "E": {
+            "seconds": 272.18666666666667,
+            "bracket": [
+              272.1,
+              272.2
+            ],
+            "frames": [
+              "f_0272p1s.png",
+              "f_0272p2s.png"
+            ]
+          },
+          "F": {
+            "seconds": 272.5285714285714,
+            "bracket": [
+              272.5,
+              272.6
+            ],
+            "frames": [
+              "f_0272p5s.png",
+              "f_0272p6s.png"
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "turn_entry": {
+            "status": "reference",
+            "video_seconds": 3.342,
+            "bracket_range_video_seconds": [
+              3.2,
+              3.4
+            ]
+          },
+          "turn_exit": {
+            "status": "reference",
+            "video_seconds": 0.847,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.189,
+            "bracket_range_video_seconds": [
+              4.1,
+              4.3
+            ]
+          },
+          "exit_recovery": {
+            "status": "reference",
+            "video_seconds": 0.413,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.457,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.342,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.799,
+            "bracket_range_video_seconds": [
+              0.7,
+              0.9
+            ]
+          }
+        }
+      }
+    ],
+    "coverage": {
+      "turn_entry": 6,
+      "turn_exit": 6,
+      "turn_total": 6,
+      "exit_recovery": 6,
+      "back_early": 6,
+      "back_late": 6,
+      "back_stretch": 6
+    }
+  },
+  "capture": {
+    "requested_frames": 252,
+    "measurable_frames": 252,
+    "nudges": 0,
+    "observations": {
+      "1": [
+        {
+          "file": "f_0248s.png",
+          "bow": [
+            481,
+            623
+          ]
+        },
+        {
+          "file": "f_0248p1s.png",
+          "bow": [
+            519,
+            615
+          ]
+        },
+        {
+          "file": "f_0250p5s.png",
+          "bow": [
+            744,
+            356
+          ]
+        },
+        {
+          "file": "f_0250p6s.png",
+          "bow": [
+            729,
+            347
+          ]
+        },
+        {
+          "file": "f_0251p7s.png",
+          "bow": [
+            544,
+            284
+          ]
+        },
+        {
+          "file": "f_0251p8s.png",
+          "bow": [
+            519,
+            274
+          ]
+        },
+        {
+          "file": "f_0252p1s.png",
+          "bow": [
+            439,
+            264
+          ]
+        },
+        {
+          "file": "f_0252p2s.png",
+          "bow": [
+            410,
+            257
+          ]
+        },
+        {
+          "file": "f_0252p6s.png",
+          "bow": [
+            317,
+            249
+          ]
+        },
+        {
+          "file": "f_0252p7s.png",
+          "bow": [
+            287,
+            246
+          ]
+        },
+        {
+          "file": "f_0253s.png",
+          "bow": [
+            195,
+            235
+          ]
+        },
+        {
+          "file": "f_0253p1s.png",
+          "bow": [
+            171,
+            232
+          ]
+        }
+      ],
+      "2": [
+        {
+          "file": "f_0250p4s.png",
+          "bow": [
+            486,
+            676
+          ]
+        },
+        {
+          "file": "f_0250p5s.png",
+          "bow": [
+            520,
+            666
+          ]
+        },
+        {
+          "file": "f_0253p2s.png",
+          "bow": [
+            748,
+            359
+          ]
+        },
+        {
+          "file": "f_0253p3s.png",
+          "bow": [
+            719,
+            346
+          ]
+        },
+        {
+          "file": "f_0254p1s.png",
+          "bow": [
+            555,
+            301
+          ]
+        },
+        {
+          "file": "f_0254p2s.png",
+          "bow": [
+            533,
+            301
+          ]
+        },
+        {
+          "file": "f_0254p3s.png",
+          "bow": [
+            503,
+            295
+          ]
+        },
+        {
+          "file": "f_0254p6s.png",
+          "bow": [
+            432,
+            282
+          ]
+        },
+        {
+          "file": "f_0254p7s.png",
+          "bow": [
+            393,
+            278
+          ]
+        },
+        {
+          "file": "f_0255s.png",
+          "bow": [
+            322,
+            277
+          ]
+        },
+        {
+          "file": "f_0255p1s.png",
+          "bow": [
+            293,
+            273
+          ]
+        },
+        {
+          "file": "f_0255p4s.png",
+          "bow": [
+            198,
+            256
+          ]
+        },
+        {
+          "file": "f_0255p5s.png",
+          "bow": [
+            164,
+            253
+          ]
+        }
+      ],
+      "3": [
+        {
+          "file": "f_0255p7s.png",
+          "bow": [
+            472,
+            643
+          ]
+        },
+        {
+          "file": "f_0255p8s.png",
+          "bow": [
+            518,
+            624
+          ]
+        },
+        {
+          "file": "f_0258p5s.png",
+          "bow": [
+            763,
+            359
+          ]
+        },
+        {
+          "file": "f_0258p6s.png",
+          "bow": [
+            748,
+            348
+          ]
+        },
+        {
+          "file": "f_0259p6s.png",
+          "bow": [
+            565,
+            295
+          ]
+        },
+        {
+          "file": "f_0259p7s.png",
+          "bow": [
+            532,
+            290
+          ]
+        },
+        {
+          "file": "f_0259p8s.png",
+          "bow": [
+            501,
+            285
+          ]
+        },
+        {
+          "file": "f_0260p1s.png",
+          "bow": [
+            434,
+            279
+          ]
+        },
+        {
+          "file": "f_0260p2s.png",
+          "bow": [
+            400,
+            277
+          ]
+        },
+        {
+          "file": "f_0260p5s.png",
+          "bow": [
+            324,
+            275
+          ]
+        },
+        {
+          "file": "f_0260p6s.png",
+          "bow": [
+            284,
+            273
+          ]
+        },
+        {
+          "file": "f_0261s.png",
+          "bow": [
+            198,
+            251
+          ]
+        },
+        {
+          "file": "f_0261p1s.png",
+          "bow": [
+            153,
+            249
+          ]
+        }
+      ],
+      "4": [
+        {
+          "file": "f_0260s.png",
+          "bow": [
+            482,
+            602
+          ]
+        },
+        {
+          "file": "f_0260p1s.png",
+          "bow": [
+            516,
+            590
+          ]
+        },
+        {
+          "file": "f_0263s.png",
+          "bow": [
+            733,
+            356
+          ]
+        },
+        {
+          "file": "f_0263p1s.png",
+          "bow": [
+            724,
+            348
+          ]
+        },
+        {
+          "file": "f_0264p1s.png",
+          "bow": [
+            536,
+            302
+          ]
+        },
+        {
+          "file": "f_0264p2s.png",
+          "bow": [
+            511,
+            296
+          ]
+        },
+        {
+          "file": "f_0264p5s.png",
+          "bow": [
+            432,
+            286
+          ]
+        },
+        {
+          "file": "f_0264p6s.png",
+          "bow": [
+            399,
+            282
+          ]
+        },
+        {
+          "file": "f_0264p9s.png",
+          "bow": [
+            336,
+            281
+          ]
+        },
+        {
+          "file": "f_0265s.png",
+          "bow": [
+            294,
+            278
+          ]
+        },
+        {
+          "file": "f_0265p4s.png",
+          "bow": [
+            198,
+            258
+          ]
+        },
+        {
+          "file": "f_0265p5s.png",
+          "bow": [
+            165,
+            257
+          ]
+        }
+      ],
+      "5": [
+        {
+          "file": "f_0263p1s.png",
+          "bow": [
+            494,
+            594
+          ]
+        },
+        {
+          "file": "f_0263p2s.png",
+          "bow": [
+            536,
+            582
+          ]
+        },
+        {
+          "file": "f_0265p9s.png",
+          "bow": [
+            731,
+            357
+          ]
+        },
+        {
+          "file": "f_0266s.png",
+          "bow": [
+            719,
+            348
+          ]
+        },
+        {
+          "file": "f_0266p9s.png",
+          "bow": [
+            550,
+            306
+          ]
+        },
+        {
+          "file": "f_0267s.png",
+          "bow": [
+            513,
+            303
+          ]
+        },
+        {
+          "file": "f_0267p3s.png",
+          "bow": [
+            439,
+            293
+          ]
+        },
+        {
+          "file": "f_0267p4s.png",
+          "bow": [
+            427,
+            290
+          ]
+        },
+        {
+          "file": "f_0267p5s.png",
+          "bow": [
+            388,
+            285
+          ]
+        },
+        {
+          "file": "f_0267p8s.png",
+          "bow": [
+            314,
+            285
+          ]
+        },
+        {
+          "file": "f_0267p9s.png",
+          "bow": [
+            280,
+            281
+          ]
+        },
+        {
+          "file": "f_0268p3s.png",
+          "bow": [
+            203,
+            265
+          ]
+        },
+        {
+          "file": "f_0268p4s.png",
+          "bow": [
+            160,
+            263
+          ]
+        }
+      ],
+      "6": [
+        {
+          "file": "f_0267p1s.png",
+          "bow": [
+            488,
+            622
+          ]
+        },
+        {
+          "file": "f_0267p2s.png",
+          "bow": [
+            531,
+            608
+          ]
+        },
+        {
+          "file": "f_0270p4s.png",
+          "bow": [
+            725,
+            358
+          ]
+        },
+        {
+          "file": "f_0270p5s.png",
+          "bow": [
+            722,
+            348
+          ]
+        },
+        {
+          "file": "f_0271p3s.png",
+          "bow": [
+            536,
+            311
+          ]
+        },
+        {
+          "file": "f_0271p4s.png",
+          "bow": [
+            500,
+            305
+          ]
+        },
+        {
+          "file": "f_0271p7s.png",
+          "bow": [
+            437,
+            298
+          ]
+        },
+        {
+          "file": "f_0271p8s.png",
+          "bow": [
+            396,
+            293
+          ]
+        },
+        {
+          "file": "f_0272p1s.png",
+          "bow": [
+            326,
+            292
+          ]
+        },
+        {
+          "file": "f_0272p2s.png",
+          "bow": [
+            296,
+            291
+          ]
+        },
+        {
+          "file": "f_0272p5s.png",
+          "bow": [
+            193,
+            273
+          ]
+        },
+        {
+          "file": "f_0272p6s.png",
+          "bow": [
+            158,
+            270
+          ]
+        }
+      ]
+    },
+    "layout": "fixed first-lap first-mark replay",
+    "capture_interval_seconds": 0.1,
+    "requested_window_seconds": [
+      247.7,
+      272.8
+    ],
+    "source_resolution": [
+      854,
+      480
+    ],
+    "tracking": "manual single-reviewer bow annotation",
+    "physical_course_distance_verified": false
+  },
+  "batch": {
+    "jobs": 1,
+    "status_counts": {
+      "reference": 1
+    },
+    "rating_ready": false,
+    "races": [
+      {
+        "date": "20261112",
+        "venue": "04",
+        "race": 12,
+        "status": "reference",
+        "coverage": {
+          "turn_entry": 6,
+          "turn_exit": 6,
+          "turn_total": 6,
+          "exit_recovery": 6,
+          "back_early": 6,
+          "back_late": 6,
+          "back_stretch": 6
+        }
+      }
+    ]
+  }
+}
