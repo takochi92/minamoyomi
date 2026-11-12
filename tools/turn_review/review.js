@@ -77,6 +77,14 @@ if (typeof document !== 'undefined') {
   }
   const imageCache = new Map();
   const bowOnly = bundle.method === 'heiwajima-bow-gates-v2';
+  const segmentsOnly = bundle.segments_only === true;
+  if (segmentsOnly) {
+    pos = 0;
+    $('gates').hidden = true; $('scene').closest('label').hidden = true;
+    $('proposal').hidden = true; $('timing').hidden = true;
+    for (const button of document.querySelectorAll('[data-side], [data-point="stern"]')) button.hidden = true;
+    $('clear').textContent = '艇首が見えない・次へ';
+  }
   const width = bundle.size[0], height = bundle.size[1]; canvas.width = width; canvas.height = height;
   const watchMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'watch';
   if (watchMode) { document.body.classList.add('watch'); document.querySelector('h1').textContent = '１マークの展示映像'; }
@@ -138,13 +146,17 @@ if (typeof document !== 'undefined') {
     document.querySelectorAll('[data-point]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.point === point)));
     $('proposal').setAttribute('aria-pressed', String(showProposal));
     const completed = Object.values(pairs).filter(p => p.before !== undefined && p.after !== undefined).length;
-    $('progress').textContent = '前後コマの指定 ' + completed + ' / 18区間 ／ ' + (bowOnly ? '艇首' : '艇首・艇尾') + 'の指定 ' + Object.values(labels).filter(l => measurementPoint(l, bundle.method)).length + 'コマ';
+    const reviewed = ev.frames.filter(f => Object.hasOwn(labels, boat + ':' + f.index)).length;
+    $('progress').textContent = segmentsOnly ? boat + '号艇 ' + reviewed + ' / ' + ev.frames.length + ' コマ確認済み' :
+      '前後コマの指定 ' + completed + ' / 18区間 ／ ' + (bowOnly ? '艇首' : '艇首・艇尾') + 'の指定 ' + Object.values(labels).filter(l => measurementPoint(l, bundle.method)).length + 'コマ';
     const pair = pairs[boat + ':' + gate] || {};
     const times = previewIntervals(bundle, boat, pairs, labels);
     $('timing').textContent = boat + '号艇の参考タイム　入り ' + (times.entry === null ? '—' : times.entry.toFixed(1) + '秒') +
       ' ／ 出口 ' + (times.exit === null ? '—' : times.exit.toFixed(1) + '秒');
     $('status').textContent = playing ? 'ゆっくり再生中。位置を指定するときは一時停止してください。' :
       '指定する線 ' + gate + '：前 ' + (pair.before ?? '未指定') + ' ／ 後 ' + (pair.after ?? '未指定') + '　次は' + (point === 'bow' ? '艇首' : '艇尾') + 'をクリック';
+    if (segmentsOnly && !playing) $('status').textContent = labelKey() in labels && labels[labelKey()].bow === null
+      ? 'このコマは艇首が判別できないとして記録済みです。' : '艇首をクリックすると次のコマへ進みます。';
     if (watchMode) $('status').textContent = playing ? 'スロー再生中' : '再生ボタンで向きの変化を確認できます。';
     draw();
   }
@@ -153,11 +165,14 @@ if (typeof document !== 'undefined') {
     function paint() {
       if (token !== imageToken) return;
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, width, height);
-      const box = fr.proposal, centre = box ? [box[0] + box[2] / 2, box[1] + box[3] / 2] : [width / 2, height / 2];
+      const box = fr.proposal;
+      const recent = segmentsOnly && current().frames.slice(Math.max(0, pos - 4), pos + 1)
+        .reverse().map(f => labels[boat + ':' + f.index]?.bow).find(Boolean);
+      const centre = recent || (box ? [box[0] + box[2] / 2, box[1] + box[3] / 2] : [width / 2, height / 2]);
       offset = zoom === 1 ? [0, 0] : [width / 2 - centre[0] * zoom, height / 2 - centre[1] * zoom];
       ctx.setTransform(zoom, 0, 0, zoom, ...offset); ctx.drawImage(img, 0, 0, width, height); readyFrame = fr.index;
       for (const [name, g] of Object.entries(bundle.gates)) {
-        ctx.strokeStyle = { A: '#f1c66a', B: '#69e3c8', C: '#76b5ff' }[name]; ctx.lineWidth = 3 / zoom; ctx.beginPath();
+        ctx.strokeStyle = { A: '#f1c66a', B: '#69e3c8', C: '#76b5ff' }[name] || '#bbb'; ctx.lineWidth = 3 / zoom; ctx.beginPath();
         if (g.axis === 'x') { ctx.moveTo(g.value, g.segment[0]); ctx.lineTo(g.value, g.segment[1]); }
         else { ctx.moveTo(g.segment[0], g.value); ctx.lineTo(g.segment[1], g.value); }
         ctx.stroke();
@@ -205,11 +220,20 @@ if (typeof document !== 'undefined') {
     if (readyFrame !== frame().index) { $('status').textContent = '画像の読込完了を待ってください'; return; }
     const xy = sourcePoint(canvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), width, height), zoom, offset);
     if (xy[0] < 0 || xy[1] < 0 || xy[0] >= width || xy[1] >= height) return;
-    const key = labelKey(); labels[key] = { ...(labels[key] || {}), [point]: xy }; point = !bowOnly && point === 'bow' ? 'stern' : 'bow'; update();
+    const key = labelKey(); labels[key] = { ...(labels[key] || {}), [point]: xy }; point = !bowOnly && point === 'bow' ? 'stern' : 'bow';
+    if (segmentsOnly) pos = Math.min(current().frames.length - 1, pos + 1);
+    update();
   };
   document.querySelectorAll('[data-point]').forEach(b => b.onclick = () => { stopPlayback(); point = bowOnly ? 'bow' : b.dataset.point; update(); });
   document.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { stopPlayback(); const key = boat + ':' + gate; pairs[key] = { ...(pairs[key] || {}), [b.dataset.side]: frame().index }; update(); });
-  $('clear').onclick = () => { stopPlayback(); delete labels[labelKey()]; update(); };
+  $('clear').onclick = () => {
+    stopPlayback();
+    if (segmentsOnly) {
+      if (readyFrame !== frame().index) return;
+      labels[labelKey()] = {bow: null}; pos = Math.min(current().frames.length - 1, pos + 1);
+    } else delete labels[labelKey()];
+    update();
+  };
   $('proposal').onclick = () => { stopPlayback(); showProposal = !showProposal; update(); };
   $('zoom').onclick = () => { stopPlayback(); zoom = zoom === 1 ? 4 : 1; $('zoom').textContent = zoom === 1 ? '４倍に拡大' : '全体に戻す'; update(); };
   $('export').onclick = () => {

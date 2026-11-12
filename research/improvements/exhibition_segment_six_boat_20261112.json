@@ -1,0 +1,1910 @@
+{
+  "race": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 12,
+    "lap": 1
+  },
+  "use": "research_only",
+  "source_clock": "browser_presented_frame_media_time",
+  "capture_usable_frames": 265,
+  "independent_readers": 1,
+  "measured_area": "visible_fixed_camera_part_of_back_stretch",
+  "threshold_trials": [
+    {
+      "residual_limit_px": 4,
+      "boats_with_straight_time": 1,
+      "missing_crossings": [
+        {
+          "boat": 2,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 3,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 4,
+          "reasons": {
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 5,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 6,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "residual_limit_px": 6,
+      "boats_with_straight_time": 3,
+      "missing_crossings": [
+        {
+          "boat": 3,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 4,
+          "reasons": {
+            "E": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 5,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 6,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "residual_limit_px": 8,
+      "boats_with_straight_time": 4,
+      "missing_crossings": [
+        {
+          "boat": 3,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 5,
+          "reasons": {
+            "D": [
+              "crossing_fit_residual_too_high"
+            ],
+            "E": [
+              "crossing_fit_residual_too_high"
+            ],
+            "F": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        },
+        {
+          "boat": 6,
+          "reasons": {
+            "E": [
+              "crossing_fit_residual_too_high"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "residual_limit_px": 10,
+      "boats_with_straight_time": 6,
+      "missing_crossings": []
+    }
+  ],
+  "straight_range_common_to_all_boats": [
+    0.833,
+    0.9
+  ],
+  "straight_estimate_range": [
+    0.795,
+    0.923
+  ],
+  "tracking_benchmark": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 12,
+    "manifest_sha256": "0873a498547e838b6b7b4193fd3250e33010bf6b412aae42ab640a0acbdf34a3",
+    "usable_capture_frames": 265,
+    "image_size": [
+      1280,
+      813
+    ],
+    "method": "existing_actor_optical_flow_with_two_manual_seeds",
+    "reference": "legacy_human_bow_observations_with_exact_media_time",
+    "bow_measurement_validated": false,
+    "rating_ready": false,
+    "boats": [
+      {
+        "boat": 1,
+        "status": "actor_candidates_only",
+        "clip_frames": 52,
+        "frames_with_candidate": 5,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 2,
+        "holdouts_near_box": 2,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 3,
+            "holdouts": [
+              {
+                "media_time": 248.1,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 2,
+            "holdouts": [
+              {
+                "media_time": 253,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      },
+      {
+        "boat": 2,
+        "status": "actor_candidates_only",
+        "clip_frames": 52,
+        "frames_with_candidate": 5,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 2,
+        "holdouts_near_box": 2,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 3,
+            "holdouts": [
+              {
+                "media_time": 250.5,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 2,
+            "holdouts": [
+              {
+                "media_time": 255.4,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      },
+      {
+        "boat": 3,
+        "status": "actor_candidates_only",
+        "clip_frames": 55,
+        "frames_with_candidate": 5,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 1,
+        "holdouts_near_box": 1,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 4,
+            "holdouts": [
+              {
+                "media_time": 255.8,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 1,
+            "holdouts": [],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      },
+      {
+        "boat": 4,
+        "status": "actor_candidates_only",
+        "clip_frames": 56,
+        "frames_with_candidate": 6,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 1,
+        "holdouts_near_box": 1,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 5,
+            "holdouts": [
+              {
+                "media_time": 260.1,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 1,
+            "holdouts": [],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      },
+      {
+        "boat": 5,
+        "status": "actor_candidates_only",
+        "clip_frames": 54,
+        "frames_with_candidate": 6,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 2,
+        "holdouts_near_box": 2,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 4,
+            "holdouts": [
+              {
+                "media_time": 263.2,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 2,
+            "holdouts": [
+              {
+                "media_time": 268.3,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      },
+      {
+        "boat": 6,
+        "status": "actor_candidates_only",
+        "clip_frames": 56,
+        "frames_with_candidate": 6,
+        "matched_reference_frames": 12,
+        "holdout_count": 10,
+        "holdouts_with_candidate": 2,
+        "holdouts_near_box": 2,
+        "runs": [
+          {
+            "seed": "turn_approach",
+            "frame_count": 4,
+            "holdouts": [
+              {
+                "media_time": 267.2,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "source_boundary",
+              "flow_lost_no_detector"
+            ]
+          },
+          {
+            "seed": "straight",
+            "frame_count": 2,
+            "holdouts": [
+              {
+                "media_time": 272.5,
+                "distance_outside_box_px": 0.0
+              }
+            ],
+            "stops": [
+              "flow_lost_no_detector",
+              "source_boundary"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "manual_result": {
+    "schema": 1,
+    "date": "20261112",
+    "venue": "04",
+    "race": 12,
+    "lap": 1,
+    "profile_id": "04-heiwajima-12r-six-boat-straight-trial",
+    "manifest_sha256": "0873a498547e838b6b7b4193fd3250e33010bf6b412aae42ab640a0acbdf34a3",
+    "profile_sha256": "755582a43675700735ba50878f9c16f81b53f8ca1f3e5526fb095dfbdc1e6eab",
+    "review_sha256": "da2915c99620a472c1a684a35838324d9da2b7f62942e82db8cd8aaca22f4371",
+    "lap_evidence": {
+      "lap": 1,
+      "file": "f_0247p6s.png",
+      "method": "broadcast_caption"
+    },
+    "quality_checks": "pinned_camera_and_continuous_track_v2",
+    "time_basis": "browser_presented_frame_media_time",
+    "full_backstretch_verified": false,
+    "real_time_scale_verified": false,
+    "measurement_mode": "reviewed_or_imported_bow_track",
+    "publication_ready": false,
+    "rating_eligible": false,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "D": {
+            "seconds": 252.12439999999998,
+            "bracket": [
+              252.1,
+              252.2
+            ],
+            "frames": [
+              "f_0252p1s.png",
+              "f_0252p2s.png"
+            ],
+            "raw_bracket": [
+              252.1,
+              252.2
+            ],
+            "fit_frames": [
+              "f_0252s.png",
+              "f_0252p1s.png",
+              "f_0252p2s.png",
+              "f_0252p3s.png",
+              "f_0252p4s.png"
+            ],
+            "max_fit_residual_pixels": 2.4
+          },
+          "E": {
+            "seconds": 252.64296160877512,
+            "bracket": [
+              252.6,
+              252.7
+            ],
+            "frames": [
+              "f_0252p6s.png",
+              "f_0252p7s.png"
+            ],
+            "raw_bracket": [
+              252.6,
+              252.7
+            ],
+            "fit_frames": [
+              "f_0252p5s.png",
+              "f_0252p6s.png",
+              "f_0252p7s.png",
+              "f_0252p8s.png",
+              "f_0252p9s.png"
+            ],
+            "max_fit_residual_pixels": 2.25
+          },
+          "F": {
+            "seconds": 253.04766666666666,
+            "bracket": [
+              253,
+              253.1
+            ],
+            "frames": [
+              "f_0253s.png",
+              "f_0253p1s.png"
+            ],
+            "raw_bracket": [
+              253,
+              253.1
+            ],
+            "fit_frames": [
+              "f_0252p9s.png",
+              "f_0253s.png",
+              "f_0253p1s.png",
+              "f_0253p2s.png",
+              "f_0253p3s.png"
+            ],
+            "max_fit_residual_pixels": 2.3
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_support_missing"
+          ]
+        },
+        "identity": {
+          "boat": 1,
+          "method": "boat_color",
+          "file": "f_0252s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0251p7s.png",
+            "time": 251.7,
+            "x": 533.0,
+            "y": 281.0
+          },
+          {
+            "file": "f_0251p8s.png",
+            "time": 251.8,
+            "x": 510.0,
+            "y": 274.0
+          },
+          {
+            "file": "f_0251p9s.png",
+            "time": 251.9,
+            "x": 485.0,
+            "y": 272.0
+          },
+          {
+            "file": "f_0252s.png",
+            "time": 252,
+            "x": 458.5,
+            "y": 265.0
+          },
+          {
+            "file": "f_0252p1s.png",
+            "time": 252.1,
+            "x": 429.5,
+            "y": 266.0
+          },
+          {
+            "file": "f_0252p2s.png",
+            "time": 252.2,
+            "x": 404.5,
+            "y": 255.0
+          },
+          {
+            "file": "f_0252p3s.png",
+            "time": 252.3,
+            "x": 379.5,
+            "y": 259.0
+          },
+          {
+            "file": "f_0252p4s.png",
+            "time": 252.4,
+            "x": 358.5,
+            "y": 252.5
+          },
+          {
+            "file": "f_0252p5s.png",
+            "time": 252.5,
+            "x": 338.0,
+            "y": 248.0
+          },
+          {
+            "file": "f_0252p6s.png",
+            "time": 252.6,
+            "x": 314.0,
+            "y": 252.5
+          },
+          {
+            "file": "f_0252p7s.png",
+            "time": 252.7,
+            "x": 282.5,
+            "y": 245.0
+          },
+          {
+            "file": "f_0252p8s.png",
+            "time": 252.8,
+            "x": 258.5,
+            "y": 239.5
+          },
+          {
+            "file": "f_0252p9s.png",
+            "time": 252.9,
+            "x": 229.0,
+            "y": 238.0
+          },
+          {
+            "file": "f_0253s.png",
+            "time": 253,
+            "x": 195.0,
+            "y": 235.5
+          },
+          {
+            "file": "f_0253p1s.png",
+            "time": 253.1,
+            "x": 167.0,
+            "y": 232.5
+          },
+          {
+            "file": "f_0253p2s.png",
+            "time": 253.2,
+            "x": 138.0,
+            "y": 229.5
+          },
+          {
+            "file": "f_0253p3s.png",
+            "time": 253.3,
+            "x": 107.5,
+            "y": 226.5
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.519,
+            "bracket_range_video_seconds": [
+              0.4,
+              0.6
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.405,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.923,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "D": {
+            "seconds": 254.5813953488372,
+            "bracket": [
+              254.5,
+              254.6
+            ],
+            "frames": [
+              "f_0254p5s.png",
+              "f_0254p6s.png"
+            ],
+            "raw_bracket": [
+              254.5,
+              254.6
+            ],
+            "fit_frames": [
+              "f_0254p4s.png",
+              "f_0254p5s.png",
+              "f_0254p6s.png",
+              "f_0254p7s.png",
+              "f_0254p8s.png"
+            ],
+            "max_fit_residual_pixels": 4.35
+          },
+          "E": {
+            "seconds": 255.04098360655738,
+            "bracket": [
+              255,
+              255.1
+            ],
+            "frames": [
+              "f_0255s.png",
+              "f_0255p1s.png"
+            ],
+            "raw_bracket": [
+              255,
+              255.1
+            ],
+            "fit_frames": [
+              "f_0254p9s.png",
+              "f_0255s.png",
+              "f_0255p1s.png",
+              "f_0255p2s.png",
+              "f_0255p3s.png"
+            ],
+            "max_fit_residual_pixels": 2.9
+          },
+          "F": {
+            "seconds": 255.41769911504426,
+            "bracket": [
+              255.4,
+              255.5
+            ],
+            "frames": [
+              "f_0255p4s.png",
+              "f_0255p5s.png"
+            ],
+            "raw_bracket": [
+              255.4,
+              255.5
+            ],
+            "fit_frames": [
+              "f_0255p3s.png",
+              "f_0255p4s.png",
+              "f_0255p5s.png",
+              "f_0255p6s.png",
+              "f_0255p7s.png"
+            ],
+            "max_fit_residual_pixels": 4.5
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_not_observed"
+          ]
+        },
+        "identity": {
+          "boat": 2,
+          "method": "boat_color",
+          "file": "f_0254p5s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0254p2s.png",
+            "time": 254.2,
+            "x": 529.5,
+            "y": 300.5
+          },
+          {
+            "file": "f_0254p3s.png",
+            "time": 254.3,
+            "x": 499.5,
+            "y": 295.5
+          },
+          {
+            "file": "f_0254p4s.png",
+            "time": 254.4,
+            "x": 476.0,
+            "y": 292.0
+          },
+          {
+            "file": "f_0254p5s.png",
+            "time": 254.5,
+            "x": 450.0,
+            "y": 286.0
+          },
+          {
+            "file": "f_0254p6s.png",
+            "time": 254.6,
+            "x": 418.0,
+            "y": 280.5
+          },
+          {
+            "file": "f_0254p7s.png",
+            "time": 254.7,
+            "x": 387.5,
+            "y": 280.5
+          },
+          {
+            "file": "f_0254p8s.png",
+            "time": 254.8,
+            "x": 367.5,
+            "y": 278.0
+          },
+          {
+            "file": "f_0254p9s.png",
+            "time": 254.9,
+            "x": 336.5,
+            "y": 275.5
+          },
+          {
+            "file": "f_0255s.png",
+            "time": 255,
+            "x": 312.0,
+            "y": 273.5
+          },
+          {
+            "file": "f_0255p1s.png",
+            "time": 255.1,
+            "x": 286.0,
+            "y": 275.5
+          },
+          {
+            "file": "f_0255p2s.png",
+            "time": 255.2,
+            "x": 258.5,
+            "y": 269.5
+          },
+          {
+            "file": "f_0255p3s.png",
+            "time": 255.3,
+            "x": 226.0,
+            "y": 265.5
+          },
+          {
+            "file": "f_0255p4s.png",
+            "time": 255.4,
+            "x": 184.5,
+            "y": 262.5
+          },
+          {
+            "file": "f_0255p5s.png",
+            "time": 255.5,
+            "x": 156.5,
+            "y": 260.5
+          },
+          {
+            "file": "f_0255p6s.png",
+            "time": 255.6,
+            "x": 119.5,
+            "y": 256.5
+          },
+          {
+            "file": "f_0255p7s.png",
+            "time": 255.7,
+            "x": 89.0,
+            "y": 255.0
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.46,
+            "bracket_range_video_seconds": [
+              0.4,
+              0.6
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.377,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.836,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "D": {
+            "seconds": 260.08956277023555,
+            "bracket": [
+              260,
+              260.1
+            ],
+            "frames": [
+              "f_0260s.png",
+              "f_0260p1s.png"
+            ],
+            "raw_bracket": [
+              260,
+              260.1
+            ],
+            "fit_frames": [
+              "f_0259p9s.png",
+              "f_0260s.png",
+              "f_0260p1s.png",
+              "f_0260p2s.png",
+              "f_0260p3s.png"
+            ],
+            "max_fit_residual_pixels": 8.86
+          },
+          "E": {
+            "seconds": 260.5417529027322,
+            "bracket": [
+              260.5,
+              260.6
+            ],
+            "frames": [
+              "f_0260p5s.png",
+              "f_0260p6s.png"
+            ],
+            "raw_bracket": [
+              260.5,
+              260.6
+            ],
+            "fit_frames": [
+              "f_0260p4s.png",
+              "f_0260p5s.png",
+              "f_0260p6s.png",
+              "f_0260p7s.png",
+              "f_0260p8s.png"
+            ],
+            "max_fit_residual_pixels": 4.439
+          },
+          "F": {
+            "seconds": 260.92941325864973,
+            "bracket": [
+              260.866667,
+              261
+            ],
+            "frames": [
+              "f_0260p9s.png",
+              "f_0261s.png"
+            ],
+            "raw_bracket": [
+              260.866667,
+              261
+            ],
+            "fit_frames": [
+              "f_0260p8s.png",
+              "f_0260p9s.png",
+              "f_0261s.png",
+              "f_0261p1s.png",
+              "f_0261p2s.png"
+            ],
+            "max_fit_residual_pixels": 6.806
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_not_observed"
+          ]
+        },
+        "identity": {
+          "boat": 3,
+          "method": "boat_color",
+          "file": "f_0260s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0259p7s.png",
+            "time": 259.7,
+            "x": 530.0,
+            "y": 296.5
+          },
+          {
+            "file": "f_0259p8s.png",
+            "time": 259.8,
+            "x": 501.5,
+            "y": 292.0
+          },
+          {
+            "file": "f_0259p9s.png",
+            "time": 259.866667,
+            "x": 481.5,
+            "y": 289.0
+          },
+          {
+            "file": "f_0260s.png",
+            "time": 260,
+            "x": 443.0,
+            "y": 278.0
+          },
+          {
+            "file": "f_0260p1s.png",
+            "time": 260.1,
+            "x": 416.0,
+            "y": 277.5
+          },
+          {
+            "file": "f_0260p2s.png",
+            "time": 260.2,
+            "x": 407.5,
+            "y": 273.0
+          },
+          {
+            "file": "f_0260p3s.png",
+            "time": 260.3,
+            "x": 372.5,
+            "y": 271.5
+          },
+          {
+            "file": "f_0260p4s.png",
+            "time": 260.366667,
+            "x": 350.0,
+            "y": 271.0
+          },
+          {
+            "file": "f_0260p5s.png",
+            "time": 260.5,
+            "x": 309.5,
+            "y": 264.0
+          },
+          {
+            "file": "f_0260p6s.png",
+            "time": 260.6,
+            "x": 287.5,
+            "y": 268.5
+          },
+          {
+            "file": "f_0260p7s.png",
+            "time": 260.7,
+            "x": 257.0,
+            "y": 263.0
+          },
+          {
+            "file": "f_0260p8s.png",
+            "time": 260.8,
+            "x": 221.0,
+            "y": 257.5
+          },
+          {
+            "file": "f_0260p9s.png",
+            "time": 260.866667,
+            "x": 211.5,
+            "y": 256.0
+          },
+          {
+            "file": "f_0261s.png",
+            "time": 261,
+            "x": 162.5,
+            "y": 253.5
+          },
+          {
+            "file": "f_0261p1s.png",
+            "time": 261.1,
+            "x": 120.5,
+            "y": 253.5
+          },
+          {
+            "file": "f_0261p2s.png",
+            "time": 261.2,
+            "x": 89.0,
+            "y": 250.0
+          },
+          {
+            "file": "f_0261p3s.png",
+            "time": 261.3,
+            "x": 49.5,
+            "y": 247.5
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.452,
+            "bracket_range_video_seconds": [
+              0.4,
+              0.6
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.388,
+            "bracket_range_video_seconds": [
+              0.267,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.84,
+            "bracket_range_video_seconds": [
+              0.767,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "D": {
+            "seconds": 264.4929692576548,
+            "bracket": [
+              264.366667,
+              264.5
+            ],
+            "frames": [
+              "f_0264p4s.png",
+              "f_0264p5s.png"
+            ],
+            "raw_bracket": [
+              264.366667,
+              264.5
+            ],
+            "fit_frames": [
+              "f_0264p3s.png",
+              "f_0264p4s.png",
+              "f_0264p5s.png",
+              "f_0264p6s.png",
+              "f_0264p7s.png"
+            ],
+            "max_fit_residual_pixels": 3.393
+          },
+          "E": {
+            "seconds": 264.9586173342457,
+            "bracket": [
+              264.866667,
+              265
+            ],
+            "frames": [
+              "f_0264p9s.png",
+              "f_0265s.png"
+            ],
+            "raw_bracket": [
+              264.866667,
+              265
+            ],
+            "fit_frames": [
+              "f_0264p8s.png",
+              "f_0264p9s.png",
+              "f_0265s.png",
+              "f_0265p1s.png",
+              "f_0265p2s.png"
+            ],
+            "max_fit_residual_pixels": 6.874
+          },
+          "F": {
+            "seconds": 265.34889507472747,
+            "bracket": [
+              265.3,
+              265.366667
+            ],
+            "frames": [
+              "f_0265p3s.png",
+              "f_0265p4s.png"
+            ],
+            "raw_bracket": [
+              265.3,
+              265.366667
+            ],
+            "fit_frames": [
+              "f_0265p2s.png",
+              "f_0265p3s.png",
+              "f_0265p4s.png",
+              "f_0265p5s.png",
+              "f_0265p6s.png"
+            ],
+            "max_fit_residual_pixels": 5.388
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_not_observed"
+          ]
+        },
+        "identity": {
+          "boat": 4,
+          "method": "boat_color",
+          "file": "f_0264p4s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0264p1s.png",
+            "time": 264.1,
+            "x": 519.5,
+            "y": 301.0
+          },
+          {
+            "file": "f_0264p2s.png",
+            "time": 264.2,
+            "x": 500.5,
+            "y": 294.5
+          },
+          {
+            "file": "f_0264p3s.png",
+            "time": 264.3,
+            "x": 480.0,
+            "y": 290.0
+          },
+          {
+            "file": "f_0264p4s.png",
+            "time": 264.366667,
+            "x": 457.5,
+            "y": 289.5
+          },
+          {
+            "file": "f_0264p5s.png",
+            "time": 264.5,
+            "x": 421.0,
+            "y": 285.5
+          },
+          {
+            "file": "f_0264p6s.png",
+            "time": 264.6,
+            "x": 399.0,
+            "y": 279.5
+          },
+          {
+            "file": "f_0264p7s.png",
+            "time": 264.7,
+            "x": 367.0,
+            "y": 278.5
+          },
+          {
+            "file": "f_0264p8s.png",
+            "time": 264.8,
+            "x": 344.5,
+            "y": 279.5
+          },
+          {
+            "file": "f_0264p9s.png",
+            "time": 264.866667,
+            "x": 330.0,
+            "y": 280.5
+          },
+          {
+            "file": "f_0265s.png",
+            "time": 265,
+            "x": 294.0,
+            "y": 277.0
+          },
+          {
+            "file": "f_0265p1s.png",
+            "time": 265.1,
+            "x": 257.0,
+            "y": 273.5
+          },
+          {
+            "file": "f_0265p2s.png",
+            "time": 265.2,
+            "x": 220.5,
+            "y": 266.5
+          },
+          {
+            "file": "f_0265p3s.png",
+            "time": 265.3,
+            "x": 202.0,
+            "y": 262.0
+          },
+          {
+            "file": "f_0265p4s.png",
+            "time": 265.366667,
+            "x": 182.5,
+            "y": 265.0
+          },
+          {
+            "file": "f_0265p5s.png",
+            "time": 265.5,
+            "x": 135.5,
+            "y": 261.0
+          },
+          {
+            "file": "f_0265p6s.png",
+            "time": 265.6,
+            "x": 110.5,
+            "y": 257.0
+          },
+          {
+            "file": "f_0265p7s.png",
+            "time": 265.7,
+            "x": 76.5,
+            "y": 257.5
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.466,
+            "bracket_range_video_seconds": [
+              0.367,
+              0.633
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.39,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.856,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "D": {
+            "seconds": 267.3384642085612,
+            "bracket": [
+              267.3,
+              267.366667
+            ],
+            "frames": [
+              "f_0267p3s.png",
+              "f_0267p4s.png"
+            ],
+            "raw_bracket": [
+              267.3,
+              267.366667
+            ],
+            "fit_frames": [
+              "f_0267p2s.png",
+              "f_0267p3s.png",
+              "f_0267p4s.png",
+              "f_0267p5s.png",
+              "f_0267p6s.png"
+            ],
+            "max_fit_residual_pixels": 8.714
+          },
+          "E": {
+            "seconds": 267.8118346272175,
+            "bracket": [
+              267.8,
+              267.866667
+            ],
+            "frames": [
+              "f_0267p8s.png",
+              "f_0267p9s.png"
+            ],
+            "raw_bracket": [
+              267.8,
+              267.866667
+            ],
+            "fit_frames": [
+              "f_0267p7s.png",
+              "f_0267p8s.png",
+              "f_0267p9s.png",
+              "f_0268s.png",
+              "f_0268p1s.png"
+            ],
+            "max_fit_residual_pixels": 8.255
+          },
+          "F": {
+            "seconds": 268.2324634215236,
+            "bracket": [
+              268.2,
+              268.3
+            ],
+            "frames": [
+              "f_0268p2s.png",
+              "f_0268p3s.png"
+            ],
+            "raw_bracket": [
+              268.2,
+              268.3
+            ],
+            "fit_frames": [
+              "f_0268p1s.png",
+              "f_0268p2s.png",
+              "f_0268p3s.png",
+              "f_0268p4s.png",
+              "f_0268p5s.png"
+            ],
+            "max_fit_residual_pixels": 8.657
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_support_missing"
+          ]
+        },
+        "identity": {
+          "boat": 5,
+          "method": "boat_color",
+          "file": "f_0267p2s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0266p9s.png",
+            "time": 266.866667,
+            "x": 549.5,
+            "y": 307.0
+          },
+          {
+            "file": "f_0267s.png",
+            "time": 267,
+            "x": 516.5,
+            "y": 301.5
+          },
+          {
+            "file": "f_0267p1s.png",
+            "time": 267.1,
+            "x": 491.0,
+            "y": 300.0
+          },
+          {
+            "file": "f_0267p2s.png",
+            "time": 267.2,
+            "x": 458.0,
+            "y": 293.5
+          },
+          {
+            "file": "f_0267p3s.png",
+            "time": 267.3,
+            "x": 445.0,
+            "y": 288.0
+          },
+          {
+            "file": "f_0267p4s.png",
+            "time": 267.366667,
+            "x": 416.5,
+            "y": 288.0
+          },
+          {
+            "file": "f_0267p5s.png",
+            "time": 267.5,
+            "x": 382.5,
+            "y": 283.0
+          },
+          {
+            "file": "f_0267p6s.png",
+            "time": 267.6,
+            "x": 342.5,
+            "y": 284.0
+          },
+          {
+            "file": "f_0267p7s.png",
+            "time": 267.7,
+            "x": 324.0,
+            "y": 276.0
+          },
+          {
+            "file": "f_0267p8s.png",
+            "time": 267.8,
+            "x": 311.0,
+            "y": 275.5
+          },
+          {
+            "file": "f_0267p9s.png",
+            "time": 267.866667,
+            "x": 279.5,
+            "y": 268.0
+          },
+          {
+            "file": "f_0268s.png",
+            "time": 268,
+            "x": 257.5,
+            "y": 268.0
+          },
+          {
+            "file": "f_0268p1s.png",
+            "time": 268.1,
+            "x": 233.5,
+            "y": 267.5
+          },
+          {
+            "file": "f_0268p2s.png",
+            "time": 268.2,
+            "x": 191.0,
+            "y": 264.5
+          },
+          {
+            "file": "f_0268p3s.png",
+            "time": 268.3,
+            "x": 163.5,
+            "y": 264.0
+          },
+          {
+            "file": "f_0268p4s.png",
+            "time": 268.366667,
+            "x": 126.5,
+            "y": 263.0
+          },
+          {
+            "file": "f_0268p5s.png",
+            "time": 268.5,
+            "x": 92.0,
+            "y": 259.0
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.473,
+            "bracket_range_video_seconds": [
+              0.433,
+              0.567
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.421,
+            "bracket_range_video_seconds": [
+              0.333,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.894,
+            "bracket_range_video_seconds": [
+              0.833,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "D": {
+            "seconds": 271.66502546689304,
+            "bracket": [
+              271.6,
+              271.7
+            ],
+            "frames": [
+              "f_0271p6s.png",
+              "f_0271p7s.png"
+            ],
+            "raw_bracket": [
+              271.6,
+              271.7
+            ],
+            "fit_frames": [
+              "f_0271p5s.png",
+              "f_0271p6s.png",
+              "f_0271p7s.png",
+              "f_0271p8s.png",
+              "f_0271p9s.png"
+            ],
+            "max_fit_residual_pixels": 6.8
+          },
+          "E": {
+            "seconds": 272.08464285714285,
+            "bracket": [
+              272,
+              272.1
+            ],
+            "frames": [
+              "f_0272s.png",
+              "f_0272p1s.png"
+            ],
+            "raw_bracket": [
+              272,
+              272.1
+            ],
+            "fit_frames": [
+              "f_0271p9s.png",
+              "f_0272s.png",
+              "f_0272p1s.png",
+              "f_0272p2s.png",
+              "f_0272p3s.png"
+            ],
+            "max_fit_residual_pixels": 9.3
+          },
+          "F": {
+            "seconds": 272.46012759170657,
+            "bracket": [
+              272.4,
+              272.5
+            ],
+            "frames": [
+              "f_0272p4s.png",
+              "f_0272p5s.png"
+            ],
+            "raw_bracket": [
+              272.4,
+              272.5
+            ],
+            "fit_frames": [
+              "f_0272p3s.png",
+              "f_0272p4s.png",
+              "f_0272p5s.png",
+              "f_0272p6s.png",
+              "f_0272p7s.png"
+            ],
+            "max_fit_residual_pixels": 5.35
+          }
+        },
+        "missing_crossings": {
+          "A": [
+            "crossing_not_observed"
+          ],
+          "B": [
+            "crossing_not_observed"
+          ],
+          "C": [
+            "crossing_not_observed"
+          ]
+        },
+        "identity": {
+          "boat": 6,
+          "method": "boat_color",
+          "file": "f_0271p6s.png"
+        },
+        "observations": [
+          {
+            "file": "f_0271p3s.png",
+            "time": 271.3,
+            "x": 518.5,
+            "y": 309.0
+          },
+          {
+            "file": "f_0271p4s.png",
+            "time": 271.4,
+            "x": 492.0,
+            "y": 304.0
+          },
+          {
+            "file": "f_0271p5s.png",
+            "time": 271.5,
+            "x": 472.0,
+            "y": 302.0
+          },
+          {
+            "file": "f_0271p6s.png",
+            "time": 271.6,
+            "x": 442.5,
+            "y": 299.5
+          },
+          {
+            "file": "f_0271p7s.png",
+            "time": 271.7,
+            "x": 421.5,
+            "y": 298.0
+          },
+          {
+            "file": "f_0271p8s.png",
+            "time": 271.8,
+            "x": 383.0,
+            "y": 295.5
+          },
+          {
+            "file": "f_0271p9s.png",
+            "time": 271.9,
+            "x": 354.5,
+            "y": 293.5
+          },
+          {
+            "file": "f_0272s.png",
+            "time": 272,
+            "x": 320.0,
+            "y": 292.5
+          },
+          {
+            "file": "f_0272p1s.png",
+            "time": 272.1,
+            "x": 291.0,
+            "y": 294.0
+          },
+          {
+            "file": "f_0272p2s.png",
+            "time": 272.2,
+            "x": 277.0,
+            "y": 293.5
+          },
+          {
+            "file": "f_0272p3s.png",
+            "time": 272.3,
+            "x": 236.0,
+            "y": 289.0
+          },
+          {
+            "file": "f_0272p4s.png",
+            "time": 272.4,
+            "x": 196.5,
+            "y": 280.0
+          },
+          {
+            "file": "f_0272p5s.png",
+            "time": 272.5,
+            "x": 172.0,
+            "y": 276.0
+          },
+          {
+            "file": "f_0272p6s.png",
+            "time": 272.6,
+            "x": 141.0,
+            "y": 274.0
+          },
+          {
+            "file": "f_0272p7s.png",
+            "time": 272.7,
+            "x": 107.0,
+            "y": 271.5
+          },
+          {
+            "file": "f_0272p8s.png",
+            "time": 272.8,
+            "x": 64.0,
+            "y": 271.5
+          }
+        ],
+        "segments": {
+          "turn_entry": {
+            "status": "crossing_missing"
+          },
+          "turn_exit": {
+            "status": "crossing_missing"
+          },
+          "turn_total": {
+            "status": "crossing_missing"
+          },
+          "exit_recovery": {
+            "status": "crossing_missing"
+          },
+          "back_early": {
+            "status": "reference",
+            "video_seconds": 0.42,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_late": {
+            "status": "reference",
+            "video_seconds": 0.375,
+            "bracket_range_video_seconds": [
+              0.3,
+              0.5
+            ]
+          },
+          "back_stretch": {
+            "status": "reference",
+            "video_seconds": 0.795,
+            "bracket_range_video_seconds": [
+              0.7,
+              0.9
+            ]
+          }
+        }
+      }
+    ],
+    "coverage": {
+      "turn_entry": 0,
+      "turn_exit": 0,
+      "turn_total": 0,
+      "exit_recovery": 0,
+      "back_early": 6,
+      "back_late": 6,
+      "back_stretch": 6
+    }
+  },
+  "readiness": {
+    "schema": 1,
+    "input_results": 1,
+    "comparable_capture_groups": 1,
+    "pilot_minimums": {
+      "races": 3,
+      "dates": 2,
+      "boats_per_race": 6,
+      "max_reader_difference_fraction_of_median_adjacent_gap": 0.3333333333333333
+    },
+    "metrics": {
+      "turning": {
+        "segment": "turn_total",
+        "six_boat_races": 0,
+        "paired_passing_races": 0,
+        "paired_passing_dates": 0,
+        "repeatability_screen_passed": false,
+        "venues_passing_repeatability_screen": [],
+        "races": [
+          {
+            "date": "20261112",
+            "venue": "04",
+            "race": 12,
+            "max_boats": 0,
+            "paired_checks": []
+          }
+        ]
+      },
+      "acceleration": {
+        "segment": "exit_recovery",
+        "six_boat_races": 0,
+        "paired_passing_races": 0,
+        "paired_passing_dates": 0,
+        "repeatability_screen_passed": false,
+        "venues_passing_repeatability_screen": [],
+        "races": [
+          {
+            "date": "20261112",
+            "venue": "04",
+            "race": 12,
+            "max_boats": 0,
+            "paired_checks": []
+          }
+        ]
+      },
+      "straight": {
+        "segment": "back_stretch",
+        "six_boat_races": 1,
+        "paired_passing_races": 0,
+        "paired_passing_dates": 0,
+        "repeatability_screen_passed": false,
+        "venues_passing_repeatability_screen": [],
+        "races": [
+          {
+            "date": "20261112",
+            "venue": "04",
+            "race": 12,
+            "max_boats": 6,
+            "paired_checks": []
+          }
+        ]
+      }
+    },
+    "rating_ready": false
+  }
+}

@@ -52,3 +52,17 @@ python -m tools.measure_exhibition batch --index PRIVATE/queue.json --output PRI
 - 同じ場・節・条件で他艇と比較し、風・波・気温、艇の通った位置、選手、チルト・部品交換を考慮する。モーターは交換期を含めて識別する。
 - 複数日・複数選手の測定で、誤差と欠測率を確認する。別の節や別選手の成績を使い、機力指標として再現するか、公式の直線・回り足データがある場ではそちらとの整合も検証する。
 - 種別と総合の評価基準はこの検証後に固定する。比較に必要な走数や種別が足りないときは評価保留にする。
+
+## 6艇の連続採点と再現性
+
+`setup.json` に、各艇の映像内時刻を `"windows":{"1":[開始,終了], … ,"6":[開始,終了]}` として記録する。 `camera_reference`、 `camera_layout_reviewed`、 `lap_evidence`、 `identity` は前述の形式。確認画面では艇首をクリックすると次のコマに進む。見えない艇首は欠測を選ぶ。採点者ごとに同じ確認画面の新しい下書きから始め、先の座標を見ずに採点する。
+
+```sh
+python -m tools.review_exhibition_bows build --manifest PRIVATE/manifest.json --profile PROFILE.json --setup PRIVATE/setup.json --output PRIVATE/review-page
+python -m tools.review_exhibition_bows import --manifest PRIVATE/manifest.json --profile PROFILE.json --setup PRIVATE/setup.json --draft PRIVATE/draft.json --output PRIVATE/review.json
+python -m tools.assess_exhibition_readiness --index PRIVATE/results-index.json --output PRIVATE/readiness.json
+```
+
+`review-page/index.html` はローカル確認用。計測は取り込んだ下書きを `measure` に渡す。再現性の入力は `{"results":[{"reviewer":"reader-a","path":"result-a.json"},{"reviewer":"reader-b","path":"result-b.json"}]}` の形式で、採点者名は実際に別人・独立採点を確認した上で記入する。
+
+再現性の試験では同じ映像・校正・周回を読んだ2人の6艇分を比較する。読み手の最大差が隣り合う艇間隔の中央値の3分の1以下かを確認し、暫定の試験単位は3レース・2日以上とする。全区間の実時間・距離の確認と、選手や日が替わってもモーターの傾向が再現するかの検証は別に必要。この判定ツールはA〜Dを出力しない。

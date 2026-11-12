@@ -1,12 +1,13 @@
 // Event-flow checks with a small DOM/canvas double. Not a browser layout test.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function boot(pending=false,size=[1280,720],method,initialReview){
+function boot(pending=false,size=[1280,720],method,initialReview,segmentsOnly=false){
  const nodes=new Map(),all=[],blobs=[],images=[],timers=new Map();let timerId=0;
  class Element{
   constructor(){this.dataset={};this.children=[];this.value='';this.checked=false;this.textContent='';this.attrs={};this.files=[];all.push(this);}
   append(e){this.children.push(e);}setAttribute(k,v){this.attrs[k]=v;}click(){if(this.onclick)this.onclick({});}
   getBoundingClientRect(){return{left:0,top:0,width:320,height:180};}
   getContext(){return new Proxy({}, {get:()=>()=>{},set:()=>true});}
+  closest(){return this;}
  }
  const document={getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},createElement(){return new Element();},
   querySelectorAll(selector){const key=selector.match(/\[data-(.*?)\]/)[1];return all.filter(n=>n.dataset[key]!==undefined);}};
@@ -16,6 +17,7 @@ function boot(pending=false,size=[1280,720],method,initialReview){
   events:Array.from({length:6},(_,i)=>['A','B','C'].map(g=>({boat:i+1,gate:g,frames}))).flat(),images:Object.fromEntries(frames.map(f=>[f.index,'test-image']))};
  if(method)bundle.method=method;
  if(initialReview)bundle.initial_review=initialReview;
+ if(segmentsOnly)bundle.segments_only=true;
  document.getElementById('bundle').textContent=JSON.stringify(bundle);
  for(const p of ['bow','stern']){const e=new Element();e.dataset.point=p;}
  for(const p of ['before','after']){const e=new Element();e.dataset.side=p;}
@@ -42,6 +44,16 @@ function boot(pending=false,size=[1280,720],method,initialReview){
  assert.match(delayed.document.getElementById('status').textContent,/読込完了/);
  delayed.document.getElementById('reviewer').value='reviewer';delayed.document.getElementById('export').click();
  assert.deepEqual(JSON.parse(await delayed.blobs.at(-1).text()).labels,{});
+ const segmented=boot(false,[1280,720],'heiwajima-bow-gates-v2',null,true);
+ const s=id=>segmented.document.getElementById(id);
+ assert.match(s('clock').textContent,/コマ 0 ／/);
+ s('canvas').onclick({clientX:100,clientY:100});
+ assert.match(s('clock').textContent,/コマ 1 ／/);
+ s('clear').click();
+ assert.match(s('clock').textContent,/コマ 2 ／/);
+ s('reviewer').value='reader-1';s('trajectory').checked=true;s('export').click();
+ assert.deepEqual(JSON.parse(await segmented.blobs.at(-1).text()).labels,
+   {'1:0':{bow:[400,400]},'1:1':{bow:null}});
  // Slow replay advances every recorded frame and stops without stale timers.
  const replay=boot(),r=id=>replay.document.getElementById(id);
  r('restart').click();assert.equal(r('play').attrs['aria-pressed'],'true');

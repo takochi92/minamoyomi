@@ -10,6 +10,7 @@ from scraper.exhibition_segments import SEGMENTS, fit_crossing, frame_loader, me
 from scraper.turn_measurement import digest
 from tools.measure_exhibition import inventory, main, output_lock, run_batch, scan_camera, template
 from tools.exhibition_review_sheet import build_sheets
+from tools.review_exhibition_bows import build, import_draft
 
 
 LAP_EVIDENCE = {"lap": 1, "file": "f_000.png", "method": "broadcast_caption"}
@@ -185,6 +186,30 @@ def test_camera_scan_reports_matching_and_tampered_frames(tmp_path):
     Image.new("L", (96, 96), 0).save(tmp_path / "f_006.png")
     result = scan_camera(manifest_path, profile_path, tmp_path / "calibration.png")
     assert result["status_counts"] == {"match": 22, "frame_sha256_mismatch": 1}
+
+
+def test_six_boat_review_keeps_unknown_frames_and_external_calibration_frame(tmp_path):
+    manifest, profile, _ = setup_capture(tmp_path)
+    manifest_path = write_json(tmp_path / "manifest.json", manifest)
+    profile_path = write_json(tmp_path / "profile.json", profile)
+    setup = write_json(tmp_path / "setup.json", {"windows": {str(n): [200.2, 201] for n in range(1, 7)},
+                       "camera_reference": "f_000.png", "lap_evidence": LAP_EVIDENCE,
+                       "camera_layout_reviewed": True, "identity": {}})
+    bundle = build(manifest_path, profile_path, setup, tmp_path / "review")
+    assert len(bundle["clips"]) == 6
+    assert (tmp_path / "review/index.html").is_file()
+    source = {"kind": "turn-review-draft-v1", "method": bundle["method"],
+              "bundle_digest": bundle["digest"], "trajectory_checked": True,
+              "reviewer": "reviewer-1", "labels": {"1:2": {"bow": [20, 50]}, "1:3": {"bow": None}}}
+    draft = write_json(tmp_path / "draft.json", source)
+    converted = import_draft(manifest_path, profile_path, setup, draft)
+    assert converted["window"] == [200, 201]
+    assert converted["boats"]["1"][:3] == [{"file": "f_002.png", "bow": [20, 50]},
+                                         {"file": "f_003.png", "bow": None},
+                                         {"file": "f_004.png", "bow": None}]
+    write_json(draft, {**source, "bundle_digest": "wrong"})
+    with pytest.raises(ValueError, match="unbound_or_unreviewed_bow_draft"):
+        import_draft(manifest_path, profile_path, setup, draft)
 
 
 def test_venue_inventory_distinguishes_replay_from_calibration(tmp_path):
