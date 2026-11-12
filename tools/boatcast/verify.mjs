@@ -4,8 +4,14 @@
 //   node verify.mjs                       # 今日（日本時間）の平和島12R展示で点検
 //   node verify.mjs --date 20261112 --race 12
 //
-// 点検項目：1 Chrome のバージョン / 2 デバッグポートの空き / 3 Chrome 起動とデバッグ接続 / 4 プレイヤー読込（video 要素）
-//          5 duration > 0 / 6 5秒間で currentTime が 3秒以上進む / 7 エラーなし
+// 点検項目
+//   1 Chrome のバージョン / 2 デバッグポートの空き / 3 Chrome 起動とデバッグ接続
+//   4 プレイヤー読込（video 要素があること。この時点の映像サイズは見ない：読込直後は 0×0 のことがある）
+//   5 duration > 0
+//   6 5秒間で currentTime が 3秒以上進む
+//   7 再生後の映像サイズ（幅・高さが 0 より大きい。読込直後ではなく、再生が進んだあとで見る）
+//   8 フレーム数が実際に増える（5秒間に 10 フレーム以上。requestVideoFrameCallback の通知数と getVideoPlaybackQuality の両方を見る）
+//   9 エラーなし
 // 起動した Chrome は、自分の PID だけを終了する。
 
 import path from 'node:path';
@@ -13,12 +19,37 @@ import { fileURLToPath } from 'node:url';
 import { ArgError, parseVerifyArgs } from './args.mjs';
 import { CdpClient } from './cdp.mjs';
 import { findChrome, isPortInUse, launchChrome } from './chrome.mjs';
-import { StageError, classifyFailure } from './failures.mjs';
-import { ensurePlaying, readVideo, sleep, waitForVideo, watchNetwork, failureContext } from './player.mjs';
+import { HINTS, StageError, classifyFailure } from './failures.mjs';
+import { ensurePlaying, failureContext, installFrameProbe, readProbe, readVideo, sleep, waitForVideo, watchNetwork } from './player.mjs';
 import { buildPlayerUrl, resolveVenue, UrlBuildError } from './player-url.mjs';
 import { makeLogger, redactText, redactUrl } from './redact.mjs';
 
-const USAGE = `使い方: node verify.mjs [--date YYYYMMDD|today] [--race N] [--venue 04] [--port 9454] [--profile PATH] [--chrome PATH] [--attach] [--player-url URL]`;
+const USAGE = `使い方: node verify.mjs [--date YYYYMMDD|today] [--race N] [--venue 04] [--port 9454] [--profile PATH] [--chrome PATH] [--attach] [--video-timeout SEC] [--player-url URL]`;
+
+export const MIN_FRAMES_IN_WINDOW = 10;   // 5秒間に増えるべきフレーム数の最低ライン（2fps 相当。実際の配信は、これよりずっと多いはず）
+export const WINDOW_MS = 5000;
+
+/** 点検項目 6〜8 の判定（ブラウザなしでテストできるように、値を渡して判定だけする） */
+export function judgePlayback({ before, after, probeBefore, probeAfter }) {
+  const adv = (after?.currentTime ?? 0) - (before?.currentTime ?? 0);
+  const w = after?.width ?? 0;
+  const h = after?.height ?? 0;
+  const rvfc = probeAfter?.supported ? (probeAfter.seq ?? 0) - (probeBefore?.seq ?? 0) : null;
+  const q = probeBefore?.quality && probeAfter?.quality ? probeAfter.quality.total - probeBefore.quality.total : null;
+  const frames = [rvfc, q].filter((x) => x !== null);
+  return {
+    advance: adv,
+    advanceOk: adv >= 3,
+    sizeOk: w > 0 && h > 0,
+    width: w,
+    height: h,
+    framesRvfc: rvfc,
+    framesQuality: q,
+    // どちらか取れた方すべてが基準以上であること（片方でも 0 なら「実際には増えていない」とみなす）
+    framesOk: frames.length > 0 && frames.every((n) => n >= MIN_FRAMES_IN_WINDOW),
+    framesMeasured: frames.length > 0,
+  };
+}
 
 export async function run(argv, env = process.env, out = console.log) {
   let args;
@@ -51,9 +82,8 @@ export async function run(argv, env = process.env, out = console.log) {
   let cdp = null;
   try {
     // 1 Chrome のバージョン
-    let found = null;
     try {
-      found = await findChrome(args.chrome);
+      const found = await findChrome(args.chrome);
       line(true, '1 Chrome のバージョン', `${found.version}（${found.bin}）`);
     } catch (e) {
       line(false, '1 Chrome のバージョン', e.message);
@@ -87,41 +117,44 @@ export async function run(argv, env = process.env, out = console.log) {
     try {
       await cdp.navigate(url);
       v = await waitForVideo(cdp, net, { timeoutMs: args.videoTimeoutMs });
-      line(true, '4 プレイヤー読込（video 要素）', `${v.width}x${v.height}`);
+      line(true, '4 プレイヤー読込（video 要素）', '映像サイズは再生後に項目7で確認');
       line(v.duration > 0, '5 duration > 0', `${v.duration}s`);
     } catch (e) {
       const st = e instanceof StageError ? e : null;
       line(false, '4 プレイヤー読込（video 要素）', st ? `[${st.stage}] ${st.cause_}` : e.message);
-      line(null, '5 duration > 0', '4 が失敗したため未確認');
-      line(null, '6 5秒間の再生進行', '未確認');
-      line(null, '7 エラーなし', '未確認');
+      for (const n of ['5 duration > 0', '6 5秒間で currentTime が 3秒以上進む', '7 再生後の映像サイズ', '8 フレーム数が増える', '9 エラーなし']) line(null, n, '4 が失敗したため未確認');
       if (st) out(`  対処: ${st.hint}`);
       return finish(rows, out);
     }
 
-    // 6 5秒間で currentTime が 3秒以上進む
+    // 6〜8 再生して 5秒間の変化を見る（フレーム監視は再生の前に入れる）
+    await installFrameProbe(cdp);
     const play = await ensurePlaying(cdp);
-    const a = await readVideo(cdp);
-    await sleep(5000);
-    const b = await readVideo(cdp);
-    const adv = (b.currentTime ?? 0) - (a.currentTime ?? 0);
-    line(adv >= 3, '6 5秒間で currentTime が 3秒以上進む', `${a.currentTime.toFixed(2)} → ${b.currentTime.toFixed(2)}（+${adv.toFixed(2)}s${play.clicked ? '・中央クリックあり' : ''}）`);
+    const before = await readVideo(cdp);
+    const probeBefore = await readProbe(cdp);
+    await sleep(WINDOW_MS);
+    const after = await readVideo(cdp);
+    const probeAfter = await readProbe(cdp);
+    const j = judgePlayback({ before, after, probeBefore, probeAfter });
 
-    // 7 エラーなし
+    line(j.advanceOk, '6 5秒間で currentTime が 3秒以上進む', `${before.currentTime.toFixed(2)} → ${after.currentTime.toFixed(2)}（+${j.advance.toFixed(2)}s${play.clicked ? '・中央クリックあり' : ''}）`);
+    line(j.sizeOk, '7 再生後の映像サイズ', `${j.width}x${j.height}${j.sizeOk ? '' : '（0 のまま。映像がデコード・描画されていない可能性）'}`);
+    const fd = `rVFC ${j.framesRvfc ?? '未対応'} / playbackQuality ${j.framesQuality ?? '未対応'}（5秒・基準 ${MIN_FRAMES_IN_WINDOW} 以上）`;
+    line(j.framesOk, '8 フレーム数が増える', j.framesMeasured ? fd : 'フレーム数を測れません（どちらも未対応）');
+
+    // 9 エラーなし
     const ctx = await failureContext(cdp, net);
     const err = ctx.video?.error;
     const bad = err || net.httpErrors.some((e) => e.status === 403);
     if (bad) {
       const c = classifyFailure(ctx);
-      line(false, '7 エラーなし', `[${c.stage}] ${c.cause}`);
+      line(false, '9 エラーなし', `[${c.stage}] ${c.cause}`);
       out(`  対処: ${c.hint}`);
     } else {
-      line(true, '7 エラーなし', `video.error なし・403 なし（その他の HTTP エラー ${net.httpErrors.length} 件）`);
+      line(true, '9 エラーなし', `video.error なし・403 なし（その他の HTTP エラー ${net.httpErrors.length} 件）`);
     }
-    if (adv < 3 && !bad) {
-      const c = classifyFailure({ ...ctx, video: { ...(ctx.video || {}), has: true, duration: v.duration } });
-      out(`  再生が進みません。対処: ${c.hint}`);
-    }
+    if (!j.advanceOk && !bad) out(`  再生位置が進んでいません。確認: ${HINTS['player-load']}`);
+    if ((!j.sizeOk || !j.framesOk) && !bad) out(`  映像が描画されていません（映像サイズ 0×0、またはフレームが増えない）。デコードの失敗（起動フラグ不足）や、映像トラックのない配信の可能性があります。確認: ${HINTS.decode}`);
   } catch (e) {
     line(false, '内部エラー', e.message);
   } finally {

@@ -77,3 +77,9 @@ test('--video-timeout は秒で受け取りミリ秒にする（既定 45 秒）
   assert.equal(parseCaptureArgs(['--date', '20261112', '--race', '1', '--video-timeout', '5'], ENV).videoTimeoutMs, 5000);
   assert.throws(() => parseCaptureArgs(['--date', '20261112', '--race', '1', '--video-timeout', '0'], ENV), ArgError);
 });
+
+test('--frame-tolerance は秒（既定 0.5）', () => {
+  assert.equal(parseCaptureArgs(['--date', '20261112', '--race', '1'], ENV).frameToleranceSec, 0.5);
+  assert.equal(parseCaptureArgs(['--date', '20261112', '--race', '1', '--frame-tolerance', '0.2'], ENV).frameToleranceSec, 0.2);
+  assert.throws(() => parseCaptureArgs(['--date', '20261112', '--race', '1', '--frame-tolerance', '-1'], ENV), ArgError);
+});

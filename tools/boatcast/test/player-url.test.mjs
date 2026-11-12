@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPlayerUrl, resolveVenue, isValidDate, venuePageUrl, STADIUMS, UrlBuildError } from '../player-url.mjs';
+import { buildPlayerUrl, resolveVenue, isValidDate, venuePageUrl, STADIUMS, EVIDENCE, UrlBuildError } from '../player-url.mjs';
 
 test('平和島12R展示（検証済みの形）と完全に一致する', () => {
   assert.equal(
@@ -41,4 +41,12 @@ test('1桁のレース番号は既定では「1」。padRace で「01」（未�
 
 test('場ページのURL', () => {
   assert.equal(venuePageUrl('04'), 'https://race.boatcast.jp/?jo=04');
+});
+
+test('場の確認の出どころ（evidence）：PR版の実機確認と、別ツールの実測を混ぜない', () => {
+  assert.equal(resolveVenue('04').evidence, EVIDENCE.PR_TOOL_HOMESV);
+  assert.notEqual(EVIDENCE.PR_TOOL_HOMESV, EVIDENCE.OTHER_TOOL_288);
+  for (const [jo, v] of Object.entries(STADIUMS)) {
+    if (jo !== '04') assert.ok(!v.evidence, `${jo}: 対応表を受け取るまで evidence も空`);
+  }
 });

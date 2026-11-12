@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// BOATCAST 展示リプレイの「再生・フレーム取得・記録」。homesv（日本国内の家庭回線）で実行する。
+// BOATCAST 展示リプレイの「再生・フレーム取得・記録」。homesv で実行する（クラウドでは実行しない）。
 //
 //   node capture.mjs --date 20261112 --race 12
 //   node capture.mjs --date 20261112 --races 11,12 --seconds 10,60,120
@@ -20,8 +20,9 @@ import { ensurePlaying, failureContext, seekAndShoot, waitForVideo, watchNetwork
 import { buildPlayerUrl, resolveVenue, UrlBuildError } from './player-url.mjs';
 import { makeLogger, redactDeep, redactUrl } from './redact.mjs';
 import { frameFileName, makeUniqueDir, nowJst, pngSize, writeNew } from './util.mjs';
+import { judgeFrame, markDuplicates, sha256 } from './frames.mjs';
 
-export const TOOL_VERSION = '0.1.0';
+export const TOOL_VERSION = '0.2.0';
 const log = makeLogger('[capture]');
 
 export const USAGE = `使い方: node capture.mjs --date YYYYMMDD|today --race N [--race M ... | --races N,M]
@@ -30,9 +31,10 @@ export const USAGE = `使い方: node capture.mjs --date YYYYMMDD|today --race N
   --port ${DEFAULT_PORT}          デバッグポート（環境変数 BOATCAST_PORT。9447 / 9453 は使わない）
   --profile PATH        Chrome のプロファイル（既定 ${DEFAULT_PROFILE}）
   --out DIR             出力の親フォルダ（既定 ${DEFAULT_OUT}）
-  --mode seek|play      seek=一時停止してシーク（既定） / play=再生したまま撮る
+  --mode seek|play      seek=一時停止してシーク（既定。画像とフレーム時刻の対応を確認できる） / play=再生したまま撮る（対応を確認できるのは撮影中にフレームが進まなかったときだけ）
   --chrome PATH         Chrome の実行ファイル（環境変数 BOATCAST_CHROME）
   --attach              すでに起動している Chrome（--port）に繋ぐ。起動も終了もしない
+  --frame-tolerance SEC 表示フレームが指定秒より何秒前まで許すか（seek モードの計測可判定。既定 0.5）
   --video-timeout SEC   video 要素と duration を待つ秒数（既定 45）
   --pad-race            1桁のレース番号を 01 の形にする（未検証。1〜9R で開けないときの切り分け用）
   --player-url URL      組み立てずにこのURLを開く（ローカルのテストページ用。記録はドメイン＋パスまで）
@@ -54,10 +56,11 @@ async function captureRace({ cdp, net, args, race, venue, chrome }) {
   const url = playerUrlFor(args, race);
   const dir = makeUniqueDir(args.out, `${args.date}-${venue.label}-${race}`);
   const manifest = {
+    schema: 2,
     tool: { name: 'boatcast-capture', version: TOOL_VERSION },
     createdAt: startedAt,
     date: args.date,
-    venue: { jo: venue.jo, name: venue.name, slug: venue.slug },
+    venue: { jo: venue.jo, name: venue.name, slug: venue.slug, evidence: venue.evidence ?? null },
     race,
     raceType: 'exhibition',
     bitrate: 'low',
@@ -98,28 +101,45 @@ async function captureRace({ cdp, net, args, race, venue, chrome }) {
       const clamped = target !== want;
       if (seen.has(target)) { log(`  ${want}s は ${target}s と重なるので省略`); continue; }
       seen.add(target);
-      const shot = await seekAndShoot(cdp, target, { mode: args.mode });
+      const shot = await seekAndShoot(cdp, target, { mode: args.mode, duration: dur });
       const file = path.basename(writeNew(dir, frameFileName(target), shot.png));
       const size = pngSize(shot.png);
+      const verdict = judgeFrame({ mode: args.mode, targetSec: target, frame: shot.frame, seeked: shot.seeked, stable: shot.stable, toleranceBefore: args.frameToleranceSec });
+      const pos = shot.playerPosition.afterShot;
       manifest.frames.push({
-        requestedSec: want, targetSec: target, clamped, file,
-        currentTimeBefore: Math.round(shot.before * 1000) / 1000,
-        actualCurrentTime: Math.round(shot.actual * 1000) / 1000,
-        seekOk: shot.seekOk, seekable: shot.seekable,
-        paused: shot.paused, error: shot.error, bytes: shot.png.length, screenshot: size,
+        requestedSec: want,                         // 指定秒（頼まれた秒）
+        targetSec: target, clamped, file,           // クランプ後の秒
+        playerPosition: shot.playerPosition,        // プレイヤーの再生位置（video.currentTime）
+        frame: shot.frame,                          // 実際に表示されたフレーム（mediaTime / presentedFrames など）
+        mediaTimeRange: shot.mediaTimeRange,        // play モードで撮影中にフレームが進んだときの範囲
+        frameOffsetSec: verdict.frameOffsetSec === null ? null : Math.round(verdict.frameOffsetSec * 1e6) / 1e6,
+        measurable: verdict.measurable,             // この画像を、フレーム時刻つきの計測に使ってよいか
+        notMeasurableReasons: verdict.reasons,
+        seeked: shot.seeked, stable: shot.stable, nudged: shot.nudged, attempts: shot.attempts,
+        seekOk: Number.isFinite(pos) && Math.abs(pos - target) <= (args.mode === 'play' ? 3 : 0.5),
+        paused: shot.paused, error: shot.error, seekable: shot.seekable, quality: shot.quality,
+        sha256: sha256(shot.png), bytes: shot.png.length, screenshot: size,
       });
-      log(`  ${file}  要求 ${want}s → 実測 ${shot.actual.toFixed(2)}s${clamped ? '（末尾に切り詰め）' : ''}${shot.paused ? ' paused' : ''}${shot.error ? ' ERROR' : ''}${shot.seekOk ? '' : ' ⚠シーク位置がずれています'}`);
+      const fr = manifest.frames.at(-1);
+      log(`  ${file}  指定 ${want}s / 再生位置 ${pos}s / 表示フレーム mediaTime=${shot.frame.mediaTime === null ? '取得不可' : shot.frame.mediaTime.toFixed(6) + 's'}` +
+        `${clamped ? '（末尾に切り詰め）' : ''}${shot.nudged ? '（別位置から戻して取得）' : ''}  ${fr.measurable ? '計測可' : '計測不可: ' + fr.notMeasurableReasons.join(',')}`);
       if (shot.error) {
         const c = classifyFailure({ video: { has: true, duration: dur, error: shot.error }, httpErrors: net.httpErrors });
         throw new StageError(c.stage, c.cause);
       }
     }
-    const off = manifest.frames.filter((f) => !f.seekOk);
-    if (off.length) {
+    manifest.measurement = markDuplicates(manifest.frames);
+    const m = manifest.measurement;
+    for (const d of m.duplicates) log(`  同じコマ: ${d.files.join(' = ')}（mediaTime ${d.mediaTime.toFixed(6)}s。独立した計測値は1つ）`);
+    for (const a of m.anomalies) log(`  要確認: ${a.kind} ${a.files.join(', ')}`);
+    const bad = manifest.frames.filter((f) => !f.measurable);
+    const warn = [];
+    if (bad.length) warn.push(`計測に使えない画像が ${bad.length} 枚あります（${bad.map((f) => `${f.file}: ${f.notMeasurableReasons.join('/')}`).join(', ')}）`);
+    if (m.anomalies.length) warn.push(`画像とフレーム時刻の食い違いの疑いが ${m.anomalies.length} 件あります（measurement.anomalies）`);
+    if (warn.length) {
       manifest.status = 'partial';
-      manifest.warnings = [`シーク位置が指定秒からずれたフレームが ${off.length} 枚あります（${off.map((f) => f.file).join(', ')}）。` +
-        'seekable の範囲や、配信が Range / MSE のシークに対応しているかを確認してください'];
-      log(`警告: ${manifest.warnings[0]}`);
+      manifest.warnings = warn;
+      warn.forEach((w) => log(`警告: ${w}`));
     } else {
       manifest.status = 'ok';
     }

@@ -1,27 +1,39 @@
 // BOATCAST 展示リプレイのプレイヤーURLを組み立てる。
 //
-// 検証済み（平和島 12R・2026-11-12 の実測）
+// 「何で確かめたか」を分けて持つ（evidence）。混ぜない。
+//   PR_TOOL_HOMESV … この PR のツールを homesv で実機実行して確認（e041f13。平和島の 2026-11-12 の 12R と 1R で再生と PNG 保存に成功）
+//   OTHER_TOOL_288 … 別の検証ツールで確認：ゼロ埋めしたレース番号で 24場×12R=288本の再生開始。
+//                    ただし、その場コード／stadium 表記の対応表は、この PR の作成時点で受け取っていない。
+//                    表を受け取ったら STADIUMS に slug と evidence を書き足す（PR 版の実機確認はまだなので PR_TOOL_HOMESV にはしない）
+//
+// 検証済み
 //   ・場ページ：https://race.boatcast.jp/?jo=04
 //   ・プレイヤー：https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima
 //                 &raceType=exhibition&raceDate=<YYYYMMDD>&raceNumber=<レース番号>&autoplay=0&bitrate=low
+//   ・raceNumber は「1」でも開けた（PR版・実機・平和島 1R）。ゼロ埋め（01）は別ツールで24場288本の再生開始を確認済みだが、PR版では未実機
 // 未検証（TODO。推測で埋めない）
-//   ・平和島以外の場の stadium 表記
+//   ・平和島以外の場の stadium 表記（別ツールの対応表を受け取るまで空欄）
 //   ・レース本編リプレイの raceType の値
 //   ・bitrate=low 以外の画質
-//   ・1桁のレース番号（1〜9R）を「1」と書くか「01」と書くか（12R しか実測していない。下の padRace で切り替えて確かめる）
+
+export const EVIDENCE = {
+  PR_TOOL_HOMESV: 'pr-tool-homesv',
+  OTHER_TOOL_288: 'other-tool-288',
+};
 
 export const PLAYER_BASE = 'https://front.player.boatrace-cdn.jp/player/vod';
 export const VENUE_PAGE_BASE = 'https://race.boatcast.jp/';
 
 /**
  * 場コード（jo）→ { name, slug, verified }
- * slug が null の場は stadium 表記が未検証。TODO: 実機で場ページから確かめて埋める。
+ * slug が null の場は stadium 表記が未検証。TODO: 別ツールの対応表（24場288本の再生開始を確認済み）を受け取ってから埋める。
+ * evidence は確認の出どころ（EVIDENCE）。表を反映するときは、別ツールの実測（OTHER_TOOL_288）と、PR 版の実機確認（PR_TOOL_HOMESV）を区別する。
  */
 export const STADIUMS = {
   '01': { name: '桐生', slug: null, verified: false }, // TODO: stadium 表記を実機で確認
   '02': { name: '戸田', slug: null, verified: false }, // TODO
   '03': { name: '江戸川', slug: null, verified: false }, // TODO
-  '04': { name: '平和島', slug: '04heiwajima', verified: true },
+  '04': { name: '平和島', slug: '04heiwajima', verified: true, evidence: EVIDENCE.PR_TOOL_HOMESV },
   '05': { name: '多摩川', slug: null, verified: false }, // TODO
   '06': { name: '浜名湖', slug: null, verified: false }, // TODO
   '07': { name: '蒲郡', slug: null, verified: false }, // TODO
@@ -76,7 +88,7 @@ export function resolveVenue(input = '04') {
     throw new UrlBuildError(`${v.name}（jo=${jo}）の stadium 表記は未検証です（TODO）。検証済みなのは 04 平和島だけです。` +
       `実機で場ページ https://race.boatcast.jp/?jo=${jo} から確かめてから STADIUMS に追記してください`);
   }
-  return { jo, name: v.name, slug: v.slug, label: v.slug.replace(/^\d+/, '') };
+  return { jo, name: v.name, slug: v.slug, label: v.slug.replace(/^\d+/, ''), evidence: v.evidence ?? null };
 }
 
 /** YYYYMMDD として実在する日付か */
@@ -95,7 +107,7 @@ export function isValidDate(s) {
  * @param {number} o.race      1〜12
  * @param {string} [o.raceType='exhibition']
  * @param {string} [o.bitrate='low']
- * @param {boolean} [o.padRace=false]  1桁のレース番号を 01 の形にする（未検証。12R 以外で再生できないときの切り分け用）
+ * @param {boolean} [o.padRace=false]  1桁のレース番号を 01 の形にする（別ツールでは24場288本の再生開始を確認済み。PR 版の実機は raceNumber=1 で確認済み・01 は未実機）
  */
 export function buildPlayerUrl({ date, venue = '04', race, raceType = 'exhibition', bitrate = 'low', padRace = false } = {}) {
   if (!isValidDate(date)) throw new UrlBuildError(`日付は実在する YYYYMMDD で指定してください: ${date}`);

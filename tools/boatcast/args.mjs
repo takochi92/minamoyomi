@@ -60,6 +60,12 @@ function parsePositive(v, name) {
   return n;
 }
 
+function parseNonNegative(v, name) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || n > 10) throw new ArgError(`${name} は 0〜10 の秒数です: ${v}`);
+  return n;
+}
+
 function parsePort(v) {
   const n = Number(v);
   if (!Number.isInteger(n) || n < 1024 || n > 65535) throw new ArgError(`ポートは 1024〜65535 の整数です: ${v}`);
@@ -96,6 +102,7 @@ function common(flags, env) {
     padRace: Boolean(flags['pad-race']),
     playerUrl: flags['player-url']?.[0] ?? null,
     videoTimeoutMs: Math.round(parsePositive(flags['video-timeout']?.[0] ?? env.BOATCAST_VIDEO_TIMEOUT ?? 45, '--video-timeout') * 1000),
+    frameToleranceSec: parseNonNegative(flags['frame-tolerance']?.[0] ?? env.BOATCAST_FRAME_TOLERANCE ?? 0.5, '--frame-tolerance'),
     reservedPortWarning: RESERVED_PORTS[port] ? `ポート ${port} は ${RESERVED_PORTS[port]} の割当てです。別のポートにしてください` : null,
   };
 }
