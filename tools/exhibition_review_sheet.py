@@ -35,6 +35,8 @@ def build_sheets(manifest_path, output, start, end, crop, stride, scale):
     columns = min(4, 1600 // tile_width)
     load = frame_loader(path.parent, (width, height), frames, image_mode="RGB")
     output.mkdir(parents=True, exist_ok=True)
+    if any(output.glob("sheet-*.jpg")):
+        raise ValueError("sheet_output_not_empty")      # 途中まで作ってから落ちないよう、先に確かめる
     page_size = columns * 4
     for offset in range(0, len(names), page_size):
         group = names[offset:offset + page_size]

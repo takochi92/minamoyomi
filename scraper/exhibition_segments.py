@@ -25,6 +25,10 @@ SEGMENTS = {
     "back_stretch": ("D", "F"),
 }
 MAX_GAP_SECONDS = 0.15
+MAX_STEP_FRACTION = 0.08       # 0.1秒あたりの艇首の移動上限（画像の長辺に対する割合）。これを超える動きは別の艇への乗り移りとみなす
+SHARED_TRACK_PIXELS = 2.0      # 2艇の艇首がこの距離以内で重なるコマが2つ以上あれば、同じ軌跡の使い回しとみなす
+FIT_HALF_WINDOW_SECONDS = 0.25 # 通過時刻の当てはめに使う、基準線の前後の時間幅
+PATCH_RADIUS = 10
 IMAGE_FILE = re.compile(r"f_[a-zA-Z0-9_-]+\.png\Z")
 SHA256 = re.compile(r"[a-f0-9]{64}\Z")
 
@@ -127,11 +131,44 @@ def frame_loader(directory, size, frames, *, image_mode="L"):
     return load
 
 
-def camera_check(load, reference, anchors):
-    """Check small textured patches on three fixed landmarks within the shot."""
-    radius = 10
+def anchor_patches(profile, anchors):
+    """Reference patches stored in the profile (base64 of raw 8-bit grey). None when the profile has none."""
+    import base64
+    raw = profile.get("anchor_patches")
+    if raw is None:
+        return None
+    side = 2 * PATCH_RADIUS + 1
+    if not isinstance(raw, list) or len(raw) != len(anchors):
+        raise ValueError("invalid_profile_anchor_patches")
+    patches = []
+    for item in raw:
+        try:
+            data = base64.b64decode(item, validate=True)
+        except (TypeError, ValueError) as error:
+            raise ValueError("invalid_profile_anchor_patches") from error
+        if len(data) != side * side:
+            raise ValueError("invalid_profile_anchor_patches")
+        patches.append(Image.frombytes("L", (side, side), data))
+    return patches
+
+
+def make_anchor_patches(image, anchors):
+    import base64
+    r = PATCH_RADIUS
+    return [base64.b64encode(image.convert("L").crop((x - r, y - r, x + r + 1, y + r + 1)).tobytes()).decode()
+            for x, y in anchors]
+
+
+def camera_check(load, reference, anchors, stored=None):
+    """Check small textured patches on three fixed landmarks.
+
+    With `stored` patches (from the profile) every frame is compared with the view the profile was
+    calibrated on. Without them only consistency inside this capture is checked, which cannot detect
+    a capture taken with another zoom or camera position.
+    """
+    radius = PATCH_RADIUS
     ref = load(reference)
-    patches = [ref.crop((x - radius, y - radius, x + radius + 1, y + radius + 1)) for x, y in anchors]
+    patches = stored or [ref.crop((x - radius, y - radius, x + radius + 1, y + radius + 1)) for x, y in anchors]
     if any(ImageStat.Stat(patch).stddev[0] < 10 for patch in patches):
         raise ValueError("fixed_landmark_texture_too_low")
 
@@ -151,6 +188,8 @@ def camera_check(load, reference, anchors):
                 return False
         return True
 
+    if stored and not check(reference):
+        raise ValueError("camera_view_differs_from_profile")
     return check
 
 
@@ -210,11 +249,49 @@ def find_crossings(track, gates, check_camera):
     return found, missing
 
 
-def section_times(events, gates, frame_sequence, check_camera):
+def fitted_crossing(track, gate, event):
+    """Least-squares crossing time from the observations around the gate (not only the bracketing pair)."""
+    axis = gate["axis"]
+    middle = sum(event["bracket"]) / 2
+    rows = [r for r in track if r is not None and abs(r["time"] - middle) <= FIT_HALF_WINDOW_SECONDS]
+    if len(rows) < 4:
+        return None
+    mt = sum(r["time"] for r in rows) / len(rows)
+    mv = sum(r[axis] for r in rows) / len(rows)
+    var = sum((r["time"] - mt) ** 2 for r in rows)
+    slope = sum((r["time"] - mt) * (r[axis] - mv) for r in rows) / var
+    if slope * gate["direction"] <= 0:
+        return None
+    residual = math.sqrt(sum((r[axis] - (mv + slope * (r["time"] - mt))) ** 2 for r in rows) / (len(rows) - 2))
+    return {"seconds": mt + (gate["value"] - mv) / slope, "points": len(rows),
+            "residual_pixels": round(residual, 2), "pixels_per_second": round(abs(slope), 1)}
+
+
+def track_break(track, start, end, max_step):
+    """Reason the bow track is not continuous between two times, or None."""
+    inside = [i for i, r in enumerate(track) if r is not None and start <= r["time"] <= end]
+    if not inside:
+        return "bow_track_not_continuous"
+    if any(r is None for r in track[inside[0]:inside[-1] + 1]):
+        return "bow_track_has_unusable_observation"
+    rows = [track[i] for i in inside]
+    for a, b in zip(rows, rows[1:]):
+        gap = b["time"] - a["time"]
+        if gap > MAX_GAP_SECONDS:
+            return "bow_track_not_continuous"
+        if math.dist((a["x"], a["y"]), (b["x"], b["y"])) > max_step * max(gap, 1 / 60) / 0.1:
+            return "bow_jump_too_large"
+    return None
+
+
+def section_times(events, gates, frame_sequence, check_camera, track=(), max_step=math.inf, blocked=None):
     sections = {}
     for name, (start, end) in SEGMENTS.items():
         if start not in gates or end not in gates:
             sections[name] = {"status": "gate_not_configured"}
+            continue
+        if blocked:
+            sections[name] = {"status": blocked}
             continue
         a, b = events.get(start), events.get(end)
         if not a or not b:
@@ -229,6 +306,10 @@ def section_times(events, gates, frame_sequence, check_camera):
         if any(t2 - t1 > MAX_GAP_SECONDS for (t1, _), (t2, _) in zip(span, span[1:])):
             sections[name] = {"status": "frame_gap_in_section"}
             continue
+        broken = track_break(track, a["bracket"][0], b["bracket"][1], max_step)
+        if broken:
+            sections[name] = {"status": broken}
+            continue
         try:
             stable = all(check_camera(name) for _, name in span)
         except ValueError as error:
@@ -240,7 +321,29 @@ def section_times(events, gates, frame_sequence, check_camera):
         sections[name] = {"status": "reference",
                           "video_seconds": round(b["seconds"] - a["seconds"], 3),
                           "bracket_range_video_seconds": [round(earliest, 3), round(latest, 3)]}
+        fa, fb = fitted_crossing(track, gates[start], a), fitted_crossing(track, gates[end], b)
+        if fa and fb:
+            sections[name].update(
+                fit_video_seconds=round(fb["seconds"] - fa["seconds"], 3),
+                fit_minus_bracket_seconds=round(fb["seconds"] - fa["seconds"] - (b["seconds"] - a["seconds"]), 3),
+                fit_residual_pixels=max(fa["residual_pixels"], fb["residual_pixels"]))
     return sections
+
+
+def shared_tracks(tracks):
+    """Boat numbers whose bow annotations coincide on two or more frames (copied or mixed-up tracks)."""
+    points = {}
+    for boat, rows in tracks.items():
+        points[boat] = {r["file"]: (r["x"], r["y"]) for r in rows if r is not None}
+    shared = set()
+    boats = sorted(points)
+    for i, one in enumerate(boats):
+        for other in boats[i + 1:]:
+            same = sum(1 for f, p in points[one].items()
+                       if f in points[other] and math.dist(p, points[other][f]) <= SHARED_TRACK_PIXELS)
+            if same >= 2:
+                shared |= {one, other}
+    return shared
 
 
 def measure(manifest, profile, review, directory, *, manifest_sha256):
@@ -265,17 +368,29 @@ def measure(manifest, profile, review, directory, *, manifest_sha256):
     tracks = review.get("boats") or {}
     if not isinstance(tracks, dict) or not set(tracks) <= {str(i) for i in range(1, 7)}:
         raise ValueError("invalid_boat_numbers")
-    check_camera = camera_check(frame_loader(directory, size, frames), reference, anchors)
+    stored = anchor_patches(profile, anchors)
+    check_camera = camera_check(frame_loader(directory, size, frames), reference, anchors, stored)
     frame_sequence = sorted((row["time"], name) for name, row in frames.items())
+    max_step = profile.get("max_bow_step_px", MAX_STEP_FRACTION * max(size))
+    if not finite(max_step) or max_step <= 0:
+        raise ValueError("invalid_profile_max_bow_step")
+    parsed, errors = {}, {}
+    for boat in range(1, 7):
+        try:
+            parsed[boat] = read_track(tracks.get(str(boat), []), size, frames, window)
+        except ValueError as error:
+            parsed[boat], errors[boat] = [], str(error)
+    shared = shared_tracks(parsed)
     boats = []
     for boat in range(1, 7):
-        observations = tracks.get(str(boat), [])
-        try:
-            events, missing = find_crossings(read_track(observations, size, frames, window), gates, check_camera)
-        except ValueError as error:
-            events, missing = {}, {k: [str(error)] for k in gates}
+        blocked = errors.get(boat) or ("bow_track_shared_with_another_boat" if boat in shared else None)
+        if blocked:
+            events, missing = {}, {k: [blocked] for k in gates}
+        else:
+            events, missing = find_crossings(parsed[boat], gates, check_camera)
         boats.append({"boat": boat, "crossings": events, "missing_crossings": missing,
-                      "segments": section_times(events, gates, frame_sequence, check_camera)})
+                      "segments": section_times(events, gates, frame_sequence, check_camera,
+                                                parsed[boat], max_step, blocked)})
     return {
         "schema": 1, "date": day, "venue": venue, "race": race, "lap": profile["lap"],
         "profile_id": profile["id"], "manifest_sha256": manifest_sha256,
@@ -283,6 +398,7 @@ def measure(manifest, profile, review, directory, *, manifest_sha256):
         "time_basis": "browser_presented_frame_media_time",
         "full_backstretch_verified": False, "real_time_scale_verified": False,
         "measurement_mode": "reviewed_or_imported_bow_track",
+        "camera_layout_check": "profile_reference_patches" if stored else "human_review_only",
         "publication_ready": False, "rating_eligible": False,
         "boats": boats,
         "coverage": {name: sum(b["segments"][name]["status"] == "reference" for b in boats)
