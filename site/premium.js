@@ -30,7 +30,7 @@
   var root = document.querySelector('[data-premium-race], [data-premium-chart], [data-premium-plan]');
   if (!root) return;
   var account = window.TeiNoteAccount, box = root.querySelector('.premium-content');
-  var preview = box.innerHTML, selected = 'month', epoch = 0, status;
+  var preview = box.innerHTML, selected = 'month', epoch = 0, status, request;
   var dateFormat = new Intl.DateTimeFormat('ja-JP', {timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
   var price = new Intl.NumberFormat('ja-JP', {style:'currency',currency:'JPY',signDisplay:'exceptZero'});
   var metrics = ['exhibition','straight','turn','acceleration','overall'];
@@ -126,16 +126,21 @@
   }
   async function load() {
     if (root.hasAttribute('data-premium-race') && root.closest('.tabp').hidden) return;
-    var id=account.identity(), ticket=++epoch;
+    var id=account.identity();
     if (!id) {
       status=null; box.innerHTML=preview;
       if (root.hasAttribute('data-premium-plan') && account.state().mode !== 'loading') plan(null);
       return;
     }
+    if (request?.id === id) return;
+    var ticket=++epoch;
+    request={id:id,ticket:ticket};
     try {
       var state=await account.premiumCall('status');
       if (ticket!==epoch || id!==account.identity()) return;
+      var unchanged = JSON.stringify(state) === JSON.stringify(status);
       status=state;
+      if (unchanged && root.hasAttribute('data-premium-plan')) return;
       if (root.hasAttribute('data-premium-plan')) plan(state);
       else if (!state.member) box.innerHTML=preview;
       else if (root.hasAttribute('data-premium-chart')) chart();
@@ -148,6 +153,8 @@
       if (ticket!==epoch) return;
       status=null; box.innerHTML=preview;
       box.append(button('もう一度確認',function(){load();}));
+    } finally {
+      if (request?.ticket === ticket) request=null;
     }
   }
   function init() {
@@ -156,7 +163,7 @@
       new MutationObserver(function(){if(!tab.hidden) load();}).observe(tab,{attributes:true,attributeFilter:['hidden']});
     }
     account.subscribe(function(reason) {
-      if (reason==='identity') { ++epoch; status=null; box.innerHTML=preview; load(); }
+      if (reason==='identity') { ++epoch; request=null; status=null; box.innerHTML=preview; load(); }
       else if (root.hasAttribute('data-premium-chart') && status?.member) chart();
     });
     // Recheck entitlements even when the page stays open after a cancellation or expiry.
