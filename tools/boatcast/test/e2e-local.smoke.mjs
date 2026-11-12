@@ -55,6 +55,17 @@ writeFileSync(path.join(site, 'bad.webm'), Buffer.from('this is not a video file
 
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
+  // 全場ツール（venues.mjs）用のにせプレイヤー：01 は候補どおり、02 は場ページからしか分からない書き方、ほかは未公開
+  if (u.pathname === '/player/vod') {
+    const ok = ['01kiryu', '02pageonly'].includes(u.searchParams.get('stadium'));
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(ok ? pages['page.html'] : pages['novideo.html']);
+    return;
+  }
+  if (u.pathname === '/venue') {
+    const jo = u.searchParams.get('jo');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(page(jo === '02' ? '<iframe src="/player/vod?stadium=02pageonly&token=SECRET123"></iframe>' : '<p>場ページ</p>'));
+    return;
+  }
   const f = path.join(site, path.basename(u.pathname));
   if (!existsSync(f)) { res.writeHead(404).end(); return; }
   const size = statSync(f).size;
@@ -246,6 +257,30 @@ try {
   const bad = await runAsync('accept.mjs', ['--date', '20261112', '--pair', '5,12', '--spread', '3,10', '--port', port, '--player-url', U('noframe.html')]);
   assert.notEqual(bad.code, 0);
   assert.match(bad.out, /総合: 不合格/);
+
+  // 全場ツール：再生できた書き方だけを記録し、その場が capture で使えるようになる
+  const mapFile = path.join(tmp, 'stadiums.json');
+  const venv = { ...env, BOATCAST_STADIUMS: mapFile, BOATCAST_PLAYER_BASE: `${base}/player/vod`, BOATCAST_VENUE_BASE: `${base}/venue` };
+  const runEnv = (script, args, en) => new Promise((resolve) => {
+    const c = spawn(process.execPath, [path.join(here, script), ...args], { env: en });
+    let out = ''; c.stdout.on('data', (d) => { out += d; }); c.stderr.on('data', (d) => { out += d; });
+    c.on('close', (code) => resolve({ code, out }));
+  });
+  const ven = await runEnv('venues.mjs', ['--date', '20261112', '--venues', '01,02,03', '--port', port, '--video-timeout', '3'], venv);
+  console.log(ven.out);
+  assert.equal(ven.code, 0);
+  noSecret(ven.out);
+  const saved = JSON.parse(readFileSync(mapFile, 'utf8')).stadiums;
+  assert.deepEqual([saved['01'].slug, saved['01'].source], ['01kiryu', 'candidate']);
+  assert.deepEqual([saved['02'].slug, saved['02'].source], ['02pageonly', 'venue-page'], '場ページから拾った書き方');
+  assert.equal(saved['03'], undefined, '再生できない場は記録しない');
+  assert.match(ven.out, /未確認   03 江戸川/);
+  const c2 = await runEnv('capture.mjs', ['--date', '20261112', '--race', '1', '--venue', '02', '--seconds', '3', '--port', port, '--out', path.join(tmp, 'out2')], venv);
+  assert.equal(c2.code, 0, '記録された場は capture で使える');
+  const m2 = manifestOf(path.join(tmp, 'out2', '20261112-pageonly-1'));
+  assert.deepEqual([m2.venue.jo, m2.venue.slug, m2.venue.evidence], ['02', '02pageonly', 'pr-tool-homesv']);
+  const c3 = await runEnv('capture.mjs', ['--date', '20261112', '--race', '1', '--venue', '03', '--dry-run'], venv);
+  assert.equal(c3.code, 2, '未確認の場は使えないまま');
 
   console.log('E2E OK');
 } finally {

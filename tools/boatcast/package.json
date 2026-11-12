@@ -1,6 +1,6 @@
 {
   "name": "boatcast-tools",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "BOATCAST 展示リプレイの再生・フレーム取得・記録ツール（外部npm依存なし）",
   "type": "module",
@@ -11,6 +11,7 @@
     "verify": "node verify.mjs",
     "capture": "node capture.mjs",
     "report": "node report.mjs",
-    "accept": "node accept.mjs"
+    "accept": "node accept.mjs",
+    "venues": "node venues.mjs"
   }
 }

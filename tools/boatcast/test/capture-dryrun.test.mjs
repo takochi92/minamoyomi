@@ -18,7 +18,7 @@ test('capture --dry-run は Chrome を起動せず、URL をクエリなしで�
 });
 
 test('capture：未検証の場は引数エラー（終了コード 2）', () => {
-  const r = run('capture.mjs', ['--date', '20261112', '--race', '1', '--venue', '03', '--dry-run']);
+  const r = run('capture.mjs', ['--date', '20261112', '--race', '1', '--venue', '03', '--dry-run'], { BOATCAST_STADIUMS: 'none' });
   assert.equal(r.status, 2);
   assert.match(r.stderr, /未検証/);
 });

@@ -21,6 +21,10 @@ export const EVIDENCE = {
   OTHER_TOOL_288: 'other-tool-288',
 };
 
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export const PLAYER_BASE = 'https://front.player.boatrace-cdn.jp/player/vod';
 export const VENUE_PAGE_BASE = 'https://race.boatcast.jp/';
 
@@ -72,23 +76,50 @@ export class UrlBuildError extends Error {
   }
 }
 
-/** 場の指定（'04' / 4 / '平和島' / 'heiwajima' / '04heiwajima'）を { jo, name, slug } にする。未検証の場は例外 */
-export function resolveVenue(input = '04') {
+/**
+ * 場の対応表ファイル（stadiums.json）。venues.mjs が homesv で「実際に再生できた書き方」だけを書き込む。
+ *   { "01": { "slug": "...", "evidence": "pr-tool-homesv", "checkedAt": "...", "date": "YYYYMMDD", "race": 1, "source": "venue-page|candidate|imported" } }
+ * 別ツールの表を手で入れるときは evidence を "other-tool-288"、source を "imported" にする（PR 版の実機確認と区別するため）。
+ * 置き場所：このフォルダの stadiums.json。環境変数 BOATCAST_STADIUMS で変更可（"none" で読まない）。
+ */
+export function stadiumMapPath(env = process.env) {
+  if (env.BOATCAST_STADIUMS === 'none') return null;
+  return env.BOATCAST_STADIUMS || path.join(path.dirname(fileURLToPath(import.meta.url)), 'stadiums.json');
+}
+
+export function loadStadiumMap(file = stadiumMapPath()) {
+  if (!file || !existsSync(file)) return {};
+  try {
+    const j = JSON.parse(readFileSync(file, 'utf8'));
+    const out = {};
+    for (const [jo, v] of Object.entries(j.stadiums || j)) {
+      if (STADIUMS[jo] && v && typeof v.slug === 'string' && /^[0-9a-z_-]{3,40}$/i.test(v.slug)) out[jo] = v;
+    }
+    return out;
+  } catch { return {}; }
+}
+
+/** 場の指定（'04' / 4 / '平和島' / 'heiwajima' / '04heiwajima'）を { jo, name, slug } にする。書き方が分からない場は例外 */
+export function resolveVenue(input = '04', { stadiumMap = loadStadiumMap() } = {}) {
   const raw = String(input).trim();
+  const slugOf = (code) => STADIUMS[code].slug || stadiumMap[code]?.slug || null;
   let jo = null;
   if (/^\d{1,2}$/.test(raw)) jo = raw.padStart(2, '0');
   else {
     for (const [code, v] of Object.entries(STADIUMS)) {
-      if (v.name === raw || (v.slug && (v.slug === raw || v.slug.replace(/^\d+/, '') === raw.toLowerCase()))) jo = code;
+      const sl = slugOf(code);
+      if (v.name === raw || (sl && (sl === raw || sl.replace(/^\d+/, '') === raw.toLowerCase()))) jo = code;
     }
   }
-  if (!jo || !STADIUMS[jo]) throw new UrlBuildError(`場が分かりません: ${raw}（場コード 01〜24 か、平和島）`);
+  if (!jo || !STADIUMS[jo]) throw new UrlBuildError(`場が分かりません: ${raw}（場コード 01〜24 か、場の名前）`);
   const v = STADIUMS[jo];
-  if (!v.slug) {
-    throw new UrlBuildError(`${v.name}（jo=${jo}）の stadium 表記は未検証です（TODO）。検証済みなのは 04 平和島だけです。` +
-      `実機で場ページ https://race.boatcast.jp/?jo=${jo} から確かめてから STADIUMS に追記してください`);
+  const slug = slugOf(jo);
+  if (!slug) {
+    throw new UrlBuildError(`${v.name}（jo=${jo}）の stadium 表記は未検証です。` +
+      `homesv で node venues.mjs --date <開催日> を実行すると、再生できた書き方が stadiums.json に記録され、使えるようになります`);
   }
-  return { jo, name: v.name, slug: v.slug, label: v.slug.replace(/^\d+/, ''), evidence: v.evidence ?? null };
+  const evidence = v.slug ? v.evidence : (stadiumMap[jo].evidence || 'unknown');
+  return { jo, name: v.name, slug, label: slug.replace(/^\d+/, ''), evidence };
 }
 
 /** YYYYMMDD として実在する日付か */
@@ -109,7 +140,7 @@ export function isValidDate(s) {
  * @param {string} [o.bitrate='low']
  * @param {boolean} [o.padRace=false]  1桁のレース番号を 01 の形にする（別ツールでは24場288本の再生開始を確認済み。PR 版の実機は raceNumber=1 で確認済み・01 は未実機）
  */
-export function buildPlayerUrl({ date, venue = '04', race, raceType = 'exhibition', bitrate = 'low', padRace = false } = {}) {
+export function buildPlayerUrl({ date, venue = '04', race, raceType = 'exhibition', bitrate = 'low', padRace = false, slug = null, stadiumMap } = {}) {
   if (!isValidDate(date)) throw new UrlBuildError(`日付は実在する YYYYMMDD で指定してください: ${date}`);
   const n = Number(race);
   if (!Number.isInteger(n) || n < 1 || n > 12) throw new UrlBuildError(`レース番号は 1〜12 の整数です: ${race}`);
@@ -119,8 +150,8 @@ export function buildPlayerUrl({ date, venue = '04', race, raceType = 'exhibitio
   if (!BITRATES[bitrate]?.verified) {
     throw new UrlBuildError(`bitrate=${bitrate} は未検証です（TODO）。検証済みなのは low（854×480）だけです`);
   }
-  const v = resolveVenue(venue);
-  const u = new URL(PLAYER_BASE);
+  const v = slug ? { slug } : resolveVenue(venue, stadiumMap ? { stadiumMap } : undefined);   // slug 直接指定は venues.mjs の確認用
+  const u = new URL(process.env.BOATCAST_PLAYER_BASE || PLAYER_BASE);                       // 上書きはローカルのテスト用
   u.searchParams.set('service', 'boatcast');
   u.searchParams.set('stadium', v.slug);
   u.searchParams.set('raceType', raceType);
@@ -133,6 +164,7 @@ export function buildPlayerUrl({ date, venue = '04', race, raceType = 'exhibitio
 
 /** 場ページのURL（人が見る用。解析には使わない） */
 export function venuePageUrl(venue = '04') {
-  const v = resolveVenue(venue);
-  return `${VENUE_PAGE_BASE}?jo=${v.jo}`;
+  const raw = String(venue).trim();
+  const v = /^\d{1,2}$/.test(raw) ? { jo: raw.padStart(2, '0') } : resolveVenue(venue);
+  return `${process.env.BOATCAST_VENUE_BASE || VENUE_PAGE_BASE}?jo=${v.jo}`;
 }

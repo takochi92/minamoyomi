@@ -20,6 +20,21 @@ node accept.mjs --date 20261112        # リプレイが見られる日付を指
 中身は、ユニットテスト → 自己点検（verify）→ 近い2つの秒（12R の 248.167 / 248.197）→ 離れた秒（1R の 10 / 60 / 120）の4つです。
 結果は `captures/acceptance-<日時>/acceptance-report.json` にも残ります。
 
+## 全24場で使う（場の書き方を、実際に再生して確かめる）
+
+プレイヤーの URL は、場ごとに書き方（`stadium=04heiwajima` の部分）が違います。推測では埋めず、homesv で**実際に再生できた書き方だけ**を記録します。
+
+```bash
+node venues.mjs --date 20261112            # 全場を順番に試す（Chrome は1つ。開催のない場は「未確認」で残る）
+node venues.mjs --date 20261113 --venues 03,05   # 残った場を、開催のある日にもう一度
+```
+
+- 1場ずつ：場ページから書き方を拾う → 候補（`stadium-candidates.mjs` の仮説）を試す → **再生が始まった書き方だけ**を `stadiums.json` に記録
+- 記録された場は、`capture.mjs --venue 01` や `accept.mjs --venue 01` でそのまま使えます（manifest の `venue.evidence` に出どころが残る）
+- 再生できなかった場は記録しません。前に確認できた記録は、失敗しても消しません
+- 最後に「使える場の合計: N / 24」と、まだ使えない場の一覧が出ます。全場そろうまで、開催日を変えて繰り返します
+- 別ツールの対応表を手で入れる場合は、`stadiums.json` に `{"stadiums": {"01": {"slug": "…", "evidence": "other-tool-288", "source": "imported"}}}` の形で書きます
+
 ## 確認の出どころ（混ぜない）
 
 | 出どころ | 内容 |
@@ -35,6 +50,8 @@ node accept.mjs --date 20261112        # リプレイが見られる日付を指
 | `capture.mjs` | **本体**。Chrome 起動 → 再生 → フレーム確認 → PNG 保存 → manifest.json 記録 → 自分の Chrome だけ終了 |
 | `verify.mjs` | 自己点検。9項目を `PASS` / `FAIL` で1行ずつ出す |
 | `accept.mjs` | **受け入れ検査**。1コマンドで 合格 / 不合格 を出す |
+| `venues.mjs` | **全24場の対応表づくり**。実際に再生できた書き方だけを `stadiums.json` に記録 |
+| `stadium-candidates.mjs` | 場の書き方の候補（未検証の仮説。venues.mjs が確かめる材料） |
 | `report.mjs` | manifest.json を表にして、計測に使える画像・同じコマの重複・要確認を出す（実機確認用。ブラウザ不要） |
 | `frames.mjs` | 「撮った画像が、どのフレームか」の判定と、同じコマのまとめ（純粋なロジック） |
 | `player.mjs` | プレイヤー操作：video 待ち、再生確認、**表示フレーム時刻の監視（requestVideoFrameCallback）**、シーク＆撮影 |
@@ -294,7 +311,7 @@ PR 版の実機確認は、平和島の 12R・1R（2026-11-12）、`e041f13` 時
 
 - 今回の修正が実機で動くこと：`requestVideoFrameCallback` の通知が出るか、`mediaTime` が取れるか、`stable` / `nudged` の挙動、`--mode seek` と `--mode play` の画像とフレーム時刻の対応
 - verify の項目7・8（再生後の映像サイズ、フレーム数の増加）が実機の配信で PASS すること（基準の「5秒間に10フレーム以上」は、実配信の fps が未確認のための暫定値）
-- 平和島以外の場の stadium 表記：別ツールで24場・288本の再生開始を確認済みだが、対応表を受け取っていないため `STADIUMS` は空欄のまま（反映するときは、別ツールの実測 `other-tool-288` と、PR 版の実機確認 `pr-tool-homesv` を区別する）
+- 平和島以外の場の stadium 表記：`venues.mjs` を実機で実行して埋める（候補が当たるか・場ページから拾えるかは実機で未確認。別ツールの対応表を手で入れることもできる）
 - ゼロ埋めしたレース番号（`--pad-race`）：別ツールでは確認済み。**PR 版では未実機**（`raceNumber=1` は PR 版で実機確認済み）
 - レース本編リプレイの `raceType` の値（未定義 TODO）
 - `bitrate=low`（854×480）以外の画質
