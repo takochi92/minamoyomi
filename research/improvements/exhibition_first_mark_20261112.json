@@ -1,0 +1,942 @@
+{
+  "source": "https://race.boatcast.jp/txt/04/bc_oriten_20261112_04_11.txt",
+  "source_column": "まわり足",
+  "same_physical_measurement_area_verified": false,
+  "real_time_scale_verified": false,
+  "comparison": {
+    "counts": {
+      "same_direction": 5,
+      "opposite_direction": 2,
+      "observed_bounds_overlap": 7,
+      "official_tie": 1
+    },
+    "boat_pairs": {
+      "same_direction": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "opposite_direction": [
+        [
+          3,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "observed_bounds_overlap": [
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ]
+      ],
+      "official_tie": [
+        [
+          1,
+          2
+        ]
+      ]
+    }
+  },
+  "rows": [
+    {
+      "boat": 1,
+      "name": "前田 聖文",
+      "motor": 74,
+      "official_turn_seconds": 5.53,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 0.75,
+          "bracket_range_video_seconds": [
+            0.6,
+            0.9
+          ],
+          "checked_frame_count": 10
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.3,
+          "bracket_range_video_seconds": [
+            1.1,
+            1.5
+          ],
+          "checked_frame_count": 16
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.65,
+          "bracket_range_video_seconds": [
+            1.5,
+            1.8
+          ],
+          "checked_frame_count": 19
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 3.7,
+          "bracket_range_video_seconds": [
+            3.6,
+            3.8
+          ],
+          "checked_frame_count": 39
+        }
+      }
+    },
+    {
+      "boat": 2,
+      "name": "山ノ内 雅人",
+      "motor": 37,
+      "official_turn_seconds": 5.53,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 0.733,
+          "bracket_range_video_seconds": [
+            0.567,
+            0.9
+          ],
+          "checked_frame_count": 10
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.617,
+          "bracket_range_video_seconds": [
+            1.5,
+            1.733
+          ],
+          "checked_frame_count": 18
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.283,
+          "bracket_range_video_seconds": [
+            1.2,
+            1.367
+          ],
+          "checked_frame_count": 15
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 3.633,
+          "bracket_range_video_seconds": [
+            3.5,
+            3.767
+          ],
+          "checked_frame_count": 39
+        }
+      }
+    },
+    {
+      "boat": 3,
+      "name": "松瀬 弘美",
+      "motor": 38,
+      "official_turn_seconds": 5.93,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 0.767,
+          "bracket_range_video_seconds": [
+            0.633,
+            0.9
+          ],
+          "checked_frame_count": 10
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.683,
+          "bracket_range_video_seconds": [
+            1.5,
+            1.867
+          ],
+          "checked_frame_count": 20
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.467,
+          "bracket_range_video_seconds": [
+            1.333,
+            1.6
+          ],
+          "checked_frame_count": 17
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 3.917,
+          "bracket_range_video_seconds": [
+            3.833,
+            4.0
+          ],
+          "checked_frame_count": 41
+        }
+      }
+    },
+    {
+      "boat": 4,
+      "name": "大澤 風葵",
+      "motor": 70,
+      "official_turn_seconds": 5.74,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 1.05,
+          "bracket_range_video_seconds": [
+            0.867,
+            1.233
+          ],
+          "checked_frame_count": 13
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.617,
+          "bracket_range_video_seconds": [
+            1.4,
+            1.833
+          ],
+          "checked_frame_count": 19
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.15,
+          "bracket_range_video_seconds": [
+            1.0,
+            1.3
+          ],
+          "checked_frame_count": 14
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 3.817,
+          "bracket_range_video_seconds": [
+            3.7,
+            3.933
+          ],
+          "checked_frame_count": 40
+        }
+      }
+    },
+    {
+      "boat": 5,
+      "name": "正木 聖賢",
+      "motor": 31,
+      "official_turn_seconds": 5.9,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 1.4,
+          "bracket_range_video_seconds": [
+            1.2,
+            1.6
+          ],
+          "checked_frame_count": 17
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.8,
+          "bracket_range_video_seconds": [
+            1.6,
+            2.0
+          ],
+          "checked_frame_count": 21
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.35,
+          "bracket_range_video_seconds": [
+            1.2,
+            1.5
+          ],
+          "checked_frame_count": 16
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 4.55,
+          "bracket_range_video_seconds": [
+            4.4,
+            4.7
+          ],
+          "checked_frame_count": 48
+        }
+      }
+    },
+    {
+      "boat": 6,
+      "name": "岩永 雅人",
+      "motor": 20,
+      "official_turn_seconds": 5.97,
+      "video_sections": {
+        "entry": {
+          "status": "reference",
+          "video_seconds": 1.0,
+          "bracket_range_video_seconds": [
+            0.8,
+            1.2
+          ],
+          "checked_frame_count": 13
+        },
+        "rotation": {
+          "status": "reference",
+          "video_seconds": 1.6,
+          "bracket_range_video_seconds": [
+            1.4,
+            1.8
+          ],
+          "checked_frame_count": 19
+        },
+        "exit": {
+          "status": "reference",
+          "video_seconds": 1.3,
+          "bracket_range_video_seconds": [
+            1.1,
+            1.5
+          ],
+          "checked_frame_count": 16
+        },
+        "turn_total": {
+          "status": "reference",
+          "video_seconds": 3.9,
+          "bracket_range_video_seconds": [
+            3.7,
+            4.1
+          ],
+          "checked_frame_count": 42
+        }
+      }
+    }
+  ],
+  "measurement": {
+    "date": "20261112",
+    "venue": "04",
+    "race": 11,
+    "lap": 1,
+    "manifest_sha256": "91eade9b6f9306192b2cc5f77105e5a2fd7777afd5b9aac85d90ef2aa8198213",
+    "profile_sha256": "aebcfe5169a7b696e3c4b0539043ece0d29a8100d150fff5652f67f1a2ea9192",
+    "profile": {
+      "schema": 1,
+      "id": "04-heiwajima-11r-first-mark-four-gates",
+      "venue": "04",
+      "lap": 1,
+      "image_size": [
+        1280,
+        813
+      ],
+      "anchors": [
+        [
+          30,
+          78
+        ],
+        [
+          704,
+          83
+        ],
+        [
+          834,
+          90
+        ]
+      ],
+      "calibration_sha256": "0ef641c773503c541e6b61299f713c67cd36a1cae878ab433f4787c48d7a98a1",
+      "gates": {
+        "A": {
+          "axis": "x",
+          "value": 500,
+          "direction": 1,
+          "segment": [
+            490,
+            685
+          ]
+        },
+        "B": {
+          "axis": "y",
+          "value": 480,
+          "direction": -1,
+          "segment": [
+            695,
+            930
+          ]
+        },
+        "C": {
+          "axis": "y",
+          "value": 351,
+          "direction": -1,
+          "segment": [
+            720,
+            960
+          ]
+        },
+        "D": {
+          "axis": "x",
+          "value": 535,
+          "direction": -1,
+          "segment": [
+            237,
+            322
+          ]
+        }
+      }
+    },
+    "time_basis": "browser_presented_frame_media_time",
+    "measurement_method": "manual_visual_gate_brackets_midpoint",
+    "independent_readers": 1,
+    "continuous_bow_track_verified": false,
+    "rating_ready": false,
+    "usable_frames": 257,
+    "boats": [
+      {
+        "boat": 1,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0252p4s.png",
+              "f_0252p5s.png"
+            ],
+            "bracket": [
+              252.4,
+              252.5
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0253p1s.png",
+              "f_0253p3s.png"
+            ],
+            "bracket": [
+              253.1,
+              253.3
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0254p4s.png",
+              "f_0254p6s.png"
+            ],
+            "bracket": [
+              254.4,
+              254.6
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0256p1s.png",
+              "f_0256p2s.png"
+            ],
+            "bracket": [
+              256.1,
+              256.2
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 0.75,
+            "bracket_range_video_seconds": [
+              0.6,
+              0.9
+            ],
+            "checked_frame_count": 10
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.3,
+            "bracket_range_video_seconds": [
+              1.1,
+              1.5
+            ],
+            "checked_frame_count": 16
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.65,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.8
+            ],
+            "checked_frame_count": 19
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.7,
+            "bracket_range_video_seconds": [
+              3.6,
+              3.8
+            ],
+            "checked_frame_count": 39
+          }
+        }
+      },
+      {
+        "boat": 2,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0256p1s.png",
+              "f_0256p3s.png"
+            ],
+            "bracket": [
+              256.1,
+              256.3
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0256p9s.png",
+              "f_0257s.png"
+            ],
+            "bracket": [
+              256.866667,
+              257
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0258p5s.png",
+              "f_0258p6s.png"
+            ],
+            "bracket": [
+              258.5,
+              258.6
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0259p8s.png",
+              "f_0259p9s.png"
+            ],
+            "bracket": [
+              259.8,
+              259.866667
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 0.733,
+            "bracket_range_video_seconds": [
+              0.567,
+              0.9
+            ],
+            "checked_frame_count": 10
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.617,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.733
+            ],
+            "checked_frame_count": 18
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.283,
+            "bracket_range_video_seconds": [
+              1.2,
+              1.367
+            ],
+            "checked_frame_count": 15
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.633,
+            "bracket_range_video_seconds": [
+              3.5,
+              3.767
+            ],
+            "checked_frame_count": 39
+          }
+        }
+      },
+      {
+        "boat": 3,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0259p8s.png",
+              "f_0259p9s.png"
+            ],
+            "bracket": [
+              259.8,
+              259.866667
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0260p5s.png",
+              "f_0260p7s.png"
+            ],
+            "bracket": [
+              260.5,
+              260.7
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0262p2s.png",
+              "f_0262p4s.png"
+            ],
+            "bracket": [
+              262.2,
+              262.366667
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0263p7s.png",
+              "f_0263p8s.png"
+            ],
+            "bracket": [
+              263.7,
+              263.8
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 0.767,
+            "bracket_range_video_seconds": [
+              0.633,
+              0.9
+            ],
+            "checked_frame_count": 10
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.683,
+            "bracket_range_video_seconds": [
+              1.5,
+              1.867
+            ],
+            "checked_frame_count": 20
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.467,
+            "bracket_range_video_seconds": [
+              1.333,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.917,
+            "bracket_range_video_seconds": [
+              3.833,
+              4.0
+            ],
+            "checked_frame_count": 41
+          }
+        }
+      },
+      {
+        "boat": 4,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0264p4s.png",
+              "f_0264p5s.png"
+            ],
+            "bracket": [
+              264.366667,
+              264.5
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0265p4s.png",
+              "f_0265p6s.png"
+            ],
+            "bracket": [
+              265.366667,
+              265.6
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0267s.png",
+              "f_0267p2s.png"
+            ],
+            "bracket": [
+              267,
+              267.2
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0268p2s.png",
+              "f_0268p3s.png"
+            ],
+            "bracket": [
+              268.2,
+              268.3
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.05,
+            "bracket_range_video_seconds": [
+              0.867,
+              1.233
+            ],
+            "checked_frame_count": 13
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.617,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.833
+            ],
+            "checked_frame_count": 19
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.15,
+            "bracket_range_video_seconds": [
+              1.0,
+              1.3
+            ],
+            "checked_frame_count": 14
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.817,
+            "bracket_range_video_seconds": [
+              3.7,
+              3.933
+            ],
+            "checked_frame_count": 40
+          }
+        }
+      },
+      {
+        "boat": 5,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0267p8s.png",
+              "f_0268s.png"
+            ],
+            "bracket": [
+              267.8,
+              268
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0269p2s.png",
+              "f_0269p4s.png"
+            ],
+            "bracket": [
+              269.2,
+              269.4
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0271s.png",
+              "f_0271p2s.png"
+            ],
+            "bracket": [
+              271,
+              271.2
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0272p4s.png",
+              "f_0272p5s.png"
+            ],
+            "bracket": [
+              272.4,
+              272.5
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.4,
+            "bracket_range_video_seconds": [
+              1.2,
+              1.6
+            ],
+            "checked_frame_count": 17
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.8,
+            "bracket_range_video_seconds": [
+              1.6,
+              2.0
+            ],
+            "checked_frame_count": 21
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.35,
+            "bracket_range_video_seconds": [
+              1.2,
+              1.5
+            ],
+            "checked_frame_count": 16
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 4.55,
+            "bracket_range_video_seconds": [
+              4.4,
+              4.7
+            ],
+            "checked_frame_count": 48
+          }
+        }
+      },
+      {
+        "boat": 6,
+        "crossings": {
+          "A": {
+            "frames": [
+              "f_0271p9s.png",
+              "f_0272p1s.png"
+            ],
+            "bracket": [
+              271.9,
+              272.1
+            ]
+          },
+          "B": {
+            "frames": [
+              "f_0272p9s.png",
+              "f_0273p1s.png"
+            ],
+            "bracket": [
+              272.9,
+              273.1
+            ]
+          },
+          "C": {
+            "frames": [
+              "f_0274p5s.png",
+              "f_0274p7s.png"
+            ],
+            "bracket": [
+              274.5,
+              274.7
+            ]
+          },
+          "D": {
+            "frames": [
+              "f_0275p8s.png",
+              "f_0276s.png"
+            ],
+            "bracket": [
+              275.8,
+              276
+            ]
+          }
+        },
+        "missing_crossings": {},
+        "segments": {
+          "entry": {
+            "status": "reference",
+            "video_seconds": 1.0,
+            "bracket_range_video_seconds": [
+              0.8,
+              1.2
+            ],
+            "checked_frame_count": 13
+          },
+          "rotation": {
+            "status": "reference",
+            "video_seconds": 1.6,
+            "bracket_range_video_seconds": [
+              1.4,
+              1.8
+            ],
+            "checked_frame_count": 19
+          },
+          "exit": {
+            "status": "reference",
+            "video_seconds": 1.3,
+            "bracket_range_video_seconds": [
+              1.1,
+              1.5
+            ],
+            "checked_frame_count": 16
+          },
+          "turn_total": {
+            "status": "reference",
+            "video_seconds": 3.9,
+            "bracket_range_video_seconds": [
+              3.7,
+              4.1
+            ],
+            "checked_frame_count": 42
+          }
+        }
+      }
+    ],
+    "coverage": {
+      "entry": 6,
+      "rotation": 6,
+      "exit": 6,
+      "turn_total": 6
+    },
+    "review_notes_sha256": "3867738709df82b724d30aa6cc573b757a8611daecfee5f05d6f9f09b1b5e34a"
+  },
+  "publication_ready": false,
+  "rating_ready": false
+}
