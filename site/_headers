@@ -8,3 +8,5 @@
   Cache-Control: no-cache
 /offline
   Cache-Control: no-cache
+/data/motor-periods.json
+  Cache-Control: no-cache, no-store, must-revalidate

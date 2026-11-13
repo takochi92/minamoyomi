@@ -49,6 +49,16 @@ export function validSnapshot(snapshot, today) {
   });
 }
 
+export function matchesMotorPeriod(snapshot, ledger, date, venue) {
+  const raceDay = calendarDay(date);
+  const ledgerDay = calendarDay(ledger?.date);
+  const pending = calendarDay(ledger?.pending?.[venue]);
+  const start = calendarDay(ledger?.venues?.[venue]?.date);
+  return raceDay !== null && ledgerDay !== null && ledgerDay >= raceDay &&
+    (pending === null || pending > raceDay) && start !== null && start < raceDay &&
+    snapshot?.venues?.[venue]?.period === ledger.venues[venue].date;
+}
+
 export function raceEvaluation(snapshot, date, venue, frames, title = "") {
   const raceDay = calendarDay(date);
   const cutoff = calendarDay(snapshot?.through);

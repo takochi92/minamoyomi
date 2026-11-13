@@ -40,6 +40,7 @@ def test_daily_publish_rejects_partial_archive(tmp_path):
     with pytest.raises(ValueError, match="incomplete official archive.*04"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
     rows.update({(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(3, 12)})
+    rows[cutoff, "04", 12] = {"result": {"cancelled": True}}
     check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
     with pytest.raises(ValueError, match="stale"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 16), tmp_path)
@@ -112,3 +113,41 @@ def test_overall_uses_only_three_official_intervals():
     race["oriten"] = {"items": ["まわり足", "直線"], "rows": rows}
     rows["6"][0] = None
     assert not any(k == "overall" for k, *_ in observations(race, "22"))
+
+
+def test_daily_publish_rejects_entire_missing_scheduled_venue(tmp_path):
+    import json
+    import pytest
+    from scraper.premium_motor import check_publish_inputs
+
+    cutoff = "20261112"
+    races_dir = tmp_path / "races"
+    (races_dir / cutoff).mkdir(parents=True)
+    index = tmp_path / "day-index"
+    index.mkdir()
+    (index / f"{cutoff}.json").write_text(json.dumps({"date": cutoff, "venues": [
+        {"jcd": "04"}, {"jcd": "07"}, {"jcd": "22", "cancelled": True},
+    ]}), encoding="utf-8")
+    rows = {}
+    for rno in range(1, 13):
+        (races_dir / cutoff / f"04{rno:02d}.json").touch()
+        rows[cutoff, "04", rno] = {"result": {"finished": True}}
+    with pytest.raises(ValueError, match="incomplete official archive.*07"):
+        check_publish_inputs(rows, cutoff, date(2026, 11, 13), races_dir)
+
+
+def test_official_cancellation_is_terminal_but_not_a_timing_sample(tmp_path):
+    import json
+    from scraper.parse import parse_result
+    from scraper.research_snapshot import archive, archived_records
+
+    result = parse_result("<h3>レース中止</h3>")
+    assert result["cancelled"] is True and result["finished"] is False
+    folder = tmp_path / "site" / "data" / "races" / "20261112"
+    folder.mkdir(parents=True)
+    (folder / "0401.json").write_text(json.dumps({
+        "date": "20261112", "jcd": "04", "rno": 1, "result": result,
+    }), encoding="utf-8")
+    assert archive(tmp_path, ["20261112"])["added_or_updated"] == 1
+    assert archived_records(tmp_path)["20261112", "04", 1]["result"]["cancelled"] is True
+    assert archive(tmp_path, ["20261112"])["added_or_updated"] == 0

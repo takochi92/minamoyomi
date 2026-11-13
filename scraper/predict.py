@@ -179,11 +179,12 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None, *, race_dat
     day=race_date or datetime.now(JST).strftime('%Y%m%d')
     refs=references(day,[b.get('toban','') for b in boats])
     try:
-        from . import motor as _motor
-        madj = {} if sum(1 for b in boats if not b.get("motor_2")) >= 5 else _motor.load().get(jcd, {})   # 入れ替え直後は使わない
+        from . import motor, motor_generation
+        ledger = motor_generation.read(motor_generation.DATA / motor_generation.FILENAME, {})
+        mstat = motor_generation.for_race(motor.load(), jcd, day, boats, ledger)
     except Exception:
-        madj = {}
-    madj={no:v for no,v in madj.items() if v.get('adj_method')=='prior_days_v2' and v.get('as_of','99999999')<day}
+        mstat = {}
+    madj={no:v for no,v in mstat.items() if v.get('adj_method')=='prior_days_v2' and v.get('as_of','99999999')<day}
     fb = [{"frame": b["frame"], "toban": b.get("toban", ""), "course": course_of[b["frame"]],
            "ex": round(ex[b["frame"]] * 100) if has_ex else None, "cls": b.get("class", ""),
            "nat": b.get("nat_win"), "loc": b.get("loc_win"), "motor": b.get("motor_2"), "boat": b.get("boat_2"),
@@ -333,14 +334,6 @@ def predict(jcd: str, racelist: dict, before: Optional[dict] = None, *, race_dat
                            "att": a["frame"], "att_name": a["name"], "att_course": ac, **RESIST_STATS[(ac, ityp)]})
 
     # モーターの機歴（場・モーター番号ごと）：展示タイムが場の中で上位、または前節のオリジナル展示が抜けている
-    try:
-        from . import motor as _motor
-        mstat = _motor.load().get(jcd, {})
-    except Exception:
-        mstat = {}
-    # 入れ替え直後（番組表のモーター2連率がほぼ全艇0.00）は、同じ番号でも別のモーターなので出さない
-    if sum(1 for b in boats if not b.get("motor_2")) >= 5:
-        mstat = {}
     for b in boats:
         ms = mstat.get(str(b.get("motor_no")))
         if not ms or ms.get("n", 0) < 10 or ms.get("ex") is None or "rank" not in ms:

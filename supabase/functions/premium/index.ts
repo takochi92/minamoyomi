@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { Buffer } from 'node:buffer';
-import { calendarDay, paidSubscription, raceEvaluation, validSnapshot } from './logic.mjs';
+import { calendarDay, matchesMotorPeriod, paidSubscription, raceEvaluation, validSnapshot } from './logic.mjs';
 
 const origin = 'https://teilog.com';
 const env = (key: string) => Deno.env.get(key) || '';
@@ -173,6 +173,13 @@ Deno.serve(async req => {
           Number.isInteger(b.frame) && b.frame >= 1 && b.frame <= 6 && Number.isInteger(b.motor) && b.motor > 0) ||
           new Set(frames.map((b: {frame: number}) => b.frame)).size !== 6 ||
           new Set(frames.map((b: {motor: number}) => b.motor)).size !== 6) return reply({ evaluation: null });
+      const ledgerResponse = await fetch(origin + '/data/motor-periods.json', {
+        signal: AbortSignal.timeout(10000), redirect: 'error', cache: 'no-store',
+      });
+      if (ledgerResponse.status === 404) return reply({ evaluation: null });
+      if (!ledgerResponse.ok) throw Error('Motor periods unavailable');
+      const ledger = await ledgerResponse.json();
+      if (!matchesMotorPeriod(saved, ledger, date, venue)) return reply({ evaluation: null });
       return reply({ evaluation: raceEvaluation(saved, date, venue, frames, entry.racelist?.title?.trim() || '') });
     }
     return reply({ error: 'unavailable' }, 409);
