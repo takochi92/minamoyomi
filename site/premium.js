@@ -81,9 +81,14 @@
     if (state?.testCheckout) box.append(button('テスト決済を開く',checkout('checkout',state.amount)));
     if (state?.manage) box.append(button('支払い方法・解約',checkout('portal')));
   }
+  function evaluationNote() {
+    var note=el('p','まわり足・出足・総評は検証中です。');
+    note.className='premium-evaluation-note';
+    return note;
+  }
   function drawRace(data) {
     if (!data || !data.rows.some(row => Object.keys(row.metrics).length)) {
-      box.replaceChildren(el('p','このレースに対応する評価データはまだありません。'));
+      box.replaceChildren(el('p','このレースに対応する評価データはまだありません。'),evaluationNote());
       return;
     }
     var table=el('table'); table.className='premium-table';
@@ -102,7 +107,7 @@
       });
     });
     box.replaceChildren(el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'までの展示から集計・試験評価'),table,
-      el('p','秒差は場内の中央値との差。マイナスほど速く、—は評価保留です。'));
+      el('p','秒差は場内の中央値との差。マイナスほど速く、—は評価保留です。'),evaluationNote());
   }
   function chart() {
     if (!status?.member || !account.identity()) return;
