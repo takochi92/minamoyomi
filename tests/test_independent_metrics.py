@@ -1,5 +1,6 @@
 import json
 import random
+from collections import defaultdict
 
 import pytest
 
@@ -71,7 +72,7 @@ def test_store_is_idempotent_and_keeps_valid_rows_when_some_are_invalid(tmp_path
 
 def test_values_are_compared_inside_one_race_only():
     rows = [row("20261001", 1, b, b, f"{1000 + b}", 6.0 + .01 * b) for b in range(1, 7)]
-    rows += [row("20261001", 2, b, 10 + b, f"{2000 + b}", 9.0) for b in range(1, 5)]      # only four boats measured
+    rows += [row("20261001", 2, 1, 11, "2001", 9.0)]                                       # one boat measured: no comparison
     devs = im.race_deviations(rows)
     assert len(devs) == 6 and abs(sum(d["delta"] for d in devs)) < 1e-9
     assert min(devs, key=lambda d: d["delta"])["boat"] == 1
@@ -191,3 +192,50 @@ def test_robust_crossing_survives_one_sided_spray():
     assert missing <= 40                                           # at most a fifth is voided (13% here); the rest must be accurate
     assert abs(sum(errors) / len(errors)) < .004                   # no bias toward the spray side
     assert (sum(e * e for e in errors) / len(errors)) ** .5 < .012
+
+
+def thin(rows, keep, seed):
+    rng = random.Random(seed)
+    return [r for r in rows if rng.random() < keep]
+
+
+def test_partly_measured_races_still_find_the_good_motor():
+    """Half of the runs are lost at random. Stacking the meetings must still rank the good motor on top."""
+    meets = [[f"202610{d:02d}" for d in range(s, s + 7)] for s in (1, 10, 19)]
+    rows = thin(fleet(meets), .5, seed=11)
+    assert len(rows) < .56 * len(fleet(meets))
+    ratings = im.venue_ratings(rows, "03", "20261026", "20260901")["turn"]
+    assert len(ratings) >= 12 and ratings["7"]["grade"] in ("S", "A")
+    assert min(ratings, key=lambda m: ratings[m]["delta"]) == "7"
+
+
+def test_incomplete_race_does_not_punish_a_motor_for_its_company():
+    """Motor 1 is average but is only ever measured together with the two quick motors."""
+    rng = random.Random(2)
+    speed = {m: (-.08 if m in (2, 3) else 0.0) for m in range(1, 13)}
+    rows = []
+    for n in range(12):
+        d = f"202610{1 + n:02d}"
+        full = [row(d, 1, b, 6 + b, f"{3000 + b}", 6.0 + speed[6 + b] + rng.gauss(0, .004)) for b in range(1, 7)]
+        mixed = [row(d, 2, b, m, f"{4000 + m}", 6.0 + speed[m] + rng.gauss(0, .004))
+                 for b, m in ((1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6))]
+        rows += full + (mixed if n % 3 == 0 else mixed[:3])       # usually only motors 1, 2, 3 are measured
+    level = defaultdict(list)
+    for d in im.race_deviations(rows):
+        level[d["motor"]].append(d["delta"])
+    mean = {m: sum(v) / len(v) for m, v in level.items()}
+    assert abs(mean[1] - mean[4]) < .02                           # the same as other average motors
+    assert mean[2] < mean[1] - .05 and mean[3] < mean[1] - .05
+    naive = [r["seconds"] - sum(x["seconds"] for x in rows if (x["date"], x["race"]) == (r["date"], r["race"]))
+             / sum(1 for x in rows if (x["date"], x["race"]) == (r["date"], r["race"])) for r in rows if r["motor"] == 1]
+    assert sum(naive) / len(naive) > .03                          # a plain race mean would call motor 1 slow
+
+
+def test_motor_measured_on_too_few_of_its_starts_is_not_rated():
+    rows = fleet(MEETS)
+    starts = {m: 18 for m in range(1, 13)}
+    assert "5" in im.venue_ratings(rows, "03", "20261023", "20260901", starts=starts)["turn"]
+    few = [r for r in rows if r["motor"] != 5 or r["date"] not in ("20261003", "20261012", "20261022")]   # 6 of its runs
+    rated = im.venue_ratings(few, "03", "20261023", "20260901", starts=starts)
+    assert "5" not in rated.get("turn", {})                       # 6 of 18 starts: a third
+    assert im.venue_ratings(few, "03", "20261023", "20260901")["turn"]["5"]["share_of_starts"] is None
