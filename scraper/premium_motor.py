@@ -26,6 +26,10 @@ HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
 # Official course maps document the early straight section at these venues.
 EXIT_SECTION_VENUES = {"04", "22"}
+# Venues with monotonic A–D means on the next-day replay (2026-10-12 through 11-12).
+TURN_RATED_VENUES = frozenset(
+    "01 02 04 05 06 07 08 10 11 13 14 16 17 18 19 20 21 22 23 24".split()
+)
 
 
 def day(value):
@@ -65,7 +69,7 @@ def observations(race, venue=None):
             yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
 
 
-def pairing_ratings(meets, venue):
+def pairing_ratings(meets, venue, *, include_unqualified=False):
     samples = defaultdict(list)
     for meet in meets:
         for d, title, race in meet:
@@ -75,6 +79,8 @@ def pairing_ratings(meets, venue):
 
     output = {}
     for metric in ("turn", "acceleration"):
+        if metric == "turn" and venue not in TURN_RATED_VENUES and not include_unqualified:
+            continue
         eligible = {k: v for k, v in samples.items() if k[0] == metric and len(v) >= 3
                     and len({d for d, _ in v}) >= 2}
         # The reference field contains completed and current meeting pairings at this venue.
@@ -133,7 +139,7 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None):
+def build(records, motor_history, through, meeting_dates=None, *, include_unqualified=False):
     as_of = day(through)
     first = as_of - timedelta(days=45)
     grouped = defaultdict(list)
@@ -188,7 +194,7 @@ def build(records, motor_history, through, meeting_dates=None):
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
                 motors.setdefault(motor, {})[key] = value
-        pairings = pairing_ratings(meets[-4:], venue)
+        pairings = pairing_ratings(meets[-4:], venue, include_unqualified=include_unqualified)
         if motors or pairings:
             output[venue] = {"period": boundary, "motors": motors, "pairings": pairings}
     return {"version": 1, "through": through, "venues": output}

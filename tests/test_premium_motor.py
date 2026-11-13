@@ -86,5 +86,7 @@ def test_pairing_requires_same_meeting_and_multiple_dates(monkeypatch):
     assert top["grade"] == "A"
     assert top["runs"] == 3 and top["through"] == "20261112"
     assert top["title"] == "Test"
+    assert premium_motor.pairing_ratings([two_days], "09") == {}
+    assert premium_motor.pairing_ratings([two_days], "09", include_unqualified=True)
     next_meeting = [("20261114", "Test", {})]
     assert premium_motor.pairing_ratings([two_days, next_meeting], "04") == {}

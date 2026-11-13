@@ -34,7 +34,7 @@
   var dateFormat = new Intl.DateTimeFormat('ja-JP', {timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
   var price = new Intl.NumberFormat('ja-JP', {style:'currency',currency:'JPY',signDisplay:'exceptZero'});
   var metrics = ['exhibition','straight','turn','acceleration','overall'];
-  var labels = ['展示','伸び','まわり足','出足参考','総評'];
+  var labels = ['展示','伸び','まわり足','立ち上がり','総評'];
   function el(tag, text) {
     var x = document.createElement(tag);
     if (text !== undefined) x.textContent = text;
@@ -82,7 +82,7 @@
     if (state?.manage) box.append(button('支払い方法・解約',checkout('portal')));
   }
   function evaluationNote() {
-    var note=el('p','まわり足は今節の選手とモーターの組み合わせを評価。出足参考は平和島・福岡のターン出口側と通常展示の差を使った指数です。総評は検証中です。');
+    var note=el('p','まわり足は今節の選手とモーターの組み合わせを評価。立ち上がりは平和島・福岡の出口側のタイムと通常展示を比べた指数です。総評は検証中です。');
     note.className='premium-evaluation-note';
     return note;
   }
@@ -110,7 +110,7 @@
       });
     });
     box.replaceChildren(el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'までの展示から集計・試験評価'),table,
-      el('p','秒差は場内の中央値との差。出足参考の指数はプラスほど出口側が良好。—は評価保留です。'),evaluationNote());
+      el('p','秒差は場内の中央値との差。立ち上がり指数はプラスほど出口側が良好。—は評価保留です。'),evaluationNote());
   }
   function chart() {
     if (!status?.member || !account.identity()) return;
