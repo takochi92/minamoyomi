@@ -15,6 +15,7 @@ const assert = require('node:assert/strict');
   };
   let handler, paid = false, paymentStatus = 'active', checkoutCalls = 0, published = 0, session, authDown = false, owner = false;
   let createKey;
+  let period = '20260618', pending;
   const now = Date.now();
   const cutoff = new Date(now + 9*3600000 - 86400000).toISOString().slice(0,10).replaceAll('-','');
   const today = new Date(now + 9*3600000).toISOString().slice(0,10).replaceAll('-','');
@@ -57,6 +58,9 @@ const assert = require('node:assert/strict');
       if (pathname.endsWith('/billing_portal/sessions')) return Response.json({url:'https://billing.stripe.com/test'});
     }
     if (hostname === 'teilog.com') {
+      if (pathname === '/data/motor-periods.json') return Response.json({
+        date:today, venues:{'04':{date:period}}, pending:{'04':pending}
+      });
       return Response.json({date:today,jcd:'04',rno:1,racelist:{boats:
         Array.from({length:6},(_,i)=>({frame:i+1,motor_no:20+i,motor_2:22}))}});
     }
@@ -95,6 +99,12 @@ const assert = require('node:assert/strict');
   const result=await call(race);
   assert.match(result.headers.get('cache-control'),/no-store/);
   assert.equal((await result.json()).evaluation.rows[0].metrics.straight.grade,'S');
+  period = today;
+  assert.equal((await (await call(race)).json()).evaluation, null, 'Same numbers must not reuse the old fleet');
+  period = '20260618';
+  pending = today;
+  assert.equal((await (await call(race)).json()).evaluation, null, 'Hold rankings while a reset is being checked');
+  pending = undefined;
   paymentStatus = 'past_due';
   assert.equal((await call(race)).status,403,'Payment failure revokes access in test mode');
   paymentStatus = 'canceled';

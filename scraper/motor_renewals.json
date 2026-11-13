@@ -3,5 +3,25 @@
     "date": "20260511",
     "checked_at": "20261025",
     "url": "https://www.boatrace-edogawa.com/sp/index.php?page=raceinfo-motor_seiseki"
+  },
+  "04": {
+    "date": "20260618",
+    "checked_at": "20261113",
+    "url": "https://www.heiwajima.gr.jp/pdf/heiwajima/bangumihyo/202606180100.pdf"
+  },
+  "15": {
+    "date": "20260917",
+    "checked_at": "20261113",
+    "url": "https://www.marugameboat.jp/asp/htmlmade/marugame/motor/motor01.htm"
+  },
+  "17": {
+    "date": "20261020",
+    "checked_at": "20261113",
+    "url": "https://www.boatrace-miyajima.com/news_detail.html?id=763"
+  },
+  "23": {
+    "date": "20260916",
+    "checked_at": "20261113",
+    "url": "https://www.boatrace-karatsu.jp/modules/news/?storyid=1511"
   }
 }

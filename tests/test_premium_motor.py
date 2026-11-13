@@ -39,7 +39,7 @@ def test_daily_publish_rejects_partial_archive(tmp_path):
     rows = {(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(1, 3)}
     with pytest.raises(ValueError, match="incomplete official archive.*04"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
-    rows.update({(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(3, 12)})
+    rows.update({(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(3, 13)})
     check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
     with pytest.raises(ValueError, match="stale"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 16), tmp_path)
@@ -112,3 +112,24 @@ def test_overall_uses_only_three_official_intervals():
     race["oriten"] = {"items": ["まわり足", "直線"], "rows": rows}
     rows["6"][0] = None
     assert not any(k == "overall" for k, *_ in observations(race, "22"))
+
+
+def test_daily_publish_rejects_entire_missing_scheduled_venue(tmp_path):
+    import json
+    import pytest
+    from scraper.premium_motor import check_publish_inputs
+
+    cutoff = "20261112"
+    races_dir = tmp_path / "races"
+    (races_dir / cutoff).mkdir(parents=True)
+    index = tmp_path / "day-index"
+    index.mkdir()
+    (index / f"{cutoff}.json").write_text(json.dumps({"date": cutoff, "venues": [
+        {"jcd": "04"}, {"jcd": "07"}, {"jcd": "22", "cancelled": True},
+    ]}), encoding="utf-8")
+    rows = {}
+    for rno in range(1, 13):
+        (races_dir / cutoff / f"04{rno:02d}.json").touch()
+        rows[cutoff, "04", rno] = {"result": {"finished": True}}
+    with pytest.raises(ValueError, match="incomplete official archive.*07"):
+        check_publish_inputs(rows, cutoff, date(2026, 11, 13), races_dir)

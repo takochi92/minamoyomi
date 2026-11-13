@@ -517,6 +517,11 @@ def main(argv=None):
     jobs = [(v, r) for v in idx["venues"] for r in v["races"]]
     jobs.sort(key=lambda x: abs((_dl(date, x[1]["deadline"]) - now).total_seconds()))
     summaries = {}
+    from . import motor, motor_generation
+    from .race_days import save_index
+    save_index(DATA, idx)
+    seeds = motor_generation.saved_starts(motor.load())
+    _save(DATA / motor_generation.FILENAME, motor_generation.live_periods(DATA, date, seeds))
 
     def one(job):
         v, r = job
@@ -537,8 +542,8 @@ def main(argv=None):
 
     idx["updated_at"] = now.strftime("%Y-%m-%dT%H:%M")
     _save(DATA / "index.json", idx)
-    from .race_days import save_index
-    save_index(DATA, idx)
+    periods = motor_generation.live_periods(DATA, date, seeds)
+    _save(DATA / motor_generation.FILENAME, periods)
     shutil.copyfile(Path(__file__).parent / "venues.json", DATA / "venues.json")
     if (Path(__file__).parent / "model_report.json").exists():
         shutil.copyfile(Path(__file__).parent / "model_report.json", DATA / "model_report.json")

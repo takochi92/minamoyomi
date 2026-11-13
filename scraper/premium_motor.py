@@ -153,7 +153,9 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None):
+def build(records, motor_history, through, meeting_dates=None, periods=None):
+    from . import motor_generation
+    active = motor_generation.boundaries(through, motor_generation.saved_starts(motor_history), periods)
     as_of = day(through)
     first = as_of - timedelta(days=45)
     grouped = defaultdict(list)
@@ -166,12 +168,9 @@ def build(records, motor_history, through, meeting_dates=None):
 
     output = {}
     for venue, races in grouped.items():
-        boundaries = {m.get("history_boundary") for m in motor_history.get(venue, {}).values()
-                      if m.get("history_boundary") and m.get("history_boundary_source") in
-                      ("official_confirmed", "zero_rate_inferred")}
-        if len(boundaries) != 1:
+        boundary = active.get(venue, {}).get("date")
+        if not boundary or boundary == through:
             continue
-        boundary = next(iter(boundaries))
         meets = []
         for d, title, race in races:
             if d < boundary:
@@ -259,17 +258,32 @@ def check_publish_inputs(records, through, today, races_dir):
         raise ValueError("refusing to publish a stale or future cutoff")
     expected = Counter()
     available = Counter()
+    day_index = races_dir.parent / "day-index" / (through + ".json")
+    scheduled = {}
+    if day_index.is_file():
+        index = json.loads(day_index.read_text(encoding="utf-8"))
+        if index.get("date") != through:
+            raise ValueError("official schedule date mismatch")
+        scheduled = {v["jcd"]: not v.get("cancelled") for v in index.get("venues", [])}
+        if not scheduled:
+            raise ValueError("official schedule is empty")
     for path in (races_dir / through).glob("*.json"):
         if not re.fullmatch(r"(0[1-9]|1[0-9]|2[0-4])(0[1-9]|1[0-2])", path.stem):
             continue
         venue, race = path.stem[:2], int(path.stem[2:])
+        if scheduled and not scheduled.get(venue):
+            continue
         expected[venue] += 1
         archived = records.get((through, venue, race), {})
         if (archived.get("result") or {}).get("finished"):
             available[venue] += 1
     if not expected:
         raise ValueError("no scheduled race files on the requested cutoff")
-    incomplete = [venue for venue, count in expected.items() if available[venue] * 10 < count * 9]
+    venues = {venue for venue, held in scheduled.items() if held} if scheduled else set(expected)
+    # BOAT RACE uses 12 races per active venue. An incomplete local
+    # racecard list is not a reliable denominator.
+    incomplete = sorted(venue for venue in venues
+                        if available[venue] < (12 if scheduled else expected[venue]))
     if incomplete:
         raise ValueError("incomplete official archive for " + through + ": " + ", ".join(sorted(incomplete)))
 
@@ -289,6 +303,7 @@ def main():
     ap.add_argument("--through", help="Last included race date in JST, YYYYMMDD")
     ap.add_argument("--output", type=Path, help="Write a private JSON file outside site/")
     ap.add_argument("--publish", action="store_true", help="Replace the protected Supabase snapshot")
+    ap.add_argument("--require-complete", action="store_true", help="Apply the production checks to a local run")
     args = ap.parse_args()
     if not (args.output or args.publish):
         ap.error("choose --output or --publish")
@@ -298,9 +313,13 @@ def main():
         if day(through) >= today:
             ap.error("only past dates are accepted")
         records, history, schedules = load_inputs()
-        if args.publish:
+        if args.publish or args.require_complete:
             check_publish_inputs(records, through, today, ROOT / "site" / "data" / "races")
-        result = build(records, history, through, schedules)
+        from . import motor_generation
+        periods = motor_generation.live_periods(ROOT / "site" / "data", through)
+        result = build(records, history, through, schedules, periods["venues"])
+        for venue in periods["pending"]:
+            result["venues"].pop(venue, None)
         if not result["venues"]:
             ap.error("No eligible venue data. The stored snapshot was left intact.")
         payload = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False)

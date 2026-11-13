@@ -171,8 +171,7 @@ def test_motor_history_has_all_users_dates_and_official_result_links():
     assert '西田 和加' in html and '2026/10/08' in html and '2026/05/25' in html
     assert '全使用履歴' in html and '公式の節区分ではありません' in html
     assert 'hd=20261008&amp;jcd=03&amp;rno=1' in html
-    assert '交換日不明' in html
-    assert '初卸からの網羅性は未確認' in html
+    assert '2026/05/11' in html and '公式確認済み' in html
 
 
 def test_seo_basics(tmp_path):
