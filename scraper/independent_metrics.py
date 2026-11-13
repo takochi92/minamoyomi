@@ -61,8 +61,9 @@ def robust_crossing(points, gate_value, direction, *, max_residual=MAX_FIT_RESID
                     min_points=MIN_FIT_POINTS):
     """Time at which a tracked point passes a gate, from many frames instead of the two around it.
 
-    `points` are (time_seconds, position_along_the_gate_axis). A straight line is fitted, frames that
-    sit far from it (spray, a mis-tracked frame) are dropped once, and the line is fitted again.
+    `points` are (time_seconds, position_along_the_gate_axis). A robust line (median of pairwise
+    slopes) finds the boat first, frames that sit far from it (spray, a mis-tracked frame) are dropped,
+    and a least-squares line is fitted to the rest.
     Returns None when the fit is not trustworthy: too few frames, movement in the wrong direction,
     a gate outside the observed positions, or a residual above `max_residual` pixels.
     """
@@ -79,13 +80,27 @@ def robust_crossing(points, gate_value, direction, *, max_residual=MAX_FIT_RESID
         slope = sum((t - mt) * (x - mx) for t, x in data) / var
         return slope, mt, mx, [x - (mx + slope * (t - mt)) for t, x in data]
 
-    first = fit(rows)
-    if first is None:
-        return None
-    spread = median(abs(r) for r in first[3])
-    limit = max(3 * 1.4826 * spread, 1.0)
-    kept = [row for row, r in zip(rows, first[3]) if abs(r) <= limit]
-    if len(kept) < min_points:
+    def theil_sen(data):
+        # Median of pairwise slopes: stays on the boat when up to about a quarter of the frames sit on
+        # spray, which is always on one side (behind the boat) and would drag a least-squares line.
+        slopes = sorted((x2 - x1) / (t2 - t1) for i, (t1, x1) in enumerate(data) for t2, x2 in data[i + 1:])
+        slope = slopes[len(slopes) // 2]
+        offset = median(x - slope * t for t, x in data)
+        return [x - (slope * t + offset) for t, x in data]
+
+    kept = rows
+    residuals = theil_sen(rows)
+    for _ in range(3):
+        spread = median(abs(r) for r in residuals)
+        limit = max(3 * 1.4826 * spread, 1.0)
+        trimmed = [row for row, r in zip(kept, residuals) if abs(r) <= limit]
+        if len(trimmed) < min_points:
+            return None
+        if len(trimmed) == len(kept):
+            break
+        kept = trimmed
+        residuals = fit(kept)[3]
+    if fit(kept) is None:
         return None
     slope, mt, mx, residuals = fit(kept)
     if slope * direction <= 0:
