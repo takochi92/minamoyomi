@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const {buckets} = require('../site/premium.js');
+const {chartData} = require('../site/premium.js');
 
 (async function () {
   const {paidSubscription,raceEvaluation,validSnapshot} = await import('../supabase/functions/premium/logic.mjs');
@@ -29,8 +29,19 @@ const {buckets} = require('../site/premium.js');
   const bets=[{date:'20261231',inv:300,ret:700},{date:'20270101',inv:700,ret:0},
               {date:'20270104',inv:200,ret:100},{date:'20270105',ret:900},
               {date:'20261301',ret:900}];
-  assert.deepEqual(buckets(bets,'week','20270104').slice(-2).map(x=>x.net),[-300,-100]);
-  assert.deepEqual(buckets(bets,'month','20270104').slice(-2).map(x=>x.net),[400,-800]);
-  assert.deepEqual(buckets(bets,'year','20270104').slice(-2).map(x=>x.net),[400,-800]);
+  const week = chartData(bets,'week','20270104',-1);
+  assert.equal(week.start,'20261228');
+  assert.deepEqual(week.rows.map(x=>x.net),[0,0,0,400,-700,0,0]);
+  assert.equal(week.total,-300);
+  assert.equal(week.count,2);
+  const month = chartData(bets,'month','20270104',0);
+  assert.equal(month.latest,3);
+  assert.deepEqual(month.rows.slice(0,4).map(x=>x.total),[-700,-700,-700,-800]);
+  assert.equal(month.inv,900);
+  assert.equal(month.ret,100);
+  assert.equal(chartData(bets,'month','20270104',-1).total,400);
+  assert.equal(chartData(bets,'year','20270104',-1).rows[11].total,400);
+  assert.equal(chartData(bets,'year','20270104',0).latest,0);
+  assert.equal(chartData([], 'month', '20280201', 0).rows.length,29);
   console.log('Premium access, historical boundaries and chart totals OK.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
