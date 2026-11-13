@@ -32,7 +32,8 @@ VENUES = frozenset(f"{n:02}" for n in range(1, 25))
 # Column of the Premium table -> metric names a measurement may report for it.
 METRICS = ("exhibition", "straight", "turn", "acceleration")
 SOURCES = ("video",)
-MIN_BOATS_IN_RACE = 5          # a race with fewer measured boats is not a comparison
+MIN_BOATS_IN_RACE = 2          # one boat alone says nothing about the others; two or more can be compared
+MIN_SHARE_OF_STARTS = .4       # a motor needs this share of its starts measured, or the misses may be biased
 RECENT_MEETINGS = 3
 MIN_RUNS = 6
 MIN_DAYS = 3
@@ -234,18 +235,48 @@ class Store:
 
 
 # ------------------------------------------------------------------ comparison inside a race
-def race_deviations(rows):
-    """Each value minus the mean of its race, per metric. Negative is quicker than the field."""
+def race_deviations(rows, *, sweeps=12, shrink=4.0):
+    """Each value minus the level of its race, per metric. Negative is quicker than the field.
+
+    Not every boat of a race is measured (spray, overlap, a lost track). Subtracting the mean of the
+    boats that happen to be measured would punish a motor for being measured next to quick ones, so
+    the race level and the motor level are estimated together:
+
+        seconds = race level + motor level + noise
+
+    by alternating between the two (a motor with few runs is pulled toward the venue average). With
+    all six boats measured this is the plain race mean. A race with one measured boat is dropped.
+    """
     races = defaultdict(dict)
     for row in rows:
         races[row["date"], row["venue"], row["race"], row["metric"]][row["boat"]] = row
+    usable = {}
+    for key, boats in races.items():
+        if len(boats) >= MIN_BOATS_IN_RACE and len({r["motor"] for r in boats.values()}) == len(boats):
+            usable[key] = list(boats.values())
+    by_field = defaultdict(list)                 # motors are only comparable inside a venue and metric
+    for key in usable:
+        by_field[key[1], key[3]].append(key)
     out = []
-    for boats in races.values():
-        motors = {r["motor"] for r in boats.values()}
-        if len(boats) < MIN_BOATS_IN_RACE or len(motors) != len(boats):
-            continue
-        mean = sum(r["seconds"] for r in boats.values()) / len(boats)
-        out += [{**r, "delta": r["seconds"] - mean} for r in boats.values()]
+    for keys in by_field.values():
+        motor_level = defaultdict(float)
+        level = {}
+        for _ in range(sweeps):
+            for key in keys:
+                boats = usable[key]
+                level[key] = sum(r["seconds"] - motor_level[r["motor"]] for r in boats) / len(boats)
+            sums = defaultdict(lambda: [0, 0.0])
+            for key in keys:
+                for r in usable[key]:
+                    total = sums[r["motor"]]
+                    total[0] += 1
+                    total[1] += r["seconds"] - level[key]
+            motor_level = defaultdict(float, {m: total / (n + shrink) for m, (n, total) in sums.items()})
+            centre = sum(motor_level.values()) / len(motor_level)
+            for m in motor_level:
+                motor_level[m] -= centre
+        for key in keys:
+            out += [{**r, "delta": r["seconds"] - level[key], "boats_measured": len(usable[key])} for r in usable[key]]
     return out
 
 
@@ -313,13 +344,15 @@ def grade_field(candidates, standout_gap):
 
 
 def venue_ratings(rows, venue, through, fleet_start, *, schedule=None, baselines=None,
-                  standout_gap=.03, all_rows=None):
+                  standout_gap=.03, all_rows=None, starts=None):
     """Rider-adjusted, venue-relative ratings of one venue's current motors.
 
     rows        measured values (any venues; only `venue` is rated)
     fleet_start YYYYMMDD the current motors were first used. Rows before it are another motor with
                 the same number and are dropped. None (unknown or pending) returns {}.
     baselines   precomputed rider baselines; by default they are built from `all_rows` or `rows`
+    starts      {motor: number of exhibition runs it had in the rated meetings} from the racecards.
+                With it, a motor measured on less than MIN_SHARE_OF_STARTS of its runs is not rated
     Returns {metric: {motor(str): rating}}.
     """
     if not fleet_start or fleet_start > through or venue not in VENUES:
@@ -346,6 +379,9 @@ def venue_ratings(rows, venue, through, fleet_start, *, schedule=None, baselines
             riders, days = {r for _, _, r, _ in runs}, {d for d, *_ in runs}
             if key != metric or len(runs) < MIN_RUNS or len(days) < MIN_DAYS or len(riders) < MIN_RIDERS:
                 continue
+            share = len(runs) / starts[motor] if starts and starts.get(motor) else None
+            if share is not None and share < MIN_SHARE_OF_STARTS:
+                continue
             weights = [.5 ** ((as_of - day(d)).days / HALF_LIFE_DAYS) for d, *_ in runs]
             by_pair = defaultdict(list)
             for _, meet, rider, value in runs:
@@ -355,6 +391,7 @@ def venue_ratings(rows, venue, through, fleet_start, *, schedule=None, baselines
                 "delta": round(sum(w * v for w, (*_, v) in zip(weights, runs)) / sum(weights), 4),
                 "runs": len(runs), "riders": len(riders), "meetings": len({m for _, m, _, _ in runs}),
                 "through": max(days), "source": "video", "rider_adjusted": True,
+                "share_of_starts": round(share, 2) if share is not None else None,
                 # Shown with the grade. Whether a change should reset the rating is not validated yet.
                 "parts_changed": last_change,
                 "runs_since_parts_change": sum(d > last_change for d, *_ in runs) if last_change else None,
