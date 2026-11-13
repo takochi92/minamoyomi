@@ -167,12 +167,13 @@ Deno.serve(async req => {
       // A reset-looking race card must not inherit ratings from the previous motors.
       const boats = entry.racelist?.boats || [];
       if (boats.filter((boat: {motor_2: number}) => boat.motor_2 === 0).length >= 5) return reply({ evaluation: null });
-      const frames = boats.map((b: { frame: number, motor_no: number }) => ({ frame: b.frame, motor: b.motor_no }));
+      const frames = boats.map((b: { frame: number, motor_no: number, toban?: string }) =>
+        ({ frame: b.frame, motor: b.motor_no, rider: String(b.toban || '') }));
       if (frames.length !== 6 || !frames.every((b: {frame: number, motor: number}) =>
           Number.isInteger(b.frame) && b.frame >= 1 && b.frame <= 6 && Number.isInteger(b.motor) && b.motor > 0) ||
           new Set(frames.map((b: {frame: number}) => b.frame)).size !== 6 ||
           new Set(frames.map((b: {motor: number}) => b.motor)).size !== 6) return reply({ evaluation: null });
-      return reply({ evaluation: raceEvaluation(saved, date, venue, frames) });
+      return reply({ evaluation: raceEvaluation(saved, date, venue, frames, entry.racelist?.title?.trim() || '') });
     }
     return reply({ error: 'unavailable' }, 409);
   } catch (error) {

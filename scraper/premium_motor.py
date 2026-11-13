@@ -24,6 +24,15 @@ MIN_FIELD = 12
 MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
+# Official course maps document the early straight section at these venues.
+EXIT_SECTION_VENUES = {"04", "22"}
+# Venues with monotonic A–D means on the next-day replay (2026-10-12 through 11-12).
+TURN_RATED_VENUES = frozenset(
+    "01 02 04 05 06 07 08 10 11 13 14 16 17 18 19 20 21 22 23 24".split()
+)
+
+# Both the turn grade and the overall grade reproduced their order at these venues.
+OVERALL_RATED_VENUES = frozenset("02 05 07 08 10 11 14 16 17 19 20 21 22 23 24".split())
 
 
 def day(value):
@@ -32,7 +41,7 @@ def day(value):
     return date(int(value[:4]), int(value[4:6]), int(value[6:8]))
 
 
-def observations(race):
+def observations(race, venue=None):
     boats = (race.get("racelist") or {}).get("boats") or []
     entries = {b["frame"]: b for b in boats if b.get("motor_no") and b.get("toban")}
     lanes = set(range(1, 7))
@@ -42,7 +51,8 @@ def observations(race):
     exhibition = {b["frame"]: b.get("exhibit_time") for b in before} if len(before) == 6 else {}
     ori = race.get("oriten") or {}
     labels, rows = ori.get("items", []), ori.get("rows", {})
-    for key, label in METRICS.items():
+    deviations = {}
+    for key, label in {**METRICS, "lap": "一周"}.items():
         if key == "exhibition":
             values = [exhibition.get(i) for i in range(1, 7)]
         elif label in labels:
@@ -53,8 +63,59 @@ def observations(race):
         if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and 0 < x < 120 for x in values):
             continue
         baseline = sum(values) / len(values)
+        deviations[key] = [value - baseline for value in values]
+    if venue in EXIT_SECTION_VENUES and {"straight", "exhibition"} <= deviations.keys():
+        deviations["acceleration"] = [early - late for early, late in
+                                      zip(deviations["straight"], deviations["exhibition"])]
+    components = ("exhibition", "straight", "turn")
+    if set(components) <= deviations.keys():
+        # Combine ranks, since the three official intervals have different durations.
+        # Exhibition and straight share half the weight because both measure speed.
+        ranks = {}
+        for key in components:
+            field = deviations[key]
+            ranks[key] = [(sum(x < v for x in field) + (field.count(v) - 1) / 2) / 5 for v in field]
+        deviations["overall"] = [(.25 * a + .25 * b + .5 * c) - .5 for a, b, c in
+                                 zip(*(ranks[key] for key in components))]
+    for key, values in deviations.items():
         for i, value in enumerate(values, 1):
-            yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value - baseline
+            yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
+
+
+def pairing_ratings(meets, venue, *, include_unqualified=False):
+    samples = defaultdict(list)
+    for meet in meets:
+        for d, title, race in meet:
+            for key, motor, rider, value in observations(race, venue):
+                if key in ("turn", "acceleration", "overall"):
+                    samples[key, meet[0][0], title, motor, rider].append((d, value))
+
+    output = {}
+    for metric in ("turn", "acceleration", "overall"):
+        qualified = {"turn": TURN_RATED_VENUES, "overall": OVERALL_RATED_VENUES}
+        if metric in qualified and venue not in qualified[metric] and not include_unqualified:
+            continue
+        eligible = {k: v for k, v in samples.items() if k[0] == metric and len(v) >= 3
+                    and len({d for d, _ in v}) >= 2}
+        # The reference field contains completed and current meeting pairings at this venue.
+        values = sorted(sum(x for _, x in xs) / len(xs) for xs in eligible.values())
+        if len(values) < MIN_FIELD:
+            continue
+        center = median(values)
+        for (_, start, title, motor, rider), xs in eligible.items():
+            # Older pairings are reference samples only. A meeting title can repeat.
+            if start != meets[-1][0][0]:
+                continue
+            mean_delta = sum(x for _, x in xs) / len(xs)
+            percentile = (sum(x < mean_delta for x in values) + (values.count(mean_delta) - 1) / 2) / (len(values) - 1)
+            grade = "A" if percentile <= .20 else "B" if percentile <= .50 else "C" if percentile <= .80 else "D"
+            score = {"grade": grade, "runs": len(xs), "field": len(values), "meetings": 1,
+                     "delta": round(mean_delta, 4), "venue_delta": round(mean_delta - center, 4),
+                     "through": max(d for d, _ in xs)}
+            if metric in ("acceleration", "overall"):
+                score["index"] = round((center - mean_delta) * (50 if metric == "acceleration" else 100))
+            output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
+    return output
 
 
 def profile(samples, as_of):
@@ -92,7 +153,7 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None):
+def build(records, motor_history, through, meeting_dates=None, *, include_unqualified=False):
     as_of = day(through)
     first = as_of - timedelta(days=45)
     grouped = defaultdict(list)
@@ -147,8 +208,9 @@ def build(records, motor_history, through, meeting_dates=None):
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
                 motors.setdefault(motor, {})[key] = value
-        if motors:
-            output[venue] = {"period": boundary, "motors": motors}
+        pairings = pairing_ratings(meets[-4:], venue, include_unqualified=include_unqualified)
+        if motors or pairings:
+            output[venue] = {"period": boundary, "motors": motors, "pairings": pairings}
     return {"version": 1, "through": through, "venues": output}
 
 

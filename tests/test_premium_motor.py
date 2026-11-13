@@ -68,3 +68,41 @@ def test_publish_retries_transient_errors_and_rejects_redirects():
         publish_snapshot("{}", url, "a" * 64, redirect)
     with pytest.raises(ValueError, match="invalid premium function URL"):
         publish_snapshot("{}", "https://elsewhere.example/a.supabase.co/functions/v1/premium", "a" * 64, opener)
+
+
+def test_pairing_requires_same_meeting_and_multiple_dates(monkeypatch):
+    from scraper import premium_motor
+
+    def observations(race, venue):
+        for motor in range(1, 13):
+            yield "turn", str(motor), "1234", -motor / 100
+            yield "overall", str(motor), "1234", -motor / 100
+
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    one_day = [("20261111", "Test", {})] * 3
+    assert premium_motor.pairing_ratings([one_day], "04") == {}
+    two_days = one_day[:2] + [("20261112", "Test", {})]
+    ratings = premium_motor.pairing_ratings([two_days], "04")
+    top = ratings["12"]["1234"]["turn"]
+    assert top["grade"] == "A"
+    assert top["runs"] == 3 and top["through"] == "20261112"
+    assert top["title"] == "Test"
+    assert "overall" not in ratings["12"]["1234"]
+    assert premium_motor.pairing_ratings([two_days], "22")["12"]["1234"]["overall"]["grade"] == "A"
+    assert premium_motor.pairing_ratings([two_days], "09") == {}
+    assert premium_motor.pairing_ratings([two_days], "09", include_unqualified=True)
+    next_meeting = [("20261114", "Test", {})]
+    assert premium_motor.pairing_ratings([two_days, next_meeting], "04") == {}
+
+def test_overall_uses_only_three_official_intervals():
+    from scraper.premium_motor import observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6 + i / 100} for i in range(1, 7)]
+    rows = {str(i): [5 + i / 100, 7 + i / 100] for i in range(1, 7)}
+    race = {"racelist": {"boats": boats}, "before": {"boats": before},
+            "oriten": {"items": ["まわり足", "直線"], "rows": rows}}
+    overall = [v for k, _, _, v in observations(race, "22") if k == "overall"]
+    assert overall == sorted(overall) and overall[0] == -.5 and overall[-1] == .5
+    rows["6"][0] = None
+    assert not any(k == "overall" for k, *_ in observations(race, "22"))
