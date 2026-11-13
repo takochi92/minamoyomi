@@ -87,10 +87,10 @@ def test_pairing_requires_same_meeting_and_multiple_dates(monkeypatch):
     assert top["grade"] == "A"
     assert top["runs"] == 3 and top["through"] == "20261112"
     assert top["title"] == "Test"
-    assert "overall" not in ratings["12"]["1234"]
+    assert ratings["12"]["1234"]["overall"]["grade"] == "A"
     assert premium_motor.pairing_ratings([two_days], "22")["12"]["1234"]["overall"]["grade"] == "A"
-    assert premium_motor.pairing_ratings([two_days], "09") == {}
-    assert premium_motor.pairing_ratings([two_days], "09", include_unqualified=True)
+    grades = {r["1234"]["turn"]["grade"] for r in premium_motor.pairing_ratings([two_days], "09").values()}
+    assert grades == {"A", "B", "D"}
     next_meeting = [("20261114", "Test", {})]
     assert premium_motor.pairing_ratings([two_days, next_meeting], "04") == {}
 
@@ -104,5 +104,11 @@ def test_overall_uses_only_three_official_intervals():
             "oriten": {"items": ["まわり足", "直線"], "rows": rows}}
     overall = [v for k, _, _, v in observations(race, "22") if k == "overall"]
     assert overall == sorted(overall) and overall[0] == -.5 and overall[-1] == .5
+    assert not any(k == "acceleration" for k, *_ in observations(race, "03"))
+    assert any(k == "acceleration" for k, *_ in observations(race, "14"))
+    race["oriten"] = {"items": ["まわり足"], "rows": {key: value[:1] for key, value in rows.items()}}
+    assert any(k == "overall" for k, *_ in observations(race, "13"))
+    assert not any(k == "overall" for k, *_ in observations(race, "22"))
+    race["oriten"] = {"items": ["まわり足", "直線"], "rows": rows}
     rows["6"][0] = None
     assert not any(k == "overall" for k, *_ in observations(race, "22"))

@@ -40,7 +40,7 @@ export function validSnapshot(snapshot, today) {
         /^\d{4}$/.test(rider) && Object.entries(scores || {}).every(([key, m]) => {
           const start = calendarDay(m?.start);
           return (key === "turn" ||
-            ((key === "overall" || (key === "acceleration" && ["04", "22"].includes(venue))) && Number.isInteger(m?.index))) &&
+            ((key === "overall" || (key === "acceleration" && ["02", "04", "07", "14", "22"].includes(venue))) && Number.isInteger(m?.index))) &&
             /^[ABCD]$/.test(m?.grade) && validScore(m, 3) && m.meetings === 1 &&
             start !== null && start >= period && start <= calendarDay(m.through) &&
             typeof m.title === "string" && m.title.length > 0 && m.title.length <= 200;
