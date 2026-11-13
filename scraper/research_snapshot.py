@@ -93,7 +93,8 @@ def archive(root=ROOT, dates=None):
     paths = (path for date in dates for path in (races_dir / date).glob("*.json")) if dates else races_dir.glob("*/*.json")
     for p in sorted(paths):
         r = json.loads(p.read_text(encoding="utf-8"))
-        if not (r.get('result') or {}).get('finished') or not r.get('before'):
+        outcome = r.get("result") or {}
+        if not (outcome.get("cancelled") or (outcome.get("finished") and r.get("before"))):
             continue
         key = (r['date'], r['jcd'], r['rno'])
         snap = r.get('research_snapshot')

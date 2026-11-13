@@ -349,7 +349,9 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 race.pop(key, None)
 
     # 3) 結果
-    if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:
+    outcome = race.get("result") or {}
+    if (now >= dl + timedelta(minutes=12) and not outcome.get("finished")
+            and not outcome.get("cancelled") and race.get("result_tries", 0) < 12):
         res = parse.parse_result(f.result(jcd, rno, date))
         race["result_tries"] = race.get("result_tries", 0) + 1
         race["result"] = res

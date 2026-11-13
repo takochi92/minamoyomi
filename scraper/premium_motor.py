@@ -163,7 +163,7 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
         if not first <= day(d) <= as_of:
             continue
         title = (race.get("racelist") or {}).get("title", "").strip()
-        if title:
+        if title and not (race.get("result") or {}).get("cancelled"):
             grouped[venue].append((d, title, race))
 
     output = {}
@@ -275,7 +275,8 @@ def check_publish_inputs(records, through, today, races_dir):
             continue
         expected[venue] += 1
         archived = records.get((through, venue, race), {})
-        if (archived.get("result") or {}).get("finished"):
+        outcome = archived.get("result") or {}
+        if outcome.get("finished") or outcome.get("cancelled"):
             available[venue] += 1
     if not expected:
         raise ValueError("no scheduled race files on the requested cutoff")

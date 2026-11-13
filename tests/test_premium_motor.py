@@ -39,7 +39,8 @@ def test_daily_publish_rejects_partial_archive(tmp_path):
     rows = {(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(1, 3)}
     with pytest.raises(ValueError, match="incomplete official archive.*04"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
-    rows.update({(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(3, 13)})
+    rows.update({(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(3, 12)})
+    rows[cutoff, "04", 12] = {"result": {"cancelled": True}}
     check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
     with pytest.raises(ValueError, match="stale"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 16), tmp_path)
@@ -133,3 +134,20 @@ def test_daily_publish_rejects_entire_missing_scheduled_venue(tmp_path):
         rows[cutoff, "04", rno] = {"result": {"finished": True}}
     with pytest.raises(ValueError, match="incomplete official archive.*07"):
         check_publish_inputs(rows, cutoff, date(2026, 11, 13), races_dir)
+
+
+def test_official_cancellation_is_terminal_but_not_a_timing_sample(tmp_path):
+    import json
+    from scraper.parse import parse_result
+    from scraper.research_snapshot import archive, archived_records
+
+    result = parse_result("<h3>レース中止</h3>")
+    assert result["cancelled"] is True and result["finished"] is False
+    folder = tmp_path / "site" / "data" / "races" / "20261112"
+    folder.mkdir(parents=True)
+    (folder / "0401.json").write_text(json.dumps({
+        "date": "20261112", "jcd": "04", "rno": 1, "result": result,
+    }), encoding="utf-8")
+    assert archive(tmp_path, ["20261112"])["added_or_updated"] == 1
+    assert archived_records(tmp_path)["20261112", "04", 1]["result"]["cancelled"] is True
+    assert archive(tmp_path, ["20261112"])["added_or_updated"] == 0
