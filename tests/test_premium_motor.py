@@ -68,3 +68,23 @@ def test_publish_retries_transient_errors_and_rejects_redirects():
         publish_snapshot("{}", url, "a" * 64, redirect)
     with pytest.raises(ValueError, match="invalid premium function URL"):
         publish_snapshot("{}", "https://elsewhere.example/a.supabase.co/functions/v1/premium", "a" * 64, opener)
+
+
+def test_pairing_requires_same_meeting_and_multiple_dates(monkeypatch):
+    from scraper import premium_motor
+
+    def observations(race, venue):
+        for motor in range(1, 13):
+            yield "turn", str(motor), "1234", -motor / 100
+
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    one_day = [("20261111", "Test", {})] * 3
+    assert premium_motor.pairing_ratings([one_day], "04") == {}
+    two_days = one_day[:2] + [("20261112", "Test", {})]
+    ratings = premium_motor.pairing_ratings([two_days], "04")
+    top = ratings["12"]["1234"]["turn"]
+    assert top["grade"] == "A"
+    assert top["runs"] == 3 and top["through"] == "20261112"
+    assert top["title"] == "Test"
+    next_meeting = [("20261114", "Test", {})]
+    assert premium_motor.pairing_ratings([two_days, next_meeting], "04") == {}

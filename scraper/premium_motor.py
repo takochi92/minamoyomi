@@ -24,6 +24,8 @@ MIN_FIELD = 12
 MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
+# Official course maps document the early straight section at these venues.
+EXIT_SECTION_VENUES = {"04", "22"}
 
 
 def day(value):
@@ -32,7 +34,7 @@ def day(value):
     return date(int(value[:4]), int(value[4:6]), int(value[6:8]))
 
 
-def observations(race):
+def observations(race, venue=None):
     boats = (race.get("racelist") or {}).get("boats") or []
     entries = {b["frame"]: b for b in boats if b.get("motor_no") and b.get("toban")}
     lanes = set(range(1, 7))
@@ -42,6 +44,7 @@ def observations(race):
     exhibition = {b["frame"]: b.get("exhibit_time") for b in before} if len(before) == 6 else {}
     ori = race.get("oriten") or {}
     labels, rows = ori.get("items", []), ori.get("rows", {})
+    deviations = {}
     for key, label in METRICS.items():
         if key == "exhibition":
             values = [exhibition.get(i) for i in range(1, 7)]
@@ -53,8 +56,46 @@ def observations(race):
         if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and 0 < x < 120 for x in values):
             continue
         baseline = sum(values) / len(values)
+        deviations[key] = [value - baseline for value in values]
+    if venue in EXIT_SECTION_VENUES and {"straight", "exhibition"} <= deviations.keys():
+        deviations["acceleration"] = [early - late for early, late in
+                                      zip(deviations["straight"], deviations["exhibition"])]
+    for key, values in deviations.items():
         for i, value in enumerate(values, 1):
-            yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value - baseline
+            yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
+
+
+def pairing_ratings(meets, venue):
+    samples = defaultdict(list)
+    for meet in meets:
+        for d, title, race in meet:
+            for key, motor, rider, value in observations(race, venue):
+                if key in ("turn", "acceleration"):
+                    samples[key, meet[0][0], title, motor, rider].append((d, value))
+
+    output = {}
+    for metric in ("turn", "acceleration"):
+        eligible = {k: v for k, v in samples.items() if k[0] == metric and len(v) >= 3
+                    and len({d for d, _ in v}) >= 2}
+        # The reference field contains completed and current meeting pairings at this venue.
+        values = sorted(sum(x for _, x in xs) / len(xs) for xs in eligible.values())
+        if len(values) < MIN_FIELD:
+            continue
+        center = median(values)
+        for (_, start, title, motor, rider), xs in eligible.items():
+            # Older pairings are reference samples only. A meeting title can repeat.
+            if start != meets[-1][0][0]:
+                continue
+            mean_delta = sum(x for _, x in xs) / len(xs)
+            percentile = (sum(x < mean_delta for x in values) + (values.count(mean_delta) - 1) / 2) / (len(values) - 1)
+            grade = "A" if percentile <= .20 else "B" if percentile <= .50 else "C" if percentile <= .80 else "D"
+            score = {"grade": grade, "runs": len(xs), "field": len(values), "meetings": 1,
+                     "delta": round(mean_delta, 4), "venue_delta": round(mean_delta - center, 4),
+                     "through": max(d for d, _ in xs)}
+            if metric == "acceleration":
+                score["index"] = round((center - mean_delta) * 50)
+            output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
+    return output
 
 
 def profile(samples, as_of):
@@ -147,8 +188,9 @@ def build(records, motor_history, through, meeting_dates=None):
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
                 motors.setdefault(motor, {})[key] = value
-        if motors:
-            output[venue] = {"period": boundary, "motors": motors}
+        pairings = pairing_ratings(meets[-4:], venue)
+        if motors or pairings:
+            output[venue] = {"period": boundary, "motors": motors, "pairings": pairings}
     return {"version": 1, "through": through, "venues": output}
 
 
