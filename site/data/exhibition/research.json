@@ -1288,6 +1288,14 @@
       "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261113&raceNumber=11&autoplay=0&bitrate=low",
       "source_state": "registered",
       "analysis_state": "not_measured"
+    },
+    {
+      "date": "20261113",
+      "jcd": "04",
+      "rno": 12,
+      "official_url": "https://front.player.boatrace-cdn.jp/player/vod?service=boatcast&stadium=04heiwajima&raceType=exhibition&raceDate=20261113&raceNumber=12&autoplay=0&bitrate=low",
+      "source_state": "registered",
+      "analysis_state": "not_measured"
     }
   ]
 }
