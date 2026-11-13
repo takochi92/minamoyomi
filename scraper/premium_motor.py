@@ -24,6 +24,11 @@ MIN_FIELD = 12
 MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
+# Rider-adjusted exhibition (research/improvements/RIDER_ADJUSTED_MOTOR.md). The published snapshot
+# only carries it when the build is asked to, because the Premium function must accept the key first.
+ADJUSTED_HALF_LIFE = 45
+RIDER_SHRINK_RUNS = 8
+RIDER_TERM_DECAY = .5
 # Official course maps document the early straight section at these venues.
 EXIT_SECTION_VENUES = {"02", "04", "07", "14", "22"}
 # The replay found clear A/D separation but unstable intermediate ordering here.
@@ -118,11 +123,31 @@ def pairing_ratings(meets, venue):
     return output
 
 
-def profile(samples, as_of):
+def rider_baselines(term_profiles, through):
+    """Each rider's usual exhibition gap to the race average, in seconds (negative is faster).
+
+    Built from the official exhibition profiles per rating term. Newer terms weigh more and the
+    value is pulled toward zero for riders with few runs. Terms that start after `through` are ignored.
+    """
+    terms = sorted((t for t in ((term_profiles or {}).get("terms") or {}).values()
+                    if isinstance(t, dict) and str(t.get("available_from", "9")) <= through),
+                   key=lambda t: t["available_from"], reverse=True)
+    totals = defaultdict(lambda: [0.0, 0.0])
+    for age, term in enumerate(terms):
+        weight = RIDER_TERM_DECAY ** age
+        for rider, row in (term.get("players") or {}).items():
+            n, total = row.get("n"), row.get("dev_sum")
+            if type(n) is int and n > 0 and isinstance(total, (int, float)) and math.isfinite(total):
+                totals[str(rider)][0] += weight * n
+                totals[str(rider)][1] += weight * total
+    return {rider: total / (n + RIDER_SHRINK_RUNS) for rider, (n, total) in totals.items()}
+
+
+def profile(samples, as_of, half_life=HALF_LIFE):
     days = {s[0] for s in samples}
     if len(samples) < MIN_RUNS or len(days) < 3:
         return None
-    weights = [2 ** (-(as_of - s[0]).days / HALF_LIFE) for s in samples]
+    weights = [2 ** (-(as_of - s[0]).days / half_life) for s in samples]
     avg = sum(s[3] * w for s, w in zip(samples, weights)) / sum(weights)
     # Whole meetings are the replication unit, not individual races from a single day.
     by_meet_rider = defaultdict(list)
@@ -153,7 +178,7 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None, periods=None):
+def build(records, motor_history, through, meeting_dates=None, periods=None, rider_profiles=None):
     from . import motor_generation
     active = motor_generation.boundaries(through, motor_generation.saved_starts(motor_history), periods)
     as_of = day(through)
@@ -166,6 +191,7 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
         if title and not (race.get("result") or {}).get("cancelled"):
             grouped[venue].append((d, title, race))
 
+    baselines = rider_baselines(rider_profiles, through) if rider_profiles else None
     output = {}
     for venue, races in grouped.items():
         boundary = active.get(venue, {}).get("date")
@@ -203,6 +229,23 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
                     candidates[motor] = result
             # Trial thresholds in seconds. The S grade also requires two separate meetings.
             metrics[key] = rank_field(candidates, .03)
+        if baselines is not None:
+            # Every finished meeting in the window, minus what each rider usually does. A rider the
+            # profiles do not know is treated as average. Different riders must have used the motor.
+            adjusted = defaultdict(list)
+            for meeting in complete:
+                meet = meeting[0][0]
+                for d, _, race in meeting:
+                    for key, motor, rider, delta in observations(race):
+                        if key == "exhibition":
+                            adjusted[motor].append((day(d), meet, rider, delta - baselines.get(rider, 0.0)))
+            candidates = {}
+            for motor, samples in adjusted.items():
+                result = profile(samples, as_of, ADJUSTED_HALF_LIFE)
+                if result and len({rider for _, _, rider, _ in samples}) >= 2:
+                    result[0]["riders"] = len({rider for _, _, rider, _ in samples})
+                    candidates[motor] = result
+            metrics["adjusted"] = rank_field(candidates, .03)
         motors = {}
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
@@ -299,12 +342,19 @@ def load_inputs():
     return archived_records(), history, schedules
 
 
+def load_rider_profiles():
+    with gzip.open(ROOT / "scraper" / "exstats.json.gz", "rt", encoding="utf-8") as f:
+        return json.load(f).get("term_profiles") or {}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--through", help="Last included race date in JST, YYYYMMDD")
     ap.add_argument("--output", type=Path, help="Write a private JSON file outside site/")
     ap.add_argument("--publish", action="store_true", help="Replace the protected Supabase snapshot")
     ap.add_argument("--require-complete", action="store_true", help="Apply the production checks to a local run")
+    ap.add_argument("--with-rider-adjusted", action="store_true",
+                    help="Add the rider-adjusted exhibition rating. Deploy the Premium function that accepts it first")
     args = ap.parse_args()
     if not (args.output or args.publish):
         ap.error("choose --output or --publish")
@@ -318,7 +368,8 @@ def main():
             check_publish_inputs(records, through, today, ROOT / "site" / "data" / "races")
         from . import motor_generation
         periods = motor_generation.live_periods(ROOT / "site" / "data", through)
-        result = build(records, history, through, schedules, periods["venues"])
+        result = build(records, history, through, schedules, periods["venues"],
+                       load_rider_profiles() if args.with_rider_adjusted else None)
         for venue in periods["pending"]:
             result["venues"].pop(venue, None)
         if not result["venues"]:
