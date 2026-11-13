@@ -170,3 +170,24 @@ def test_nightly_rating_skips_pending_or_unknown_fleets(tmp_path):
     assert list(result["venues"]) == ["03"] and result["venues"]["03"]["period"] == "20260901"
     assert result["venues"]["03"]["motors"]["7"]["turn"]["grade"] in ("S", "A")
     assert rate(store, "20261023", {}, {})["venues"] == {}
+
+
+def test_robust_crossing_survives_one_sided_spray():
+    """Spray is always behind the boat. A fifth of the frames on spray must not move or void the result."""
+    rng = random.Random(4)
+    errors, missing = [], 0
+    for _ in range(200):
+        points = []
+        for i in range(-12, 13):
+            if rng.random() < .3:
+                continue                                           # dropped frame
+            x = 357 - 183 * i / 30
+            points.append((268.2 + i / 30, x + (rng.uniform(8, 40) if rng.random() < .2 else rng.gauss(0, 3))))
+        fitted = im.robust_crossing(points, 357, -1)
+        if fitted is None:
+            missing += 1
+        else:
+            errors.append(fitted["seconds"] - 268.2)
+    assert missing <= 40                                           # at most a fifth is voided (13% here); the rest must be accurate
+    assert abs(sum(errors) / len(errors)) < .004                   # no bias toward the spray side
+    assert (sum(e * e for e in errors) / len(errors)) ** .5 < .012
