@@ -22,7 +22,12 @@ def replay(records, history, schedules, start, end):
             if venue not in fields:
                 continue
             title = (race.get("racelist") or {}).get("title", "").strip()
-            for metric, motor, rider, value in observations(race, venue):
+            metrics = {(metric, motor, rider): value for metric, motor, rider, value in observations(race, venue)}
+            for (metric, motor, rider), value in metrics.items():
+                if metric == "overall":
+                    value = metrics.get(("lap", motor, rider))
+                    if value is None:
+                        continue
                 score = fields[venue]["pairings"].get(motor, {}).get(rider, {}).get(metric)
                 if not score or score["title"] != title or (day(date) - day(score["through"])).days > 3:
                     continue
@@ -37,7 +42,7 @@ def replay(records, history, schedules, start, end):
     return result
 
 
-def summary(rows):
+def summary(rows, *, compare_mae=True):
     if not rows:
         return None
     by_meeting = defaultdict(list)
@@ -62,7 +67,8 @@ def summary(rows):
             d = [r[2] for r in sample if r[1] == "D"]
             if a and d:
                 gaps.append(mean(d) - mean(a))
-            gains.append(mean(abs(y) - abs(y - .5 * pred) for _, _, y, pred in sample))
+            if compare_mae:
+                gains.append(mean(abs(y) - abs(y - .5 * pred) for _, _, y, pred in sample))
     def interval(values):
         if not values:
             return None
@@ -74,8 +80,8 @@ def summary(rows):
             "counts": counts, "means": {g: round(v, 4) for g, v in means.items()},
             "gap": round(means["D"] - means["A"], 4) if "A" in means and "D" in means else None,
             "gap_ci": interval(gaps), "gain_ci": interval(gains),
-            "baseline_mae": round(mean(abs(y) for _, _, y, _ in rows), 4),
-            "adjusted_mae": round(mean(abs(y - .5 * pred) for _, _, y, pred in rows), 4)}
+            **({"baseline_mae": round(mean(abs(y) for _, _, y, _ in rows), 4),
+                "adjusted_mae": round(mean(abs(y - .5 * pred) for _, _, y, pred in rows), 4)} if compare_mae else {})}
 
 
 def main():
@@ -85,11 +91,11 @@ def main():
     parser.add_argument("--by-venue", action="store_true")
     args = parser.parse_args()
     data = replay(*load_inputs(), args.start, args.end)
-    for metric in ("turn", "acceleration"):
+    for metric in ("turn", "acceleration", "overall"):
         for (kind, venue), rows in sorted(data.items()):
             if metric == kind and (args.by_venue or kind == "acceleration"):
-                print(metric, venue, summary(rows))
-        print(metric, "all", summary([r for (kind, _), rows in data.items() if kind == metric for r in rows]))
+                print(metric, venue, summary(rows, compare_mae=metric != "overall"))
+        print(metric, "all", summary([r for (kind, _), rows in data.items() if kind == metric for r in rows], compare_mae=metric != "overall"))
 
 
 if __name__ == "__main__":

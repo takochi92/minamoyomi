@@ -82,7 +82,7 @@
     if (state?.manage) box.append(button('支払い方法・解約',checkout('portal')));
   }
   function evaluationNote() {
-    var note=el('p','まわり足は今節の選手とモーターの組み合わせを評価。立ち上がりは平和島・福岡の出口側のタイムと通常展示を比べた指数です。総評は検証中です。');
+    var note=el('p','まわり足は今節の選手とモーターの組み合わせを評価。立ち上がりは平和島・福岡の出口側のタイムと通常展示を比べた指数です。総評は通常展示・直線・まわり足がそろった今節の走りを総合した評価です。');
     note.className='premium-evaluation-note';
     return note;
   }
@@ -103,14 +103,14 @@
         if (!score || !Number.isFinite(score.venue_delta) || !/^[SABCD]$/.test(score.grade)) { td.textContent='—'; return; }
         var grade=el('strong',score.grade); grade.dataset.grade=score.grade;
         var diff=score.venue_delta;
-        var detail=metric==='acceleration' && Number.isInteger(score.index)
+        var detail=(metric==='acceleration' || metric==='overall') && Number.isInteger(score.index)
           ? (score.index>0?'+':'')+score.index+'pt'
           : (diff>0?'+':'')+diff.toFixed(2)+'秒';
         td.append(grade,el('small',detail),el('small',score.runs+'走'));
       });
     });
     box.replaceChildren(el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'までの展示から集計・試験評価'),table,
-      el('p','秒差は場内の中央値との差。立ち上がり指数はプラスほど出口側が良好。—は評価保留です。'),evaluationNote());
+      el('p','秒差は場内の中央値との差。立ち上がり・総評の指数はプラスほど良好。—は評価保留です。'),evaluationNote());
   }
   function chart() {
     if (!status?.member || !account.identity()) return;

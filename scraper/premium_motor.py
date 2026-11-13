@@ -31,6 +31,9 @@ TURN_RATED_VENUES = frozenset(
     "01 02 04 05 06 07 08 10 11 13 14 16 17 18 19 20 21 22 23 24".split()
 )
 
+# Both the turn grade and the overall grade reproduced their order at these venues.
+OVERALL_RATED_VENUES = frozenset("02 05 07 08 10 11 14 16 17 19 20 21 22 23 24".split())
+
 
 def day(value):
     if not re.fullmatch(r"20[0-9]{6}", value):
@@ -49,7 +52,7 @@ def observations(race, venue=None):
     ori = race.get("oriten") or {}
     labels, rows = ori.get("items", []), ori.get("rows", {})
     deviations = {}
-    for key, label in METRICS.items():
+    for key, label in {**METRICS, "lap": "一周"}.items():
         if key == "exhibition":
             values = [exhibition.get(i) for i in range(1, 7)]
         elif label in labels:
@@ -64,6 +67,16 @@ def observations(race, venue=None):
     if venue in EXIT_SECTION_VENUES and {"straight", "exhibition"} <= deviations.keys():
         deviations["acceleration"] = [early - late for early, late in
                                       zip(deviations["straight"], deviations["exhibition"])]
+    components = ("exhibition", "straight", "turn")
+    if set(components) <= deviations.keys():
+        # Combine ranks, since the three official intervals have different durations.
+        # Exhibition and straight share half the weight because both measure speed.
+        ranks = {}
+        for key in components:
+            field = deviations[key]
+            ranks[key] = [(sum(x < v for x in field) + (field.count(v) - 1) / 2) / 5 for v in field]
+        deviations["overall"] = [(.25 * a + .25 * b + .5 * c) - .5 for a, b, c in
+                                 zip(*(ranks[key] for key in components))]
     for key, values in deviations.items():
         for i, value in enumerate(values, 1):
             yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
@@ -74,12 +87,13 @@ def pairing_ratings(meets, venue, *, include_unqualified=False):
     for meet in meets:
         for d, title, race in meet:
             for key, motor, rider, value in observations(race, venue):
-                if key in ("turn", "acceleration"):
+                if key in ("turn", "acceleration", "overall"):
                     samples[key, meet[0][0], title, motor, rider].append((d, value))
 
     output = {}
-    for metric in ("turn", "acceleration"):
-        if metric == "turn" and venue not in TURN_RATED_VENUES and not include_unqualified:
+    for metric in ("turn", "acceleration", "overall"):
+        qualified = {"turn": TURN_RATED_VENUES, "overall": OVERALL_RATED_VENUES}
+        if metric in qualified and venue not in qualified[metric] and not include_unqualified:
             continue
         eligible = {k: v for k, v in samples.items() if k[0] == metric and len(v) >= 3
                     and len({d for d, _ in v}) >= 2}
@@ -98,8 +112,8 @@ def pairing_ratings(meets, venue, *, include_unqualified=False):
             score = {"grade": grade, "runs": len(xs), "field": len(values), "meetings": 1,
                      "delta": round(mean_delta, 4), "venue_delta": round(mean_delta - center, 4),
                      "through": max(d for d, _ in xs)}
-            if metric == "acceleration":
-                score["index"] = round((center - mean_delta) * 50)
+            if metric in ("acceleration", "overall"):
+                score["index"] = round((center - mean_delta) * (50 if metric == "acceleration" else 100))
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
     return output
 

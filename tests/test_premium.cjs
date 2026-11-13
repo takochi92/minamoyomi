@@ -16,12 +16,13 @@ const {buckets} = require('../site/premium.js');
   assert.deepEqual(raceEvaluation(field,'20261113','04',lanes).rows[1].metrics,{});
   const score={grade:'A',delta:-.08,venue_delta:-.06,runs:3,field:30,meetings:1,through:'20261112',start:'20261111',title:'Test meet'};
   const snapshot={version:1,through:'20261112',venues:{'04':{
-    period:'20260618',motors:{},pairings:{'20':{'1234':{turn:score,acceleration:{...score,index:3}}}}
+    period:'20260618',motors:{},pairings:{'20':{'1234':{turn:score,acceleration:{...score,index:3},overall:{...score,index:5}}}}
   }}};
   const pair=[{frame:1,motor:20,rider:'1234'},{frame:2,motor:20,rider:'4321'}];
   assert.equal(validSnapshot(snapshot,'20261113'),true);
   const matched=raceEvaluation(snapshot,'20261113','04',pair,'Test meet');
   assert.equal(matched.rows[0].metrics.acceleration.index,3);
+  assert.equal(matched.rows[0].metrics.overall.index,5);
   assert.deepEqual(matched.rows[1].metrics,{});
   assert.deepEqual(raceEvaluation(snapshot,'20261113','04',pair,'Another meet').rows[0].metrics,{});
   assert.equal(validSnapshot({...snapshot,venues:{'03':snapshot.venues['04']}},'20261113'),false);
