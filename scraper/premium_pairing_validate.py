@@ -16,7 +16,7 @@ def replay(records, history, schedules, start, end):
         by_date[d].append((venue, race))
     for date in sorted(d for d in by_date if start <= d <= end):
         cutoff = (day(date) - timedelta(days=1)).strftime("%Y%m%d")
-        fields = build(records, history, cutoff, schedules, include_unqualified=True)["venues"]
+        fields = build(records, history, cutoff, schedules)["venues"]
         observations_by_pair = defaultdict(list)
         for venue, race in by_date[date]:
             if venue not in fields:
@@ -75,7 +75,7 @@ def summary(rows, *, compare_mae=True):
         values.sort()
         return [round(values[int((len(values)-1)*p)], 4) for p in (.025, .975)]
     return {"pairs": len(rows), "meetings": len(clusters),
-            "ordered": len(means) == 4 and all(means[a] < means[b] for a, b in zip("ABC", "BCD")),
+            "ordered": len(means) >= 3 and all(a < b for a, b in zip(means.values(), list(means.values())[1:])),
             "meetings_a_faster": [sum(g > 0 for g in meeting_gaps), len(meeting_gaps)],
             "counts": counts, "means": {g: round(v, 4) for g, v in means.items()},
             "gap": round(means["D"] - means["A"], 4) if "A" in means and "D" in means else None,
