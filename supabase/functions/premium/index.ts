@@ -103,9 +103,12 @@ Deno.serve(async req => {
     const { action, date, venue, race, amount } = body;
     const tester = env('TEILOG_PREMIUM_TEST_USERS').split(',').map(x => x.trim()).includes(user);
     if (!['checkout', 'status', 'portal', 'race'].includes(action)) return reply({ error: 'invalid action' }, 400);
+    const owner = action !== 'portal'
+      ? (await rest('teilog_premium_owners?user_id=eq.' + user + '&select=user_id')).length === 1
+      : false;
     const billingAccess = checkoutReady && (billing === 'live' || tester);
     const preview = tester && !billing;
-    if (action === 'checkout' && !billingAccess) return reply({ error: 'unavailable' }, 409);
+    if (action === 'checkout' && (!billingAccess || owner)) return reply({ error: 'unavailable' }, 409);
     if (action === 'checkout' && amount !== await monthlyAmount()) return reply({ error: 'price changed' }, 409);
     const customerId = billingAccess ? await customer(user, action === 'checkout') : undefined;
     if (action === 'portal' && customerId) {
@@ -117,14 +120,14 @@ Deno.serve(async req => {
     const customerFilter = customerId ? 'customer=' + encodeURIComponent(customerId) : '';
     // Reading Checkout first makes a completed purchase visible before checking subscriptions.
     const latest = action === 'checkout' ? (await stripe('checkout/sessions?' + customerFilter + '&limit=1')).data[0] : undefined;
-    const subscriptions = customerId ? await stripe('subscriptions?status=all&limit=100&' + customerFilter) : {data: []};
+    const subscriptions = customerId && !owner ? await stripe('subscriptions?status=all&limit=100&' + customerFilter) : {data: []};
     if (subscriptions.has_more) throw Error('Too many subscriptions to verify');
     const subs = subscriptions.data;
-    const member = paidSubscription(subs, validPrices) || preview;
+    const member = owner || preview || paidSubscription(subs, validPrices);
     if (action === 'status') {
       const amount = billingAccess && !member ? await monthlyAmount() : null;
       return reply({ member, checkout: billingAccess && billing === 'live', manage: !!customerId,
-        tester: preview, testCheckout: billingAccess && billing === 'test' && !member, amount });
+        owner, tester: preview, testCheckout: billingAccess && billing === 'test' && !member, amount });
     }
     if (action === 'checkout') {
       if (subs.some((s: {status: string}) => !['canceled', 'incomplete_expired'].includes(s.status))) {

@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
     TEILOG_BILLING_MODE:'test',
     TEILOG_PREMIUM_TEST_USERS:uid
   };
-  let handler, paid = false, paymentStatus = 'active', checkoutCalls = 0, published = 0, session, authDown = false;
+  let handler, paid = false, paymentStatus = 'active', checkoutCalls = 0, published = 0, session, authDown = false, owner = false;
   let createKey;
   const now = Date.now();
   const cutoff = new Date(now + 9*3600000 - 86400000).toISOString().slice(0,10).replaceAll('-','');
@@ -31,6 +31,10 @@ const assert = require('node:assert/strict');
         return token === 'Bearer valid' ? Response.json({id:uid}) : new Response(null,{status:401});
       }
       assert.equal(options.headers.get('Authorization'),'Bearer service');
+      if (pathname.endsWith('/teilog_premium_owners')) {
+        assert.equal(new URL(url).searchParams.get('user_id'),'eq.'+uid);
+        return Response.json(owner ? [{user_id:uid}] : []);
+      }
       if (pathname.endsWith('/teilog_premium_customers')) return Response.json([{customer_id:'cus_example'}]);
       if (pathname.endsWith('/teilog_store_premium_snapshot')) { published++; return Response.json(true); }
       if (pathname.endsWith('/teilog_premium_daily')) {
@@ -99,6 +103,14 @@ const assert = require('node:assert/strict');
   config.TEILOG_PREMIUM_TEST_USERS='';
   assert.equal((await call(race)).status,403);
   assert.equal((await call({action:'checkout',amount:400})).status,409);
+  owner = true;
+  const ownerStatus = await (await call({action:'status'})).json();
+  assert.equal(ownerStatus.owner,true);
+  assert.equal(ownerStatus.member,true);
+  assert.equal(ownerStatus.checkout,false);
+  assert.equal((await call(race)).status,200);
+  owner = false;
+  assert.equal((await call(race)).status,403);
   authDown = true;
   assert.equal((await call({action:'status'})).status,503);
   authDown = false;

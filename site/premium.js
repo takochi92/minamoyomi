@@ -69,7 +69,7 @@
     if (!account.identity()) {
       box.append(el('p','マイノートでログインすると、会員状況を確認できます。'),link('ログインへ','/mynote#note-account'));
     } else if (state?.member) {
-      box.append(el('p',state.tester ? 'プレミアムの試用中です。' : 'プレミアム会員です。'),link('収支グラフを開く','/mynote#premium-chart'));
+      box.append(el('p',state.owner ? 'オーナー権限でプレミアムをご利用中です。' : state.tester ? 'プレミアムの試用中です。' : 'プレミアム会員です。'),link('収支グラフを開く','/mynote#premium-chart'));
     } else if (finished) {
       box.append(el('p','会員状態の反映を確認しています。'),button('会員状態を確認',function(){load();}));
     } else if (!state?.checkout) {
