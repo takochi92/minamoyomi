@@ -107,7 +107,10 @@ def analyze(captures, date, venue, races, prof):
         if not (d / "manifest.json").is_file():
             reports.append({"race": race, "capture": "missing"})
             continue
-        r, rep = analyze_race(d, prof, date, venue, race)
+        try:
+            r, rep = analyze_race(d, prof, date, venue, race)
+        except Exception as e:          # one bad race must not lose the others; it is reported
+            r, rep = [], {"race": race, "capture": "ok", "analysis_error": f"{type(e).__name__}: {e}"[:200]}
         rows += r
         reports.append(rep)
     return rows, reports
@@ -162,7 +165,10 @@ def run(args):
         path = write(args.date, args.venue, rows, reports, prof, Path(args.out))
         summary = self_check(path, rows, reports, races)
         if args.store and summary["pass"]:
-            summary["store"] = im.Store(Path(args.store)).upsert(rows)
+            # only metrics that matched the official numbers go into the ratings
+            adopted = {cfg["metric"] for cfg in prof["shots"].values() if cfg.get("adopted")}
+            summary["store"] = im.Store(Path(args.store)).upsert([r for r in rows if r["metric"] in adopted])
+            summary["not_adopted"] = sorted({r["metric"] for r in rows} - adopted)
         print(json.dumps(summary, ensure_ascii=False))
         print("saved:", path.relative_to(ROOT) if path.is_relative_to(ROOT) else path)
         return 0 if summary["pass"] else 1

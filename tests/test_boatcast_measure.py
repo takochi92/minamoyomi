@@ -168,3 +168,9 @@ def test_line_correction_brings_times_to_the_common_line():
     bm.line_correct(recs, .0125)
     assert [r["seconds"] for r in recs] == [3.5, 3.5]
     assert recs[0]["seconds_raw"] == 3.0
+
+
+def test_a_colour_seen_on_several_passes_anchors_nothing():
+    recs = bm.assign_by_colour(passes([None, None, 344, 213, 218, 55, 216]), [1, 2, 3, 4, 5, 6], COLOURS)
+    boats = [r.get("boat") for r in recs if r.get("boat")]
+    assert len(boats) == len(set(boats))

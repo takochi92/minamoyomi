@@ -23,7 +23,7 @@ FPS_MAX_GAP = .05
 JUMP_LAGS = (4, 12)           # frames: a point brightens compared with 4..12 frames before
 JUMP_THRESHOLD = 80.0         # grey levels (0..255)
 MOTION_THRESHOLD = 40.0       # grey levels changed within 2 frames
-MOTION_MIN_COUNT = 4          # band samples moving at once
+MOTION_MIN_COUNT = 8           # band samples moving at once (4 let rough water make false curves on 11/13)
 MAX_RESIDUAL_FRAMES = 1.6     # spread of the curve around its fit
 MIN_COVER = .5                # share of path columns between the gates that carry the curve
 PLATE_COLOURS = {1: (235, 235, 235), 2: (25, 25, 25), 3: (225, 40, 60), 4: (30, 120, 220),
@@ -131,7 +131,8 @@ def ridges(count, min_count=MOTION_MIN_COUNT, half=4):
             fi = int(round(g.mean()))
             lo, hi = max(0, fi - half), min(T, fi + half + 1)
             w = count[lo:hi, si]
-            out.append((si, float((np.arange(lo, hi) * w).sum() / w.sum())))
+            if w.sum() > 0:
+                out.append((si, float((np.arange(lo, hi) * w).sum() / w.sum())))
     return np.array(out) if out else np.zeros((0, 2))
 
 
@@ -162,6 +163,7 @@ def _fit(s, t, deg, rounds=5, k=3.0):
 
 def curves(ev, n_s, *, seed=(.4, .6), tol=3.0, min_gap=30):
     """Group onsets into one curve per boat: bunch them in the seed columns, then grow along the path."""
+    ev = ev[np.isfinite(ev).all(1)] if len(ev) else ev
     if not len(ev):
         return []
     s, t = ev[:, 0], ev[:, 1]
@@ -183,7 +185,13 @@ def curves(ev, n_s, *, seed=(.4, .6), tol=3.0, min_gap=30):
         m = sel & (t >= min(g) - 1) & (t <= max(g) + 1)
         for it in range(10):
             deg = 1 if it < 2 or m.sum() < 40 else 2
-            coef = np.polyfit(s[m], t[m], deg)
+            if m.sum() <= deg + 1:
+                break
+            try:
+                coef = np.polyfit(s[m], t[m], deg)
+            except np.linalg.LinAlgError:
+                m[:] = False
+                break
             pred = np.polyval(coef, s)
             near = np.nonzero(np.abs(t - pred) < tol)[0]
             best = {}
@@ -196,7 +204,8 @@ def curves(ev, n_s, *, seed=(.4, .6), tol=3.0, min_gap=30):
             if (m2 == m).all():
                 break
             m = m2
-        out.append((s[m], t[m]))
+        if m.sum() >= 3:
+            out.append((s[m], t[m]))
     # the same boat must not be found twice
     out.sort(key=lambda c: np.median(c[1]))
     uniq = []
@@ -346,12 +355,16 @@ def assign_by_colour(records, boats, colours):
         elif r["colour"] == 4 and seen5:
             r["colour"] = 6
     # drop repeated anchors (same colour twice in a row): keep the one with more points
-    anchors = [i for i, r in enumerate(records) if r["colour"] in boats]
-    for a, b in zip(anchors, anchors[1:]):
-        if records[a]["colour"] == records[b]["colour"]:
-            weaker = a if records[a]["points"] < records[b]["points"] else b
-            records[weaker]["colour"] = None
-            records[weaker]["reasons"].append("duplicate_pass")
+    # the same colour on several passes: a boat cannot pass twice, so none of them anchors
+    seen = {}
+    for i, r in enumerate(records):
+        if r["colour"] in boats:
+            seen.setdefault(r["colour"], []).append(i)
+    for colour, idx in seen.items():
+        if len(idx) > 1:
+            for i in idx:
+                records[i]["colour"] = None
+                records[i]["reasons"].append("colour_seen_twice")
     anchors = [i for i, r in enumerate(records) if r["colour"] in boats]
     if [records[i]["colour"] for i in anchors] != sorted(records[i]["colour"] for i in anchors):
         for r in records:
@@ -369,8 +382,7 @@ def assign_by_colour(records, boats, colours):
         bounds.append((a, b, [x for x in boats if records[a]["colour"] < x < records[b]["colour"]]))
     bounds.append((anchors[-1], None, [x for x in boats if x > records[anchors[-1]]["colour"]]))
     for a, b, need in bounds:
-        idx = [i for i in range(len(records)) if (a is None or i > a) and (b is None or i < b)
-               and "duplicate_pass" not in records[i]["reasons"]]
+        idx = [i for i in range(len(records)) if (a is None or i > a) and (b is None or i < b)]
         if not need:
             for i in idx:
                 records[i]["reasons"].append("extra_pass")

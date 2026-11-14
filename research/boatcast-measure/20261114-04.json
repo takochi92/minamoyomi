@@ -1,0 +1,4828 @@
+{
+ "schema": 1,
+ "date": "20261114",
+ "venue": "04",
+ "created_at": "2026-11-15T01:35:38+09:00",
+ "method": "boatcast-fixed-camera-space-time-v1",
+ "profile_established": {
+  "date": "20261114",
+  "race": 11
+ },
+ "rows": [
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 3,
+   "motor": 14,
+   "rider": "4228",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1047,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 5,
+   "motor": 63,
+   "rider": "4906",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1813,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 2,
+   "motor": 61,
+   "rider": "3921",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2659,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 3,
+   "motor": 14,
+   "rider": "4228",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2929,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 4,
+   "motor": 38,
+   "rider": "3474",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2881,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 5,
+   "motor": 63,
+   "rider": "4906",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2654,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 1,
+   "boat": 6,
+   "motor": 66,
+   "rider": "4636",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2737,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 3,
+   "motor": 48,
+   "rider": "3912",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1363,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 4,
+   "motor": 69,
+   "rider": "3467",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0781,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 2,
+   "motor": 57,
+   "rider": "4365",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.263,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 3,
+   "motor": 48,
+   "rider": "3912",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2423,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 4,
+   "motor": 69,
+   "rider": "3467",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2737,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 5,
+   "motor": 13,
+   "rider": "5388",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.202,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 2,
+   "boat": 6,
+   "motor": 70,
+   "rider": "5141",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.1761,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 1,
+   "motor": 11,
+   "rider": "4894",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0328,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 2,
+   "motor": 47,
+   "rider": "4818",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 0.9812,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 3,
+   "motor": 16,
+   "rider": "3900",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0767,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 4,
+   "motor": 39,
+   "rider": "3503",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0593,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 5,
+   "motor": 29,
+   "rider": "4888",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.156,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 6,
+   "motor": 15,
+   "rider": "3385",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0233,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 2,
+   "motor": 47,
+   "rider": "4818",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.192,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 3,
+   "motor": 16,
+   "rider": "3900",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.1919,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 4,
+   "motor": 39,
+   "rider": "3503",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2138,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 3,
+   "boat": 5,
+   "motor": 29,
+   "rider": "4888",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.2167,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 1,
+   "motor": 33,
+   "rider": "3475",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.121,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 2,
+   "motor": 37,
+   "rider": "4640",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0877,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 3,
+   "motor": 40,
+   "rider": "4331",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.116,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 4,
+   "motor": 17,
+   "rider": "4404",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1747,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 5,
+   "motor": 18,
+   "rider": "4405",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1087,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 1,
+   "motor": 33,
+   "rider": "3475",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4649,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 2,
+   "motor": 37,
+   "rider": "4640",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5169,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 3,
+   "motor": 40,
+   "rider": "4331",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4895,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 4,
+   "motor": 17,
+   "rider": "4404",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4724,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 5,
+   "motor": 18,
+   "rider": "4405",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4496,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 4,
+   "boat": 6,
+   "motor": 34,
+   "rider": "4190",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4889,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 5,
+   "motor": 65,
+   "rider": "4308",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0598,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 6,
+   "motor": 20,
+   "rider": "4630",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0086,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 1,
+   "motor": 71,
+   "rider": "3580",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5007,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 3,
+   "motor": 31,
+   "rider": "3920",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5425,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 4,
+   "motor": 35,
+   "rider": "3370",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4529,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 5,
+   "motor": 65,
+   "rider": "4308",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4802,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 5,
+   "boat": 6,
+   "motor": 20,
+   "rider": "4630",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4929,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 1,
+   "motor": 24,
+   "rider": "4383",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0723,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 2,
+   "motor": 36,
+   "rider": "4642",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0806,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 3,
+   "motor": 45,
+   "rider": "4574",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1205,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 4,
+   "motor": 27,
+   "rider": "5351",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.183,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 5,
+   "motor": 30,
+   "rider": "5402",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1128,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 6,
+   "boat": 6,
+   "motor": 61,
+   "rider": "3921",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0506,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 3,
+   "motor": 69,
+   "rider": "3467",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.234,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 4,
+   "motor": 14,
+   "rider": "4228",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1405,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 5,
+   "motor": 47,
+   "rider": "4818",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1335,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 6,
+   "motor": 53,
+   "rider": "3647",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1959,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 1,
+   "motor": 67,
+   "rider": "5271",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.463,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 2,
+   "motor": 38,
+   "rider": "3474",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5279,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 3,
+   "motor": 69,
+   "rider": "3467",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5345,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 4,
+   "motor": 14,
+   "rider": "4228",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5522,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 5,
+   "motor": 47,
+   "rider": "4818",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.482,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 7,
+   "boat": 6,
+   "motor": 53,
+   "rider": "3647",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5092,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 8,
+   "boat": 3,
+   "motor": 66,
+   "rider": "4636",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1401,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 8,
+   "boat": 4,
+   "motor": 48,
+   "rider": "3912",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0839,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 8,
+   "boat": 5,
+   "motor": 39,
+   "rider": "3503",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.109,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 8,
+   "boat": 6,
+   "motor": 73,
+   "rider": "4247",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1347,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 3,
+   "motor": 62,
+   "rider": "3977",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1112,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 4,
+   "motor": 34,
+   "rider": "4190",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0936,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 5,
+   "motor": 37,
+   "rider": "4640",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1139,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 6,
+   "motor": 24,
+   "rider": "4383",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1144,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 1,
+   "motor": 13,
+   "rider": "5388",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4194,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 3,
+   "motor": 62,
+   "rider": "3977",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5259,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 4,
+   "motor": 34,
+   "rider": "4190",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4964,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 10,
+   "boat": 5,
+   "motor": 37,
+   "rider": "4640",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5231,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 4,
+   "motor": 40,
+   "rider": "4331",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1553,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 5,
+   "motor": 16,
+   "rider": "3900",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0349,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 6,
+   "motor": 33,
+   "rider": "3475",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0292,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 2,
+   "motor": 31,
+   "rider": "3920",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4585,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 3,
+   "motor": 36,
+   "rider": "4642",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5359,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 4,
+   "motor": 40,
+   "rider": "4331",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5222,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 5,
+   "motor": 16,
+   "rider": "3900",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.5204,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 11,
+   "boat": 6,
+   "motor": 33,
+   "rider": "3475",
+   "metric": "straight",
+   "source": "video",
+   "seconds": 3.4774,
+   "profile": "04-straight-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 12,
+   "boat": 4,
+   "motor": 74,
+   "rider": "4570",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.1274,
+   "profile": "04-turn1-v1",
+   "parts": [
+    "リング×2"
+   ]
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 12,
+   "boat": 5,
+   "motor": 23,
+   "rider": "4199",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0786,
+   "profile": "04-turn1-v1",
+   "parts": []
+  },
+  {
+   "schema": 1,
+   "date": "20261114",
+   "venue": "04",
+   "race": 12,
+   "boat": 6,
+   "motor": 26,
+   "rider": "4737",
+   "metric": "acceleration",
+   "source": "video",
+   "seconds": 1.0452,
+   "profile": "04-turn1-v1",
+   "parts": []
+  }
+ ],
+ "report": [
+  {
+   "race": 1,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 992,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      176.766666,
+      210.1
+     ],
+     "curves": 6,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 87,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 1,
+       "residual_frames": 0.439,
+       "cover": 0.582,
+       "t_a": 188.4837,
+       "t_b": 189.313,
+       "seconds": 0.8293,
+       "span": [
+        84,
+        184
+       ],
+       "v_a": 455.1,
+       "v_b": 636.1,
+       "line_px": 93.74,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 182,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.105,
+       "cover": 1.009,
+       "t_a": 192.6882,
+       "t_b": 193.7769,
+       "seconds": 1.0888,
+       "span": [
+        0,
+        183
+       ],
+       "v_a": 267.6,
+       "v_b": 825.1,
+       "line_px": 70.25,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 166,
+       "reasons": [],
+       "hue": 345.0,
+       "hue_pixels": 164,
+       "residual_frames": 0.96,
+       "cover": 1.009,
+       "t_a": 196.6612,
+       "t_b": 197.7659,
+       "seconds": 1.1047,
+       "span": [
+        3,
+        171
+       ],
+       "v_a": 289.8,
+       "v_b": 636.5,
+       "line_px": -63.57,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 4,
+       "points": 158,
+       "reasons": [
+        "noisy_curve",
+        "identity_unclear"
+       ],
+       "hue": 210.6,
+       "hue_pixels": 203,
+       "residual_frames": 1.61,
+       "cover": 0.845,
+       "t_a": 200.1721,
+       "t_b": 201.4567,
+       "seconds": 1.2846,
+       "span": [
+        0,
+        183
+       ],
+       "v_a": 213.8,
+       "v_b": 860.0,
+       "line_px": 85.51,
+       "colour": null
+      },
+      {
+       "order": 5,
+       "points": 182,
+       "reasons": [],
+       "hue": 52.4,
+       "hue_pixels": 120,
+       "residual_frames": 0.938,
+       "cover": 0.982,
+       "t_a": 204.471,
+       "t_b": 205.6523,
+       "seconds": 1.1813,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 244.5,
+       "v_b": 781.7,
+       "line_px": 79.97,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 65,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.582,
+       "cover": 0.236,
+       "t_a": 209.5704,
+       "t_b": 210.0,
+       "seconds": 0.4296,
+       "span": [
+        0,
+        65
+       ],
+       "v_a": 233.4,
+       "v_b": null,
+       "line_px": 58.34,
+       "colour": null
+      }
+     ]
+    },
+    "straight": {
+     "frames": 821,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      214.866666,
+      242.5
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 267,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.675,
+       "cover": 0.42,
+       "t_a": 215.0667,
+       "t_b": 217.3201,
+       "seconds": 2.1404,
+       "span": [
+        222,
+        618
+       ],
+       "v_a": 726.9,
+       "v_b": 272.6,
+       "line_px": 8.9,
+       "plate": 1,
+       "plate_distance": 48.23639704621397,
+       "boat": 1,
+       "seconds_raw": 2.2534
+      },
+      {
+       "order": 2,
+       "points": 507,
+       "reasons": [],
+       "residual_frames": 0.757,
+       "cover": 0.895,
+       "t_a": 219.1185,
+       "t_b": 222.2082,
+       "seconds": 3.2659,
+       "span": [
+        0,
+        587
+       ],
+       "v_a": 593.5,
+       "v_b": 299.5,
+       "line_px": -13.87,
+       "plate": 6,
+       "plate_distance": 97.57433064079918,
+       "boat": 2,
+       "seconds_raw": 3.0898
+      },
+      {
+       "order": 3,
+       "points": 479,
+       "reasons": [],
+       "residual_frames": 0.756,
+       "cover": 0.88,
+       "t_a": 223.0149,
+       "t_b": 226.4983,
+       "seconds": 3.2929,
+       "span": [
+        0,
+        569
+       ],
+       "v_a": 534.6,
+       "v_b": 263.6,
+       "line_px": 15.0,
+       "plate": 3,
+       "plate_distance": 35.22782990761707,
+       "boat": 3,
+       "seconds_raw": 3.4834
+      },
+      {
+       "order": 4,
+       "points": 496,
+       "reasons": [],
+       "residual_frames": 0.906,
+       "cover": 0.871,
+       "t_a": 226.6085,
+       "t_b": 230.0489,
+       "seconds": 3.2881,
+       "span": [
+        0,
+        583
+       ],
+       "v_a": 543.3,
+       "v_b": 266.4,
+       "line_px": 12.0,
+       "plate": 4,
+       "plate_distance": 47.60252094164762,
+       "boat": 4,
+       "seconds_raw": 3.4405
+      },
+      {
+       "order": 5,
+       "points": 515,
+       "reasons": [],
+       "residual_frames": 0.87,
+       "cover": 0.873,
+       "t_a": 230.8286,
+       "t_b": 233.9298,
+       "seconds": 3.2654,
+       "span": [
+        0,
+        599
+       ],
+       "v_a": 596.3,
+       "v_b": 297.1,
+       "line_px": -12.93,
+       "plate": 5,
+       "plate_distance": 31.416556144810016,
+       "boat": 5,
+       "seconds_raw": 3.1012
+      },
+      {
+       "order": 6,
+       "points": 523,
+       "reasons": [],
+       "residual_frames": 0.802,
+       "cover": 0.885,
+       "t_a": 236.207,
+       "t_b": 239.2902,
+       "seconds": 3.2737,
+       "span": [
+        0,
+        595
+       ],
+       "v_a": 585.7,
+       "v_b": 302.5,
+       "line_px": -15.0,
+       "plate": 5,
+       "plate_distance": 98.60147057726877,
+       "boat": 6,
+       "seconds_raw": 3.0832
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 2,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 959,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      177.6,
+      209.8
+     ],
+     "curves": 4,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 181,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.009,
+       "cover": 1.009,
+       "t_a": 191.0246,
+       "t_b": 192.1203,
+       "seconds": 1.0956,
+       "span": [
+        3,
+        184
+       ],
+       "v_a": 271.4,
+       "v_b": 771.6,
+       "line_px": 38.91,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 172,
+       "reasons": [],
+       "hue": 348.1,
+       "hue_pixels": 39,
+       "residual_frames": 1.362,
+       "cover": 1.009,
+       "t_a": 194.7858,
+       "t_b": 195.9221,
+       "seconds": 1.1363,
+       "span": [
+        0,
+        179
+       ],
+       "v_a": 227.5,
+       "v_b": 1300.2,
+       "line_px": 68.91,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 3,
+       "points": 185,
+       "reasons": [],
+       "hue": 214.1,
+       "hue_pixels": 75,
+       "residual_frames": 1.142,
+       "cover": 1.009,
+       "t_a": 198.4626,
+       "t_b": 199.5407,
+       "seconds": 1.0781,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 267.1,
+       "v_b": 864.5,
+       "line_px": 48.5,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 4,
+       "points": 117,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": 60.0,
+       "hue_pixels": 35,
+       "residual_frames": 0.743,
+       "cover": 0.7,
+       "t_a": 202.413,
+       "t_b": 203.2648,
+       "seconds": 0.8518,
+       "span": [
+        0,
+        118
+       ],
+       "v_a": 277.2,
+       "v_b": 3789.9,
+       "line_px": -53.53,
+       "colour": null
+      }
+     ]
+    },
+    "straight": {
+     "frames": 828,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      211.833333,
+      239.7
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 280,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "different_line"
+       ],
+       "residual_frames": 0.482,
+       "cover": 0.376,
+       "t_a": 212.0333,
+       "t_b": 214.3485,
+       "seconds": 2.0,
+       "span": [
+        224,
+        596
+       ],
+       "v_a": 543.5,
+       "v_b": 274.7,
+       "line_px": 24.82,
+       "plate": 1,
+       "plate_distance": 46.82947789587238,
+       "boat": 1,
+       "seconds_raw": 2.3152
+      },
+      {
+       "order": 2,
+       "points": 481,
+       "reasons": [],
+       "residual_frames": 0.738,
+       "cover": 0.827,
+       "t_a": 217.3894,
+       "t_b": 220.3363,
+       "seconds": 3.263,
+       "span": [
+        0,
+        584
+       ],
+       "v_a": 610.8,
+       "v_b": 317.0,
+       "line_px": -24.89,
+       "plate": 6,
+       "plate_distance": 99.37555031294167,
+       "boat": 2,
+       "seconds_raw": 2.9469
+      },
+      {
+       "order": 3,
+       "points": 410,
+       "reasons": [],
+       "residual_frames": 0.638,
+       "cover": 0.69,
+       "t_a": 220.9645,
+       "t_b": 223.9783,
+       "seconds": 3.2423,
+       "span": [
+        0,
+        565
+       ],
+       "v_a": 599.3,
+       "v_b": 309.4,
+       "line_px": -18.0,
+       "plate": 3,
+       "plate_distance": 41.75224544859833,
+       "boat": 3,
+       "seconds_raw": 3.0137
+      },
+      {
+       "order": 4,
+       "points": 357,
+       "reasons": [],
+       "residual_frames": 0.843,
+       "cover": 0.593,
+       "t_a": 224.617,
+       "t_b": 227.8098,
+       "seconds": 3.2737,
+       "span": [
+        1,
+        573
+       ],
+       "v_a": 569.4,
+       "v_b": 291.1,
+       "line_px": -6.37,
+       "plate": 4,
+       "plate_distance": 45.97009897748753,
+       "boat": 4,
+       "seconds_raw": 3.1928
+      },
+      {
+       "order": 5,
+       "points": 355,
+       "reasons": [],
+       "residual_frames": 0.835,
+       "cover": 0.637,
+       "t_a": 228.1806,
+       "t_b": 231.1713,
+       "seconds": 3.202,
+       "span": [
+        0,
+        573
+       ],
+       "v_a": 596.3,
+       "v_b": 313.9,
+       "line_px": -16.64,
+       "plate": 5,
+       "plate_distance": 32.69556544854363,
+       "boat": 5,
+       "seconds_raw": 2.9907
+      },
+      {
+       "order": 6,
+       "points": 482,
+       "reasons": [],
+       "residual_frames": 0.628,
+       "cover": 0.822,
+       "t_a": 233.5955,
+       "t_b": 236.7004,
+       "seconds": 3.1761,
+       "span": [
+        0,
+        580
+       ],
+       "v_a": 542.6,
+       "v_b": 311.9,
+       "line_px": -5.61,
+       "plate": 5,
+       "plate_distance": 77.3983203952127,
+       "boat": 6,
+       "seconds_raw": 3.1049
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 3,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1019,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      176.166666,
+      210.366666
+     ],
+     "curves": 6,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 162,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.976,
+       "cover": 1.009,
+       "t_a": 187.0344,
+       "t_b": 188.0672,
+       "seconds": 1.0328,
+       "span": [
+        9,
+        172
+       ],
+       "v_a": 289.4,
+       "v_b": 807.3,
+       "line_px": -10.15,
+       "colour": null,
+       "boat": 1
+      },
+      {
+       "order": 2,
+       "points": 146,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.408,
+       "cover": 0.873,
+       "t_a": 192.8685,
+       "t_b": 193.8496,
+       "seconds": 0.9812,
+       "span": [
+        38,
+        184
+       ],
+       "v_a": 325.3,
+       "v_b": 721.6,
+       "line_px": 43.31,
+       "colour": null,
+       "boat": 2
+      },
+      {
+       "order": 3,
+       "points": 172,
+       "reasons": [],
+       "hue": 342.6,
+       "hue_pixels": 30,
+       "residual_frames": 0.719,
+       "cover": 1.009,
+       "t_a": 195.4917,
+       "t_b": 196.5684,
+       "seconds": 1.0767,
+       "span": [
+        13,
+        184
+       ],
+       "v_a": 304.9,
+       "v_b": 619.5,
+       "line_px": -9.21,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 4,
+       "points": 163,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 17,
+       "residual_frames": 0.708,
+       "cover": 1.009,
+       "t_a": 198.3453,
+       "t_b": 199.4046,
+       "seconds": 1.0593,
+       "span": [
+        9,
+        183
+       ],
+       "v_a": 320.2,
+       "v_b": 591.2,
+       "line_px": -34.44,
+       "colour": null,
+       "boat": 4
+      },
+      {
+       "order": 5,
+       "points": 185,
+       "reasons": [],
+       "hue": 51.5,
+       "hue_pixels": 124,
+       "residual_frames": 1.083,
+       "cover": 1.009,
+       "t_a": 201.6428,
+       "t_b": 202.7988,
+       "seconds": 1.156,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 244.4,
+       "v_b": 859.9,
+       "line_px": 46.34,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 165,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 8,
+       "residual_frames": 0.857,
+       "cover": 1.009,
+       "t_a": 206.4184,
+       "t_b": 207.4417,
+       "seconds": 1.0233,
+       "span": [
+        20,
+        184
+       ],
+       "v_a": 321.0,
+       "v_b": 651.0,
+       "line_px": -10.9,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 750,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      213.733333,
+      239
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 295,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.482,
+       "cover": 0.393,
+       "t_a": 213.9333,
+       "t_b": 216.1489,
+       "seconds": 2.2213,
+       "span": [
+        215,
+        577
+       ],
+       "v_a": 827.2,
+       "v_b": 285.5,
+       "line_px": -0.46,
+       "plate": 1,
+       "plate_distance": 51.995192085422666,
+       "boat": 1,
+       "seconds_raw": 2.2155
+      },
+      {
+       "order": 2,
+       "points": 491,
+       "reasons": [],
+       "residual_frames": 0.687,
+       "cover": 0.839,
+       "t_a": 219.0139,
+       "t_b": 222.1589,
+       "seconds": 3.192,
+       "span": [
+        0,
+        574
+       ],
+       "v_a": 553.5,
+       "v_b": 302.4,
+       "line_px": -3.69,
+       "plate": 6,
+       "plate_distance": 95.75359001102778,
+       "boat": 2,
+       "seconds_raw": 3.1451
+      },
+      {
+       "order": 3,
+       "points": 422,
+       "reasons": [],
+       "residual_frames": 0.54,
+       "cover": 0.754,
+       "t_a": 221.8395,
+       "t_b": 224.9933,
+       "seconds": 3.1919,
+       "span": [
+        0,
+        562
+       ],
+       "v_a": 534.6,
+       "v_b": 307.0,
+       "line_px": -3.0,
+       "plate": 3,
+       "plate_distance": 52.08646657242167,
+       "boat": 3,
+       "seconds_raw": 3.1538
+      },
+      {
+       "order": 4,
+       "points": 433,
+       "reasons": [],
+       "residual_frames": 0.559,
+       "cover": 0.793,
+       "t_a": 224.8463,
+       "t_b": 228.0104,
+       "seconds": 3.2138,
+       "span": [
+        0,
+        586
+       ],
+       "v_a": 541.4,
+       "v_b": 303.2,
+       "line_px": -3.91,
+       "plate": 4,
+       "plate_distance": 78.2368199762746,
+       "boat": 4,
+       "seconds_raw": 3.1641
+      },
+      {
+       "order": 5,
+       "points": 446,
+       "reasons": [],
+       "residual_frames": 0.648,
+       "cover": 0.802,
+       "t_a": 228.1639,
+       "t_b": 231.0942,
+       "seconds": 3.2167,
+       "span": [
+        0,
+        584
+       ],
+       "v_a": 600.4,
+       "v_b": 322.7,
+       "line_px": -22.55,
+       "plate": 5,
+       "plate_distance": 87.03591212827037,
+       "boat": 5,
+       "seconds_raw": 2.9303
+      },
+      {
+       "order": 6,
+       "points": 490,
+       "reasons": [
+        "different_line"
+       ],
+       "residual_frames": 0.731,
+       "cover": 0.837,
+       "t_a": 232.7429,
+       "t_b": 236.422,
+       "seconds": 3.2812,
+       "span": [
+        0,
+        585
+       ],
+       "v_a": 507.7,
+       "v_b": 249.2,
+       "line_px": 31.33,
+       "plate": 5,
+       "plate_distance": 96.79101197941883,
+       "boat": 6,
+       "seconds_raw": 3.6791
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 4,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 907,
+     "skipped": 1,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      173.7,
+      204.233333
+     ],
+     "curves": 8,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 20,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "wrong_direction",
+        "extra_pass"
+       ],
+       "hue": 66.6,
+       "hue_pixels": 35,
+       "residual_frames": 0.821,
+       "cover": 0.0,
+       "t_a": 178.3629,
+       "t_b": 175.6968,
+       "seconds": -2.6661,
+       "span": [
+        156,
+        184
+       ],
+       "v_a": null,
+       "v_b": null,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 184,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.144,
+       "cover": 1.009,
+       "t_a": 186.5822,
+       "t_b": 187.7032,
+       "seconds": 1.121,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 251.9,
+       "v_b": 887.9,
+       "line_px": 75.56,
+       "colour": null,
+       "boat": 1
+      },
+      {
+       "order": 3,
+       "points": 184,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.729,
+       "cover": 1.0,
+       "t_a": 190.2895,
+       "t_b": 191.3772,
+       "seconds": 1.0877,
+       "span": [
+        6,
+        184
+       ],
+       "v_a": 267.1,
+       "v_b": 833.6,
+       "line_px": 54.68,
+       "colour": null,
+       "boat": 2
+      },
+      {
+       "order": 4,
+       "points": 182,
+       "reasons": [],
+       "hue": 344.8,
+       "hue_pixels": 187,
+       "residual_frames": 0.981,
+       "cover": 1.009,
+       "t_a": 193.134,
+       "t_b": 194.2499,
+       "seconds": 1.116,
+       "span": [
+        0,
+        182
+       ],
+       "v_a": 259.1,
+       "v_b": 824.8,
+       "line_px": 79.79,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 5,
+       "points": 184,
+       "reasons": [],
+       "hue": 213.1,
+       "hue_pixels": 60,
+       "residual_frames": 1.084,
+       "cover": 1.009,
+       "t_a": 197.0,
+       "t_b": 198.1747,
+       "seconds": 1.1747,
+       "span": [
+        1,
+        184
+       ],
+       "v_a": 244.9,
+       "v_b": 795.8,
+       "line_px": 34.53,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 6,
+       "points": 168,
+       "reasons": [],
+       "hue": 54.6,
+       "hue_pixels": 100,
+       "residual_frames": 0.945,
+       "cover": 1.009,
+       "t_a": 200.5218,
+       "t_b": 201.6305,
+       "seconds": 1.1087,
+       "span": [
+        2,
+        183
+       ],
+       "v_a": 263.2,
+       "v_b": 806.1,
+       "line_px": 71.96,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 7,
+       "points": 35,
+       "reasons": [
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.401,
+       "cover": 0.0,
+       "t_a": 202.7691,
+       "t_b": 202.8687,
+       "seconds": 0.0996,
+       "span": [
+        5,
+        184
+       ],
+       "v_a": 6287.9,
+       "v_b": 3405.3,
+       "colour": null
+      },
+      {
+       "order": 8,
+       "points": 73,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.413,
+       "cover": 0.291,
+       "t_a": 203.703,
+       "t_b": 204.13,
+       "seconds": 0.427,
+       "span": [
+        2,
+        71
+       ],
+       "v_a": 262.0,
+       "v_b": null,
+       "line_px": 41.96,
+       "colour": null
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1038,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      208.733333,
+      243.6
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 381,
+       "reasons": [],
+       "residual_frames": 0.413,
+       "cover": 0.859,
+       "t_a": 212.711,
+       "t_b": 215.953,
+       "seconds": 3.4649,
+       "span": [
+        0,
+        475
+       ],
+       "v_a": 526.1,
+       "v_b": 296.7,
+       "line_px": -17.55,
+       "plate": 1,
+       "plate_distance": 45.0832563153994,
+       "boat": 1,
+       "seconds_raw": 3.242
+      },
+      {
+       "order": 2,
+       "points": 347,
+       "reasons": [],
+       "residual_frames": 0.473,
+       "cover": 0.776,
+       "t_a": 216.6676,
+       "t_b": 219.8929,
+       "seconds": 3.5169,
+       "span": [
+        0,
+        499
+       ],
+       "v_a": 527.8,
+       "v_b": 298.5,
+       "line_px": -22.95,
+       "plate": 6,
+       "plate_distance": 96.35870484808314,
+       "boat": 2,
+       "seconds_raw": 3.2254
+      },
+      {
+       "order": 3,
+       "points": 224,
+       "reasons": [],
+       "residual_frames": 0.448,
+       "cover": 0.524,
+       "t_a": 219.502,
+       "t_b": 222.6852,
+       "seconds": 3.4895,
+       "span": [
+        1,
+        499
+       ],
+       "v_a": 527.6,
+       "v_b": 304.8,
+       "line_px": -24.12,
+       "plate": 3,
+       "plate_distance": 31.0322412983658,
+       "boat": 3,
+       "seconds_raw": 3.1832
+      },
+      {
+       "order": 4,
+       "points": 333,
+       "reasons": [],
+       "residual_frames": 0.509,
+       "cover": 0.744,
+       "t_a": 223.8029,
+       "t_b": 227.2974,
+       "seconds": 3.4724,
+       "span": [
+        0,
+        474
+       ],
+       "v_a": 476.7,
+       "v_b": 279.0,
+       "line_px": 1.74,
+       "plate": 4,
+       "plate_distance": 44.328320518603,
+       "boat": 4,
+       "seconds_raw": 3.4945
+      },
+      {
+       "order": 5,
+       "points": 309,
+       "reasons": [],
+       "residual_frames": 0.433,
+       "cover": 0.698,
+       "t_a": 227.0578,
+       "t_b": 230.3174,
+       "seconds": 3.4496,
+       "span": [
+        0,
+        447
+       ],
+       "v_a": 494.2,
+       "v_b": 305.2,
+       "line_px": -14.96,
+       "plate": 5,
+       "plate_distance": 27.62697956708261,
+       "boat": 5,
+       "seconds_raw": 3.2596
+      },
+      {
+       "order": 6,
+       "points": 251,
+       "reasons": [],
+       "residual_frames": 0.467,
+       "cover": 0.541,
+       "t_a": 230.0937,
+       "t_b": 233.6969,
+       "seconds": 3.4889,
+       "span": [
+        0,
+        456
+       ],
+       "v_a": 460.6,
+       "v_b": 271.2,
+       "line_px": 9.0,
+       "plate": 5,
+       "plate_distance": 103.6110515340907,
+       "boat": 6,
+       "seconds_raw": 3.6032
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 5,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 987,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      172.933333,
+      206.1
+     ],
+     "curves": 8,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 20,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "wrong_direction",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 4,
+       "residual_frames": 1.117,
+       "cover": 0.0,
+       "t_a": 182.5794,
+       "t_b": 175.2518,
+       "seconds": -7.3275,
+       "span": [
+        161,
+        184
+       ],
+       "v_a": null,
+       "v_b": null,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 33,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.381,
+       "cover": 0.164,
+       "t_a": 185.7072,
+       "t_b": 186.2776,
+       "seconds": 0.5704,
+       "span": [
+        126,
+        184
+       ],
+       "v_a": 921.3,
+       "v_b": 663.5,
+       "line_px": 94.0,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 185,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 2,
+       "residual_frames": 0.514,
+       "cover": 0.964,
+       "t_a": 188.9548,
+       "t_b": 190.0078,
+       "seconds": 1.0529,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 283.1,
+       "v_b": 797.4,
+       "line_px": 65.23,
+       "colour": null
+      },
+      {
+       "order": 4,
+       "points": 121,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": 343.9,
+       "hue_pixels": 50,
+       "residual_frames": 0.674,
+       "cover": 0.727,
+       "t_a": 191.8681,
+       "t_b": 192.7686,
+       "seconds": 0.9005,
+       "span": [
+        0,
+        121
+       ],
+       "v_a": 300.3,
+       "v_b": 1310.7,
+       "line_px": -58.35,
+       "colour": null
+      },
+      {
+       "order": 5,
+       "points": 74,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": 213.3,
+       "hue_pixels": 69,
+       "residual_frames": 0.615,
+       "cover": 0.455,
+       "t_a": 195.7973,
+       "t_b": 196.7606,
+       "seconds": 0.9633,
+       "span": [
+        97,
+        184
+       ],
+       "v_a": 390.1,
+       "v_b": 551.0,
+       "line_px": 92.71,
+       "colour": null
+      },
+      {
+       "order": 6,
+       "points": 174,
+       "reasons": [],
+       "hue": 56.8,
+       "hue_pixels": 25,
+       "residual_frames": 1.057,
+       "cover": 1.009,
+       "t_a": 199.8416,
+       "t_b": 200.9014,
+       "seconds": 1.0598,
+       "span": [
+        6,
+        184
+       ],
+       "v_a": 293.1,
+       "v_b": 711.6,
+       "line_px": -3.59,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 7,
+       "points": 23,
+       "reasons": [
+        "short_curve",
+        "wrong_direction",
+        "extra_pass"
+       ],
+       "hue": null,
+       "hue_pixels": 16,
+       "residual_frames": 0.623,
+       "cover": 0.0,
+       "t_a": 202.5284,
+       "t_b": 202.3359,
+       "seconds": -0.1925,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": null,
+       "v_b": 5471.9,
+       "colour": null
+      },
+      {
+       "order": 8,
+       "points": 148,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.182,
+       "cover": 0.982,
+       "t_a": 203.772,
+       "t_b": 204.7807,
+       "seconds": 1.0086,
+       "span": [
+        3,
+        167
+       ],
+       "v_a": 282.6,
+       "v_b": 955.8,
+       "line_px": -59.73,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1077,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      206.233333,
+      242.366666
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 455,
+       "reasons": [],
+       "residual_frames": 0.445,
+       "cover": 0.893,
+       "t_a": 211.5293,
+       "t_b": 215.1508,
+       "seconds": 3.5007,
+       "span": [
+        0,
+        503
+       ],
+       "v_a": 484.6,
+       "v_b": 261.4,
+       "line_px": 9.51,
+       "plate": 1,
+       "plate_distance": 48.51288488638869,
+       "boat": 1,
+       "seconds_raw": 3.6215
+      },
+      {
+       "order": 2,
+       "points": 466,
+       "reasons": [
+        "different_line"
+       ],
+       "residual_frames": 0.465,
+       "cover": 0.89,
+       "t_a": 215.3944,
+       "t_b": 218.289,
+       "seconds": 3.4933,
+       "span": [
+        0,
+        517
+       ],
+       "v_a": 590.5,
+       "v_b": 331.9,
+       "line_px": -47.14,
+       "plate": 6,
+       "plate_distance": 93.592200529745,
+       "boat": 2,
+       "seconds_raw": 2.8946
+      },
+      {
+       "order": 3,
+       "points": 424,
+       "reasons": [],
+       "residual_frames": 0.573,
+       "cover": 0.812,
+       "t_a": 218.3925,
+       "t_b": 221.9821,
+       "seconds": 3.5425,
+       "span": [
+        1,
+        533
+       ],
+       "v_a": 504.6,
+       "v_b": 259.4,
+       "line_px": 3.71,
+       "plate": 3,
+       "plate_distance": 30.36856927812043,
+       "boat": 3,
+       "seconds_raw": 3.5896
+      },
+      {
+       "order": 4,
+       "points": 454,
+       "reasons": [],
+       "residual_frames": 0.532,
+       "cover": 0.866,
+       "t_a": 221.7973,
+       "t_b": 225.136,
+       "seconds": 3.4529,
+       "span": [
+        0,
+        517
+       ],
+       "v_a": 491.0,
+       "v_b": 294.8,
+       "line_px": -9.0,
+       "plate": 4,
+       "plate_distance": 48.14561246884289,
+       "boat": 4,
+       "seconds_raw": 3.3386
+      },
+      {
+       "order": 5,
+       "points": 466,
+       "reasons": [],
+       "residual_frames": 0.431,
+       "cover": 0.883,
+       "t_a": 226.1474,
+       "t_b": 229.271,
+       "seconds": 3.4802,
+       "span": [
+        0,
+        509
+       ],
+       "v_a": 553.7,
+       "v_b": 305.5,
+       "line_px": -28.08,
+       "plate": 5,
+       "plate_distance": 27.820855486487112,
+       "boat": 5,
+       "seconds_raw": 3.1236
+      },
+      {
+       "order": 6,
+       "points": 468,
+       "reasons": [],
+       "residual_frames": 0.535,
+       "cover": 0.924,
+       "t_a": 229.7434,
+       "t_b": 233.003,
+       "seconds": 3.4929,
+       "span": [
+        0,
+        533
+       ],
+       "v_a": 531.7,
+       "v_b": 292.5,
+       "line_px": -18.38,
+       "plate": 5,
+       "plate_distance": 107.38831407560136,
+       "boat": 6,
+       "seconds_raw": 3.2595
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 6,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1017,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      174.566666,
+      208.733333
+     ],
+     "curves": 7,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 167,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 1,
+       "residual_frames": 0.575,
+       "cover": 1.0,
+       "t_a": 186.156,
+       "t_b": 187.2283,
+       "seconds": 1.0723,
+       "span": [
+        16,
+        184
+       ],
+       "v_a": 276.5,
+       "v_b": 795.1,
+       "line_px": 66.21,
+       "colour": null,
+       "boat": 1
+      },
+      {
+       "order": 2,
+       "points": 185,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.292,
+       "cover": 1.009,
+       "t_a": 190.385,
+       "t_b": 191.4656,
+       "seconds": 1.0806,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 266.0,
+       "v_b": 868.4,
+       "line_px": 39.31,
+       "colour": null,
+       "boat": 2
+      },
+      {
+       "order": 3,
+       "points": 180,
+       "reasons": [],
+       "hue": 341.6,
+       "hue_pixels": 119,
+       "residual_frames": 0.772,
+       "cover": 1.009,
+       "t_a": 195.4982,
+       "t_b": 196.6187,
+       "seconds": 1.1205,
+       "span": [
+        8,
+        184
+       ],
+       "v_a": 257.0,
+       "v_b": 831.7,
+       "line_px": 49.4,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 4,
+       "points": 185,
+       "reasons": [],
+       "hue": 214.4,
+       "hue_pixels": 96,
+       "residual_frames": 0.868,
+       "cover": 1.0,
+       "t_a": 198.53,
+       "t_b": 199.713,
+       "seconds": 1.183,
+       "span": [
+        3,
+        184
+       ],
+       "v_a": 240.2,
+       "v_b": 824.1,
+       "line_px": 73.83,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 5,
+       "points": 177,
+       "reasons": [],
+       "hue": 47.4,
+       "hue_pixels": 169,
+       "residual_frames": 1.235,
+       "cover": 1.009,
+       "t_a": 202.4417,
+       "t_b": 203.5545,
+       "seconds": 1.1128,
+       "span": [
+        8,
+        184
+       ],
+       "v_a": 271.2,
+       "v_b": 729.3,
+       "line_px": 2.28,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 153,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.828,
+       "cover": 1.009,
+       "t_a": 206.1255,
+       "t_b": 207.176,
+       "seconds": 1.0506,
+       "span": [
+        12,
+        182
+       ],
+       "v_a": 309.6,
+       "v_b": 647.3,
+       "line_px": -54.23,
+       "colour": null,
+       "boat": 6
+      },
+      {
+       "order": 7,
+       "points": 13,
+       "reasons": [
+        "noisy_curve",
+        "gates_not_covered",
+        "short_curve",
+        "wrong_direction",
+        "extra_pass"
+       ],
+       "hue": null,
+       "hue_pixels": 12,
+       "residual_frames": 2.072,
+       "cover": 0.055,
+       "t_a": 208.6333,
+       "t_b": 206.8998,
+       "seconds": -1.7335,
+       "span": [
+        140,
+        175
+       ],
+       "v_a": null,
+       "v_b": null,
+       "colour": null
+      }
+     ]
+    },
+    "straight": {
+     "frames": 814,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      213.1,
+      240.5
+     ],
+     "curves": 4,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 113,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_4_of_6"
+       ],
+       "residual_frames": 0.319,
+       "cover": 0.227,
+       "t_a": 216.5782,
+       "t_b": 219.9668,
+       "seconds": 3.3886,
+       "span": [
+        0,
+        145
+       ],
+       "v_a": 511.0,
+       "v_b": 281.5,
+       "plate": 6,
+       "plate_distance": 95.83710137519812
+      },
+      {
+       "order": 2,
+       "points": 113,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_4_of_6"
+       ],
+       "residual_frames": 0.318,
+       "cover": 0.224,
+       "t_a": 222.1446,
+       "t_b": 226.1042,
+       "seconds": 3.9596,
+       "span": [
+        0,
+        116
+       ],
+       "v_a": 507.7,
+       "v_b": 223.8,
+       "plate": 3,
+       "plate_distance": 33.529837458597974
+      },
+      {
+       "order": 3,
+       "points": 106,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_4_of_6"
+       ],
+       "residual_frames": 0.307,
+       "cover": 0.222,
+       "t_a": 228.85,
+       "t_b": 232.3468,
+       "seconds": 3.4969,
+       "span": [
+        0,
+        145
+       ],
+       "v_a": 457.5,
+       "v_b": 285.7,
+       "plate": 5,
+       "plate_distance": 31.96873472629156
+      },
+      {
+       "order": 4,
+       "points": 91,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_4_of_6"
+       ],
+       "residual_frames": 0.398,
+       "cover": 0.202,
+       "t_a": 232.818,
+       "t_b": 237.3897,
+       "seconds": 4.5717,
+       "span": [
+        0,
+        145
+       ],
+       "v_a": 479.3,
+       "v_b": 187.0,
+       "plate": 5,
+       "plate_distance": 94.45898580865666
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 7,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1017,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      180.5,
+      214.666666
+     ],
+     "curves": 6,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 124,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.602,
+       "cover": 0.818,
+       "t_a": 192.2784,
+       "t_b": 193.258,
+       "seconds": 0.9796,
+       "span": [
+        60,
+        184
+       ],
+       "v_a": 343.7,
+       "v_b": 648.0,
+       "line_px": 81.91,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 123,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.437,
+       "cover": 0.809,
+       "t_a": 196.8539,
+       "t_b": 197.8676,
+       "seconds": 1.0137,
+       "span": [
+        61,
+        184
+       ],
+       "v_a": 329.4,
+       "v_b": 636.1,
+       "line_px": 85.67,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 175,
+       "reasons": [],
+       "hue": 343.3,
+       "hue_pixels": 89,
+       "residual_frames": 0.776,
+       "cover": 0.945,
+       "t_a": 199.9347,
+       "t_b": 201.1687,
+       "seconds": 1.234,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 244.8,
+       "v_b": 656.0,
+       "line_px": 71.59,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 4,
+       "points": 142,
+       "reasons": [],
+       "hue": 211.4,
+       "hue_pixels": 25,
+       "residual_frames": 0.815,
+       "cover": 0.982,
+       "t_a": 204.6717,
+       "t_b": 205.8122,
+       "seconds": 1.1405,
+       "span": [
+        40,
+        184
+       ],
+       "v_a": 255.0,
+       "v_b": 792.3,
+       "line_px": 70.44,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 5,
+       "points": 170,
+       "reasons": [],
+       "hue": 58.3,
+       "hue_pixels": 38,
+       "residual_frames": 1.045,
+       "cover": 0.991,
+       "t_a": 207.5417,
+       "t_b": 208.6752,
+       "seconds": 1.1335,
+       "span": [
+        0,
+        171
+       ],
+       "v_a": 249.6,
+       "v_b": 872.5,
+       "line_px": -40.31,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 185,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.245,
+       "cover": 1.009,
+       "t_a": 210.5755,
+       "t_b": 211.7714,
+       "seconds": 1.1959,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 245.5,
+       "v_b": 733.9,
+       "line_px": 36.89,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1127,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      214.7,
+      252.533333
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 504,
+       "reasons": [],
+       "residual_frames": 0.563,
+       "cover": 0.849,
+       "t_a": 218.5628,
+       "t_b": 221.9481,
+       "seconds": 3.463,
+       "span": [
+        0,
+        573
+       ],
+       "v_a": 517.3,
+       "v_b": 280.0,
+       "line_px": -6.12,
+       "plate": 1,
+       "plate_distance": 47.37087712930804,
+       "boat": 1,
+       "seconds_raw": 3.3853
+      },
+      {
+       "order": 2,
+       "points": 493,
+       "reasons": [],
+       "residual_frames": 0.881,
+       "cover": 0.827,
+       "t_a": 223.1509,
+       "t_b": 226.6618,
+       "seconds": 3.5279,
+       "span": [
+        0,
+        577
+       ],
+       "v_a": 542.7,
+       "v_b": 258.6,
+       "line_px": -1.34,
+       "plate": 6,
+       "plate_distance": 99.24212815130478,
+       "boat": 2,
+       "seconds_raw": 3.5109
+      },
+      {
+       "order": 3,
+       "points": 465,
+       "reasons": [],
+       "residual_frames": 0.738,
+       "cover": 0.807,
+       "t_a": 226.4979,
+       "t_b": 229.8369,
+       "seconds": 3.5345,
+       "span": [
+        0,
+        560
+       ],
+       "v_a": 556.9,
+       "v_b": 275.2,
+       "line_px": -15.39,
+       "plate": 3,
+       "plate_distance": 30.454884665682123,
+       "boat": 3,
+       "seconds_raw": 3.339
+      },
+      {
+       "order": 4,
+       "points": 490,
+       "reasons": [],
+       "residual_frames": 0.754,
+       "cover": 0.817,
+       "t_a": 231.0546,
+       "t_b": 234.7211,
+       "seconds": 3.5522,
+       "span": [
+        0,
+        569
+       ],
+       "v_a": 518.5,
+       "v_b": 247.9,
+       "line_px": 9.0,
+       "plate": 4,
+       "plate_distance": 47.576254581461114,
+       "boat": 4,
+       "seconds_raw": 3.6665
+      },
+      {
+       "order": 5,
+       "points": 462,
+       "reasons": [],
+       "residual_frames": 0.685,
+       "cover": 0.798,
+       "t_a": 234.2624,
+       "t_b": 237.3911,
+       "seconds": 3.482,
+       "span": [
+        0,
+        546
+       ],
+       "v_a": 596.0,
+       "v_b": 293.3,
+       "line_px": -27.82,
+       "plate": 5,
+       "plate_distance": 32.54228019054596,
+       "boat": 5,
+       "seconds_raw": 3.1287
+      },
+      {
+       "order": 6,
+       "points": 484,
+       "reasons": [],
+       "residual_frames": 0.767,
+       "cover": 0.793,
+       "t_a": 237.9029,
+       "t_b": 241.3011,
+       "seconds": 3.5092,
+       "span": [
+        0,
+        589
+       ],
+       "v_a": 543.3,
+       "v_b": 271.4,
+       "line_px": -8.73,
+       "plate": 5,
+       "plate_distance": 107.84363680811214,
+       "boat": 6,
+       "seconds_raw": 3.3983
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 8,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1046,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      175.1,
+      210.233333
+     ],
+     "curves": 8,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 18,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.546,
+       "cover": 0.1,
+       "t_a": 175.7785,
+       "t_b": 175.8669,
+       "seconds": 0.0884,
+       "span": [
+        22,
+        81
+       ],
+       "v_a": null,
+       "v_b": 2091.7,
+       "line_px": 15.68,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 31,
+       "reasons": [
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": 65.8,
+       "hue_pixels": 40,
+       "residual_frames": 0.885,
+       "cover": 0.009,
+       "t_a": 176.3276,
+       "t_b": 176.7295,
+       "seconds": 0.4018,
+       "span": [
+        4,
+        184
+       ],
+       "v_a": 854.3,
+       "v_b": 1524.7,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 185,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.587,
+       "cover": 0.973,
+       "t_a": 189.5108,
+       "t_b": 190.64,
+       "seconds": 1.1292,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 249.8,
+       "v_b": 885.0,
+       "line_px": 62.72,
+       "colour": null
+      },
+      {
+       "order": 4,
+       "points": 184,
+       "reasons": [],
+       "hue": 339.7,
+       "hue_pixels": 143,
+       "residual_frames": 1.282,
+       "cover": 1.009,
+       "t_a": 194.2192,
+       "t_b": 195.3593,
+       "seconds": 1.1401,
+       "span": [
+        1,
+        184
+       ],
+       "v_a": 255.3,
+       "v_b": 789.9,
+       "line_px": 37.91,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 5,
+       "points": 184,
+       "reasons": [],
+       "hue": 217.6,
+       "hue_pixels": 58,
+       "residual_frames": 0.807,
+       "cover": 1.0,
+       "t_a": 197.4176,
+       "t_b": 198.5014,
+       "seconds": 1.0839,
+       "span": [
+        2,
+        184
+       ],
+       "v_a": 257.0,
+       "v_b": 965.9,
+       "line_px": 26.95,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 6,
+       "points": 180,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 15,
+       "residual_frames": 1.039,
+       "cover": 1.009,
+       "t_a": 201.354,
+       "t_b": 202.463,
+       "seconds": 1.109,
+       "span": [
+        15,
+        184
+       ],
+       "v_a": 271.2,
+       "v_b": 739.2,
+       "line_px": -15.52,
+       "colour": null,
+       "boat": 5
+      },
+      {
+       "order": 7,
+       "points": 26,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "wrong_direction",
+        "extra_pass"
+       ],
+       "hue": null,
+       "hue_pixels": 1,
+       "residual_frames": 0.168,
+       "cover": 0.0,
+       "t_a": 205.7234,
+       "t_b": 205.0212,
+       "seconds": -0.7022,
+       "span": [
+        154,
+        184
+       ],
+       "v_a": null,
+       "v_b": null,
+       "colour": null
+      },
+      {
+       "order": 8,
+       "points": 176,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.244,
+       "cover": 0.982,
+       "t_a": 206.6762,
+       "t_b": 207.8109,
+       "seconds": 1.1347,
+       "span": [
+        1,
+        179
+       ],
+       "v_a": 267.2,
+       "v_b": 706.8,
+       "line_px": -14.18,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 736,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      213.1,
+      237.866666
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 197,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.556,
+       "cover": 0.171,
+       "t_a": 213.3,
+       "t_b": 215.695,
+       "seconds": 2.57,
+       "span": [
+        176,
+        572
+       ],
+       "v_a": 729.9,
+       "v_b": 303.7,
+       "line_px": -13.78,
+       "plate": 1,
+       "plate_distance": 45.79301256742124,
+       "boat": 1,
+       "seconds_raw": 2.395
+      },
+      {
+       "order": 2,
+       "points": 198,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.352,
+       "cover": 0.449,
+       "t_a": 216.1564,
+       "t_b": 219.2067,
+       "seconds": 3.2408,
+       "span": [
+        0,
+        223
+       ],
+       "v_a": 540.6,
+       "v_b": 321.5,
+       "line_px": -15.0,
+       "plate": 6,
+       "plate_distance": 97.20082304178294,
+       "boat": 2,
+       "seconds_raw": 3.0503
+      },
+      {
+       "order": 3,
+       "points": 342,
+       "reasons": [
+        "too_few_boats_in_race"
+       ],
+       "residual_frames": 0.403,
+       "cover": 0.51,
+       "t_a": 220.9626,
+       "t_b": 224.0311,
+       "seconds": 3.2972,
+       "span": [
+        0,
+        556
+       ],
+       "v_a": 559.6,
+       "v_b": 312.2,
+       "line_px": -18.0,
+       "plate": 3,
+       "plate_distance": 39.370039370059054,
+       "boat": 3,
+       "seconds_raw": 3.0686
+      },
+      {
+       "order": 4,
+       "points": 286,
+       "reasons": [
+        "short_curve"
+       ],
+       "residual_frames": 0.344,
+       "cover": 0.449,
+       "t_a": 224.2001,
+       "t_b": 227.2475,
+       "seconds": 3.276,
+       "span": [
+        2,
+        568
+       ],
+       "v_a": 575.7,
+       "v_b": 310.8,
+       "line_px": -18.0,
+       "plate": 4,
+       "plate_distance": 51.509707822894896,
+       "boat": 4,
+       "seconds_raw": 3.0474
+      },
+      {
+       "order": 5,
+       "points": 181,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.307,
+       "cover": 0.407,
+       "t_a": 228.0294,
+       "t_b": 230.9885,
+       "seconds": 3.194,
+       "span": [
+        2,
+        222
+       ],
+       "v_a": 547.5,
+       "v_b": 335.0,
+       "line_px": -18.5,
+       "plate": 5,
+       "plate_distance": 38.53894134508627,
+       "boat": 5,
+       "seconds_raw": 2.9591
+      },
+      {
+       "order": 6,
+       "points": 311,
+       "reasons": [
+        "short_curve"
+       ],
+       "residual_frames": 0.448,
+       "cover": 0.495,
+       "t_a": 233.0586,
+       "t_b": 236.4984,
+       "seconds": 3.2273,
+       "span": [
+        5,
+        537
+       ],
+       "v_a": 496.1,
+       "v_b": 279.5,
+       "line_px": 16.73,
+       "plate": 5,
+       "plate_distance": 94.04254356406997,
+       "boat": 6,
+       "seconds_raw": 3.4398
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 9,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1027,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      173.433333,
+      207.933333
+     ],
+     "curves": 7,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 26,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 3,
+       "residual_frames": 0.56,
+       "cover": 0.036,
+       "t_a": 173.6333,
+       "t_b": 175.4089,
+       "seconds": 1.7756,
+       "span": [
+        146,
+        184
+       ],
+       "v_a": 72.4,
+       "v_b": 732.0,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 121,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": 329.2,
+       "hue_pixels": 54,
+       "residual_frames": 0.546,
+       "cover": 0.818,
+       "t_a": 183.9327,
+       "t_b": 184.8608,
+       "seconds": 0.9282,
+       "span": [
+        61,
+        181
+       ],
+       "v_a": 376.4,
+       "v_b": 640.1,
+       "line_px": 79.77,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 182,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.914,
+       "cover": 1.009,
+       "t_a": 186.7989,
+       "t_b": 187.9346,
+       "seconds": 1.1357,
+       "span": [
+        0,
+        183
+       ],
+       "v_a": 247.0,
+       "v_b": 898.6,
+       "line_px": 72.73,
+       "colour": null
+      },
+      {
+       "order": 4,
+       "points": 25,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 4,
+       "residual_frames": 0.911,
+       "cover": 0.0,
+       "t_a": 196.422,
+       "t_b": 202.5493,
+       "seconds": 6.1272,
+       "span": [
+        0,
+        26
+       ],
+       "v_a": 129.2,
+       "v_b": 49.7,
+       "colour": null
+      },
+      {
+       "order": 5,
+       "points": 180,
+       "reasons": [
+        "too_few_boats_in_race"
+       ],
+       "hue": 55.9,
+       "hue_pixels": 44,
+       "residual_frames": 0.988,
+       "cover": 1.009,
+       "t_a": 201.4231,
+       "t_b": 202.542,
+       "seconds": 1.1189,
+       "span": [
+        4,
+        184
+       ],
+       "v_a": 258.4,
+       "v_b": 822.8,
+       "line_px": 26.07,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 130,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.302,
+       "cover": 0.864,
+       "t_a": 204.8451,
+       "t_b": 205.8718,
+       "seconds": 1.0267,
+       "span": [
+        4,
+        135
+       ],
+       "v_a": 255.6,
+       "v_b": 1325.9,
+       "line_px": -82.63,
+       "colour": null
+      },
+      {
+       "order": 7,
+       "points": 17,
+       "reasons": [
+        "noisy_curve",
+        "gates_not_covered",
+        "short_curve",
+        "wrong_direction",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 16,
+       "residual_frames": 1.621,
+       "cover": 0.064,
+       "t_a": 207.8333,
+       "t_b": 205.0269,
+       "seconds": -2.8064,
+       "span": [
+        114,
+        165
+       ],
+       "v_a": null,
+       "v_b": null,
+       "line_px": -89.9,
+       "colour": null
+      }
+     ]
+    },
+    "straight": {
+     "frames": 768,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      210.533333,
+      236.366666
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 193,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.445,
+       "cover": 0.12,
+       "t_a": 210.7333,
+       "t_b": 212.7183,
+       "seconds": 1.951,
+       "span": [
+        274,
+        617
+       ],
+       "v_a": 1297.7,
+       "v_b": 285.4,
+       "line_px": 2.68,
+       "plate": 1,
+       "plate_distance": 44.844174649557324,
+       "boat": 1,
+       "seconds_raw": 1.985
+      },
+      {
+       "order": 2,
+       "points": 292,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.805,
+       "cover": 0.407,
+       "t_a": 213.2645,
+       "t_b": 216.4889,
+       "seconds": 3.2435,
+       "span": [
+        34,
+        590
+       ],
+       "v_a": 602.5,
+       "v_b": 279.1,
+       "line_px": -1.5,
+       "plate": 6,
+       "plate_distance": 95.0,
+       "boat": 2,
+       "seconds_raw": 3.2245
+      },
+      {
+       "order": 3,
+       "points": 338,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.781,
+       "cover": 0.473,
+       "t_a": 217.8607,
+       "t_b": 221.1295,
+       "seconds": 3.2565,
+       "span": [
+        35,
+        619
+       ],
+       "v_a": 586.4,
+       "v_b": 277.0,
+       "line_px": 0.97,
+       "plate": 3,
+       "plate_distance": 43.54308211415448,
+       "boat": 3,
+       "seconds_raw": 3.2688
+      },
+      {
+       "order": 4,
+       "points": 370,
+       "reasons": [
+        "gates_not_covered"
+       ],
+       "residual_frames": 0.786,
+       "cover": 0.554,
+       "t_a": 223.0284,
+       "t_b": 226.1414,
+       "seconds": 3.223,
+       "span": [
+        34,
+        604
+       ],
+       "v_a": 615.4,
+       "v_b": 291.0,
+       "line_px": -8.67,
+       "plate": 4,
+       "plate_distance": 49.28488612140643,
+       "boat": 4,
+       "seconds_raw": 3.1129
+      },
+      {
+       "order": 5,
+       "points": 357,
+       "reasons": [
+        "gates_not_covered"
+       ],
+       "residual_frames": 0.833,
+       "cover": 0.505,
+       "t_a": 228.1621,
+       "t_b": 230.9933,
+       "seconds": 3.2751,
+       "span": [
+        38,
+        605
+       ],
+       "v_a": 680.0,
+       "v_b": 319.2,
+       "line_px": -34.95,
+       "plate": 5,
+       "plate_distance": 27.730849247724095,
+       "boat": 5,
+       "seconds_raw": 2.8312
+      },
+      {
+       "order": 6,
+       "points": 104,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve"
+       ],
+       "residual_frames": 0.376,
+       "cover": 0.022,
+       "t_a": 231.8272,
+       "t_b": 234.4707,
+       "seconds": 2.5673,
+       "span": [
+        296,
+        577
+       ],
+       "v_a": 1516.8,
+       "v_b": 274.8,
+       "line_px": 6.0,
+       "plate": 5,
+       "plate_distance": 103.97235209419858,
+       "boat": 6,
+       "seconds_raw": 2.6435
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 10,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1026,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      169.433333,
+      203.9
+     ],
+     "curves": 7,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 26,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 2,
+       "residual_frames": 0.702,
+       "cover": 0.0,
+       "t_a": 171.5288,
+       "t_b": 171.7055,
+       "seconds": 0.1767,
+       "span": [
+        155,
+        184
+       ],
+       "v_a": 1940.5,
+       "v_b": 3472.8,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 51,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 1,
+       "residual_frames": 0.38,
+       "cover": 0.282,
+       "t_a": 182.6331,
+       "t_b": 183.4226,
+       "seconds": 0.7895,
+       "span": [
+        118,
+        184
+       ],
+       "v_a": 499.2,
+       "v_b": 630.8,
+       "line_px": 95.96,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 179,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 3,
+       "residual_frames": 0.753,
+       "cover": 1.009,
+       "t_a": 188.2791,
+       "t_b": 189.3906,
+       "seconds": 1.1115,
+       "span": [
+        0,
+        174
+       ],
+       "v_a": 244.9,
+       "v_b": 1031.4,
+       "line_px": 87.87,
+       "colour": null
+      },
+      {
+       "order": 4,
+       "points": 179,
+       "reasons": [],
+       "hue": 344.0,
+       "hue_pixels": 222,
+       "residual_frames": 0.741,
+       "cover": 1.009,
+       "t_a": 191.2982,
+       "t_b": 192.4095,
+       "seconds": 1.1112,
+       "span": [
+        2,
+        177
+       ],
+       "v_a": 259.7,
+       "v_b": 833.0,
+       "line_px": 72.7,
+       "colour": 3,
+       "boat": 3
+      },
+      {
+       "order": 5,
+       "points": 180,
+       "reasons": [],
+       "hue": 215.5,
+       "hue_pixels": 132,
+       "residual_frames": 1.089,
+       "cover": 1.009,
+       "t_a": 193.6885,
+       "t_b": 194.782,
+       "seconds": 1.0936,
+       "span": [
+        5,
+        184
+       ],
+       "v_a": 271.8,
+       "v_b": 774.1,
+       "line_px": 11.28,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 6,
+       "points": 173,
+       "reasons": [],
+       "hue": 54.7,
+       "hue_pixels": 94,
+       "residual_frames": 0.856,
+       "cover": 1.009,
+       "t_a": 196.547,
+       "t_b": 197.6609,
+       "seconds": 1.1139,
+       "span": [
+        13,
+        184
+       ],
+       "v_a": 272.4,
+       "v_b": 718.2,
+       "line_px": 71.6,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 7,
+       "points": 181,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 13,
+       "residual_frames": 1.147,
+       "cover": 1.009,
+       "t_a": 199.6492,
+       "t_b": 200.7636,
+       "seconds": 1.1144,
+       "span": [
+        2,
+        184
+       ],
+       "v_a": 262.8,
+       "v_b": 793.9,
+       "line_px": 38.21,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1037,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      204.066666,
+      238.866666
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 377,
+       "reasons": [],
+       "residual_frames": 0.266,
+       "cover": 0.802,
+       "t_a": 208.5875,
+       "t_b": 211.7841,
+       "seconds": 3.4194,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 501.5,
+       "v_b": 312.1,
+       "line_px": -17.54,
+       "plate": 1,
+       "plate_distance": 46.76537180435969,
+       "boat": 1,
+       "seconds_raw": 3.1966
+      },
+      {
+       "order": 2,
+       "points": 353,
+       "reasons": [
+        "gates_not_covered"
+       ],
+       "residual_frames": 0.294,
+       "cover": 0.78,
+       "t_a": 214.9961,
+       "t_b": 218.3959,
+       "seconds": 3.5141,
+       "span": [
+        0,
+        372
+       ],
+       "v_a": 478.2,
+       "v_b": 290.9,
+       "line_px": -9.0,
+       "plate": 6,
+       "plate_distance": 95.78752528382806,
+       "boat": 2,
+       "seconds_raw": 3.3998
+      },
+      {
+       "order": 3,
+       "points": 356,
+       "reasons": [],
+       "residual_frames": 0.312,
+       "cover": 0.788,
+       "t_a": 218.0282,
+       "t_b": 220.8723,
+       "seconds": 3.5259,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 564.7,
+       "v_b": 350.4,
+       "line_px": -53.69,
+       "plate": 3,
+       "plate_distance": 34.01837738634811,
+       "boat": 3,
+       "seconds_raw": 2.844
+      },
+      {
+       "order": 4,
+       "points": 341,
+       "reasons": [],
+       "residual_frames": 0.411,
+       "cover": 0.785,
+       "t_a": 220.362,
+       "t_b": 223.7441,
+       "seconds": 3.4964,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 485.7,
+       "v_b": 290.6,
+       "line_px": -9.0,
+       "plate": 4,
+       "plate_distance": 47.59201613716318,
+       "boat": 4,
+       "seconds_raw": 3.3821
+      },
+      {
+       "order": 5,
+       "points": 359,
+       "reasons": [],
+       "residual_frames": 0.349,
+       "cover": 0.805,
+       "t_a": 223.0502,
+       "t_b": 225.9942,
+       "seconds": 3.5231,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 544.0,
+       "v_b": 339.2,
+       "line_px": -45.61,
+       "plate": 5,
+       "plate_distance": 28.442925306655784,
+       "boat": 5,
+       "seconds_raw": 2.9439
+      },
+      {
+       "order": 6,
+       "points": 355,
+       "reasons": [
+        "gates_not_covered"
+       ],
+       "residual_frames": 0.388,
+       "cover": 0.793,
+       "t_a": 226.3683,
+       "t_b": 229.5431,
+       "seconds": 3.5724,
+       "span": [
+        0,
+        414
+       ],
+       "v_a": 529.1,
+       "v_b": 305.6,
+       "line_px": -31.31,
+       "plate": 5,
+       "plate_distance": 96.81683737862954,
+       "boat": 6,
+       "seconds_raw": 3.1748
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 11,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 1057,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      170.833333,
+      206.3
+     ],
+     "curves": 6,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 126,
+       "reasons": [
+        "gates_not_covered",
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 2,
+       "residual_frames": 0.534,
+       "cover": 0.827,
+       "t_a": 183.9752,
+       "t_b": 184.9632,
+       "seconds": 0.988,
+       "span": [
+        56,
+        184
+       ],
+       "v_a": 341.7,
+       "v_b": 639.3,
+       "line_px": 91.7,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 163,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 1.169,
+       "cover": 1.009,
+       "t_a": 188.0745,
+       "t_b": 189.1551,
+       "seconds": 1.0806,
+       "span": [
+        4,
+        171
+       ],
+       "v_a": 279.9,
+       "v_b": 746.5,
+       "line_px": -33.67,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 69,
+       "reasons": [
+        "short_curve",
+        "identity_unclear"
+       ],
+       "hue": 342.7,
+       "hue_pixels": 24,
+       "residual_frames": 0.621,
+       "cover": 0.191,
+       "t_a": 192.0423,
+       "t_b": 193.3266,
+       "seconds": 1.2843,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 253.1,
+       "v_b": 529.9,
+       "line_px": 104.45,
+       "colour": null
+      },
+      {
+       "order": 4,
+       "points": 180,
+       "reasons": [],
+       "hue": 216.9,
+       "hue_pixels": 345,
+       "residual_frames": 0.86,
+       "cover": 1.009,
+       "t_a": 194.879,
+       "t_b": 196.0343,
+       "seconds": 1.1553,
+       "span": [
+        0,
+        179
+       ],
+       "v_a": 238.7,
+       "v_b": 941.7,
+       "line_px": 84.51,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 5,
+       "points": 172,
+       "reasons": [],
+       "hue": 55.6,
+       "hue_pixels": 32,
+       "residual_frames": 0.791,
+       "cover": 1.009,
+       "t_a": 198.0768,
+       "t_b": 199.1117,
+       "seconds": 1.0349,
+       "span": [
+        13,
+        184
+       ],
+       "v_a": 299.3,
+       "v_b": 733.8,
+       "line_px": -11.34,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 6,
+       "points": 168,
+       "reasons": [],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.745,
+       "cover": 1.009,
+       "t_a": 201.3158,
+       "t_b": 202.345,
+       "seconds": 1.0292,
+       "span": [
+        19,
+        184
+       ],
+       "v_a": 310.8,
+       "v_b": 684.9,
+       "line_px": -5.83,
+       "colour": null,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1073,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      206.433333,
+      242.466666
+     ],
+     "curves": 6,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 377,
+       "reasons": [
+        "different_line"
+       ],
+       "residual_frames": 0.397,
+       "cover": 0.851,
+       "t_a": 210.0407,
+       "t_b": 212.8722,
+       "seconds": 3.4621,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 581.0,
+       "v_b": 346.9,
+       "line_px": -49.65,
+       "plate": 1,
+       "plate_distance": 45.96466033813369,
+       "boat": 1,
+       "seconds_raw": 2.8315
+      },
+      {
+       "order": 2,
+       "points": 368,
+       "reasons": [],
+       "residual_frames": 0.445,
+       "cover": 0.837,
+       "t_a": 214.631,
+       "t_b": 218.0894,
+       "seconds": 3.4585,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 494.4,
+       "v_b": 277.7,
+       "line_px": 0.0,
+       "plate": 6,
+       "plate_distance": 97.04122835166504,
+       "boat": 2,
+       "seconds_raw": 3.4585
+      },
+      {
+       "order": 3,
+       "points": 362,
+       "reasons": [],
+       "residual_frames": 0.428,
+       "cover": 0.822,
+       "t_a": 218.5621,
+       "t_b": 222.0783,
+       "seconds": 3.5359,
+       "span": [
+        0,
+        472
+       ],
+       "v_a": 493.2,
+       "v_b": 271.0,
+       "line_px": -1.55,
+       "plate": 3,
+       "plate_distance": 32.81386901905961,
+       "boat": 3,
+       "seconds_raw": 3.5162
+      },
+      {
+       "order": 4,
+       "points": 337,
+       "reasons": [],
+       "residual_frames": 0.412,
+       "cover": 0.766,
+       "t_a": 221.4094,
+       "t_b": 224.8978,
+       "seconds": 3.5222,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 495.9,
+       "v_b": 273.5,
+       "line_px": -2.66,
+       "plate": 4,
+       "plate_distance": 46.84282228901243,
+       "boat": 4,
+       "seconds_raw": 3.4884
+      },
+      {
+       "order": 5,
+       "points": 305,
+       "reasons": [],
+       "residual_frames": 0.421,
+       "cover": 0.695,
+       "t_a": 224.3465,
+       "t_b": 227.859,
+       "seconds": 3.5204,
+       "span": [
+        0,
+        503
+       ],
+       "v_a": 520.0,
+       "v_b": 264.0,
+       "line_px": -0.62,
+       "plate": 5,
+       "plate_distance": 28.848743473503312,
+       "boat": 5,
+       "seconds_raw": 3.5125
+      },
+      {
+       "order": 6,
+       "points": 354,
+       "reasons": [],
+       "residual_frames": 0.387,
+       "cover": 0.812,
+       "t_a": 227.5098,
+       "t_b": 230.9722,
+       "seconds": 3.4774,
+       "span": [
+        0,
+        440
+       ],
+       "v_a": 488.7,
+       "v_b": 279.0,
+       "line_px": -1.18,
+       "plate": 5,
+       "plate_distance": 99.7872737376866,
+       "boat": 6,
+       "seconds_raw": 3.4624
+      }
+     ]
+    }
+   }
+  },
+  {
+   "race": 12,
+   "capture": "ok",
+   "failure": null,
+   "shots": {
+    "turn1": {
+     "frames": 979,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      181.6,
+      214.5
+     ],
+     "curves": 5,
+     "metric": "acceleration",
+     "boats": [
+      {
+       "order": 1,
+       "points": 176,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 0,
+       "residual_frames": 0.761,
+       "cover": 1.0,
+       "t_a": 191.7319,
+       "t_b": 192.8585,
+       "seconds": 1.1266,
+       "span": [
+        8,
+        179
+       ],
+       "v_a": 263.2,
+       "v_b": 756.5,
+       "line_px": 78.59,
+       "colour": null
+      },
+      {
+       "order": 2,
+       "points": 182,
+       "reasons": [
+        "identity_unclear"
+       ],
+       "hue": null,
+       "hue_pixels": 1,
+       "residual_frames": 0.746,
+       "cover": 0.982,
+       "t_a": 196.4695,
+       "t_b": 197.6018,
+       "seconds": 1.1323,
+       "span": [
+        0,
+        179
+       ],
+       "v_a": 256.2,
+       "v_b": 803.9,
+       "line_px": 81.32,
+       "colour": null
+      },
+      {
+       "order": 3,
+       "points": 184,
+       "reasons": [],
+       "hue": 217.3,
+       "hue_pixels": 96,
+       "residual_frames": 1.022,
+       "cover": 1.009,
+       "t_a": 205.4965,
+       "t_b": 206.624,
+       "seconds": 1.1274,
+       "span": [
+        0,
+        184
+       ],
+       "v_a": 254.2,
+       "v_b": 839.9,
+       "line_px": 66.89,
+       "colour": 4,
+       "boat": 4
+      },
+      {
+       "order": 4,
+       "points": 178,
+       "reasons": [],
+       "hue": 52.7,
+       "hue_pixels": 213,
+       "residual_frames": 0.833,
+       "cover": 1.0,
+       "t_a": 208.2745,
+       "t_b": 209.3531,
+       "seconds": 1.0786,
+       "span": [
+        8,
+        184
+       ],
+       "v_a": 265.2,
+       "v_b": 883.8,
+       "line_px": 60.3,
+       "colour": 5,
+       "boat": 5
+      },
+      {
+       "order": 5,
+       "points": 179,
+       "reasons": [],
+       "hue": 217.1,
+       "hue_pixels": 169,
+       "residual_frames": 1.135,
+       "cover": 1.009,
+       "t_a": 212.3548,
+       "t_b": 213.4,
+       "seconds": 1.0452,
+       "span": [
+        6,
+        184
+       ],
+       "v_a": 293.5,
+       "v_b": 744.2,
+       "line_px": 9.25,
+       "colour": 6,
+       "boat": 6
+      }
+     ]
+    },
+    "straight": {
+     "frames": 1118,
+     "skipped": 0,
+     "sizes": [
+      "1920x1080"
+     ],
+     "window": [
+      214.566666,
+      252.1
+     ],
+     "curves": 5,
+     "metric": "straight",
+     "boats": [
+      {
+       "order": 1,
+       "points": 259,
+       "reasons": [
+        "curve_count_5_of_6"
+       ],
+       "residual_frames": 0.521,
+       "cover": 0.578,
+       "t_a": 217.6213,
+       "t_b": 220.7584,
+       "seconds": 3.5943,
+       "span": [
+        0,
+        438
+       ],
+       "v_a": 537.1,
+       "v_b": 308.7,
+       "line_px": -36.0,
+       "plate": 1,
+       "plate_distance": 49.759421218498915,
+       "seconds_raw": 3.1371
+      },
+      {
+       "order": 2,
+       "points": 114,
+       "reasons": [
+        "noisy_curve",
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_5_of_6"
+       ],
+       "residual_frames": 1.778,
+       "cover": 0.276,
+       "t_a": 222.6043,
+       "t_b": 225.8783,
+       "seconds": 3.7312,
+       "span": [
+        3,
+        329
+       ],
+       "v_a": 493.2,
+       "v_b": 303.4,
+       "line_px": -36.0,
+       "plate": 6,
+       "plate_distance": 97.27024210929055,
+       "seconds_raw": 3.274
+      },
+      {
+       "order": 3,
+       "points": 78,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_5_of_6"
+       ],
+       "residual_frames": 0.594,
+       "cover": 0.183,
+       "t_a": 227.6607,
+       "t_b": 231.1344,
+       "seconds": 3.5881,
+       "span": [
+        32,
+        470
+       ],
+       "v_a": 490.3,
+       "v_b": 277.1,
+       "line_px": -9.0,
+       "plate": 3,
+       "plate_distance": 38.32101251271944,
+       "seconds_raw": 3.4738
+      },
+      {
+       "order": 4,
+       "points": 81,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_5_of_6"
+       ],
+       "residual_frames": 0.206,
+       "cover": 0.159,
+       "t_a": 232.0635,
+       "t_b": 235.438,
+       "seconds": 3.4197,
+       "span": [
+        10,
+        217
+       ],
+       "v_a": 447.4,
+       "v_b": 307.5,
+       "line_px": -3.55,
+       "plate": 4,
+       "plate_distance": 43.603325561245896,
+       "seconds_raw": 3.3746
+      },
+      {
+       "order": 5,
+       "points": 57,
+       "reasons": [
+        "gates_not_covered",
+        "short_curve",
+        "curve_count_5_of_6"
+       ],
+       "residual_frames": 1.272,
+       "cover": 0.137,
+       "t_a": 235.0085,
+       "t_b": 238.5809,
+       "seconds": 3.6487,
+       "span": [
+        9,
+        329
+       ],
+       "v_a": 399.0,
+       "v_b": 302.8,
+       "line_px": -6.0,
+       "plate": 5,
+       "plate_distance": 30.170349683091178,
+       "seconds_raw": 3.5725
+      }
+     ]
+    }
+   }
+  }
+ ]
+}
