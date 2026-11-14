@@ -176,3 +176,44 @@ def test_official_cancellation_is_terminal_but_not_a_timing_sample(tmp_path):
     assert archive(tmp_path, ["20261112"])["added_or_updated"] == 1
     assert archived_records(tmp_path)["20261112", "04", 1]["result"]["cancelled"] is True
     assert archive(tmp_path, ["20261112"])["added_or_updated"] == 0
+
+
+def test_rider_baseline_weights_recent_terms_and_shrinks_small_samples():
+    from scraper.premium_motor import rider_baselines
+    profiles = {"terms": {
+        "old": {"available_from": "20250501", "players": {"1000": {"n": 100, "dev_sum": 10.0}, "2000": {"n": 2, "dev_sum": -0.2}}},
+        "new": {"available_from": "20260501", "players": {"1000": {"n": 100, "dev_sum": -10.0}}},
+        "future": {"available_from": "20270101", "players": {"1000": {"n": 1000, "dev_sum": 500.0}}},
+    }}
+    base = rider_baselines(profiles, "20261112")
+    assert base["1000"] < 0                                   # the newer term decides the sign
+    assert abs(base["1000"] - (-10 + .5 * 10) / (150 + 8)) < 1e-12
+    assert abs(base["2000"]) < .03                            # two runs barely move the value
+    assert "1000" in rider_baselines(profiles, "20250601") and rider_baselines(profiles, "20250601")["1000"] > 0
+
+
+def test_adjusted_rating_removes_the_rider_from_the_motor(monkeypatch):
+    from scraper import premium_motor
+    riders = {m: [f"{1000 + m}", f"{2000 + m}", f"{3000 + m}"] for m in range(1, 13)}
+    quick = {riders[1][0], riders[1][1], riders[1][2]}       # motor 1 always gets riders who are .10s quick
+    def observations(race, venue=None):
+        for motor in range(1, 13):
+            rider = riders[motor][race["meet"]]
+            true_motor = -.04 if motor == 2 else 0.0          # motor 2 is the genuinely quick one
+            yield "exhibition", str(motor), rider, true_motor + (-.10 if rider in quick else 0.0)
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    records = {}
+    for meet, start in enumerate((20261012, 20261020, 20261028)):
+        for offset in range(3):
+            d = str(start + offset)
+            records[d, "04", 1] = {"racelist": {"title": f"meet{meet}"}, "meet": meet}
+    history = {"04": {"1": {"history_boundary": "20260618"}}}
+    profiles = {"terms": {"t": {"available_from": "20260501", "players": {r: {"n": 400, "dev_sum": -40.0} for r in quick}}}}
+    plain = premium_motor.build(records, history, "20261105")["venues"]["04"]["motors"]
+    assert "adjusted" not in plain["1"] and plain["1"]["exhibition"]["grade"] in "SA"
+    out = premium_motor.build(records, history, "20261105", rider_profiles=profiles)["venues"]["04"]["motors"]
+    assert out["2"]["adjusted"]["grade"] in "SA" and out["2"]["adjusted"]["riders"] == 3
+    assert abs(out["1"]["adjusted"]["delta"]) < .01           # the quick riders no longer flatter motor 1
+    assert plain["1"]["exhibition"]["delta"] < -.09
+    assert out["1"]["adjusted"]["delta"] > out["2"]["adjusted"]["delta"]
+    assert out["1"]["exhibition"] == plain["1"]["exhibition"]   # the existing ratings are untouched
