@@ -5107,14 +5107,14 @@
   "excluded_reason_counts": {
     "missing_exhibition_model_decision": 1994,
     "unverified_inputs": 1994,
-    "missing_or_changed_protocol": 2257,
-    "fingerprint_mismatch": 2257,
-    "missing_fixed_decision": 1994,
-    "no_tickets": 1994,
-    "missing_or_invalid_timestamps": 2128,
-    "no_research_tickets": 7129,
-    "fixed_tickets_mismatch": 2257,
     "entry_mismatch": 2257,
+    "fingerprint_mismatch": 2257,
+    "no_research_tickets": 7129,
+    "no_tickets": 1994,
+    "missing_or_changed_protocol": 2257,
+    "missing_fixed_decision": 1994,
+    "fixed_tickets_mismatch": 2257,
+    "missing_or_invalid_timestamps": 2128,
     "incomplete_odds": 95
   },
   "limits": [
