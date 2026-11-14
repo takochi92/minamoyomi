@@ -40,26 +40,47 @@ def path_geometry(poly, step, half, ostep):
     return n_s, n_o, total
 
 
-def load_shot(capture_dir, name):
+def _layout(shot):
+    """Sample layout of one shot: band, fine lateral grid, landmark strips, plate (in that order)."""
+    nb = shot["nS"] * shot["nO"]
+    nf = shot.get("nFineS", 0) * shot.get("nFineO", 0)
+    nl = shot.get("nLand", 0)
+    return nb, nf, nl, shot.get("nPlate", 0), shot.get("channels", 3)
+
+
+def _raw(capture_dir, name):
     manifest = json.loads((Path(capture_dir) / "manifest.json").read_text(encoding="utf-8"))
     shot = manifest["shots"][name]
-    times = np.asarray(shot["times"], float)
-    n = shot["nS"] * shot["nO"] + shot["nPlate"]
+    nb, nf, nl, np_, ch = _layout(shot)
     raw = np.fromfile(Path(capture_dir) / f"{name}.bin", np.uint8)
-    if raw.size != len(times) * n * 3:
+    if raw.size != len(shot["times"]) * (nb + nf + nl + np_) * ch:
         raise ValueError("sample_size_mismatch")
-    rgb = raw.reshape(len(times), n, 3)
-    band = rgb[:, :shot["nS"] * shot["nO"]].astype(np.float32).mean(-1).reshape(len(times), shot["nS"], shot["nO"])
-    plate = rgb[:, shot["nS"] * shot["nO"]:].astype(np.float32)
+    return manifest, shot, raw.reshape(len(shot["times"]), nb + nf + nl + np_, ch)
+
+
+def load_shot(capture_dir, name):
+    manifest, shot, rgb = _raw(capture_dir, name)
+    times = np.asarray(shot["times"], float)
+    nb, nf, nl, np_, ch = _layout(shot)
+    band = rgb[:, :nb].astype(np.float32).mean(-1).reshape(len(times), shot["nS"], shot["nO"])
+    plate = rgb[:, nb + nf + nl:].astype(np.float32)
     return manifest, shot, times, band, plate
 
 
+def load_extra(capture_dir, name):
+    """Fine lateral grid (frames x columns x offsets) and landmark strips (frames x samples), grey uint8."""
+    manifest, shot, rgb = _raw(capture_dir, name)
+    nb, nf, nl, np_, ch = _layout(shot)
+    grey = rgb if ch == 1 else rgb.mean(-1, keepdims=True).astype(np.uint8)
+    fine = grey[:, nb:nb + nf, 0].reshape(len(shot["times"]), shot.get("nFineS", 0), shot.get("nFineO", 0))
+    land = grey[:, nb + nf:nb + nf + nl, 0]
+    return shot, fine, land
+
+
 def band_rgb(capture_dir, name):
-    manifest = json.loads((Path(capture_dir) / "manifest.json").read_text(encoding="utf-8"))
-    shot = manifest["shots"][name]
-    n = shot["nS"] * shot["nO"] + shot["nPlate"]
-    rgb = np.fromfile(Path(capture_dir) / f"{name}.bin", np.uint8).reshape(len(shot["times"]), n, 3)
-    return rgb[:, :shot["nS"] * shot["nO"]].reshape(len(shot["times"]), shot["nS"], shot["nO"], 3)
+    manifest, shot, rgb = _raw(capture_dir, name)
+    nb = shot["nS"] * shot["nO"]
+    return rgb[:, :nb].reshape(len(shot["times"]), shot["nS"], shot["nO"], rgb.shape[-1])
 
 
 def pass_hue(rgb, band, s, t, *, min_pixels=20):
@@ -252,9 +273,158 @@ def plate_boat(plate_rgb):
     return best, float(np.sqrt(np.sum((c - PLATE_COLOURS[best]) ** 2)))
 
 
+WAKE_LAGS = (20, 50)           # frames behind the bow: the wake lies on the water (spray has fallen back)
+SPRAY_LAGS = (3, 8)            # frames behind the bow: spray thrown above the water
+WAKE_MIN_CONTRAST = 15.0
+WAKE_MIN_COLUMNS = 15
+
+
+def _subpixel_peak(row):
+    k = int(np.argmax(row))
+    if 0 < k < len(row) - 1:
+        a, b, c = row[k - 1], row[k], row[k + 1]
+        den = a - 2 * b + c
+        if den < 0:
+            return k + .5 * (a - c) / den, float(b)
+    return float(k), float(row[k])
+
+
+def landmark_shift(shot, land):
+    """Camera shake from the fixed landmarks (strips across sharp still edges): per frame vertical and
+    sideways shift (px) against the shot median, plus where each edge sits (to compare camera framing
+    between races)."""
+    land = land.astype(np.float32)
+    frames = len(land)
+    pos, edges = 0, []
+    for m in shot.get("landmarks") or []:
+        n = (m["y"][1] - m["y"][0] + 1) if m["kind"] == "v" else (m["x"][1] - m["x"][0] + 1)
+        prof = land[:, pos:pos + n]
+        pos += n
+        g = np.diff(prof, axis=1)
+        med = np.median(g, 0)
+        if len(med) < 10:
+            continue
+        k = int(np.argmax(np.abs(med[3:-3]))) + 3
+        if abs(med[k]) < 20:
+            continue
+        # where the edge sits (median profile, sub-pixel), to compare framing between races
+        a, b, c = np.abs(med[k - 1:k + 2])
+        den = a - 2 * b + c
+        at = k + (.5 * (a - c) / den if den < 0 else 0) + .5
+        # per-frame shift against the median profile: gradient (Lucas-Kanade) step, iterated twice.
+        # Unlike a peak fit it is not pulled toward whole pixels, whatever the sharpness of the edge.
+        ref = np.median(prof, 0)
+        lo, hi = max(1, k - 6), min(n - 1, k + 8)
+        idx = np.arange(n, dtype=np.float32)
+        shift = np.zeros(frames)
+        for _ in range(3):
+            moved = np.array([np.interp(idx[lo:hi] + d, idx, ref) for d in shift])
+            grad = np.array([np.interp(idx[lo:hi] + d, idx, np.gradient(ref)) for d in shift])
+            shift += ((prof[:, lo:hi] - moved) * grad).sum(1) / np.maximum((grad ** 2).sum(1), 1e-6)
+        base = m["y"][0] if m["kind"] == "v" else m["x"][0]
+        edges.append((m["kind"], m.get("x") if m["kind"] == "v" else m.get("y"), base + at, -shift))
+    out = {"dy": np.zeros(frames), "dx": np.zeros(frames), "edges": []}
+    for kind, key in (("v", "dy"), ("h", "dx")):
+        e = [d - np.median(d) for k, _, _, d in edges if k == kind]
+        if e:
+            out[key] = np.median(np.array(e), 0)
+    out["edges"] = [[k, at, round(float(p), 2)] for k, at, p, _ in edges]
+    out["shake_sd"] = [round(float(out["dy"].std()), 3), round(float(out["dx"].std()), 3)]
+    return out
+
+
+def landmark_profiles(shot, land):
+    """Median profile of every landmark strip over the shot (numbers only: one value per pixel of the strip)."""
+    land = land.astype(np.float32)
+    out, pos = [], 0
+    for m in shot.get("landmarks") or []:
+        n = (m["y"][1] - m["y"][0] + 1) if m["kind"] == "v" else (m["x"][1] - m["x"][0] + 1)
+        out.append(np.median(land[:, pos:pos + n], 0))
+        pos += n
+    return out
+
+
+def register(profiles, reference, max_shift=30):
+    """How far this race's camera framing moved against the reference race (px; + = scene moved down /
+    right), from the vertical strips across the far bank: normalised cross-correlation of the strip
+    gradients over whole-pixel shifts, refined to sub-pixel, median over strips."""
+    shifts = []
+    for prof, ref in zip(profiles, reference):
+        a, b = np.diff(np.asarray(prof, float)), np.diff(np.asarray(ref, float))
+        best = []
+        for d in range(-max_shift, max_shift + 1):
+            x, y = (a[d:], b[:len(b) - d]) if d >= 0 else (a[:d], b[-d:])
+            if len(x) < 20:
+                best.append(-1)
+                continue
+            x, y = x - x.mean(), y - y.mean()
+            best.append(float((x * y).sum() / (np.sqrt((x * x).sum() * (y * y).sum()) + 1e-9)))
+        best = np.array(best)
+        k = int(np.argmax(best))
+        if best[k] < .5:
+            continue
+        frac = 0.0
+        if 0 < k < len(best) - 1:
+            u, v, w = best[k - 1:k + 2]
+            den = u - 2 * v + w
+            frac = .5 * (u - w) / den if den < 0 else 0.0
+        shifts.append(k - max_shift + frac)
+    if len(shifts) < 3:
+        return None, len(shifts)
+    return round(float(np.median(shifts)), 2), len(shifts)
+
+
+def wake_line(fine, coef, n_band_s, step, fine_every, dy=None, lags=WAKE_LAGS, spray_lags=SPRAY_LAGS, span=None):
+    """Where across the path the boat runs, at water level: the centre of its wake 20-50 frames after the
+    bow passed each column (spray thrown above the water has fallen back by then), sub-pixel, for every
+    fine column; then a straight line through the columns. Returns the offset at mid-path (px, + = away
+    from the camera), its slope, the scatter, and how far the spray sat above the wake."""
+    frames, n_cols, n_off = fine.shape
+    half = (n_off - 1) / 2
+    kern = np.array([1, 2, 3, 2, 1], np.float32) / 9
+    s_px, off, spray = [], [], []
+    for j in range(n_cols):
+        sb = j * fine_every / step
+        lo, hi = span if span is not None else (0, n_band_s - 1)
+        if sb < lo or sb > hi:
+            continue
+        f0 = float(np.polyval(coef, sb))
+        if f0 < 45 or f0 + lags[1] >= frames:
+            continue
+        col = fine[:, j].astype(np.float32)
+        bg = col[int(f0) - 40:int(f0) - 12].mean(0)
+        w = np.convolve(col[int(round(f0 + lags[0])):int(round(f0 + lags[1]))].mean(0) - bg, kern, "same")
+        p, v = _subpixel_peak(w)
+        if v < WAKE_MIN_CONTRAST:
+            continue
+        q, _ = _subpixel_peak(np.convolve(col[int(round(f0 + spray_lags[0])):int(round(f0 + spray_lags[1]))].mean(0) - bg, kern, "same"))
+        shift = float(dy[int(round(f0 + sum(lags) / 2))]) if dy is not None else 0.0
+        s_px.append(j * fine_every)
+        off.append(p - half + shift)      # the band offset runs upward (away); a frame shifted down by dy
+        spray.append(q - p)
+    if len(s_px) < WAKE_MIN_COLUMNS:
+        return None
+    s_px, off, spray = map(np.asarray, (s_px, off, spray))
+    mid = (n_band_s - 1) * step / 2
+    keep = np.ones(len(s_px), bool)
+    for _ in range(4):
+        A = np.c_[np.ones(keep.sum()), s_px[keep] - mid]
+        c, *_ = np.linalg.lstsq(A, off[keep], rcond=None)
+        r = off - (c[0] + c[1] * (s_px - mid))
+        keep = np.abs(r) < 3 * (np.median(np.abs(r[keep])) * 1.48 + .2)
+    return {"line_px": round(float(c[0]), 3), "line_slope": round(float(c[1]), 5),
+            "line_scatter": round(float(r[keep].std()), 3), "line_columns": int(keep.sum()),
+            "spray_px": round(float(np.median(spray[keep])), 2)}
+
+
 def measure_shot(capture_dir, name, cfg):
     """One fixed-camera shot -> one record per curve (in the order the boats came)."""
     manifest, shot, times, band, plate = load_shot(capture_dir, name)
+    if cfg.get("frontHalf") and shot["nO"] * cfg["ostep"] > 2 * cfg["frontHalf"] + cfg["ostep"]:
+        # the band is captured wide (for far lines); the bow is read inside frontHalf, away from the bank
+        k = int((shot["nO"] - 1) / 2 - cfg["frontHalf"] / cfg["ostep"])
+        band = band[:, :, k:shot["nO"] - k]
+        shot = {**shot, "nO": band.shape[2]}
     if cfg.get("feature", "front") == "motion":
         count, lateral = motion_map(band)
         ev = ridges(count)
@@ -264,6 +434,10 @@ def measure_shot(capture_dir, name, cfg):
     found = all_passes(ev, shot["nS"])
     gate_a, gate_b = (g / cfg["step"] for g in cfg["gates"]["main"])
     rgb = band_rgb(capture_dir, name) if cfg.get("colours") else None
+    fine = land = shake = None
+    if shot.get("nFineS"):
+        _, fine, land = load_extra(capture_dir, name)
+        shake = landmark_shift(shot, land) if shot.get("nLand") else None
     out = []
     for i, (s, t) in enumerate(found):
         rec = {"order": i + 1, "points": int(len(s)), "reasons": []}
@@ -297,6 +471,15 @@ def measure_shot(capture_dir, name, cfg):
             o = np.sort(off)
             k = len(o) // 4
             rec["line_px"] = round(float(o[k:len(o) - k].mean() if len(o) >= 4 else np.median(o)), 2)
+        if fine is not None:
+            # the bright front sits on the spray, above the water: use the wake on the water instead
+            rec["line_front_px"] = rec.pop("line_px", None)
+            wl = wake_line(fine, coef, shot["nS"], cfg["step"], (cfg.get("fine") or {}).get("every", 8),
+                           shake["dy"] if shake else None, span=(int(ks.min()), int(ks.max())))
+            if wl:
+                rec.update(wl)
+            else:
+                rec["reasons"].append("no_wake_line")
         if plate.size:
             fm = int(round((fa + fb) / 2))
             w = slice(max(0, fm - 15), min(len(times), fm + 15))
@@ -312,6 +495,20 @@ def measure_shot(capture_dir, name, cfg):
         out.append(rec)
     info = {"frames": len(times), "skipped": shot.get("skipped"), "sizes": shot.get("sizes"),
             "window": shot.get("window"), "curves": len(found)}
+    if shake:
+        info["shake_sd"] = shake["shake_sd"]
+        info["landmarks"] = shake["edges"]
+        ref = (cfg.get("landmarkRef") or {}).get("profiles")
+        if ref:
+            # the camera is re-aimed between races: how far the scene moved against the reference race
+            prof = landmark_profiles(shot, land)
+            pairs = [(p, r) for p, r in zip(prof, ref) if r is not None]
+            dy, used = register([p for p, _ in pairs], [r for _, r in pairs])
+            info["framing_dy"], info["framing_strips"] = dy, used
+            for rec in out:
+                if dy is not None and rec.get("line_px") is not None:
+                    # + = away from the camera; a scene moved up (dy < 0) lifts every boat's offset
+                    rec["line_ref_px"] = round(rec["line_px"] + dy, 3)
     return out, info
 
 

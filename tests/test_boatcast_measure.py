@@ -174,3 +174,42 @@ def test_a_colour_seen_on_several_passes_anchors_nothing():
     recs = bm.assign_by_colour(passes([None, None, 344, 213, 218, 55, 216]), [1, 2, 3, 4, 5, 6], COLOURS)
     boats = [r.get("boat") for r in recs if r.get("boat")]
     assert len(boats) == len(set(boats))
+
+
+def test_wake_line_reads_the_water_not_the_spray():
+    """A boat whose spray stands 4 px above its wake: the line is the wake's centre, sub-pixel,
+    and the slope across the frame is kept (lines converge toward the far end)."""
+    rng = np.random.default_rng(5)
+    frames, n_cols, n_off, every, step = 400, 60, 61, 8, 3
+    half = (n_off - 1) // 2
+    fine = (100 + 5 * rng.standard_normal((frames, n_cols, n_off))).astype(np.float32)
+    coef = np.array([0.0, 2.5 / 3 * 1.0, 20.0])      # bow reaches band column sb at frame 20 + sb * 0.833
+    true = lambda s_px: -7.3 + 0.004 * (s_px - (200 - 1) * step / 2)
+    off = np.arange(n_off) - half
+    for j in range(n_cols):
+        f0 = np.polyval(coef, j * every / step)
+        for f in range(frames):
+            age = f - f0
+            if 2 <= age < 10:
+                fine[f, j] += 120 * np.exp(-((off - true(j * every) - 4) ** 2) / 8)   # spray, higher up
+            elif age >= 10:
+                fine[f, j] += 90 * np.exp(-((off - true(j * every)) ** 2) / 6) * np.exp(-age / 200)
+    wl = bm.wake_line(np.clip(fine, 0, 255).astype(np.uint8), coef, 200, step, every)
+    assert wl["line_px"] == pytest.approx(-7.3, abs=.15)
+    assert wl["line_slope"] == pytest.approx(.004, abs=.001)
+    assert wl["spray_px"] == pytest.approx(4, abs=.6)
+
+
+def test_landmark_shift_follows_the_camera():
+    frames = 50
+    dy = .3 * np.sin(np.arange(frames) / 5)
+    ys = np.arange(370, 481)
+    strips = []
+    for x in (100, 300, 500):
+        edge = 420 + x / 100
+        strips.append(np.array([200 - 150 / (1 + np.exp(-(ys - edge - d) * 2)) for d in dy]))
+    land = np.concatenate(strips, 1).clip(0, 255).astype(np.uint8)
+    shot = {"landmarks": [{"kind": "v", "x": x, "y": [370, 480]} for x in (100, 300, 500)]}
+    out = bm.landmark_shift(shot, land)
+    assert np.abs(out["dy"] - (dy - np.median(dy))).max() < .08
+    assert [e[2] for e in out["edges"]] == pytest.approx([421, 423, 425], abs=.6)

@@ -154,11 +154,13 @@ def write(date, venue, rows, reports, prof, out_dir=OUT):
 def run(args):
     prof = profile(args.venue)
     races = [int(x) for x in args.races.split(",")] if args.races else list(range(1, 13))
-    work = Path(args.work) / f"{args.date}-{args.venue}"
+    work = Path(args.work).resolve() / f"{args.date}-{args.venue}"
     work.mkdir(parents=True, exist_ok=True)
     try:
         cmd = ["node", str(TOOLS / "measure-capture.mjs"), "--date", args.date, "--venue", args.venue,
                "--races", ",".join(map(str, races)), "--out", str(work), "--rate", str(args.rate)]
+        if args.shots:
+            cmd += ["--shots", args.shots]
         print("capture:", " ".join(cmd[2:]), flush=True)
         subprocess.run(cmd, cwd=TOOLS, check=False)
         rows, reports = analyze(work, args.date, args.venue, races, prof)
@@ -207,6 +209,122 @@ def spearman(a, b):
     return float(np.corrcoef(ra, rb)[0, 1])
 
 
+# ------------------------------------------------------------------ yardsticks (what "agrees" means)
+OFFICIAL_KEYS = ("exhibition", "straight", "turn", "lap", "accel_index")
+
+
+def official_values(venue, dates, key):
+    """{(date, race, boat): official time} for one item; accel_index = dev(直線) - dev(展示) of the race."""
+    out = {}
+    for date in dates:
+        for race in range(1, 13):
+            off = official(date, venue, race)
+            if not off:
+                continue
+            if key == "accel_index":
+                if all(isinstance(off[b].get("straight"), (int, float)) and isinstance(off[b].get("exhibition"), (int, float))
+                       and off[b]["straight"] > 0 and off[b]["exhibition"] > 0 for b in range(1, 7)):
+                    st, ex = _dev([off[b]["straight"] for b in range(1, 7)]), _dev([off[b]["exhibition"] for b in range(1, 7)])
+                    for b in range(1, 7):
+                        out[(date, race, b)] = st[b - 1] - ex[b - 1]
+                continue
+            for b in range(1, 7):
+                v = off[b].get(key)
+                if isinstance(v, (int, float)) and not isinstance(v, bool) and 0 < v < 120:
+                    out[(date, race, b)] = float(v)
+    return out
+
+
+def card_values(venue, dates):
+    """{(date, race, boat): (motor, rider, motor 2連対率, rider national win rate)} from the race cards."""
+    out = {}
+    for date in dates:
+        for race in range(1, 13):
+            r = race_file(date, venue, race)
+            for b in ((r or {}).get("racelist") or {}).get("boats") or []:
+                if b.get("motor_no") and b.get("toban"):
+                    out[(date, race, b["frame"])] = (int(b["motor_no"]), str(b["toban"]), b.get("motor_2"), b.get("nat_win"))
+    return out
+
+
+def race_deviations(values, min_boats=3):
+    by = {}
+    for (date, race, boat), v in values.items():
+        by.setdefault((date, race), {})[boat] = v
+    out = {}
+    for key, boats in by.items():
+        if len(boats) >= min_boats:
+            m = sum(boats.values()) / len(boats)
+            for b, v in boats.items():
+                out[key + (b,)] = v - m
+    return out
+
+
+def _meeting_of(dates):
+    """Consecutive race days at the venue form one meeting (a gap of more than one day starts a new one)."""
+    out, start, prev = {}, None, None
+    for d in sorted(set(dates)):
+        cur = datetime.strptime(d, "%Y%m%d")
+        if prev is None or (cur - prev).days > 1:
+            start = d
+        out[d], prev = start, cur
+    return out
+
+
+def yardstick(values, venue, against=None, min_runs=4):
+    """How well one item (video or official) works as a motor measure, by four yardsticks:
+    1. per race: rank correlation with an official item over the same boats (mean over races)
+    2. split-half reliability: per meeting and per motor-rider pair, the mean of odd vs even runs
+    3. meeting means against the official item's meeting means
+    4. meeting means against motor 2連対率 and the rider's national win rate (time: smaller = better,
+       so agreement is a negative correlation)"""
+    dev = race_deviations(values)
+    dates = sorted({k[0] for k in dev})
+    card = card_values(venue, dates)
+    meet = _meeting_of(dates)
+    out = {"boats": len(dev), "races": len({k[:2] for k in dev})}
+    ref = race_deviations(official_values(venue, dates, against)) if against else None
+    if ref:
+        per_race, xs, ys = [], [], []
+        for key in sorted({k[:2] for k in dev}):
+            boats = [b for b in range(1, 7) if key + (b,) in dev and key + (b,) in ref]
+            if len(boats) >= 4:
+                a, b = [dev[key + (x,)] for x in boats], [ref[key + (x,)] for x in boats]
+                if np.std(a) > 0 and np.std(b) > 0:
+                    per_race.append(spearman(a, b))
+            xs += [dev[key + (x,)] for x in boats]
+            ys += [ref[key + (x,)] for x in boats]
+        if per_race:
+            out["per_race_spearman"] = [round(float(np.mean(per_race)), 3), round(float(np.std(per_race, ddof=1) / np.sqrt(len(per_race))), 3), len(per_race)]
+        if len(xs) > 3:
+            out["pooled_pearson"] = round(float(np.corrcoef(xs, ys)[0, 1]), 3)
+    runs = {}
+    for key in sorted(dev):
+        if key in card:
+            motor, rider = card[key][:2]
+            runs.setdefault((meet[key[0]], motor, rider), []).append(key)
+    pairs = {k: v for k, v in runs.items() if len(v) >= min_runs}
+    if len(pairs) >= 5:
+        odd = [np.mean([dev[k] for k in v[0::2]]) for v in pairs.values()]
+        even = [np.mean([dev[k] for k in v[1::2]]) for v in pairs.values()]
+        r = float(np.corrcoef(odd, even)[0, 1])
+        out["split_half"] = {"pairs": len(pairs), "r": round(r, 3), "meeting_reliability": round(2 * r / (1 + r), 3) if r > -1 else None}
+        mean = {k: float(np.mean([dev[x] for x in v])) for k, v in pairs.items()}
+        ks = list(pairs)
+        m2 = [(mean[k], card[pairs[k][0]][2]) for k in ks if isinstance(card[pairs[k][0]][2], (int, float))]
+        win = [(mean[k], card[pairs[k][0]][3]) for k in ks if isinstance(card[pairs[k][0]][3], (int, float))]
+        if len(m2) >= 5:
+            out["meeting_vs_motor2"] = round(spearman(*map(list, zip(*m2))), 3)
+        if len(win) >= 5:
+            out["meeting_vs_rider_win"] = round(spearman(*map(list, zip(*win))), 3)
+        if ref:
+            both = [(mean[k], np.mean([ref[x] for x in pairs[k] if x in ref])) for k in ks
+                    if sum(x in ref for x in pairs[k]) >= min_runs // 2]
+            if len(both) >= 5:
+                out["meeting_vs_official"] = round(spearman(*map(list, zip(*both))), 3)
+    return out
+
+
 def compare(files):
     """Within-race deviations of the video times against the official ones (pooled correlation)."""
     pairs = {}
@@ -248,6 +366,26 @@ def compare(files):
     return out
 
 
+def yardstick_report(files, venue, metric):
+    """The video item against the official item of the same section (profile: shots.<name>.official),
+    next to the official items themselves on the same days."""
+    prof = profile(venue)
+    against = next((cfg.get("official") for cfg in prof["shots"].values() if cfg["metric"] == metric), None)
+    values = {}
+    for f in files:
+        doc = json.loads(Path(f).read_text(encoding="utf-8"))
+        for row in doc["rows"]:
+            if row["metric"] == metric:
+                values[(row["date"], row["race"], row["boat"])] = row["seconds"]
+    dates = sorted({k[0] for k in values})
+    out = {"video": {"metric": metric, "official_section": against, **yardstick(values, venue, against)}}
+    for key in OFFICIAL_KEYS:
+        v = official_values(venue, dates, key)
+        if v:
+            out[f"official_{key}"] = yardstick(v, venue, against if key != against else None)
+    return out
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
@@ -260,6 +398,7 @@ def main(argv=None):
     r.add_argument("--store")
     r.add_argument("--rate", type=float, default=.5, help="playback rate of the measured shots (0.5 keeps every frame)")
     r.add_argument("--keep", action="store_true", help="keep the temporary numbers (for checking)")
+    r.add_argument("--shots", help="only these fixed-camera shots, e.g. straight (default: every shot of the profile)")
     a = sub.add_parser("analyze")
     a.add_argument("--captures", required=True)
     a.add_argument("--date", required=True)
@@ -268,6 +407,10 @@ def main(argv=None):
     a.add_argument("--out", default=str(OUT))
     c = sub.add_parser("compare")
     c.add_argument("--files", nargs="+", required=True)
+    y = sub.add_parser("yardstick", help="video item and the official items by the same four yardsticks")
+    y.add_argument("--files", nargs="+", required=True)
+    y.add_argument("--venue", required=True)
+    y.add_argument("--metric", default="straight")
     args = p.parse_args(argv)
     if args.command == "run":
         return run(args)
@@ -279,6 +422,9 @@ def main(argv=None):
         summary = self_check(path, rows, reports, races)
         print(json.dumps(summary, ensure_ascii=False))
         return 0 if summary["pass"] else 1
+    if args.command == "yardstick":
+        print(json.dumps(yardstick_report(args.files, args.venue, args.metric), ensure_ascii=False, indent=1))
+        return 0
     print(json.dumps(compare(args.files), ensure_ascii=False, indent=1))
     return 0
 

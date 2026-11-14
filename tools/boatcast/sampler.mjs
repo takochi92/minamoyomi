@@ -22,8 +22,8 @@ const INSTALL_JS = `(() => {
     return S.box;
   };
   // [t0, t1] を rate 倍速で再生し、表示されたコマごとに点の RGB を貯める
-  S.run = (t0, t1, rate) => new Promise((resolve) => {
-    const n = S.xy.length / 2, [bx, by, bw, bh] = S.box;
+  S.run = (t0, t1, rate, channels) => new Promise((resolve) => {
+    const n = S.xy.length / 2, [bx, by, bw, bh] = S.box, gray = channels === 1;
     const chunks = [], meta = [];
     let done = false, size = null;
     const finish = (why) => { if (done) return; done = true; v.pause(); resolve({ why, meta, size }); S.chunks = chunks; };
@@ -36,10 +36,11 @@ const INSTALL_JS = `(() => {
         }
         S.ctx.drawImage(v, bx, by, bw, bh, 0, 0, bw, bh);
         const d = S.ctx.getImageData(0, 0, bw, bh).data;
-        const out = new Uint8Array(n * 3);
+        const out = new Uint8Array(n * (gray ? 1 : 3));
         for (let i = 0; i < n; i++) {
           const k = ((S.xy[2*i+1] - by) * bw + (S.xy[2*i] - bx)) * 4;
-          out[3*i] = d[k]; out[3*i+1] = d[k+1]; out[3*i+2] = d[k+2];
+          if (gray) out[i] = (d[k] + d[k+1] + d[k+2] + 1) / 3;
+          else { out[3*i] = d[k]; out[3*i+1] = d[k+1]; out[3*i+2] = d[k+2]; }
         }
         chunks.push(out);
         meta.push({ mt: md.mediaTime, pf: md.presentedFrames, w: md.width, h: md.height });
@@ -65,17 +66,18 @@ const INSTALL_JS = `(() => {
   return { ok: true };
 })()`;
 
-/** 点の RGB を [t0, t1] の全コマで取る。返り値 { meta:[{mt,pf,w,h}], rgb: Buffer(frames*n*3), n } */
-export async function samplePoints(cdp, points, t0, t1, { rate = 1 } = {}) {
+/** 点の RGB（channels=1 なら灰色 1バイト）を [t0, t1] の全コマで取る。返り値 { meta:[{mt,pf,w,h}], rgb: Buffer(frames*n*channels), n } */
+export async function samplePoints(cdp, points, t0, t1, { rate = 1, channels = 3 } = {}) {
   const ok = await cdp.evaluate(INSTALL_JS);
   if (!ok?.ok) throw new Error(`sampler を入れられません: ${ok?.why}`);
   const flat = points.flatMap(([x, y]) => [Math.round(x), Math.round(y)]);
   await cdp.evaluate(`window.__smp.setPoints(${JSON.stringify(flat)})`);
-  const res = await cdp.evaluate(`window.__smp.run(${t0}, ${t1}, ${rate})`, { timeoutMs: ((t1 - t0 + 2) / rate) * 1000 + 60000 });
+  const res = await cdp.evaluate(`window.__smp.run(${t0}, ${t1}, ${rate}, ${channels})`, { timeoutMs: ((t1 - t0 + 2) / rate) * 1000 + 60000 });
   const frames = res.meta.filter((m) => m.mt !== undefined).length;
   const bufs = [];
-  for (let i = 0; i < frames; i += 40) {
-    const b64 = await cdp.evaluate(`window.__smp.take(${i}, ${i + 40})`, { timeoutMs: 60000 });
+  const per = channels === 1 ? 60 : 40;
+  for (let i = 0; i < frames; i += per) {
+    const b64 = await cdp.evaluate(`window.__smp.take(${i}, ${i + per})`, { timeoutMs: 60000 });
     bufs.push(Buffer.from(b64, 'base64'));
   }
   await sleep(50);
