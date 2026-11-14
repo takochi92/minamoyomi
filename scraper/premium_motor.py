@@ -21,6 +21,7 @@ from .research_snapshot import ROOT, archived_records
 
 METRICS = {"exhibition": "展示", "straight": "直線", "turn": "まわり足"}
 MIN_FIELD = 12
+RESULT_TRIES_LIMIT = 12   # run.py が結果の取得をあきらめる回数
 MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
@@ -253,6 +254,18 @@ def publish_snapshot(payload, base, secret, opener=None, sleep=time.sleep):
         sleep(2 ** attempt)
 
 
+def _settled(path):
+    """これ以上待っても変わらないレースか。3連単が不成立（集団フライングなど）のレースや、
+    直前情報が取れなかったレースは保存先に入らないが、結果は確定している。"""
+    try:
+        race = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    outcome = race.get("result") or {}
+    return bool(outcome.get("finished") or outcome.get("cancelled") or outcome.get("order")
+                or outcome.get("refunded") or race.get("result_tries", 0) >= RESULT_TRIES_LIMIT)
+
+
 def check_publish_inputs(records, through, today, races_dir):
     if (today - day(through)).days not in range(1, 4):
         raise ValueError("refusing to publish a stale or future cutoff")
@@ -276,7 +289,7 @@ def check_publish_inputs(records, through, today, races_dir):
         expected[venue] += 1
         archived = records.get((through, venue, race), {})
         outcome = archived.get("result") or {}
-        if outcome.get("finished") or outcome.get("cancelled"):
+        if outcome.get("finished") or outcome.get("cancelled") or _settled(path):
             available[venue] += 1
     if not expected:
         raise ValueError("no scheduled race files on the requested cutoff")
