@@ -127,3 +127,53 @@ export function summarizeManifest(m) {
   for (const a of m.measurement?.anomalies || []) problems.push(`要確認 ${a.kind}: ${a.files.join(', ')}`);
   return { rows, problems };
 }
+
+
+// ---------------------------------------------------------------- stream モード（再生しながら写し取る）
+/** コマの間隔（秒）。mediaTime の差の中央値 */
+export function frameInterval(times) {
+  const d = times.slice(1).map((t, i) => t - times[i]).filter((x) => x > 0).sort((a, b) => a - b);
+  return d.length ? d[Math.floor(d.length / 2)] : null;
+}
+
+/**
+ * 取りこぼしを探す。mediaTime の差がコマ間隔の 1.5 倍を超える所に、抜けたコマの推定時刻を並べる。
+ * presentedFrames（表示されたコマの通し番号）が飛んでいる数も数える。
+ */
+export function findGaps(frames) {
+  const times = frames.map((f) => f.mediaTime);
+  const step = frameInterval(times);
+  const missing = [];
+  if (step) {
+    for (let i = 1; i < times.length; i++) {
+      const n = Math.round((times[i] - times[i - 1]) / step) - 1;
+      for (let k = 1; k <= n && n < 300; k++) missing.push(Number((times[i - 1] + k * step).toFixed(6)));
+    }
+  }
+  let skipped = 0;
+  for (let i = 1; i < frames.length; i++) {
+    const a = frames[i - 1].presentedFrames, b = frames[i].presentedFrames;
+    if (Number.isInteger(a) && Number.isInteger(b) && b - a > 1) skipped += b - a - 1;
+  }
+  return { interval: step, missing, presentedSkipped: skipped };
+}
+
+/** 突き合わせに使うコマの番号：最初・最後と、every コマおき */
+export function pickVerifySamples(count, every) {
+  if (count <= 0) return [];
+  const out = new Set([0, count - 1]);
+  for (let i = 0; i < count; i += Math.max(1, every)) out.add(i);
+  return [...out].sort((a, b) => a - b);
+}
+
+/**
+ * stream で取った回を採用してよいか。
+ *  ・シークで取り直したコマと1つでも違えば、その回の全コマを計測不可にする（画像と時刻がずれている疑い）
+ *  ・突き合わせが1件もできなければ、確認できていないので計測不可
+ */
+export function judgeStream({ checked, same, unfilled }) {
+  const reasons = [];
+  if (!checked) reasons.push('stream-not-verified');
+  else if (same !== checked) reasons.push('stream-frame-time-mismatch');
+  return { measurable: reasons.length === 0, reasons, complete: reasons.length === 0 && unfilled === 0 };
+}

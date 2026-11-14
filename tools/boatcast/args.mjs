@@ -129,7 +129,19 @@ export function parseCaptureArgs(argv, env = process.env) {
   const races = parseRaces([...(flags.race ?? []), ...(flags.races ?? [])]);
   if (!races.length) throw new ArgError('--race 12 または --races 11,12 でレース番号を指定してください');
   const mode = flags.mode?.[0] ?? 'seek';
-  if (!['seek', 'play'].includes(mode)) throw new ArgError(`--mode は seek か play です: ${mode}`);
+  if (!['seek', 'play', 'stream'].includes(mode)) throw new ArgError(`--mode は seek / play / stream です: ${mode}`);
+  let stream = null;
+  if (mode === 'stream') {
+    const from = Number(flags.from?.[0]), to = Number(flags.to?.[0]);
+    if (!Number.isFinite(from) || !Number.isFinite(to) || from < 0 || to <= from || to - from > 120) {
+      throw new ArgError('--mode stream には --from 秒 と --to 秒 が必要です（0 <= from < to、幅は120秒まで）');
+    }
+    const rate = Number(flags.rate?.[0] ?? env.BOATCAST_STREAM_RATE ?? 0.5);
+    if (!Number.isFinite(rate) || rate < 0.1 || rate > 1) throw new ArgError(`--rate は 0.1〜1 です: ${flags.rate?.[0]}`);
+    const every = Number(flags['verify-every']?.[0] ?? 30);
+    if (!Number.isInteger(every) || every < 1 || every > 600) throw new ArgError(`--verify-every は 1〜600 の整数です: ${flags['verify-every']?.[0]}`);
+    stream = { from, to, rate, verifyEvery: every };
+  }
   const c = common(flags, env);
   if (c.reservedPortWarning) throw new ArgError(c.reservedPortWarning);
   return {
@@ -139,6 +151,7 @@ export function parseCaptureArgs(argv, env = process.env) {
     seconds: flags.seconds ? parseSeconds(flags.seconds.join(',')) : [...DEFAULT_SECONDS],
     out: flags.out?.[0] ?? env.BOATCAST_OUT ?? DEFAULT_OUT,
     mode,
+    stream,
     dryRun: Boolean(flags['dry-run']),
   };
 }
