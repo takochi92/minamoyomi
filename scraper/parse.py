@@ -313,6 +313,8 @@ def parse_result(html: str) -> dict:
         st = []
     res["start"] = st
     res["finished"] = res["trifecta"] is not None
+    if not res["finished"] and any(_t(h) == "レース中止" for h in soup.select("h2,h3,h4")):
+        res["cancelled"] = True
     return res
 
 

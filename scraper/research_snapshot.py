@@ -1,4 +1,5 @@
 """締切前の研究入力を固定し、結果と一緒に月別履歴に保存する。"""
+import argparse
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import gzip
@@ -84,13 +85,16 @@ def archived_records(root=ROOT):
     return output
 
 
-def archive(root=ROOT):
+def archive(root=ROOT, dates=None):
     """終了レースを保存。旧データは取得時刻未確認として明示し、検証済み入力に昇格しない。"""
     records = archived_records(root)
     added = 0
-    for p in sorted((root/'site'/'data'/'races').glob('*/*.json')):
-        r = json.loads(p.read_text())
-        if not (r.get('result') or {}).get('finished') or not r.get('before'):
+    races_dir = root / "site" / "data" / "races"
+    paths = (path for date in dates for path in (races_dir / date).glob("*.json")) if dates else races_dir.glob("*/*.json")
+    for p in sorted(paths):
+        r = json.loads(p.read_text(encoding="utf-8"))
+        outcome = r.get("result") or {}
+        if not (outcome.get("cancelled") or (outcome.get("finished") and r.get("before"))):
             continue
         key = (r['date'], r['jcd'], r['rno'])
         snap = r.get('research_snapshot')
@@ -117,10 +121,22 @@ def archive(root=ROOT):
         months.setdefault(r['date'][:6], []).append(r)
     for month, rows in months.items():
         content = ''.join(json.dumps(r, ensure_ascii=False, separators=(',', ':'))+'\n' for r in rows)
-        (out/f'{month}.jsonl.gz').write_bytes(gzip.compress(content.encode(), mtime=0))
+        path = out / f"{month}.jsonl.gz"
+        raw = content.encode()
+        if path.exists() and gzip.decompress(path.read_bytes()) == raw:
+            continue
+        temp = path.with_suffix(".tmp")
+        temp.write_bytes(gzip.compress(raw, mtime=0))
+        temp.replace(path)
     return {'records': len(records), 'added_or_updated': added,
             'timestamped': sum(r['provenance']=='timestamped_pre_deadline' for r in records.values())}
 
 
 if __name__ == '__main__':
-    print(json.dumps(archive(), ensure_ascii=False))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--date", action="append", help="Archive only this JST date (YYYYMMDD)")
+    args = parser.parse_args()
+    for date in args.date or []:
+        if datetime.strptime(date, "%Y%m%d").strftime("%Y%m%d") != date:
+            parser.error("expected YYYYMMDD")
+    print(json.dumps(archive(dates=args.date), ensure_ascii=False))

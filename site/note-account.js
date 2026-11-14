@@ -252,7 +252,14 @@
     }
     return result.data;
   }
-  window.TeiNoteAccount = { notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,
+  async function premiumCall(action, fields) {
+    if (!client || !user) throw new Error('ログインが必要です。');
+    var epoch = generation;
+    var result = await client.functions.invoke('premium', {body:Object.assign({}, fields, {action:action})});
+    if (epoch !== generation || !user || result.error) throw new Error('プレミアムに接続できませんでした。');
+    return result.data;
+  }
+  window.TeiNoteAccount = { premiumCall:premiumCall, notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,
     subscribe:function (f) { callbacks.push(f); }, state:function () { return Object.assign({}, state, {user:!!user}); }, exportData:exportData };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

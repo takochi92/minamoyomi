@@ -92,6 +92,10 @@ def test_pages_and_links(tmp_path):
     assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
     assert race_html.index('data-t="yoso"') < race_html.index('data-t="setsukan"') < race_html.index('data-t="tenji"')
     assert 'data-p="setsukan"' in race_html
+    assert 'data-t="premium"' in race_html and 'data-p="premium" hidden' in race_html
+    assert 'href="/premium"' in race_html
+    assert 'data-premium-plan' in files['premium.html']
+    assert 'id="premium-chart" data-premium-chart' in files['mynote.html']
     assert len([p for p in files if p.startswith("racer/")]) > 1000
     assert 'id="page-freshness"' in files['venue/kiryu.html']
     assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']
@@ -167,8 +171,7 @@ def test_motor_history_has_all_users_dates_and_official_result_links():
     assert '西田 和加' in html and '2026/10/08' in html and '2026/05/25' in html
     assert '全使用履歴' in html and '公式の節区分ではありません' in html
     assert 'hd=20261008&amp;jcd=03&amp;rno=1' in html
-    assert '交換日不明' in html
-    assert '初卸からの網羅性は未確認' in html
+    assert '2026/05/11' in html and '公式確認済み' in html
 
 
 def test_seo_basics(tmp_path):

@@ -206,6 +206,7 @@ class Page:
 <script src="{self.asset('note-store.js')}" defer></script>
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
+{f'<script src="{self.asset("premium.js")}" defer></script>' if self.path.startswith('race/') or self.path in ('mynote.html', 'premium.html') else ''}
 <script src="{self.asset('race-notifications.js')}" defer></script>
 <script src="{self.asset('pwa.js')}" defer></script>
 <script src="{self.asset('freshness.js')}" defer></script>
@@ -1226,7 +1227,7 @@ class Site:
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 {self.freshness_block(page, race.get('updated_at', ''), f'{d}-{jcd}-{rno}') if d == self.idx.get('date') and not res else ''}
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button></nav>
+<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button><button data-t="premium" role="tab">プレミアム</button></nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
@@ -1260,9 +1261,18 @@ class Site:
 <div class="tabp" data-p="kekka" style="display:grid;gap:16px;min-width:0" hidden>
 {self.result_block(d, race, p, res, page) or '<section class="panel"><p class="sub" style="margin:0">レースが終わると、着順・払戻・本番のスタートをここに表示します（締切の15分後ごろ）。</p></section>'}
 </div>
+<div class="tabp" data-p="premium" hidden>
+<section class="panel premium-panel" data-premium-race data-date="{e(d)}" data-venue="{e(jcd)}" data-race="{int(rno)}">
+<h2>モーター評価</h2>
+<div class="premium-content" aria-live="polite">
+<div class="premium-sample" aria-hidden="true">{''.join(f'<span>{label}<b>—</b></span>' for label in ('展示', '伸び', 'まわり足'))}</div>
+<p>直近3節をもとに、6艇のモーター評価と場内での順位と秒差が見られます。</p>
+<a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a>
+</div></section>
+</div>
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka','premium'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>
@@ -2000,10 +2010,24 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             out[t] = [[VENUES[j]["name"], rn, f"race/{d}/{SLUG[j]}-{rn}.html", dl[(j,rn)], f] for d, j, rn, f in sorted(xs, key=lambda x: dl.get((x[1], x[2]), "")) if (j,rn) in dl]
         self.put("fav-today.json", json.dumps({"date": self.idx.get("date", ""), "racers": out}, ensure_ascii=False, separators=(",", ":")))
 
+    def motor_data(self):
+        if not hasattr(self, "_display_motor_data"):
+            from . import motor, motor_generation
+            if getattr(self, "idx", {}).get("date"):
+                ledger = motor_generation.read(DATA / motor_generation.FILENAME, {})
+                self.motor_periods = {
+                    "venues": motor_generation.boundaries(self.idx["date"], published=ledger.get("venues")),
+                    "pending": ledger.get("pending", {}),
+                }
+            else:
+                self.motor_periods = {"venues": {}, "pending": {}}
+            self._display_motor_data = motor_generation.for_display(motor.load(), self.motor_periods)
+        return self._display_motor_data
+
     def motor_rows(self, today):
         """モーター検索用の一覧：[場コード, 号機, 出走, 2連, 3連, 展示順位, 前節の使用者, 今日の使用者]"""
         from . import motor as _motor
-        data = _motor.load()
+        data = self.motor_data()
         use = {}
         d = self.idx.get("date")
         for v in self.idx.get("venues", []):
@@ -2202,8 +2226,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                                             f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])], script=f'<script src="{page.asset("day-browser.js")}" defer></script>'))
 
     def motor_pages(self):
-        from . import motor as _motor
-        data = _motor.load()
+        data = self.motor_data()
         for jcd, v in VENUES.items():
             try:
                 self._motor_page(jcd, v, data)
@@ -2221,10 +2244,15 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         cards = []
         for jcd in sorted(VENUES):
             ms = data.get(jcd) or {}
-            since = next((m.get("since") for m in ms.values() if m.get("since")), "")
+            period = getattr(self, "motor_periods", {}).get("venues", {}).get(jcd, {})
+            since = period.get("date") or next((m.get("since") for m in ms.values() if m.get("since")), "")
             best = max(((no, st['top2'] / st['n']) for no, m in ms.items() if (st := display_stats(m)).get('n', 0) >= 20 and 'top2' in st), key=lambda x: x[1], default=None)
-            confirmed = any(m.get('history_boundary_source') == 'official_confirmed' for m in ms.values())
+            confirmed = period.get("source") == "official_confirmed" or any(
+                m.get("history_boundary_source") == "official_confirmed" for m in ms.values())
+            pending = jcd in getattr(self, "motor_periods", {}).get("pending", {})
             sub = (f"{int(since[4:6])}/{int(since[6:])}使用開始{'確認済' if confirmed else '推定'}" if since else "集計中")
+            if pending:
+                sub = "切り替え確認中"
             top = f'<span class="sub">最高 {e(best[0])}号機 {best[1] * 100:.0f}%</span>' if best else '<span class="sub">&nbsp;</span>'
             cards.append(f'<a class="vt on{"" if jcd in held else " off"}" href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}"><b>{e(VENUES[jcd]["name"])}</b>'
                          f'<span>{"本日開催" if jcd in held else "&nbsp;"}</span><span class="st" style="font-size:12px">{sub}</span>{top}</a>')
@@ -2241,7 +2269,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if True:
             page = Page(f"venue/{SLUG[jcd]}-motor.html")
             ms = data.get(jcd) or {}
-            since = next((m.get("since") for m in ms.values() if m.get("since")), "")
+            period = getattr(self, "motor_periods", {}).get("venues", {}).get(jcd, {})
+            since = period.get("date") or next((m.get("since") for m in ms.values() if m.get("since")), "")
 
             def rate(m, k):
                 m = display_stats(m)
@@ -2320,15 +2349,19 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                              f'<div class="mt-body">{full_history(m, no)}'
                              f'<div class="nb-slot" data-kind="motor" data-key="{jcd}-{e(no)}" data-label="{e(v["name"])} {e(no)}号機のメモ" data-extra=\'{{"venue": "{e(v["name"])}", "jcd": "{jcd}", "no": {int(no)}}}\'></div></div></details>')
             sh = f"{int(since[:4])}/{int(since[4:6])}/{int(since[6:])}" if since else ""
-            official = any(m.get('history_boundary_source') == 'official_confirmed' for m in ms.values())
+            official = period.get("source") == "official_confirmed" or any(
+                m.get("history_boundary_source") == "official_confirmed" for m in ms.values())
             boundary_note = (f'現モーターの使用開始は{sh}（公式確認済み）。' if official else
                              f'交換推定日は{sh}。番組表の2連率0％から判定しており、公式の初卸日とは未照合です。' if sh else '交換日は未確認です。')
+            if jcd in getattr(self, "motor_periods", {}).get("pending", {}):
+                boundary_note = "新モーターへの切り替えを確認中です。"
+            empty = "新モーターの使用履歴を集計中です。" if period else "モーターのデータを集めているところです。"
             body = f"""<h1>{e(v['name'])}のモーター一覧</h1>
 <p class="sub">号機をタップすると、初回保存から最終使用記録までの履歴が開きます。各使用期間を開くとレースごとの着順を確認できます。{boundary_note}登録せずに使うメモはこの端末に保存します。</p>
 <p class="sub mt-award-legend">{award_badge('finalist')} 優勝戦出走　{award_badge('champion')} 優勝戦1着。公式のレース名・進入・結果で確認できた記録に表示します。</p>
 <div class="mt-sort"><label for="motor-sort">並び順</label><select id="motor-sort"><option value="top2">2連対率が高い順</option><option value="top3">3連対率が高い順</option><option value="finals">優出が多い順</option><option value="wins">優勝が多い順</option><option value="starts">出走が多い順</option><option value="number">号機順</option></select><span class="sub" id="motor-sort-status" role="status" aria-live="polite"></span></div>
 <p class="sub mt-count-note">優出・優勝回数は保存済み機歴で確認できた回数です。優出回数には優勝も含みます。</p>
-<div class="mt-list">{''.join(cards) or '<p class="empty">モーターのデータを集めているところです。</p>'}</div>
+<div class="mt-list">{''.join(cards) or f'<p class="empty">{empty}</p>'}</div>
 <p class="sub">データ：BOAT RACE公式の競走成績・番組表から独自集計。一覧の出走回数・連対率は選手責任外の失格・欠場（S0・L0・K0）を除外します。全使用履歴の記録件数にはこれらも含めます。取得期間や欠落により公式表示と異なる場合があります。展示の順位は、展示タイムが6艇平均より速い順です。<a href="{page.u('venue/' + SLUG[jcd] + '.html')}">{e(v['name'])}の水面の特徴 →</a></p>"""
             self.put(page.path, page.render(f"{v['name']}ボートレース場のモーター一覧（2連対率・3連対率・前節の使用者）｜{SITE_NAME}",
                                             f"{v['name']}のモーターを2連対率・3連対率の順に一覧。保存済みの全使用者・使用期間・着順と、展示タイムの順位。", body,
@@ -2606,9 +2639,20 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         body = f"""<h1>マイノート</h1>
 <p class="sub">収支表・選手メモ・モーターメモ。登録せずにも使えます。保存先は、下のログイン状態と案内を確認してください。</p>
 <div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
+<section class="panel premium-panel" id="premium-chart" data-premium-chart><h2>収支グラフ</h2><div class="premium-content"><p>収支の推移を週・月・年で見られます。</p><a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a></div></section>
 <section class="panel" id="race-notifications" aria-live="polite"></section>
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
+        page = Page("premium.html")
+        body = """<h1>艇ろぐ プレミアム</h1>
+<section class="panel premium-panel" data-premium-plan>
+<h2>モーター評価と収支グラフ</h2>
+<ul><li>レースごとに6艇の展示・伸び・まわり足を比較</li>
+<li>マイノートの収支を週・月・年のグラフで確認</li></ul>
+<p class="sub">計測や比較に必要なデータが少ない項目は評価保留になります。</p>
+<div class="premium-content" aria-live="polite"><p>申込の受付は準備中です。</p></div>
+</section>"""
+        self.put(page.path, page.render(f"プレミアム｜{SITE_NAME}", "モーター評価とマイノートの収支グラフ。", body, [("", "プレミアム")], noindex=True))
         page = Page("tools/composite.html")
         body = """<h1>合成オッズ計算ツール</h1>
 <p>複数の買い目のオッズを入れると、合成オッズと「どれが当たっても払戻がほぼ同じになる配分（100円単位）」を計算します。</p>

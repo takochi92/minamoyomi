@@ -349,7 +349,9 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
                 race.pop(key, None)
 
     # 3) 結果
-    if now >= dl + timedelta(minutes=12) and not race.get("result", {}).get("finished") and race.get("result_tries", 0) < 12:
+    outcome = race.get("result") or {}
+    if (now >= dl + timedelta(minutes=12) and not outcome.get("finished")
+            and not outcome.get("cancelled") and race.get("result_tries", 0) < 12):
         res = parse.parse_result(f.result(jcd, rno, date))
         race["result_tries"] = race.get("result_tries", 0) + 1
         race["result"] = res
@@ -517,6 +519,11 @@ def main(argv=None):
     jobs = [(v, r) for v in idx["venues"] for r in v["races"]]
     jobs.sort(key=lambda x: abs((_dl(date, x[1]["deadline"]) - now).total_seconds()))
     summaries = {}
+    from . import motor, motor_generation
+    from .race_days import save_index
+    save_index(DATA, idx)
+    seeds = motor_generation.saved_starts(motor.load())
+    _save(DATA / motor_generation.FILENAME, motor_generation.live_periods(DATA, date, seeds))
 
     def one(job):
         v, r = job
@@ -537,8 +544,8 @@ def main(argv=None):
 
     idx["updated_at"] = now.strftime("%Y-%m-%dT%H:%M")
     _save(DATA / "index.json", idx)
-    from .race_days import save_index
-    save_index(DATA, idx)
+    periods = motor_generation.live_periods(DATA, date, seeds)
+    _save(DATA / motor_generation.FILENAME, periods)
     shutil.copyfile(Path(__file__).parent / "venues.json", DATA / "venues.json")
     if (Path(__file__).parent / "model_report.json").exists():
         shutil.copyfile(Path(__file__).parent / "model_report.json", DATA / "model_report.json")

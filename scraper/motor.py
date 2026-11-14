@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .history import load_all
+from . import motor_generation
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(__file__).parent / "motor.json.gz"
@@ -54,9 +55,10 @@ def renewals(races: list) -> dict:
     return out
 
 
-def build(races: list, race_files: list[dict]) -> dict:
-    renew = renewals(races)
-    verified = json.loads(Path(__file__).with_name("motor_renewals.json").read_text(encoding="utf-8"))
+def build(races: list, race_files: list[dict], periods=None) -> dict:
+    through = max((r[0] for r in races), default="")
+    active = motor_generation.boundaries(through, renewals(races), periods)
+    renew = {venue: p["date"] for venue, p in active.items()}
     by = defaultdict(list)          # (jcd, motor) -> [(date, exdev, place, kimarite_if_win)]
     for r in sorted(races, key=lambda r: (r[0], r[1], r[2])):
         if r[0] < renew.get(r[1], ""):
@@ -162,10 +164,10 @@ def build(races: list, race_files: list[dict]) -> dict:
         m['history_stats'] = {'n': len(counted),
                               'top2': sum(r['place'] in (1, 2) for r in counted),
                               'top3': sum(r['place'] in (1, 2, 3) for r in counted)}
-        # 確認済み日付と推定世代が一致する場合だけ公式確認済みとする。
-        if renew.get(jcd) and verified.get(jcd, {}).get("date") == renew[jcd]:
+        period = active.get(jcd, {})
+        if period.get("source") == "official_confirmed":
             m["history_boundary_source"] = "official_confirmed"
-            m["history_boundary_url"] = verified[jcd]["url"]
+            m["history_boundary_url"] = period["url"]
     # 場の中での順位（展示タイム差が小さい＝速い順）
     for jcd, ms in out.items():
         order = sorted((k for k in ms if ms[k].get("ex") is not None), key=lambda k: ms[k]["ex"])
@@ -196,13 +198,18 @@ def main():
             files.append(json.loads(p.read_text(encoding="utf-8")))
         except Exception:
             pass
-    data = build(races, files)
     from .motoradj import current_context
-    today=datetime.now(timezone(timedelta(hours=9))).strftime('%Y%m%d')
+    today = datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d")
+    ledger = motor_generation.live_periods(motor_generation.DATA, today)
+    periods = ledger["venues"]
+    data = build(races, files, periods)
     # 学習と同じ日付順の計算法・全履歴。現在日の結果は含めない。
-    for j, ms in current_context([r for r in load_all() if r[0]<today]).items():
+    historical = load_all()
+    starts = motor_generation.boundaries(today, renewals(races), periods)
+    for j, ms in current_context([r for r in historical if r[0] < today], starts).items():
         for mno, v in ms.items():
-            data.setdefault(j, {}).setdefault(mno, {}).update(v)
+            if mno in data.get(j, {}):
+                data[j][mno].update(v)
     # ページ生成などが同時に読む場合も、書きかけのgzipを渡さない。
     temp = OUT.with_suffix('.gz.tmp')
     with gzip.open(temp, "wt", encoding="utf-8") as f:

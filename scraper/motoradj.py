@@ -155,13 +155,18 @@ class OnlineMotorAdj(MotorAdj):
         return max(-2.,min(2.,-10*a[1]/(a[0]+20)))
 
 
-def current_context(races):
+def current_context(races, periods=None):
     from datetime import datetime
     by=defaultdict(list)
     for r in races:by[r[0]].append(r)
     ma=OnlineMotorAdj()
+    starts = {venue: value["date"] for venue, value in (periods or {}).items()}
     for day,rows in sorted(by.items()):
-        ma.start_day(rows,datetime.strptime(day,'%Y%m%d').toordinal())
+        ordinal = datetime.strptime(day,'%Y%m%d').toordinal()
+        ma.start_day([r for r in rows if r[1] not in starts], ordinal)
+        for venue in {r[1] for r in rows} & starts.keys():
+            if day >= starts[venue]:
+                ma.fresh[venue] = True
         ma.finish_day(rows)
     out=defaultdict(dict)
     for (j,no),(n,_) in ma.m.items():
@@ -170,5 +175,6 @@ def current_context(races):
         out[j][str(no)]={'adj':round(ma.value(j,no),6),'ex_adj':round(ma.ex_value(j,no),6),
                          'ex_reference_n':a[0],'ex_rider_ready_n':a[2],
                          'as_of':max(by),
-                         'adj_method':'prior_days_v2','renewal_source':'zero_rate_inferred'}
+                         'adj_method':'prior_days_v2',
+                         'renewal_source':(periods or {}).get(j, {}).get("source", "zero_rate_inferred")}
     return dict(out)

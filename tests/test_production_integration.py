@@ -77,8 +77,10 @@ def test_exhibition_facts_need_six_valid_values_and_ignore_results():
 
 def test_future_motor_context_is_neutral_in_live_prediction(monkeypatch):
     import fixtures as fx
-    from scraper import prediction_context,motor
+    from scraper import prediction_context,motor,motor_generation
     rl=parse.parse_racelist(fx.racelist_html())
+    # 本物のモーター台帳に左右されないようにする（台帳が無い状態で確かめる）
+    monkeypatch.setattr(motor_generation,'read',lambda path,default:default)
     monkeypatch.setattr(P,'load_stats',lambda:model.Stats())
     monkeypatch.setattr(prediction_context,'references',lambda day,ids:{})
     monkeypatch.setattr(P,'load_model',lambda:{'coef':{s:{'base_w':1.,'motor_ex':1.} for s in ('1','2','3')},'races':100000})
