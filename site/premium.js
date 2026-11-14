@@ -98,7 +98,7 @@
       box.replaceChildren(el('p',why));
       return;
     }
-    var table=el('table'); table.className='premium-table'; table.setAttribute('aria-label','モーター試験評価');
+    var table=el('table'); table.className='premium-table'; table.setAttribute('aria-label','モーター評価');
     var header=table.createTHead().insertRow();
     ['号機'].concat(labels).forEach(function (label) {
       var th=el('th'); th.scope='col';
@@ -122,7 +122,7 @@
         td.append(grade);
       });
     });
-    var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点 · 試験評価');
+    var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点');
     date.className='premium-rating-date';
     box.replaceChildren(date,table);
   }
