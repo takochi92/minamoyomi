@@ -125,3 +125,46 @@ def test_motion_feature_measures_boats_running_through_old_wakes(tmp_path):
     for r, v in zip(records, speeds):
         assert not r["reasons"]
         assert r["seconds"] == pytest.approx(440 / v, abs=.01)
+
+
+COLOURS = {"3": [325, 15], "4": [195, 235], "5": [40, 75], "6": [90, 180]}
+
+
+def passes(hues):
+    return [{"order": i + 1, "points": 100, "reasons": [], "hue": h} for i, h in enumerate(hues)]
+
+
+def test_colour_anchors_fill_white_and_black_in_order():
+    recs = bm.assign_by_colour(passes([None, None, 344, 213, 55, None]), [1, 2, 3, 4, 5, 6], COLOURS)
+    assert [r.get("boat") for r in recs] == [1, 2, 3, 4, 5, 6]
+
+
+def test_extra_pass_before_the_first_boat_is_not_a_boat():
+    recs = passes([None, None, None, 344, 213, 55, None])
+    recs[0]["reasons"].append("short_curve")
+    bm.assign_by_colour(recs, [1, 2, 3, 4, 5, 6], COLOURS)
+    assert [r.get("boat") for r in recs] == [None, 1, 2, 3, 4, 5, 6]
+
+
+def test_a_missing_boat_leaves_its_neighbours_unassigned_instead_of_guessing():
+    # boat 2 never showed up: only one uncoloured pass before red, but boats 1 and 2 are needed
+    recs = bm.assign_by_colour(passes([None, 344, 213, 55, None]), [1, 2, 3, 4, 5, 6], COLOURS)
+    assert recs[0].get("boat") is None and "identity_unclear" in recs[0]["reasons"]
+    assert [r.get("boat") for r in recs[1:]] == [3, 4, 5, 6]
+
+
+def test_green_that_looks_blue_after_yellow_is_six():
+    recs = bm.assign_by_colour(passes([None, None, 344, 213, 55, 217]), [1, 2, 3, 4, 5, 6], COLOURS)
+    assert recs[5]["boat"] == 6
+
+
+def test_colours_out_of_order_stop_everything():
+    recs = bm.assign_by_colour(passes([55, None, 344]), [1, 2, 3, 4, 5, 6], COLOURS)
+    assert not any("boat" in r for r in recs)
+
+
+def test_line_correction_brings_times_to_the_common_line():
+    recs = [{"seconds": 3.0, "line_px": -40.0}, {"seconds": 3.5, "line_px": 0.0}]
+    bm.line_correct(recs, .0125)
+    assert [r["seconds"] for r in recs] == [3.5, 3.5]
+    assert recs[0]["seconds_raw"] == 3.0

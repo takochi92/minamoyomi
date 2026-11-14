@@ -76,7 +76,12 @@ def analyze_race(capture_dir, prof, date, venue, race):
             shot_reasons.append("frames_skipped")
         if not info["sizes"] or len(info["sizes"]) != 1 or info["sizes"][0] != "1920x1080":
             shot_reasons.append("resolution")
-        bm.assign_boats(records, boats, use_plate=False)
+        if cfg.get("colours"):
+            bm.assign_by_colour(records, boats, cfg["colours"])
+        else:
+            bm.assign_boats(records, boats, use_plate=False)
+        if cfg.get("lineSlope"):
+            bm.line_correct(records, cfg["lineSlope"])
         if cfg.get("maxLineOffset"):
             bm.line_check(records, cfg["maxLineOffset"])
         for r in records:
@@ -150,7 +155,7 @@ def run(args):
     work.mkdir(parents=True, exist_ok=True)
     try:
         cmd = ["node", str(TOOLS / "measure-capture.mjs"), "--date", args.date, "--venue", args.venue,
-               "--races", ",".join(map(str, races)), "--out", str(work)]
+               "--races", ",".join(map(str, races)), "--out", str(work), "--rate", str(args.rate)]
         print("capture:", " ".join(cmd[2:]), flush=True)
         subprocess.run(cmd, cwd=TOOLS, check=False)
         rows, reports = analyze(work, args.date, args.venue, races, prof)
@@ -247,6 +252,7 @@ def main(argv=None):
     r.add_argument("--out", default=str(OUT))
     r.add_argument("--work", default=str(WORK))
     r.add_argument("--store")
+    r.add_argument("--rate", type=float, default=.5, help="playback rate of the measured shots (0.5 keeps every frame)")
     r.add_argument("--keep", action="store_true", help="keep the temporary numbers (for checking)")
     a = sub.add_parser("analyze")
     a.add_argument("--captures", required=True)

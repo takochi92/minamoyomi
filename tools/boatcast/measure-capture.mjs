@@ -99,7 +99,7 @@ function frameStats(meta) {
   return { frames: fr.length, skipped, sizes, resChanges: meta.filter((m) => m.resChange).length, first: fr[0]?.mt ?? null, last: fr[fr.length - 1]?.mt ?? null };
 }
 
-export async function captureRace({ cdp, open }, { date, venue, race, profile, out, log = console.log, keepScan = true }) {
+export async function captureRace({ cdp, open }, { date, venue, race, profile, out, log = console.log, keepScan = true, denseRate = 0.5, withPlate = false }) {
   const dir = path.join(out, `${date}-${venue}-${String(race).padStart(2, '0')}`);
   mkdirSync(dir, { recursive: true });
   const manifest = { schema: 1, tool: CAPTURE_VERSION, createdAt: nowJst(), date, venue, race, slug: profile.slug, status: 'running', shots: {}, scan: null, failure: null };
@@ -123,8 +123,8 @@ export async function captureRace({ cdp, open }, { date, venue, race, profile, o
     for (const [name, s] of Object.entries(found.shots)) {
       const shot = profile.shots[name];
       const p = pathPoints(shot.path, shot.step, shot.half, shot.ostep);
-      const plate = shot.plate ? platePoints(shot.plate) : [];
-      const r = await samplePoints(cdp, [...p.pts, ...plate], s.from + 0.2, s.to - 0.1, { rate: 0.5 });
+      const plate = shot.plate && withPlate ? platePoints(shot.plate) : [];
+      const r = await samplePoints(cdp, [...p.pts, ...plate], s.from + 0.2, s.to - 0.1, { rate: denseRate });
       writeFileSync(path.join(dir, `${name}.bin`), r.rgb);
       const stats = frameStats(r.meta);
       manifest.shots[name] = { window: [s.from, s.to], corr: s.corr, nS: p.nS, nO: p.nO, nPlate: plate.length, end: r.why, ...stats,
@@ -143,12 +143,12 @@ export async function captureRace({ cdp, open }, { date, venue, race, profile, o
 
 async function main() {
   const a = Object.fromEntries(process.argv.slice(2).join(' ').split('--').filter(Boolean).map((x) => { const [k, ...v] = x.trim().split(/\s+/); return [k, v.join(' ')]; }));
-  if (!a.date || !a.venue || !a.out) { console.error('使い方: node measure-capture.mjs --date YYYYMMDD --venue 04 --races 1,2 --out DIR'); process.exit(2); }
+  if (!a.date || !a.venue || !a.out) { console.error('使い方: node measure-capture.mjs --date YYYYMMDD --venue 04 --races 1,2 --out DIR [--rate 0.5]'); process.exit(2); }
   const profile = loadProfile(a.venue);
   const races = (a.races || '1,2,3,4,5,6,7,8,9,10,11,12').split(',').map(Number);
   const results = [];
   await withChrome(async (ctx) => {
-    for (const race of races) results.push(await captureRace(ctx, { date: a.date, venue: a.venue, race, profile, out: a.out }));
+    for (const race of races) results.push(await captureRace(ctx, { date: a.date, venue: a.venue, race, profile, out: a.out, denseRate: Number(a.rate || 0.5) }));
   });
   const ok = results.filter((r) => r.manifest.status === 'ok').length;
   console.log(`取得 ${ok}/${results.length} レース`);
