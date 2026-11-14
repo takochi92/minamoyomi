@@ -87,3 +87,41 @@ def test_rows_pass_store_validation_and_read_back(tmp_path, monkeypatch):
     assert s["pass"] and s["rows"] == 2
     s = tool.self_check(path, rows[:1], [{"capture": "ok"}], [3])
     assert not s["pass"]
+
+
+def synth_turn(tmp_path, speeds, *, n_s=150, n_o=31, step=4, ostep=4, fps=30.0, frames=1000, seed=3):
+    """Turn-like samples: every boat leaves a bright wake that stays (and shimmers) in the band, so
+    later boats run through earlier wakes. The boat itself is a small block that moves."""
+    rng = np.random.default_rng(seed)
+    band = 100 + 6 * rng.standard_normal((frames, n_s, n_o))
+    wake = np.zeros((n_s, n_o))
+    starts = [50 + 150 * i for i in range(len(speeds))]
+    s_px = np.arange(n_s) * step
+    for f in range(frames):
+        for v, f0, lane in zip(speeds, starts, range(len(speeds))):
+            pos = (f - f0) / fps * v                      # bow position along the path (px)
+            if 0 <= pos < s_px[-1]:
+                cols = (s_px <= pos) & (s_px > pos - 24)  # hull about 24 px long
+                o = 8 + 3 * (lane % 4)
+                wake[(s_px <= pos - 24) & (s_px > pos - 60), o - 4:o + 5] = 240
+                band[f, cols, o - 4:o + 5] = 40
+        band[f] = np.where(band[f] == 40, 40, np.maximum(band[f], wake + 4 * rng.standard_normal(wake.shape) * (wake > 0)))
+    band = np.clip(band, 0, 255).astype(np.uint8)
+    rgb = np.repeat(band.reshape(frames, -1, 1), 3, axis=2)
+    d = tmp_path / "turn"
+    d.mkdir()
+    rgb.tofile(d / "turn1.bin")
+    (d / "manifest.json").write_text(json.dumps({"status": "ok", "shots": {"turn1": {
+        "nS": n_s, "nO": n_o, "nPlate": 0, "times": (np.arange(frames) / fps).tolist(), "skipped": 0,
+        "sizes": ["1920x1080"]}}}))
+    return d, {"step": step, "ostep": ostep, "gates": {"main": [80, 520]}, "feature": "motion"}
+
+
+def test_motion_feature_measures_boats_running_through_old_wakes(tmp_path):
+    speeds = [300, 320, 290, 310]
+    d, cfg = synth_turn(tmp_path, speeds)
+    records, info = bm.measure_shot(d, "turn1", cfg)
+    assert info["curves"] == 4
+    for r, v in zip(records, speeds):
+        assert not r["reasons"]
+        assert r["seconds"] == pytest.approx(440 / v, abs=.01)

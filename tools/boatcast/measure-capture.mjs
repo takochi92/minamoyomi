@@ -58,46 +58,37 @@ function ncc(frame, sig, mask) {
   return sxy / (Math.sqrt(sxx * syy) + 1e-9);
 }
 
-/** 場面分け：切りかわり（隣のコマとの差の山）で区切り、区間の相関の中央値で名前をつけ、同じ名前の隣どうしをつなぐ */
+/** 場面分け：コマごとに、いちばん相関の高い場面（minCorr 以上）を名前にする。1.5秒以内のすきまはつなぎ、
+ *  場面ごとにいちばん長い区間を使う。明るさ（朝・夕）で相関の高さは変わるが、他の場面は 0.3 未満にとどまる */
 export function findShots(gray, times, profile) {
   const [w, h] = profile.scan.grid; const n = w * h;
-  const mask = Array.from({ length: n }, (_, i) => Math.floor(i / w) >= profile.scan.maskTopRows);
-  const diff = [0];
-  for (let f = 1; f < times.length; f++) {
-    let s = 0; for (let i = 0; i < n; i++) s += Math.abs(gray[f][i] - gray[f - 1][i]); diff.push(s / n);
-  }
-  const cuts = [0];
-  for (let f = 1; f < diff.length; f++) {
-    const lo = Math.max(0, f - 3), hi = Math.min(diff.length, f + 4);
-    if (diff[f] > 12 && diff[f] >= Math.max(...diff.slice(lo, hi))) cuts.push(f);
-  }
-  cuts.push(times.length);
-  const segs = [];
-  for (let k = 0; k + 1 < cuts.length; k++) {
-    const i = cuts[k], j = cuts[k + 1];
-    if (j - i < 3) continue;
-    const scores = {};
+  const masks = Object.fromEntries(Object.entries(profile.shots).map(([name, shot]) => {
+    const [r0, r1] = shot.scanRows || [profile.scan.maskTopRows, h - 1];
+    return [name, Array.from({ length: n }, (_, i) => Math.floor(i / w) >= r0 && Math.floor(i / w) <= r1)];
+  }));
+  const labels = gray.map((fr) => {
+    let best = null, bc = -1;
     for (const [name, shot] of Object.entries(profile.shots)) {
-      const c = []; for (let f = i; f < j; f++) c.push(ncc(gray[f], shot.signature.flat(), mask));
-      c.sort((a, b) => a - b); scores[name] = c[Math.floor(c.length / 2)];
+      const c = ncc(fr, shot.signature.flat(), masks[name]);
+      if (c > bc) { bc = c; best = name; }
     }
-    const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
-    segs.push({ from: times[i], to: times[j - 1], label: best[1] >= profile.scan.minCorr ? best[0] : null, corr: Math.round(best[1] * 1000) / 1000 });
+    return { label: bc >= profile.scan.minCorr ? best : null, corr: bc };
+  });
+  const runs = [];
+  for (let f = 0; f < labels.length; f++) {
+    const L = labels[f].label;
+    if (!L) continue;
+    const last = runs[runs.length - 1];
+    if (last && last.label === L && times[f] - last.to <= (profile.scan.bridge ?? 1.5)) { last.to = times[f]; last.n++; last.sum += labels[f].corr; }
+    else runs.push({ label: L, from: times[f], to: times[f], n: 1, sum: labels[f].corr });
   }
-  const merged = [];
-  for (const s of segs) {
-    const last = merged[merged.length - 1];
-    if (last && s.label && last.label === s.label && s.from - last.to < 1.0) { last.to = s.to; last.corr = Math.min(last.corr, s.corr); }
-    else merged.push({ ...s });
-  }
+  const segments = runs.map((r) => ({ label: r.label, from: r.from, to: r.to, corr: Math.round((r.sum / r.n) * 1000) / 1000 }));
   const out = {};
-  for (const s of merged) {
-    if (!s.label) continue;
-    const need = profile.shots[s.label].minDuration ?? 5;
-    if (s.to - s.from < need) continue;
-    if (!out[s.label] || s.to - s.from > out[s.label].to - out[s.label].from) out[s.label] = s;   // いちばん長い区間
+  for (const s of segments) {
+    if (s.to - s.from < (profile.shots[s.label].minDuration ?? 5)) continue;
+    if (!out[s.label] || s.to - s.from > out[s.label].to - out[s.label].from) out[s.label] = s;
   }
-  return { shots: out, segments: merged };
+  return { shots: out, segments };
 }
 
 function frameStats(meta) {
@@ -108,7 +99,7 @@ function frameStats(meta) {
   return { frames: fr.length, skipped, sizes, resChanges: meta.filter((m) => m.resChange).length, first: fr[0]?.mt ?? null, last: fr[fr.length - 1]?.mt ?? null };
 }
 
-export async function captureRace({ cdp, open }, { date, venue, race, profile, out, log = console.log }) {
+export async function captureRace({ cdp, open }, { date, venue, race, profile, out, log = console.log, keepScan = true }) {
   const dir = path.join(out, `${date}-${venue}-${String(race).padStart(2, '0')}`);
   mkdirSync(dir, { recursive: true });
   const manifest = { schema: 1, tool: CAPTURE_VERSION, createdAt: nowJst(), date, venue, race, slug: profile.slug, status: 'running', shots: {}, scan: null, failure: null };
@@ -123,7 +114,8 @@ export async function captureRace({ cdp, open }, { date, venue, race, profile, o
       gray.push(row); times.push(m.mt);
     });
     const found = findShots(gray, times, profile);
-    manifest.scan = { duration: low.duration, frames: times.length, end: g.why, segments: found.segments.filter((s) => s.label || s.to - s.from > 3) };
+    if (keepScan) writeFileSync(path.join(dir, 'scan.json'), JSON.stringify({ times, gray: gray.map((r) => r.map((x) => Math.round(x))) }));
+    manifest.scan = { duration: low.duration, frames: times.length, end: g.why, segments: found.segments.filter((s) => s.to - s.from > 1) };
     log(`  ${race}R 場面: ${Object.entries(found.shots).map(([k, s]) => `${k} ${s.from.toFixed(1)}-${s.to.toFixed(1)}s(相関${s.corr})`).join(' / ') || 'なし'}`);
     if (!Object.keys(found.shots).length) throw new Error('固定カメラの場面が見つかりません（profile の signature と合わない）');
 

@@ -22,6 +22,8 @@ import numpy as np
 FPS_MAX_GAP = .05
 JUMP_LAGS = (4, 12)           # frames: a point brightens compared with 4..12 frames before
 JUMP_THRESHOLD = 80.0         # grey levels (0..255)
+MOTION_THRESHOLD = 40.0       # grey levels changed within 2 frames
+MOTION_MIN_COUNT = 4          # band samples moving at once
 MAX_RESIDUAL_FRAMES = 1.6     # spread of the curve around its fit
 MIN_COVER = .5                # share of path columns between the gates that carry the curve
 PLATE_COLOURS = {1: (235, 235, 235), 2: (25, 25, 25), 3: (225, 40, 60), 4: (30, 120, 220),
@@ -53,7 +55,8 @@ def load_shot(capture_dir, name):
 
 
 def jump_map(band, lags=JUMP_LAGS):
-    """Brightest point across the band per path column, minus its brightest value a few frames earlier."""
+    """Front feature: brightest point across the band per path column, minus its brightest value a few
+    frames earlier. Works where boats pass one at a time on a clean line (side-on straight)."""
     bright = band.max(2)
     prev = np.full_like(bright, -1e9)
     for k in range(lags[0], lags[1] + 1):
@@ -61,6 +64,42 @@ def jump_map(band, lags=JUMP_LAGS):
     jump = bright - prev
     jump[:lags[1]] = 0
     return jump, band.argmax(2)
+
+
+def motion_map(band, lag=2, threshold=MOTION_THRESHOLD):
+    """Motion feature: how many samples across the band changed strongly within `lag` frames.
+    The moving boat (and the spray it throws) changes fast; old wakes drift slowly and drop out.
+    Used in turns, where the wakes of every boat overlap and a "first brightening" is ambiguous."""
+    diff = np.zeros(band.shape, np.float32)
+    diff[lag:] = np.abs(band[lag:] - band[:-lag])
+    moving = diff > threshold
+    count = moving.sum(2).astype(np.float32)
+    # where across the band the motion sits (mean offset index of moving samples)
+    idx = np.arange(band.shape[2], dtype=np.float32)
+    lateral = np.where(count > 0, (moving * idx).sum(2) / np.maximum(count, 1), (band.shape[2] - 1) / 2)
+    return count, lateral
+
+
+def ridges(count, min_count=MOTION_MIN_COUNT, half=4):
+    """(column, sub-frame) at local maxima in time of the motion count: the centre of mass of the
+    moving boat within +-half frames. A flat top counts once, at its middle."""
+    sm = count.copy()
+    sm[1:-1] = (count[:-2] + 2 * count[1:-1] + count[2:]) / 4
+    peak = np.zeros(count.shape, bool)
+    peak[1:-1] = (sm[1:-1] >= sm[:-2]) & (sm[1:-1] >= sm[2:]) & (sm[1:-1] >= min_count)
+    T = len(count)
+    out = []
+    for si in range(count.shape[1]):
+        f = np.nonzero(peak[:, si])[0]
+        if not len(f):
+            continue
+        groups = np.split(f, np.nonzero(np.diff(f) > 1)[0] + 1)
+        for g in groups:
+            fi = int(round(g.mean()))
+            lo, hi = max(0, fi - half), min(T, fi + half + 1)
+            w = count[lo:hi, si]
+            out.append((si, float((np.arange(lo, hi) * w).sum() / w.sum())))
+    return np.array(out) if out else np.zeros((0, 2))
 
 
 def onsets(jump, threshold=JUMP_THRESHOLD):
@@ -149,8 +188,12 @@ def plate_boat(plate_rgb):
 def measure_shot(capture_dir, name, cfg):
     """One fixed-camera shot -> one record per curve (in the order the boats came)."""
     manifest, shot, times, band, plate = load_shot(capture_dir, name)
-    jump, lateral = jump_map(band)
-    ev = onsets(jump, cfg.get("threshold", JUMP_THRESHOLD))
+    if cfg.get("feature", "front") == "motion":
+        count, lateral = motion_map(band)
+        ev = ridges(count)
+    else:
+        jump, lateral = jump_map(band)
+        ev = onsets(jump, cfg.get("threshold", JUMP_THRESHOLD))
     found = curves(ev, shot["nS"])
     gate_a, gate_b = (g / cfg["step"] for g in cfg["gates"]["main"])
     out = []

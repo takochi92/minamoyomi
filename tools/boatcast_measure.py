@@ -129,7 +129,7 @@ def self_check(path, rows, reports, races):
     captured = sum(1 for r in reports if r.get("capture") == "ok")
     summary = {"races": len(races), "captured": captured, "rows": len(rows),
                "by_metric": {m: sum(1 for r in rows if r["metric"] == m) for m in im.METRICS if any(r["metric"] == m for r in rows)},
-               "problems": problems, "pass": not problems and captured > 0}
+               "problems": problems, "pass": not problems and captured > 0 and len(rows) > 0}
     return summary
 
 
