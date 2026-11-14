@@ -1,0 +1,104 @@
+# プレミアムのモーター評価を毎晩つくり、会員ページ用のスナップショットを更新する
+#  - 日本時間 1:17 から 7:47 まで30分おき。前日の全レースの結果（または公式の中止）がそろうまで待ち、そろった回で1度だけ反映する
+#  - 反映には Secrets の TEILOG_PREMIUM_FUNCTION_URL と TEILOG_PREMIUM_PUBLISH_KEY が必要。
+#    無いときは作れることだけ確かめて、反映しない（警告を出す）
+#  - 評価の中身は有料の内容なので、リポジトリにも成果物（artifact）にも保存しない
+name: premium-nightly
+
+on:
+  schedule:
+    - cron: "17,47 16-22 * * *"   # UTC 16:17〜22:47 = 日本時間 1:17〜7:47
+  workflow_dispatch:
+    inputs:
+      through:
+        description: "集計する最終日 YYYYMMDD（空なら日本時間のきのう）"
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: premium-nightly
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TEILOG_PREMIUM_FUNCTION_URL: ${{ secrets.TEILOG_PREMIUM_FUNCTION_URL }}
+      TEILOG_PREMIUM_PUBLISH_KEY: ${{ secrets.TEILOG_PREMIUM_PUBLISH_KEY }}
+    steps:
+      - name: 集計する日を決める
+        id: day
+        env:
+          REQUESTED: ${{ github.event.inputs.through }}
+        run: |
+          cutoff="$REQUESTED"
+          if [ -z "$cutoff" ]; then cutoff=$(TZ=Asia/Tokyo date -d yesterday +%Y%m%d); fi
+          case "$cutoff" in 20[0-9][0-9][0-9][0-9][0-9][0-9]) ;; *) echo "::error::日付は YYYYMMDD で指定してください"; exit 1;; esac
+          echo "cutoff=$cutoff" >> "$GITHUB_OUTPUT"
+          if [ -n "$TEILOG_PREMIUM_FUNCTION_URL" ] && [ -n "$TEILOG_PREMIUM_PUBLISH_KEY" ]; then echo "mode=publish" >> "$GITHUB_OUTPUT"; else echo "mode=preview" >> "$GITHUB_OUTPUT"; fi
+      - name: この日はもう反映したか
+        id: done
+        uses: actions/cache/restore@v4
+        with:
+          path: .premium-published
+          key: premium-published-${{ steps.day.outputs.cutoff }}
+          lookup-only: true
+      - uses: actions/checkout@v4
+        if: steps.done.outputs.cache-hit != 'true'
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        if: steps.done.outputs.cache-hit != 'true'
+        with:
+          python-version: "3.12"
+      - if: steps.done.outputs.cache-hit != 'true'
+        run: pip install -q -r requirements.txt
+      - name: 評価をつくる
+        id: build
+        if: steps.done.outputs.cache-hit != 'true'
+        env:
+          CUTOFF: ${{ steps.day.outputs.cutoff }}
+          MODE: ${{ steps.day.outputs.mode }}
+        run: |
+          python -m scraper.research_snapshot --date "$CUTOFF"
+          args=(--through "$CUTOFF" --output "$RUNNER_TEMP/premium/$CUTOFF.json" --require-complete)
+          if [ "$MODE" = publish ]; then args+=(--publish); fi
+          set +e
+          python -m scraper.premium_motor "${args[@]}" > "$RUNNER_TEMP/premium.log" 2>&1
+          code=$?
+          set -e
+          tail -3 "$RUNNER_TEMP/premium.log"
+          if [ $code -eq 0 ]; then
+            echo "state=$MODE" >> "$GITHUB_OUTPUT"
+          elif grep -q "incomplete official archive\|no scheduled race files" "$RUNNER_TEMP/premium.log"; then
+            echo "state=waiting" >> "$GITHUB_OUTPUT"      # 結果がまだそろっていない。次の回でやり直す
+          else
+            exit $code
+          fi
+      - name: 結果を知らせる
+        if: steps.done.outputs.cache-hit != 'true'
+        env:
+          STATE: ${{ steps.build.outputs.state }}
+          CUTOFF: ${{ steps.day.outputs.cutoff }}
+        run: |
+          case "$STATE" in
+            publish) echo "### $CUTOFF のモーター評価を会員ページに反映しました" >> "$GITHUB_STEP_SUMMARY";;
+            preview) echo "::warning::$CUTOFF の評価は作れましたが、反映用の Secrets（TEILOG_PREMIUM_FUNCTION_URL・TEILOG_PREMIUM_PUBLISH_KEY）が無いため、会員ページは更新していません";;
+            waiting)
+              echo "### $CUTOFF は結果がまだそろっていません。次の回でやり直します" >> "$GITHUB_STEP_SUMMARY"
+              # 最後の回（日本時間 7:47）でもそろわなければ、失敗として知らせる
+              if [ "${{ github.event.schedule }}" = "17,47 16-22 * * *" ] && [ "$(date -u +%H%M)" -ge 2240 ]; then
+                echo "::error::$CUTOFF は朝までに結果がそろわず、会員ページを更新できませんでした"; exit 1
+              fi;;
+          esac
+      - name: 反映した印を残す
+        if: steps.build.outputs.state == 'publish'
+        run: mkdir -p .premium-published && date -u +%FT%TZ > .premium-published/at
+      - if: steps.build.outputs.state == 'publish'
+        uses: actions/cache/save@v4
+        with:
+          path: .premium-published
+          key: premium-published-${{ steps.day.outputs.cutoff }}
