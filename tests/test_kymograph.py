@@ -133,3 +133,73 @@ def test_tool_builds_from_frames_and_times_the_pass(tmp_path):
     Image.fromarray(frames[3][1][:, :300], "L").save(tmp_path / "f_003.png")   # one frame in another resolution
     with pytest.raises(SystemExit, match="frame_resolution_changed"):
         tool.build(tmp_path / "manifest.json", BAND)
+
+
+def wake_scene(seed, *, accel=0.0, drop=.2, v0=SPEED):
+    """A dark boat moving left, and wake that stays where the boat has been: it covers the later half."""
+    rng = random.Random(seed)
+    noise = np.random.default_rng(seed)
+    frames, start = [], 268.0
+    for i in range(80):
+        t = start + i / 30
+        if rng.random() < drop:
+            continue
+        dt = t - start
+        front = 430 - (v0 * dt + .5 * accel * dt * dt)
+        frame = np.full((H, W), 120, dtype=np.int16) + noise.integers(-4, 5, size=(H, W))
+        for x in range(int(front) + 50, 430, 9):               # dark troughs left behind, fixed in place
+            if x < W and (x * 7 + seed) % 3:
+                frame[26:40, x:x + 4] = 70 + (x * 13 + i * 5) % 30
+        left = int(round(front))
+        if -42 < left < W:
+            frame[28:38, max(left, 0):min(left + 42, W)] = 45
+            frame[30:36, max(left + 8, 0):min(left + 20, W)] = 20     # structure inside the boat
+        frames.append((t, np.clip(frame, 0, 255).astype(np.uint8)))
+    return frames, np.full((H, W), 120, dtype=np.uint8)
+
+
+def test_alignment_measures_speed_where_wake_breaks_the_edge():
+    speeds = list(range(120, 261, 2))
+    errors = []
+    for seed in range(8):
+        frames, background = wake_scene(seed)
+        times, image = ky.build(frames, BAND, background, spray_guard=True)
+        got = ky.measure_speed(times, image, (370.0, 270.0), -1, speeds)
+        assert got["status"] == "measured", got["reasons"]
+        errors.append(got["seconds"] - 100 / SPEED)
+        assert abs(got["speed"] - SPEED) <= 1.5 and got["contrast"] >= 4
+    assert max(abs(e) for e in errors) < .005
+
+
+def test_alignment_follows_a_boat_that_speeds_up():
+    frames, background = wake_scene(2, accel=40.0, v0=165.0)
+    times, image = ky.build(frames, BAND, background, spray_guard=True)
+    got = ky.measure_speed(times, image, (370.0, 270.0), -1, list(range(120, 261, 2)), accelerations=(0.0, 20.0, 40.0, 60.0))
+    assert got["status"] == "measured" and got["acceleration"] in (20.0, 40.0, 60.0)
+    t = lambda x: (-165 + (165 ** 2 + 2 * 40 * (430 - x)) ** .5) / 40
+    assert abs(got["seconds"] - (t(270) - t(370))) < .015
+
+
+def test_alignment_refuses_water_without_a_boat():
+    noise = np.random.default_rng(1)
+    frames = [(268 + i / 30, np.clip(120 + noise.integers(-6, 7, size=(H, W)), 0, 255).astype(np.uint8)) for i in range(60)]
+    times, image = ky.build(frames, BAND, np.full((H, W), 120, dtype=np.uint8), spray_guard=True)
+    got = ky.measure_speed(times, image, (370.0, 270.0), -1, list(range(120, 261, 2)))
+    assert got["status"] == "missing"
+
+
+def test_tool_speed_command_uses_frame_coordinates(tmp_path):
+    import json
+
+    from PIL import Image
+
+    from tools import boatcast_kymograph as tool
+    frames, _ = wake_scene(4)
+    rows = []
+    for i, (t, frame) in enumerate(frames):
+        Image.fromarray(frame, "L").save(tmp_path / f"f_{i:03}.png")
+        rows.append({"file": f"f_{i:03}.png", "mediaTime": t})
+    (tmp_path / "manifest.json").write_text(json.dumps({"frames": rows}))
+    dump = tool.build(tmp_path / "manifest.json", BAND, (30, 440))
+    got = tool.speed(dump, (370.0, 270.0), -1, (120, 260))["image_guard"]
+    assert got["status"] == "measured" and abs(got["seconds"] - 100 / SPEED) < .005 and abs(got["speed"] - SPEED) <= 1.5
