@@ -46,6 +46,31 @@ def test_daily_publish_rejects_partial_archive(tmp_path):
         check_publish_inputs(rows, cutoff, date(2026, 11, 16), tmp_path)
 
 
+def test_daily_publish_accepts_races_that_can_never_finish(tmp_path):
+    """3連単不成立・直前情報なし・結果の取得をあきらめたレースで、毎晩止まらないこと。"""
+    import json
+    import pytest
+    from scraper.premium_motor import check_publish_inputs
+
+    cutoff = "20261112"
+    folder = tmp_path / cutoff
+    folder.mkdir()
+    rows = {(cutoff, "04", rno): {"result": {"finished": True}} for rno in range(1, 9)}
+    raw = {
+        9: {"result": {"finished": False, "trifecta": None, "order": [6, 4], "refunded": [1, 2, 3, 5]}},  # 集団フライング
+        10: {"result": {"finished": True}, "before": None},      # 直前情報が取れず保存先に無い
+        11: {"result": {"finished": False, "order": [], "refunded": []}, "result_tries": 12},  # 取得をあきらめた
+        12: {"result": {"finished": False, "order": [], "refunded": []}, "result_tries": 3},   # まだ取得中
+    }
+    for rno in range(1, 13):
+        (folder / f"04{rno:02}.json").write_text(json.dumps(raw.get(rno, {})), encoding="utf-8")
+    with pytest.raises(ValueError, match="incomplete official archive.*04"):
+        check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
+    raw[12]["result_tries"] = 12
+    (folder / "0412.json").write_text(json.dumps(raw[12]), encoding="utf-8")
+    check_publish_inputs(rows, cutoff, date(2026, 11, 13), tmp_path)
+
+
 def test_publish_retries_transient_errors_and_rejects_redirects():
     import io
     import pytest

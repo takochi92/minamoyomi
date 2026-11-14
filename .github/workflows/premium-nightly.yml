@@ -25,20 +25,21 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      TEILOG_PREMIUM_FUNCTION_URL: ${{ secrets.TEILOG_PREMIUM_FUNCTION_URL }}
-      TEILOG_PREMIUM_PUBLISH_KEY: ${{ secrets.TEILOG_PREMIUM_PUBLISH_KEY }}
     steps:
       - name: 集計する日を決める
         id: day
         env:
           REQUESTED: ${{ github.event.inputs.through }}
+          HAS_SECRETS: ${{ secrets.TEILOG_PREMIUM_FUNCTION_URL != '' && secrets.TEILOG_PREMIUM_PUBLISH_KEY != '' }}
         run: |
           cutoff="$REQUESTED"
           if [ -z "$cutoff" ]; then cutoff=$(TZ=Asia/Tokyo date -d yesterday +%Y%m%d); fi
           case "$cutoff" in 20[0-9][0-9][0-9][0-9][0-9][0-9]) ;; *) echo "::error::日付は YYYYMMDD で指定してください"; exit 1;; esac
           echo "cutoff=$cutoff" >> "$GITHUB_OUTPUT"
-          if [ -n "$TEILOG_PREMIUM_FUNCTION_URL" ] && [ -n "$TEILOG_PREMIUM_PUBLISH_KEY" ]; then echo "mode=publish" >> "$GITHUB_OUTPUT"; else echo "mode=preview" >> "$GITHUB_OUTPUT"; fi
+          if [ "$HAS_SECRETS" = true ]; then echo "mode=publish" >> "$GITHUB_OUTPUT"; else echo "mode=preview" >> "$GITHUB_OUTPUT"; fi
+          # 朝の最後の回か（予定より遅れて動いたときも最後の回として扱う）。日本時間 1:00〜7:39 の間はまだ次の回がある
+          now=$(TZ=Asia/Tokyo date +%H%M)
+          if [ "${{ github.event_name }}" = schedule ] && { [ "$now" -ge 0740 ] || [ "$now" -lt 0100 ]; }; then echo "last=true" >> "$GITHUB_OUTPUT"; else echo "last=false" >> "$GITHUB_OUTPUT"; fi
       - name: この日はもう反映したか
         id: done
         uses: actions/cache/restore@v4
@@ -62,8 +63,11 @@ jobs:
         env:
           CUTOFF: ${{ steps.day.outputs.cutoff }}
           MODE: ${{ steps.day.outputs.mode }}
+          TEILOG_PREMIUM_FUNCTION_URL: ${{ secrets.TEILOG_PREMIUM_FUNCTION_URL }}
+          TEILOG_PREMIUM_PUBLISH_KEY: ${{ secrets.TEILOG_PREMIUM_PUBLISH_KEY }}
         run: |
-          python -m scraper.research_snapshot --date "$CUTOFF"
+          # 手元にある全部の日を取りこむ（朝の集計が1日ぬけても、評価に穴をあけない）
+          python -m scraper.research_snapshot
           args=(--through "$CUTOFF" --output "$RUNNER_TEMP/premium/$CUTOFF.json" --require-complete)
           if [ "$MODE" = publish ]; then args+=(--publish); fi
           set +e
@@ -83,16 +87,17 @@ jobs:
         env:
           STATE: ${{ steps.build.outputs.state }}
           CUTOFF: ${{ steps.day.outputs.cutoff }}
+          LAST: ${{ steps.day.outputs.last }}
         run: |
           case "$STATE" in
             publish) echo "### $CUTOFF のモーター評価を会員ページに反映しました" >> "$GITHUB_STEP_SUMMARY";;
-            preview) echo "::warning::$CUTOFF の評価は作れましたが、反映用の Secrets（TEILOG_PREMIUM_FUNCTION_URL・TEILOG_PREMIUM_PUBLISH_KEY）が無いため、会員ページは更新していません";;
+            preview)
+              echo "::warning::$CUTOFF の評価は作れましたが、反映用の Secrets（TEILOG_PREMIUM_FUNCTION_URL・TEILOG_PREMIUM_PUBLISH_KEY）が無いため、会員ページは更新していません"
+              # 会員ページが止まったままになるので、朝の最後の回は失敗として知らせる（1晩に1回だけ）
+              if [ "$LAST" = true ]; then echo "::error::Secrets が無いため、$CUTOFF の評価を会員ページに反映できませんでした"; exit 1; fi;;
             waiting)
               echo "### $CUTOFF は結果がまだそろっていません。次の回でやり直します" >> "$GITHUB_STEP_SUMMARY"
-              # 最後の回（日本時間 7:47）でもそろわなければ、失敗として知らせる
-              if [ "${{ github.event.schedule }}" = "17,47 16-22 * * *" ] && [ "$(date -u +%H%M)" -ge 2240 ]; then
-                echo "::error::$CUTOFF は朝までに結果がそろわず、会員ページを更新できませんでした"; exit 1
-              fi;;
+              if [ "$LAST" = true ]; then echo "::error::$CUTOFF は朝までに結果がそろわず、会員ページを更新できませんでした"; exit 1; fi;;
           esac
       - name: 反映した印を残す
         if: steps.build.outputs.state == 'publish'
