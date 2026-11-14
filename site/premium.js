@@ -90,12 +90,15 @@
     if (state?.testCheckout) box.append(button('テスト決済を開く',checkout('checkout',state.amount)));
     if (state?.manage) box.append(button('支払い方法・解約',checkout('portal')));
   }
-  function drawRace(data) {
+  function drawRace(data, reason) {
     if (!data || !data.rows.some(row => Object.keys(row.metrics).length)) {
-      box.replaceChildren(el('p','このレースに対応する評価データはまだありません。'));
+      var why = reason==='snapshot_late' ? '評価データの更新が遅れています。復旧までしばらくお待ちください。'
+        : reason==='new_motors' ? 'モーターが入れ替わったばかりのため、評価はデータがそろうまで保留しています。'
+        : 'このレースに対応する評価データはまだありません。';
+      box.replaceChildren(el('p',why));
       return;
     }
-    var table=el('table'); table.className='premium-table'; table.setAttribute('aria-label','モーター試験評価');
+    var table=el('table'); table.className='premium-table'; table.setAttribute('aria-label','モーター評価');
     var header=table.createTHead().insertRow();
     ['号機'].concat(labels).forEach(function (label) {
       var th=el('th'); th.scope='col';
@@ -119,7 +122,7 @@
         td.append(grade);
       });
     });
-    var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点 · 試験評価');
+    var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点');
     date.className='premium-rating-date';
     box.replaceChildren(date,table);
   }
@@ -243,7 +246,7 @@
       else {
         var ds=root.dataset;
         var result=await account.premiumCall('race',{date:ds.date,venue:ds.venue,race:Number(ds.race)});
-        if (ticket===epoch && id===account.identity()) drawRace(result.evaluation);
+        if (ticket===epoch && id===account.identity()) drawRace(result.evaluation, result.reason);
       }
     } catch (_) {
       if (ticket!==epoch) return;

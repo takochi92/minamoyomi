@@ -33,6 +33,8 @@ jobs:
       - run: node tests/test_push_worker.cjs
       - run: node tests/test_notification_account.cjs
       - run: node tests/test_edge_morning.cjs
+      - run: node tests/test_premium_api.cjs
+      - run: node tests/test_premium_live_guard.cjs
       - name: 通知のDB権限と所有者分離を検査
         run: |
           npm install --prefix .cache/push-tests --ignore-scripts --no-save --package-lock=false @electric-sql/pglite@0.5.2
