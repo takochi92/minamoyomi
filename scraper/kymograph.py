@@ -189,6 +189,109 @@ def assisted(times, clicks, gates, direction):
             "residual_pixels": max(a["residual_pixels"], b["residual_pixels"]), "reasons": []}
 
 
+# ------------------------------------------------------------------ velocity alignment
+def align(times, image, speeds, direction, *, accelerations=(0.0,), window=None, columns=None):
+    """Speed of the boat from the whole streak, without reading an edge.
+
+    Wake and patterns on the water stay roughly where they are, while the boat moves at a steady speed.
+    Each row is shifted back by the distance a boat at a trial speed would have moved, and the rows are
+    averaged. At the right speed the boat lines up into one sharp profile and everything that does not
+    move with it is smeared out. The trial that gives the sharpest profile is the boat's motion:
+
+        position(t) = position(reference time) + direction * (speed * dt + acceleration * dt^2 / 2)
+
+    speeds        trial speeds in pixels per second (positive numbers)
+    accelerations trial accelerations in pixels per second squared
+    window        (start, end) media time of one boat's pass; columns (left, right) to use
+    Returns None when no trial stands out. `contrast` compares the best trial with the median trial;
+    `split_speed_gap` is the difference between the speeds found from odd and even rows alone.
+    """
+    times = np.asarray(times, dtype=float)
+    keep = np.ones(len(times), bool) if window is None else (times >= window[0]) & (times <= window[1])
+    left, right = columns or (0, image.shape[1])
+    rows, when = image[keep][:, left:right].astype(np.float32), times[keep]
+    if len(when) < 8 or rows.shape[1] < 20:
+        return None
+    reference = float(when[len(when) // 2])
+    grid = np.arange(rows.shape[1], dtype=np.float32)
+
+    def stack(subset, speed, acceleration):
+        total = np.zeros(rows.shape[1], dtype=np.float32)
+        count = np.zeros(rows.shape[1], dtype=np.float32)
+        for row, t in zip(rows[subset], when[subset]):
+            dt = t - reference
+            shift = direction * (speed * dt + .5 * acceleration * dt * dt)
+            source = grid + shift                              # where this column sits in the row at time t
+            inside = (source >= 0) & (source <= rows.shape[1] - 1)
+            total[inside] += np.interp(source[inside], grid, row)
+            count[inside] += 1
+        valid = count >= max(4, .5 * subset.sum() if subset.dtype == bool else 4)
+        profile = np.where(valid, total / np.maximum(count, 1), 0.0)
+        # Sharpness: a boat that lines up has steep sides; smeared wake is flat
+        return profile, float((np.diff(profile) ** 2).sum() / max(1, valid.sum()))
+
+    def best(subset):
+        scores = [(stack(subset, v, a)[1], v, a) for a in accelerations for v in speeds]
+        return max(scores), scores
+
+    everything = np.ones(len(when), bool)
+    (score, speed, acceleration), scores = best(everything)
+    floor = float(np.median([s for s, *_ in scores]))
+    if floor <= 0 or score <= 0:
+        return None
+    coarse = speed
+    fine = max(((stack(everything, v, acceleration)[1], float(v)) for v in np.arange(speed - 2, speed + 2.01, .25)))
+    score, speed = max((score, float(speed)), fine)            # refine between the trial speeds
+    odd = np.arange(len(when)) % 2 == 1
+    gap = abs(best(odd)[0][1] - best(~odd)[0][1])
+    profile, _ = stack(everything, speed, acceleration)
+    peak = float(profile.max())
+    above = np.where(profile >= EDGE_FRACTION * peak)[0]
+    if peak <= 0 or len(above) == 0:
+        return None
+    centre = float((profile[above] * above).sum() / profile[above].sum()) + left
+    return {"speed": float(speed), "acceleration": float(acceleration), "reference": reference,
+            "position": centre, "contrast": round(score / floor, 2), "split_speed_gap": float(gap),
+            "rows": int(len(when)), "at_search_limit": coarse in (speeds[0], speeds[-1])}
+
+
+def section_from_alignment(fit, gates, direction):
+    """Time the aligned boat needs between two positions, from the fitted motion."""
+    def when(position):
+        distance = (position - fit["position"]) * direction
+        a, v = fit["acceleration"], fit["speed"]
+        if abs(a) < 1e-9:
+            return fit["reference"] + distance / v
+        root = v * v + 2 * a * distance
+        return None if root < 0 else fit["reference"] + (-v + math.sqrt(root)) / a
+    first, second = when(gates[0]), when(gates[1])
+    if first is None or second is None or second <= first:
+        return None
+    return {"first": round(first, 4), "second": round(second, 4), "seconds": round(second - first, 4)}
+
+
+MIN_CONTRAST = 4.0             # sharpness of the best trial against the median trial
+MAX_SPLIT_SPEED_GAP = 6.0      # pixels per second between odd-row and even-row estimates
+
+
+def measure_speed(times, image, gates, direction, speeds, **kwargs):
+    """Section time from the aligned streak, or the reasons it is not trusted."""
+    fit = align(times, image, speeds, direction, **kwargs)
+    if fit is None:
+        return {"status": "missing", "reasons": ["no_moving_streak"]}
+    reasons = []
+    if fit["contrast"] < MIN_CONTRAST:
+        reasons.append("streak_not_distinct")
+    if fit["split_speed_gap"] > MAX_SPLIT_SPEED_GAP:
+        reasons.append("speed_not_repeatable")
+    if fit["at_search_limit"]:
+        reasons.append("speed_at_search_limit")
+    section = section_from_alignment(fit, gates, direction)
+    if section is None:
+        reasons.append("gates_not_reached_by_fit")
+    return {"status": "missing" if reasons else "measured", "reasons": reasons, **fit, **(section or {})}
+
+
 def to_png_bytes(image, *, scale=255.0):
     """The space-time image as a PNG a person can click on (private work area only)."""
     import io
