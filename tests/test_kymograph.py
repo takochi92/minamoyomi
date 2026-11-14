@@ -165,7 +165,7 @@ def test_alignment_measures_speed_where_wake_breaks_the_edge():
         frames, background = wake_scene(seed)
         times, image = ky.build(frames, BAND, background, spray_guard=True)
         got = ky.measure_speed(times, image, (370.0, 270.0), -1, speeds)
-        assert got["status"] == "measured", got["reasons"]
+        assert got["status"] == "candidate", got["reasons"]
         errors.append(got["seconds"] - 100 / SPEED)
         assert abs(got["speed"] - SPEED) <= 1.5 and got["contrast"] >= 4
     assert max(abs(e) for e in errors) < .005
@@ -175,7 +175,7 @@ def test_alignment_follows_a_boat_that_speeds_up():
     frames, background = wake_scene(2, accel=40.0, v0=165.0)
     times, image = ky.build(frames, BAND, background, spray_guard=True)
     got = ky.measure_speed(times, image, (370.0, 270.0), -1, list(range(120, 261, 2)), accelerations=(0.0, 20.0, 40.0, 60.0))
-    assert got["status"] == "measured" and got["acceleration"] in (20.0, 40.0, 60.0)
+    assert got["status"] == "candidate" and got["acceleration"] in (20.0, 40.0, 60.0)
     t = lambda x: (-165 + (165 ** 2 + 2 * 40 * (430 - x)) ** .5) / 40
     assert abs(got["seconds"] - (t(270) - t(370))) < .015
 
@@ -202,4 +202,4 @@ def test_tool_speed_command_uses_frame_coordinates(tmp_path):
     (tmp_path / "manifest.json").write_text(json.dumps({"frames": rows}))
     dump = tool.build(tmp_path / "manifest.json", BAND, (30, 440))
     got = tool.speed(dump, (370.0, 270.0), -1, (120, 260))["image_guard"]
-    assert got["status"] == "measured" and abs(got["seconds"] - 100 / SPEED) < .005 and abs(got["speed"] - SPEED) <= 1.5
+    assert got["status"] == "candidate" and abs(got["seconds"] - 100 / SPEED) < .005 and abs(got["speed"] - SPEED) <= 1.5

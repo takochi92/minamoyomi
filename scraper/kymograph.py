@@ -246,10 +246,16 @@ def align(times, image, speeds, direction, *, accelerations=(0.0,), window=None,
     gap = abs(best(odd)[0][1] - best(~odd)[0][1])
     profile, _ = stack(everything, speed, acceleration)
     peak = float(profile.max())
-    above = np.where(profile >= EDGE_FRACTION * peak)[0]
-    if peak <= 0 or len(above) == 0:
+    if peak <= 0:
         return None
-    centre = float((profile[above] * above).sum() / profile[above].sum()) + left
+    # Only the connected stretch around the peak: responses elsewhere are not this boat.
+    lo = hi = int(profile.argmax())
+    while lo > 0 and profile[lo - 1] >= EDGE_FRACTION * peak:
+        lo -= 1
+    while hi < len(profile) - 1 and profile[hi + 1] >= EDGE_FRACTION * peak:
+        hi += 1
+    span = np.arange(lo, hi + 1)
+    centre = float((profile[span] * span).sum() / profile[span].sum()) + left
     return {"speed": float(speed), "acceleration": float(acceleration), "reference": reference,
             "position": centre, "contrast": round(score / floor, 2), "split_speed_gap": float(gap),
             "rows": int(len(when)), "at_search_limit": coarse in (speeds[0], speeds[-1])}
@@ -275,7 +281,13 @@ MAX_SPLIT_SPEED_GAP = 6.0      # pixels per second between odd-row and even-row 
 
 
 def measure_speed(times, image, gates, direction, speeds, **kwargs):
-    """Section time from the aligned streak, or the reasons it is not trusted."""
+    """Section time from the aligned streak, or the reasons it is not trusted.
+
+    NOT VALIDATED ON REAL VIDEO. On Heiwajima 2026-11-12 11R boat 4 the result differed by 0.17 s
+    between 480p and 1080p: patterns that travel with the boat break the assumption that only the
+    boat moves. A passing result is therefore reported as "candidate", never "measured", and must
+    not be stored as a measurement.
+    """
     fit = align(times, image, speeds, direction, **kwargs)
     if fit is None:
         return {"status": "missing", "reasons": ["no_moving_streak"]}
@@ -289,7 +301,7 @@ def measure_speed(times, image, gates, direction, speeds, **kwargs):
     section = section_from_alignment(fit, gates, direction)
     if section is None:
         reasons.append("gates_not_reached_by_fit")
-    return {"status": "missing" if reasons else "measured", "reasons": reasons, **fit, **(section or {})}
+    return {"status": "missing" if reasons else "candidate", "reasons": reasons, **fit, **(section or {})}
 
 
 def to_png_bytes(image, *, scale=255.0):
