@@ -389,3 +389,21 @@ def test_arechu_shown_on_race_and_top(tmp_path):
     assert "荒れ注意のレース" in s.arechu_top(sitegen.Page("index.html"))
     race["racelist"]["boats"][0]["class"] = "B1"
     assert s.arechu_block(race) == ""
+
+
+def test_course_swap_block_is_closed_and_keeps_the_entry_table(tmp_path):
+    """進入の入れ替えは閉じたボタンだけを足す。出走表そのものは変えない。"""
+    import re
+    s, files = _site(tmp_path)
+    html = next(v for k, v in (files if isinstance(files, dict) else s.files).items() if k.startswith("race/"))
+    assert '<details class="course-swap" data-course-swap><summary>進入を入れ替えて見る</summary>' in html
+    assert '<details class="course-swap" data-course-swap open' not in html
+    table = re.search(r'<table class="t-race".*?</table>', html, re.S).group(0)
+    assert table.count("<tr data-frame=") == 6 and "course-swap" not in table
+    data = json.loads(re.search(r'<script type="application/json" class="course-swap-data">(.*?)</script>', html, re.S).group(1))
+    assert [b["f"] for b in data] == [1, 2, 3, 4, 5, 6]
+    assert sorted(b["k"] for b in data) == [1, 2, 3, 4, 5, 6]
+    for b in data:
+        for row in b["c"].values():
+            assert len(row) == 6 and row[0] > 0 and row[1] + row[2] + row[3] <= row[0]
+    assert "買い目・バフは元の進入が前提です。" in html

@@ -25,6 +25,7 @@ jobs:
       - run: node tests/test_odds_grid.cjs
       - run: node tests/test_player_info.cjs
       - run: node tests/test_exhibition.cjs
+      - run: node tests/test_course_swap.cjs
       - run: node tests/test_exhibition_flow.cjs
       - run: node tests/test_stats_logic_flow.cjs
       - run: node tests/test_turn_review.cjs

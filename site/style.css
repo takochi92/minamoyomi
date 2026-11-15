@@ -910,3 +910,24 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .insight-links{gap:10px}
 @media (max-width:720px){.pill-row{display:flex;margin:8px 0 0}}
 @media(prefers-reduced-motion:reduce){.pill-link{transition:none}}
+/* 進入の入れ替え（出走表の下）。閉じているときは1行のボタンだけ */
+.course-swap>summary{display:inline-flex;align-items:center;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface2);color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;list-style:none}
+.course-swap>summary::-webkit-details-marker{display:none}
+.course-swap[open]>summary{border-color:var(--accent)}
+.course-swap-body{display:grid;gap:8px;margin-top:8px}
+.course-swap-body p{margin:0}
+.course-swap-list{display:grid;gap:6px}
+.course-swap-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.course-swap-row[aria-pressed="true"]{border-color:var(--accent);background:var(--tint)}
+.course-swap-row .cs-h{display:flex;align-items:center;gap:8px;min-width:0}
+.course-swap-row .cs-c{font-size:12px;color:var(--ink2);min-width:4.2em}
+.course-swap-row .cs-n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course-swap-row .cs-s{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.course-swap-row .cs-v{display:grid;text-align:center;line-height:1.25}
+.course-swap-row .cs-v small{font-size:10px;color:var(--ink2)}
+.course-swap-row .cs-v b{font-size:13px;font-weight:700}
+.course-swap-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.course-swap-foot .btn{padding:5px 12px;font-size:12px}
+.course-swap-foot .btn:disabled{opacity:.5;cursor:default}
+@media (min-width:720px){.course-swap-row{grid-template-columns:minmax(0,14em) minmax(0,1fr);align-items:center}}
+.course-swap-hint,.course-swap-note{font-size:12px;color:var(--ink2)}
