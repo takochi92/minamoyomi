@@ -32,8 +32,10 @@ export function validSnapshot(snapshot, today) {
     const baseValid = motors.every(([motor, data]) =>
       /^[1-9]\d{0,2}$/.test(motor) && Object.keys(data || {}).length > 0 &&
       Object.entries(data).every(([key, m]) =>
-        ["exhibition", "straight"].includes(key) && /^[SABCD]$/.test(m?.grade) &&
-        validScore(m, 6) && Number.isInteger(m.meetings) && m.meetings >= 1 && m.meetings <= 3));
+        ["exhibition", "straight", "adjusted"].includes(key) && /^[SABCD]$/.test(m?.grade) &&
+        validScore(m, 6) && Number.isInteger(m.meetings) && m.meetings >= 1 &&
+        // The rider-adjusted rating reads every finished meeting in the 45-day window.
+        (key === "adjusted" ? m.meetings <= 15 && Number.isInteger(m.riders) && m.riders >= 2 : m.meetings <= 3)));
     const pairings = Object.entries(field.pairings || {});
     const pairsValid = pairings.every(([motor, riders]) =>
       /^[1-9]\d{0,2}$/.test(motor) && Object.entries(riders || {}).every(([rider, scores]) =>
