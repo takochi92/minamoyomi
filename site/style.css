@@ -856,16 +856,24 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .premium-table thead th{white-space:normal;overflow-wrap:anywhere;line-height:1.2;vertical-align:bottom;font-size:clamp(.65rem,2.6vw,.82rem)}
 .premium-table tbody th{font-weight:400}
 .premium-content .premium-rating-date{font-size:.78rem;color:var(--ink2)}
-.premium-table .premium-source{font-size:.62rem;color:var(--ink2);margin-left:1px}
-.premium-content .premium-source-notes{margin:6px 0 0;padding-left:1.1em;font-size:.74rem;color:var(--ink2);line-height:1.5}
 .premium-table small,.premium-table strong{display:block}
 .premium-table small{color:var(--muted)}
 .premium-table [data-grade]{display:inline-block;min-width:1.65em;padding:1px 3px;border:1px solid currentColor;border-radius:5px;line-height:1.2}
 .premium-table [data-grade="S"]{color:#211507;background:#f5cc73;border-color:#f5cc73}
-.premium-table [data-grade="A"]{color:#06302a;background:#80e4c6;border-color:#80e4c6}
+.premium-table [data-grade="A"]{color:#3a0b0b;background:#f47c7c;border-color:#f47c7c}
 .premium-table [data-grade="B"]{color:#101f35;background:#abcaff;border-color:#abcaff}
 .premium-table [data-grade="C"]{color:#27203a;background:#d3c0f0;border-color:#d3c0f0}
 .premium-table [data-grade="D"]{color:#282f38;background:#c6ced8;border-color:#c6ced8}
+/* S・A だけ光らせる：ななめの光が通り、まわりがやわらかく明るくなる。B以下には付けない */
+.premium-table [data-grade="S"],.premium-table [data-grade="A"]{position:relative;overflow:hidden;isolation:isolate}
+.premium-table [data-grade="S"]::after,.premium-table [data-grade="A"]::after{content:"";position:absolute;top:-20%;bottom:-20%;left:-60%;width:45%;z-index:-1;background:linear-gradient(105deg,transparent 0%,#ffffffb3 50%,transparent 100%);transform:translateX(-120%) skewX(-18deg);animation:premium-sheen 3.2s ease-in-out infinite;pointer-events:none}
+.premium-table [data-grade="A"]::after{animation-delay:.9s}
+.premium-table [data-grade="S"]{animation:premium-glow-s 3.2s ease-in-out infinite}
+.premium-table [data-grade="A"]{animation:premium-glow-a 3.2s ease-in-out infinite .9s}
+@keyframes premium-sheen{0%,55%{transform:translateX(-120%) skewX(-18deg)}85%,100%{transform:translateX(420%) skewX(-18deg)}}
+@keyframes premium-glow-s{0%,100%{box-shadow:0 0 0 #f5cc7300}50%{box-shadow:0 0 9px #f5cc73a6}}
+@keyframes premium-glow-a{0%,100%{box-shadow:0 0 0 #f47c7c00}50%{box-shadow:0 0 9px #f47c7c99}}
+@media (prefers-reduced-motion:reduce){.premium-table [data-grade="S"],.premium-table [data-grade="A"],.premium-table [data-grade="S"]::after,.premium-table [data-grade="A"]::after{animation:none}}
 .premium-chart-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px}
 .premium-chart-controls button,.premium-chart-range button{width:100%;padding:5px 8px;min-height:34px;border:0;background:transparent;color:var(--ink2);font-size:.86rem;border-radius:7px}
 .premium-chart-controls button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px #0004}
