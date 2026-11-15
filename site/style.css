@@ -917,8 +917,7 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .course-swap-body{display:grid;gap:8px;margin-top:8px}
 .course-swap-body p{margin:0}
 .course-swap-list{display:grid;gap:6px}
-.course-swap-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
-.course-swap-row[aria-pressed="true"]{border-color:var(--accent);background:var(--tint)}
+.course-swap-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .course-swap-row .cs-h{display:flex;align-items:center;gap:8px;min-width:0}
 .course-swap-row .cs-c{font-size:12px;color:var(--ink2);min-width:4.2em}
 .course-swap-row .cs-n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -926,8 +925,13 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .course-swap-row .cs-v{display:grid;text-align:center;line-height:1.25}
 .course-swap-row .cs-v small{font-size:10px;color:var(--ink2)}
 .course-swap-row .cs-v b{font-size:13px;font-weight:700}
-.course-swap-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.course-swap-foot .btn{padding:5px 12px;font-size:12px}
-.course-swap-foot .btn:disabled{opacity:.5;cursor:default}
+.course-swap-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.course-swap-pick{display:flex;gap:6px}
+.course-swap-boat{position:relative;width:38px;height:38px;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.course-swap-boat[aria-pressed="true"]{opacity:.45}
+.course-swap-boat sup{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;border-radius:999px;background:var(--accent);color:var(--accent-ink,#fff);font-size:10px;line-height:17px;text-align:center}
+.course-swap-bar .btn{padding:5px 12px;font-size:12px}
+.course-swap-bar .btn:disabled{opacity:.5;cursor:default}
+.course-swap-none,.cs-none{font-size:12px;color:var(--ink2)}
 @media (min-width:720px){.course-swap-row{grid-template-columns:minmax(0,14em) minmax(0,1fr);align-items:center}}
 .course-swap-hint,.course-swap-note{font-size:12px;color:var(--ink2)}

@@ -765,10 +765,10 @@ class Site:
             return ""
         data = json.dumps(boats, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
         return (f'<details class="course-swap" data-course-swap><summary>進入を入れ替えて見る</summary>'
-                f'<div class="course-swap-body"><p class="course-swap-hint">2人をタップすると、コースが入れ替わります。数字は選手ごとの、そのコースでの成績です。</p>'
-                f'<div class="course-swap-list" role="list"></div>'
-                f'<div class="course-swap-foot"><button type="button" class="btn course-swap-reset" disabled>元に戻す</button>'
-                f'<p class="course-swap-note" hidden>買い目・バフは元の進入が前提です。</p></div></div>'
+                f'<div class="course-swap-body"><p class="course-swap-hint">進入順（内側から）に艇をタップしてください。残りは元の並びのまま続きます。</p>'
+                f'<div class="course-swap-bar"><div class="course-swap-pick"></div><button type="button" class="btn course-swap-reset" disabled>元に戻す</button></div>'
+                f'<p class="course-swap-note" hidden>買い目・バフは元の進入が前提です。</p>'
+                f'<div class="course-swap-list" role="list"></div></div>'
                 f'<script type="application/json" class="course-swap-data">{data}</script></details>'
                 f'<script src="{page.asset("course-swap.js")}" defer></script>')
 

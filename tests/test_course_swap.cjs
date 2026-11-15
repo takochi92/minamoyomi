@@ -35,4 +35,9 @@ rows = m.rows(boats,far);
 assert.equal(rows[1].stats,null);
 assert.equal(rows[5].stats,null);
 assert.equal(m.stats([0,0,0,0,0,0]),null);
+// 進入順にタップ：タップした艇が内側から入り、残りは元の並びのまま続く
+assert.deepEqual(m.compose(start,[]),start);
+assert.deepEqual(m.compose(start,[4]),[4,1,2,3,6,5]);
+assert.deepEqual(m.compose(start,[4,1]),[4,1,2,3,6,5]);
+assert.deepEqual(m.compose(start,[6,5,4,3,2,1]),[6,5,4,3,2,1]);
 console.log('course swap: OK');
