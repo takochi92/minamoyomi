@@ -488,7 +488,7 @@ def measure_shot(capture_dir, name, cfg):
             rec["reasons"].append("noisy_curve")
         if ks.min() > gate_a + 3 or ks.max() < gate_b - 3:
             rec["reasons"].append("gates_not_covered")
-        if cover < MIN_COVER:
+        if cover < cfg.get("minCover", MIN_COVER):
             rec["reasons"].append("short_curve")
         if not fb > fa:
             rec["reasons"].append("wrong_direction")

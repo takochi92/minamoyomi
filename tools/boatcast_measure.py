@@ -71,6 +71,11 @@ def analyze_race(capture_dir, prof, date, venue, race):
             report["shots"][name] = {"missing": True}
             continue
         records, info = bm.measure_shot(capture_dir, name, cfg)
+        if cfg.get("dropUncovered"):
+            # a turn seen from the side leaves a second trace (the wake on the way out) that never spans the gates
+            records = [r for r in records if "gates_not_covered" not in r["reasons"] and r.get("cover", 0) >= .25]
+            for i, r in enumerate(records):
+                r["order"] = i + 1
         shot_reasons = []
         if info["skipped"] and info["skipped"] > MAX_SKIPPED_SHARE * info["frames"]:
             shot_reasons.append("frames_skipped")
