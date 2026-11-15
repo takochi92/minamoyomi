@@ -4,8 +4,8 @@ function boot(data,mode){const nodes={};for(const id of ['pi-data','pi-q','pi-fi
 const rows=[{toban:'4001',name:'確認一',f:2,rests:[]},{toban:'4002',name:'確認二',f:null,rests:[{status:'snapshot_unserved',document_date:'20261026',days:30}]},{toban:'4003',name:'前期あり',f:0,rollover:true,leave_state:'unserved_sure',rests:[]},{toban:'4004',name:'前期済み',f:0,rollover:true,leave_state:'served_estimated',rests:[]}];
 const f=boot({kind:'f',rows},'f2');assert.match(f.html,/確認一/);assert.match(f.html,/F2/);assert.doesNotMatch(f.html,/確認二|前期あり/);
 f.filter('leave');assert.match(f.html,/確認二/);assert.match(f.html,/pi-mark-unserved"[^>]*>未</);
-assert.match(f.hidden,/前期あり/);assert.doesNotMatch(f.hidden,/前期済み/);assert.doesNotMatch(f.hidden,/確認一/);f.search('確認');assert.doesNotMatch(f.hidden,/前期あり/);f.search('');
-f.filter('all');f.search('４００２');assert.match(f.html,/確認二/);assert.doesNotMatch(f.html,/確認一/);
+
+f.filter('all');assert.doesNotMatch(f.html,/前期あり|前期済み/,'Previous-period F is not listed');f.search('４００２');assert.match(f.html,/確認二/);assert.doesNotMatch(f.html,/確認一/);
 const order=boot({kind:'f',rows:[{toban:'4300',name:'い',kana:'い',f:1,rests:[]},{toban:'4100',name:'あ',kana:'あ',f:1,rests:[]},{toban:'4200',name:'う',kana:'う',f:2,rests:[]}]},'f');
 const seq=()=>[...order.html.matchAll(/racer\/(\d{4})/g)].map(m=>m[1]).join(',');
 assert.equal(seq(),'4200,4100,4300','F desc, then name');order.sort('kana');assert.equal(seq(),'4100,4300,4200');order.sort('toban');assert.equal(seq(),'4100,4200,4300');

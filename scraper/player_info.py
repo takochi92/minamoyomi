@@ -109,13 +109,9 @@ def hub(page, prizes):
 
 
 def f_page(page, data):
-    upcoming=(f'<p class="sub">次の期替わりは{date(data.get("new_start"))}。期替わりのあと、ここに前期のF持ちが出ます。</p>' if data.get('preparing') else '')
     return f'''<h1>F・休み</h1>
 <div class="pi-controls"><input id="pi-q" type="search" placeholder="選手名・登録番号・支部" aria-label="選手を検索"></div>
-<section class="pi-hidden-box" aria-labelledby="pi-hidden-title"><h2 id="pi-hidden-title">隠れF（前期から持ち越し）</h2>
-<p class="sub">前期にFをして、休みがまだ終わっていない選手です。いまの出走表ではF0と出ます。休みが終わった選手は、ここには出しません。</p>{upcoming}
-<p id="pi-hidden-count" class="sub" role="status"></p><div id="pi-hidden"></div><button id="pi-hidden-more" class="btn" type="button" hidden>もっと見る</button></section>
-<section aria-labelledby="pi-list-title"><h2 id="pi-list-title">F持ちの選手</h2>
+<section aria-labelledby="pi-list-title"><h2 id="pi-list-title">今期のF持ち（{date(data.get("new_start"))}から）</h2>
 <div class="pi-controls">
 <select id="pi-filter" aria-label="しぼりこみ"><option value="f">Fあり</option><option value="f2">F2以上</option><option value="leave">休み 未</option><option value="served">休み 済</option><option value="all">すべて</option></select>
 <select id="pi-sort" aria-label="ならべかえ"><option value="f">F本数が多い順</option><option value="kana">名前順</option><option value="toban">登録番号順</option></select></div>
@@ -124,7 +120,7 @@ def f_page(page, data):
 <details class="more"><summary>未・済の決め方</summary><p>F休みは、期の1本目のFで30日、2本目で60日、3本目で90日。分けずに続けて取ります。</p>
 <p><b>未</b>：Fのあと、必要な日数ぶん続けてレースに出ていない時期が一度もない選手です。休みはまだ終わっていません（レース結果から確実に言えます）。公式資料に未消化とある選手も未です。</p>
 <p><b>済</b>：公式資料に消化済みとある選手。<small>推</small>が付いたものは、Fのあと必要な日数ぶん続けてレースに出ていない時期がある選手です。けが・病気の欠場と区別できないので推定です。</p>
-<p>F本数は、各選手のいちばん新しい出走表の数字です。隠れFは「前期にFがあり、期替わり後の出走表がF0」の選手です。</p>
+<p>F本数は、各選手のいちばん新しい出走表の数字です。前期のFは数えていません。</p>
 <p class="sub">F履歴は{date(data.get('through'))}の保存結果まで。</p></details>
 <script id="pi-data" type="application/json">{payload(data)}</script><script src="{page.asset('player-info.js')}" defer></script>'''
 

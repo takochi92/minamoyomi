@@ -2,8 +2,7 @@
 (() => {
   'use strict';
   const node=document.getElementById('pi-data');if(!node)return;
-  const sortSel=document.getElementById('pi-sort'),hiddenBox=document.getElementById('pi-hidden'),hiddenCount=document.getElementById('pi-hidden-count'),hiddenMore=document.getElementById('pi-hidden-more');
-  let hiddenLimit=10;
+  const sortSel=document.getElementById('pi-sort');
   const data=JSON.parse(node.textContent),q=document.getElementById('pi-q'),filter=document.getElementById('pi-filter');
   const list=document.getElementById('pi-list'),count=document.getElementById('pi-count'),more=document.getElementById('pi-more');
   let limit=30;
@@ -30,10 +29,6 @@
     if(!rows.length)return'';
     return `<table class="pi-ftable"><thead><tr><th scope="col">選手</th><th scope="col" class="r">F</th><th scope="col" class="r">休み</th></tr></thead><tbody>${
       rows.map(r=>`<tr><td>${name(r)}</td><td class="r num"><b>${r.f==null?'—':'F'+esc(r.f)}</b></td><td class="r">${mark(r)}</td></tr>`).join('')}</tbody></table>`;}
-  function hiddenTable(rows){
-    if(!rows.length)return'<p class="sub">いまは該当する選手はいません。</p>';
-    return `<table class="pi-ftable"><thead><tr><th scope="col">選手</th><th scope="col" class="r">前期F</th><th scope="col" class="r">前期最後のF</th><th scope="col" class="r">休み</th></tr></thead><tbody>${
-      rows.map(r=>`<tr><td>${name(r)}</td><td class="r num"><b>F${esc(r.prev_f||r.history_count||'')}</b></td><td class="r num">${r.prev_last||r.last_f?date(r.prev_last||r.last_f):'—'}</td><td class="r">${mark(r)}</td></tr>`).join('')}</tbody></table>`;}
   const kana=r=>normalize(r.kana||r.name);
   function sorted(rows){const m=sortSel?sortSel.value:'f';const by={
       f:(a,b)=>(b.f??-1)-(a.f??-1)||kana(a).localeCompare(kana(b),'ja'),
@@ -48,20 +43,11 @@
   }
   function render(){const search=normalize(q.value),mode=filter.value;
     const cutoff=data.cutoff||18;
-    const rows=(data.rows||[]).filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search)).filter(r=>data.kind==='prizes'?mode==='top18'?r.rank<=cutoff:mode==='top6'?r.rank<=6:mode==='border'?r.rank>=cutoff-5&&r.rank<=cutoff+6:true:mode==='f'?r.f>0:mode==='f2'?r.f>=2:mode==='leave'?leaveState(r)==='unserved':mode==='served'?leaveState(r)==='served':true);
+    const rows=(data.rows||[]).filter(r=>data.kind==='prizes'||!(r.rollover||r.f===0)).filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search)).filter(r=>data.kind==='prizes'?mode==='top18'?r.rank<=cutoff:mode==='top6'?r.rank<=6:mode==='border'?r.rank>=cutoff-5&&r.rank<=cutoff+6:true:mode==='f'?r.f>0:mode==='f2'?r.f>=2:mode==='leave'?leaveState(r)==='unserved':mode==='served'?leaveState(r)==='served':true);
     if(data.kind==='prizes')list.innerHTML=rows.slice(0,limit).map(prizeCard).join('')||'<p class="sub">該当する選手はいません。</p>';
     else list.innerHTML=fTable(sorted(rows).slice(0,limit))||'<p class="sub">確認できた資料の中に該当する選手はいません。</p>';
     count.textContent=`${rows.length}人 ／ ${Math.min(limit,rows.length)}人を表示`;more.hidden=rows.length<=limit;
   }
-  function renderHidden(){if(!hiddenBox||data.kind!=='f')return;const search=normalize(q.value);
-    const rows=(data.rows||[]).filter(r=>r.rollover&&leaveState(r)==='unserved').filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search))
-      .sort((a,b)=>(leaveState(a)==='unserved'?0:1)-(leaveState(b)==='unserved'?0:1)||String(b.prev_last||b.last_f||'').localeCompare(String(a.prev_last||a.last_f||''))||kana(a).localeCompare(kana(b),'ja'));
-    hiddenBox.innerHTML=hiddenTable(rows.slice(0,hiddenLimit));
-    if(hiddenCount)hiddenCount.textContent=rows.length?`${rows.length}人（前期最後のFが新しい順）`:'';
-    if(hiddenMore)hiddenMore.hidden=rows.length<=hiddenLimit;}
-  renderHidden();
-  if(hiddenMore)hiddenMore.addEventListener('click',()=>{hiddenLimit+=30;renderHidden();});
-  q.addEventListener('input',()=>{hiddenLimit=10;renderHidden();});
   if(sortSel)sortSel.addEventListener('change',()=>{limit=30;render();});
   q.addEventListener('input',()=>{limit=30;render();});filter.addEventListener('change',()=>{limit=30;render();});more.addEventListener('click',()=>{limit+=30;render();});render();
 })();

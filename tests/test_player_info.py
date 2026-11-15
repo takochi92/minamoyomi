@@ -68,7 +68,7 @@ def test_rollover_flag_is_only_a_crosscheck_and_never_claims_unserved_leave():
     assert row['rollover'] is True and row['rests']==[] and row['leave_state']=='unknown'
     assert row['prev_f']==1 and row['prev_last']=='20261031'
     text=f_page(Page('players-f.html'),data)
-    assert '隠れF（前期から持ち越し）' in text and '分けずに続けて取ります' in text
+    assert '隠れF' not in text and '分けずに続けて取ります' in text
     report['f_players'][0]['current_f_known']=True
     assert not build_f_report(report,snapshot,{},'20261102',{})['rows'][0]['rollover']
 
