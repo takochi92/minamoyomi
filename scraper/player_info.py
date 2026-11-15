@@ -113,7 +113,7 @@ def f_page(page, data):
     return f'''<h1>F・休み</h1>
 <div class="pi-controls"><input id="pi-q" type="search" placeholder="選手名・登録番号・支部" aria-label="選手を検索"></div>
 <section class="pi-hidden-box" aria-labelledby="pi-hidden-title"><h2 id="pi-hidden-title">隠れF（前期から持ち越し）</h2>
-<p class="sub">いまの出走表はF0でも、前期にFがある選手です。期替わりのあと自動で出て、次の期替わりの準備に入ると消えます。</p>{upcoming}
+<p class="sub">前期にFをして、休みがまだ終わっていない選手です。いまの出走表ではF0と出ます。休みが終わった選手は、ここには出しません。</p>{upcoming}
 <p id="pi-hidden-count" class="sub" role="status"></p><div id="pi-hidden"></div><button id="pi-hidden-more" class="btn" type="button" hidden>もっと見る</button></section>
 <section aria-labelledby="pi-list-title"><h2 id="pi-list-title">F持ちの選手</h2>
 <div class="pi-controls">

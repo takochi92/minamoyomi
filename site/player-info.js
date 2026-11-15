@@ -54,10 +54,10 @@
     count.textContent=`${rows.length}人 ／ ${Math.min(limit,rows.length)}人を表示`;more.hidden=rows.length<=limit;
   }
   function renderHidden(){if(!hiddenBox||data.kind!=='f')return;const search=normalize(q.value);
-    const rows=(data.rows||[]).filter(r=>r.rollover).filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search))
+    const rows=(data.rows||[]).filter(r=>r.rollover&&leaveState(r)==='unserved').filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search))
       .sort((a,b)=>(leaveState(a)==='unserved'?0:1)-(leaveState(b)==='unserved'?0:1)||String(b.prev_last||b.last_f||'').localeCompare(String(a.prev_last||a.last_f||''))||kana(a).localeCompare(kana(b),'ja'));
     hiddenBox.innerHTML=hiddenTable(rows.slice(0,hiddenLimit));
-    if(hiddenCount)hiddenCount.textContent=rows.length?`${rows.length}人（うち休み未 ${rows.filter(r=>leaveState(r)==='unserved').length}人）。未の選手から順に表示`:'';
+    if(hiddenCount)hiddenCount.textContent=rows.length?`${rows.length}人（前期最後のFが新しい順）`:'';
     if(hiddenMore)hiddenMore.hidden=rows.length<=hiddenLimit;}
   renderHidden();
   if(hiddenMore)hiddenMore.addEventListener('click',()=>{hiddenLimit+=30;renderHidden();});

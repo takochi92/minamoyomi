@@ -1,10 +1,10 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('site/player-info.js','utf8');
 function boot(data,mode){const nodes={};for(const id of ['pi-data','pi-q','pi-filter','pi-sort','pi-hidden','pi-hidden-count','pi-hidden-more','pi-list','pi-count','pi-more'])nodes[id]={textContent:'',value:'',hidden:false,innerHTML:'',events:{},all:[],addEventListener(k,f){this.events[k]=f;if(k==='input')this.all.push(f);}};nodes['pi-data'].textContent=JSON.stringify(data);nodes['pi-filter'].value=mode;nodes['pi-sort'].value='f';vm.runInNewContext(source,{document:{getElementById:id=>nodes[id]},URL,console});return{nodes,filter(value){nodes['pi-filter'].value=value;nodes['pi-filter'].events.change();},search(value){nodes['pi-q'].value=value;for(const f of nodes['pi-q'].all)f();},sort(value){nodes['pi-sort'].value=value;nodes['pi-sort'].events.change();},get html(){return nodes['pi-list'].innerHTML},get hidden(){return nodes['pi-hidden'].innerHTML}};}
-const rows=[{toban:'4001',name:'確認一',f:2,rests:[]},{toban:'4002',name:'確認二',f:null,rests:[{status:'snapshot_unserved',document_date:'20261026',days:30}]},{toban:'4003',name:'前期あり',f:0,rollover:true,rests:[]}];
+const rows=[{toban:'4001',name:'確認一',f:2,rests:[]},{toban:'4002',name:'確認二',f:null,rests:[{status:'snapshot_unserved',document_date:'20261026',days:30}]},{toban:'4003',name:'前期あり',f:0,rollover:true,leave_state:'unserved_sure',rests:[]},{toban:'4004',name:'前期済み',f:0,rollover:true,leave_state:'served_estimated',rests:[]}];
 const f=boot({kind:'f',rows},'f2');assert.match(f.html,/確認一/);assert.match(f.html,/F2/);assert.doesNotMatch(f.html,/確認二|前期あり/);
 f.filter('leave');assert.match(f.html,/確認二/);assert.match(f.html,/pi-mark-unserved"[^>]*>未</);
-assert.match(f.hidden,/前期あり/);assert.doesNotMatch(f.hidden,/確認一/);f.search('確認');assert.doesNotMatch(f.hidden,/前期あり/);f.search('');
+assert.match(f.hidden,/前期あり/);assert.doesNotMatch(f.hidden,/前期済み/);assert.doesNotMatch(f.hidden,/確認一/);f.search('確認');assert.doesNotMatch(f.hidden,/前期あり/);f.search('');
 f.filter('all');f.search('４００２');assert.match(f.html,/確認二/);assert.doesNotMatch(f.html,/確認一/);
 const order=boot({kind:'f',rows:[{toban:'4300',name:'い',kana:'い',f:1,rests:[]},{toban:'4100',name:'あ',kana:'あ',f:1,rests:[]},{toban:'4200',name:'う',kana:'う',f:2,rests:[]}]},'f');
 const seq=()=>[...order.html.matchAll(/racer\/(\d{4})/g)].map(m=>m[1]).join(',');
