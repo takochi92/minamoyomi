@@ -204,6 +204,51 @@ def programme_snapshots(today):
     return out
 
 
+# F休みの日数（期の中の何本目のFか）。休みは分けずに続けて取る
+REST_DAYS = {1: 30, 2: 60, 3: 90, 4: 120}
+
+
+def rest_states(races, today, start):
+    """レース結果から、F休みが「まだ（確実）」か「済んだ（推定）」かを決める。
+
+    休みは分けて取れないので、Fのあと必要な日数ぶん続けてレースに出ていない時期が無ければ、
+    その休みはまだ終わっていない（確実）。そういう時期があれば、休んだと推定する（けが等の欠場と
+    区別はできない）。start より前のFは見ない。"""
+    from datetime import date as _d
+    day = lambda s: _d(int(s[:4]), int(s[4:6]), int(s[6:8]))
+    raced, flying = defaultdict(set), defaultdict(list)
+    for r in races:
+        if r[0] < start or r[0] >= today:
+            continue
+        for e in r[11]:
+            t = str(e[1])
+            raced[t].add(r[0])
+            if e[4] == 'F' or e[5] == 'F':
+                flying[t].append(r[0])
+    out = {}
+    end = day(today)
+    for t, fs in flying.items():
+        fs.sort()
+        ordinal = defaultdict(int)
+        need, pending, served_from, back = 0, [], None, None
+        dates = sorted(raced[t])
+        for i, d in enumerate(dates):
+            for f in (x for x in fs if x == d):
+                key = period(f)['from']
+                ordinal[key] += 1
+                need += REST_DAYS.get(ordinal[key], 120)
+                pending.append(f)
+            nxt = day(dates[i + 1]) if i + 1 < len(dates) else end
+            gap = (nxt - day(d)).days - 1
+            if pending and gap >= need:
+                served_from = (day(d) + timedelta(days=1)).strftime('%Y%m%d')
+                back = dates[i + 1] if i + 1 < len(dates) else None
+                need, pending = 0, []
+        out[t] = ({'state': 'unserved_sure', 'f': fs[-1], 'need': need} if pending else
+                  {'state': 'served_estimated', 'f': fs[-1], 'rest_from': served_from, 'back': back})
+    return out
+
+
 def build_report(today, races, sources, terms, snapshots):
     current = period(today)
     previous = period((datetime.strptime(current['from'], '%Y%m%d') - timedelta(days=1)).strftime('%Y%m%d'))
@@ -281,6 +326,7 @@ def build_report(today, races, sources, terms, snapshots):
             'roster_n': len(current_ids), 'borders': borders, 'players': rows,
             'official_period': {k: latest[k] for k in ('id', 'from', 'through', 'source')} if latest else None,
             'f_period': f_period, 'f_preparing': preparing, 'new_start': new_start, 'f_players': f_rows,
+            'f_rest': rest_states(races, today, previous['from']),
             'missing_days': missing, 'calendar_sources': [{k: x[k] for k in ('year', 'category', 'source', 'checked_at')} for x in sources]}
 
 

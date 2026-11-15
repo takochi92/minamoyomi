@@ -64,8 +64,11 @@ def test_rollover_flag_is_only_a_crosscheck_and_never_claims_unserved_leave():
             'f_players':[{'toban':'4001','name':'確認選手','events':[{'date':'20261031'}]}]}
     snapshot={'4001':{'date':'20261101','jcd':'04','rno':1,'f':0}}
     data=build_f_report(report,snapshot,{},'20261102',{})
-    assert data['rows'][0]['rollover'] is True and data['rows'][0]['rests']==[]
-    assert '未消化とは断定できません' in f_page(Page('players-f.html'),data)
+    row=data['rows'][0]
+    assert row['rollover'] is True and row['rests']==[] and row['leave_state']=='unknown'
+    assert row['prev_f']==1 and row['prev_last']=='20261031'
+    text=f_page(Page('players-f.html'),data)
+    assert '隠れF' not in text and '分けずに続けて取ります' in text
     report['f_players'][0]['current_f_known']=True
     assert not build_f_report(report,snapshot,{},'20261102',{})['rows'][0]['rollover']
 
@@ -106,3 +109,21 @@ def test_served_badge_requires_explicit_current_evidence_and_no_later_f():
     report['f_players'][0]['last_f']='20261001'
     snapshots['4001']['known_f_date']='20261027'
     assert build_f_report(report,snapshots,{'records':[document]},'20261027',{})['rows'][0]['leave_state']=='unknown'
+
+
+def test_rest_state_is_sure_only_without_a_long_enough_break():
+    """F休みは分けて取れない。必要な日数ぶん続けて休んだ時期が無ければ「未」は確実。"""
+    from scraper.season_watch import rest_states
+    def race(d, t, code=1):
+        return [d, '04', 1, None, None, None, None, None, None, None, None, [[1, t, 1, 15, 'F' if code == 'F' else None, code]]]
+    races = [race('20260601', '4001', 'F'), race('20260610', '4001'), race('20260620', '4001'), race('20261101', '4001'),  # 30日以上空く
+             race('20260601', '4002', 'F'), race('20260620', '4002'), race('20260715', '4002'), race('20260801', '4002'),   # 最大24日
+             race('20260601', '4003', 'F'), race('20260605', '4003', 'F'), race('20260801', '4003')]                       # F2で55日しか空かない
+    out = rest_states(races, '20261115', '20260501')
+    assert out['4001']['state'] == 'served_estimated' and out['4001']['rest_from'] == '20260621' and out['4001']['back'] == '20261101'
+    assert out['4002']['state'] == 'served_estimated', 'Still away since August: the open gap counts'
+    assert out['4003']['state'] == 'served_estimated', 'Away more than 90 days since August'
+    two = rest_states(races[8:], '20261001', '20260501')
+    assert two['4003']['state'] == 'unserved_sure' and two['4003']['need'] == 90, 'F2 needs 90 days in one block'
+    short = rest_states(races[4:8], '20260815', '20260501')
+    assert short['4002']['state'] == 'unserved_sure' and short['4002']['need'] == 30

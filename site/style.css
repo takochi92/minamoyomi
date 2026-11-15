@@ -943,3 +943,18 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .course-swap-none,.cs-none{font-size:12px;color:var(--ink2)}
 @media (min-width:720px){.course-swap-row{grid-template-columns:minmax(0,14em) minmax(0,1fr);align-items:center}}
 .course-swap-hint,.course-swap-note{font-size:12px;color:var(--ink2)}
+/* F・休み：名前・F・未/済の一覧 */
+.pi-hidden-box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin:8px 0 18px;min-width:0}
+.pi-hidden-box h2,.pi-hidden-box p{margin:0}
+.pi-ftable{width:100%;border-collapse:collapse;font-size:14px}
+.pi-ftable th{font-size:11px;font-weight:500;color:var(--ink2);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+.pi-ftable td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.pi-ftable .r{text-align:right;white-space:nowrap}
+.pi-ftable .pi-name small{display:block}
+.pi-legend{font-size:12px;color:var(--ink2);margin:6px 0 0;line-height:1.9}
+.pi-mark{display:inline-grid;place-items:center;min-width:1.8em;padding:1px 6px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.pi-mark-unserved{color:var(--bad);border-color:var(--bad)}
+.pi-mark-served{color:var(--good);border-color:var(--good)}
+.pi-mark-unknown{color:var(--ink2)}
+.pi-mark-est{font-size:9px;margin-left:1px;font-weight:500}
+.pi-mark-date{display:block;font-size:10px;color:var(--ink2);margin-top:2px}
