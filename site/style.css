@@ -884,3 +884,4 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 @media(max-width:480px){.rtabs.race-tabs button{padding-inline:1px;font-size:11px}.rtabs.race-tabs small{display:none}}
 .premium-closed{font-weight:700}
 .premium-action:disabled{opacity:.55;cursor:not-allowed;border-color:var(--line)}
+.premium-error{overflow-wrap:anywhere}

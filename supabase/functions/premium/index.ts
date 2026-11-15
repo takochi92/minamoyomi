@@ -162,9 +162,9 @@ Deno.serve(async req => {
       }
       const created = await stripe('checkout/sessions', {
         mode: 'subscription', customer: customerId, 'line_items[0][price]': price, 'line_items[0][quantity]': '1',
-        'metadata[teilog_price]': price, 'payment_method_types[0]': 'card',
+        'metadata[teilog_price]': price,
         success_url: origin + '/premium?checkout=done', cancel_url: origin + '/premium',
-      }, 'teilog-checkout-v2-' + customerId + '-' + price + '-' + (latest?.id || 'first'));
+      }, 'teilog-checkout-v3-' + customerId + '-' + price + '-' + (latest?.id || 'first'));
       return reply({ url: created.url });
     }
     if (action === 'race') {
