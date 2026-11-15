@@ -738,6 +738,40 @@ class Site:
 <div class="slit-chips"></div><p class="sub">実時間約7秒を5秒で再生。展示進入を仮定した直線換算で、1マークの攻防・実測距離ではありません。まわり足の独自補正は加えていません。</p></section>'''
         return f'<div class="slit-pair">{static}{animation}</div><script src="{page.u("slit.js")}" defer></script>'
 
+    # ------------------------------------------------------------ 進入の入れ替え（出走表の下・押したときだけ開く）
+    def course_swap_data(self, rl, pb):
+        """6艇それぞれの、1〜6コースでの成績。数字は作らない（走っていないコースは入れない）。
+        c[コース] = [出走, 1着, 2着, 3着, ST合計(秒), STの件数]"""
+        boats = []
+        for b in rl.get("boats") or []:
+            f, t = b["frame"], str(b.get("toban", ""))
+            by = {}
+            rc = self.S.rc.get(t) or {}
+            cs = self.S.rcs.get(t) or {}
+            for c in range(1, 7):
+                v = rc.get(c)
+                if v is None or v[0] <= 0:
+                    continue
+                st = cs.get(c)
+                by[str(c)] = [int(v[0]), int(v[1]), int(v[2]), int(v[3]),
+                              round(float(st[0]), 2) if st is not None and st[1] > 0 else 0,
+                              int(st[1]) if st is not None else 0]
+            boats.append({"f": f, "n": b.get("name", ""), "k": (pb.get(f) or {}).get("course", f), "c": by})
+        return boats
+
+    def course_swap_block(self, page, rl, pb):
+        boats = self.course_swap_data(rl, pb)
+        if len(boats) != 6 or sorted(b["k"] for b in boats) != [1, 2, 3, 4, 5, 6]:
+            return ""
+        data = json.dumps(boats, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+        return (f'<details class="course-swap" data-course-swap><summary>進入を入れ替えて見る</summary>'
+                f'<div class="course-swap-body"><p class="course-swap-hint">進入順（内側から）に艇をタップしてください。残りは元の並びのまま続きます。</p>'
+                f'<div class="course-swap-bar"><div class="course-swap-pick"></div><button type="button" class="btn course-swap-reset" disabled>元に戻す</button></div>'
+                f'<p class="course-swap-note" hidden>買い目・バフは元の進入が前提です。</p>'
+                f'<div class="course-swap-list" role="list"></div></div>'
+                f'<script type="application/json" class="course-swap-data">{data}</script></details>'
+                f'<script src="{page.asset("course-swap.js")}" defer></script>')
+
     # ------------------------------------------------------------ 1周1マークの展開イメージ（上から見た図）
     DEFAULT_MOVE = {2: "差し", 3: "まくり", 4: "まくり", 5: "まくり差し", 6: "展開待ち"}
 
@@ -1232,6 +1266,7 @@ class Site:
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
 <div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race" role="table" aria-label="出走選手とコース・勝率・モーター2連率"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+{self.course_swap_block(page, rl, pb)}
 </section>
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
 {self.ai_block(p, {b["frame"]: b.get("name", "") for b in rl["boats"]})}

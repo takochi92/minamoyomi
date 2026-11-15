@@ -63,6 +63,7 @@ class Stats:
         self.n2 = Counter()
         self.rf = defaultdict(lambda: np.zeros(3))                          # 登番→[出走, 枠より内へ(前付け), 枠より外へ]
         self.rsr = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[ST順の合計, 件数]
+        self.rcs = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))  # 登番→コース→[ST合計(秒), 件数]（F・Lは除く）
         self.vst = defaultdict(lambda: defaultdict(lambda: np.zeros(3)))  # 場→コース→[ST合計(秒), 件数, F]
         self.vm = defaultdict(lambda: defaultdict(lambda: np.zeros(2)))   # 場→月→[レース, インの1着]
 
@@ -90,6 +91,7 @@ class Stats:
             self.vc[jcd][course] += v
             if st is not None and not flag:
                 self.rst[toban] += sign * np.array([st / 100, 1])
+                self.rcs[toban][course] += sign * np.array([st / 100, 1])
         for e in ents:
             self.rf[e[1]] += sign * np.array([1, int(e[2] < e[0]), int(e[2] > e[0])])
             self.vst[jcd][e[2]] += sign * np.array([(e[3] or 0) / 100 if e[3] is not None and not e[4] else 0,
@@ -147,7 +149,8 @@ class Stats:
                       "2": {str(k): v for k, v in self.r2[t].items() if v},
                       "v": {j: arr(v) for j, v in self.rv[t].items() if v[0] > 0},
                       "f": arr(self.rf[t]),
-                      "sr": {str(c): arr(v) for c, v in self.rsr[t].items() if v[1] > 0}}
+                      "sr": {str(c): arr(v) for c, v in self.rsr[t].items() if v[1] > 0},
+                      "cs": {str(c): arr(v) for c, v in self.rcs[t].items() if v[1] > 0}}
                   for t, d in self.rc.items() if any(v[0] > 0 for v in d.values())},
         }
 
@@ -192,6 +195,8 @@ class Stats:
                 S.rf[t] = np.array(d["f"])
             for c, v in d.get("sr", {}).items():
                 S.rsr[t][int(c)] = np.array(v)
+            for c, v in d.get("cs", {}).items():
+                S.rcs[t][int(c)] = np.array(v)
         return S
 
 
