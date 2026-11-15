@@ -176,3 +176,155 @@ def test_official_cancellation_is_terminal_but_not_a_timing_sample(tmp_path):
     assert archive(tmp_path, ["20261112"])["added_or_updated"] == 1
     assert archived_records(tmp_path)["20261112", "04", 1]["result"]["cancelled"] is True
     assert archive(tmp_path, ["20261112"])["added_or_updated"] == 0
+
+
+def test_rider_baseline_weights_recent_terms_and_shrinks_small_samples():
+    from scraper.premium_motor import rider_baselines
+    profiles = {"terms": {
+        "old": {"available_from": "20250501", "players": {"1000": {"n": 100, "dev_sum": 10.0}, "2000": {"n": 2, "dev_sum": -0.2}}},
+        "new": {"available_from": "20260501", "players": {"1000": {"n": 100, "dev_sum": -10.0}}},
+        "future": {"available_from": "20270101", "players": {"1000": {"n": 1000, "dev_sum": 500.0}}},
+    }}
+    base = rider_baselines(profiles, "20261112")
+    assert base["1000"] < 0                                   # the newer term decides the sign
+    assert abs(base["1000"] - (-10 + .5 * 10) / (150 + 8)) < 1e-12
+    assert abs(base["2000"]) < .03                            # two runs barely move the value
+    assert "1000" in rider_baselines(profiles, "20250601") and rider_baselines(profiles, "20250601")["1000"] > 0
+
+
+def test_adjusted_rating_removes_the_rider_from_the_motor(monkeypatch):
+    from scraper import premium_motor
+    riders = {m: [f"{1000 + m}", f"{2000 + m}", f"{3000 + m}"] for m in range(1, 13)}
+    quick = {riders[1][0], riders[1][1], riders[1][2]}       # motor 1 always gets riders who are .10s quick
+    def observations(race, venue=None):
+        for motor in range(1, 13):
+            rider = riders[motor][race["meet"]]
+            true_motor = -.04 if motor == 2 else 0.0          # motor 2 is the genuinely quick one
+            yield "exhibition", str(motor), rider, true_motor + (-.10 if rider in quick else 0.0)
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    records = {}
+    for meet, start in enumerate((20261012, 20261020, 20261028)):
+        for offset in range(3):
+            d = str(start + offset)
+            records[d, "04", 1] = {"racelist": {"title": f"meet{meet}"}, "meet": meet}
+    history = {"04": {"1": {"history_boundary": "20260618"}}}
+    profiles = {"terms": {"t": {"available_from": "20260501", "players": {r: {"n": 400, "dev_sum": -40.0} for r in quick}}}}
+    plain = premium_motor.build(records, history, "20261105")["venues"]["04"]["motors"]
+    assert "adjusted" not in plain["1"] and plain["1"]["exhibition"]["grade"] in "SA"
+    out = premium_motor.build(records, history, "20261105", rider_profiles=profiles)["venues"]["04"]["motors"]
+    assert out["2"]["adjusted"]["grade"] in "SA" and out["2"]["adjusted"]["riders"] == 3
+    assert abs(out["1"]["adjusted"]["delta"]) < .01           # the quick riders no longer flatter motor 1
+    assert plain["1"]["exhibition"]["delta"] < -.09
+    assert out["1"]["adjusted"]["delta"] > out["2"]["adjusted"]["delta"]
+    # the member 展示 rating now carries the deduction too
+    assert out["1"]["exhibition"]["delta"] > plain["1"]["exhibition"]["delta"] + .09
+    assert abs(out["1"]["exhibition"]["rider_deduction"] - 40 / 408) < .001   # shrunk toward 0 by 8 runs
+
+
+def test_rider_deduction_takes_off_quick_riders_and_never_credits_slow_ones(monkeypatch):
+    from scraper import premium_motor
+    riders = {m: [f"{1000 + m}", f"{2000 + m}", f"{3000 + m}"] for m in range(1, 13)}
+    quick = set(riders[1])                 # motor 1: riders usually .10 s quick
+    slow = set(riders[3])                  # motor 3: riders usually .10 s slow
+    def observations(race, venue=None):
+        for motor in range(1, 13):
+            rider = riders[motor][race["meet"]]
+            yield "exhibition", str(motor), rider, -.10 if rider in quick else .10 if rider in slow else 0.0
+            yield "straight", str(motor), rider, -.10 if rider in quick else 0.0
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    records = {}
+    for meet, start in enumerate((20261012, 20261020, 20261028)):
+        for offset in range(3):
+            records[str(start + offset), "04", 1] = {"racelist": {"title": f"meet{meet}"}, "meet": meet}
+    history = {"04": {"1": {"history_boundary": "20260618"}}}
+    players = {**{r: {"n": 400, "dev_sum": -40.0} for r in quick}, **{r: {"n": 400, "dev_sum": 40.0} for r in slow}}
+    profiles = {"terms": {"t": {"available_from": "20260501", "players": players}}}
+    plain = premium_motor.build(records, history, "20261105", rider_deduction_profiles={})["venues"]["04"]["motors"]
+    out = premium_motor.build(records, history, "20261105", rider_deduction_profiles=profiles)["venues"]["04"]["motors"]
+    assert "rider_deduction" not in plain["1"]["exhibition"]
+    assert abs(out["1"]["exhibition"]["delta"]) < .01 and out["1"]["exhibition"]["rider_deduction"] > .09
+    assert out["3"]["exhibition"]["delta"] == plain["3"]["exhibition"]["delta"] > .09   # no credit for slow riders
+    assert out["3"]["exhibition"]["rider_deduction"] == 0
+    # 直線 uses the riders' runs on OTHER motors; these riders never rode another one
+    assert out["1"]["straight"]["delta"] == plain["1"]["straight"]["delta"]
+    assert out["1"]["straight"]["rider_deduction"] == 0
+
+
+def test_item_baseline_uses_only_other_motors_and_never_credits():
+    from scraper.premium_motor import ItemBaselines
+    def race(motors_riders, values):
+        boats = [{"frame": i + 1, "motor_no": m, "toban": r} for i, (m, r) in enumerate(motors_riders)]
+        before = [{"frame": i, "exhibit_time": 6.7} for i in range(1, 7)]
+        rows = {str(i + 1): [v] for i, v in enumerate(values)}
+        return {"racelist": {"boats": boats}, "before": {"boats": before},
+                "oriten": {"items": ["まわり足"], "rows": rows}}
+    quick, slow = "1111", "2222"
+    others = ["3333", "4444", "5555", "6666"]
+    records = {}
+    for k in range(16):    # quick rider: 0.12 s faster than the race on motor 1+k; slow rider 0.12 s slower
+        records["20261101", "05", k + 1] = race([(k + 1, quick), (50 + k, slow)] + [(80 + i + k, r) for i, r in enumerate(others)],
+                                                [5.38, 5.62, 5.5, 5.5, 5.5, 5.5])
+    b = ItemBaselines(records, "20261105")
+    cut = b.deduction("turn", quick, "05", "1")
+    assert abs(cut - .12 * 15 / 23) < .002          # 15 runs on other motors, shrunk by 8
+    assert b.deduction("turn", slow, "05", "50") == 0  # deduction only
+    assert b.deduction("turn", quick, "05", "99") > cut  # all 16 runs are on other motors
+    assert ItemBaselines(records, "20261031").deduction("turn", quick, "05", "1") == 0   # nothing after the cutoff
+
+
+def test_lap_minus_turn_stands_in_for_straight_only_where_straight_is_not_published():
+    from scraper.premium_motor import observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6.7} for i in range(1, 7)]
+    # 一周 and まわり足: boat 1 loses 0.10 s outside the turn, boat 6 gains 0.10 s
+    rows = {str(i): [37.0 + {1: .1, 6: -.1}.get(i, 0), 5.5] for i in range(1, 7)}
+    race = {"racelist": {"boats": boats}, "before": {"boats": before},
+            "oriten": {"items": ["一周", "まわり足"], "rows": rows}}
+    straight = {m: round(v, 4) for k, m, _, v in observations(race, "12") if k == "straight"}
+    assert straight["1"] == .1 and straight["6"] == -.1
+    assert not any(k == "straight" for k, *_ in observations(race, "03"))
+    assert not any(k == "straight" for k, *_ in observations(race, "04"))
+    # A venue that publishes 直線 keeps the official value
+    race["oriten"] = {"items": ["一周", "まわり足", "直線"], "rows": {k: v + [7.0] for k, v in rows.items()}}
+    assert all(v == 0 for k, _, _, v in observations(race, "12") if k == "straight")
+
+
+def test_mikuni_exit_side_straight_gives_acceleration():
+    from scraper.premium_motor import observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6 + i / 100} for i in range(1, 7)]
+    rows = {str(i): [5 + i / 100, 7 + i / 100] for i in range(1, 7)}
+    race = {"racelist": {"boats": boats}, "before": {"boats": before},
+            "oriten": {"items": ["まわり足", "直線"], "rows": rows}}
+    assert any(k == "acceleration" for k, *_ in observations(race, "10"))
+    assert not any(k == "acceleration" for k, *_ in observations(race, "11"))
+
+
+def test_edogawa_video_fills_straight_turn_and_overall_only_there(tmp_path):
+    import json
+    from scraper.premium_motor import attach_video, load_video, observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6.7 + i / 100} for i in range(1, 7)]
+    rows = [{"source": "video", "date": "20261114", "venue": v, "race": 6, "boat": b, "metric": m,
+             "seconds": s + b / 10} for v in ("03", "04") for m, s in (("straight", 5.0), ("turn", 2.0))
+            for b in (1, 2, 4, 6)]
+    rows.append({"source": "video", "date": "20261114", "venue": "03", "race": 6, "boat": 3,
+                 "metric": "turn", "seconds": 2.3})
+    (tmp_path / "20261114-03.json").write_text(json.dumps({"rows": rows}))
+    video = load_video(tmp_path)
+    assert ("20261114", "04", 6) not in video
+    records = attach_video({("20261114", "03", 6): {"racelist": {"boats": boats},
+                                                    "before": {"boats": before}}}, video)
+    race = records["20261114", "03", 6]
+    obs = {(k, m): v for k, m, _, v in observations(race, "03")}
+    # straight: 4 boats measured, against their own mean (5.325)
+    assert round(obs["straight", "1"], 4) == -.225 and ("straight", "3") not in obs
+    # turn: 5 boats measured
+    assert ("turn", "3") in obs and ("turn", "5") not in obs
+    # overall only for boats with exhibition, straight and turn
+    assert {m for k, m in obs if k == "overall"} == {"1", "2", "4", "6"}
+    # a venue that is not in VIDEO_VENUES ignores the measurement
+    assert not any(k in ("straight", "turn") for k, *_ in observations(race, "04"))

@@ -25,12 +25,34 @@ RESULT_TRIES_LIMIT = 12   # run.py が結果の取得をあきらめる回数
 MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
+# Rider-adjusted exhibition (research/improvements/RIDER_ADJUSTED_MOTOR.md). The published snapshot
+# only carries it when the build is asked to, because the Premium function must accept the key first.
+ADJUSTED_HALF_LIFE = 45
+RIDER_SHRINK_RUNS = 8
+RIDER_TERM_DECAY = .5
 # Official course maps document the early straight section at these venues.
-EXIT_SECTION_VENUES = {"02", "04", "07", "14", "22"}
+CONFIRMED_EXIT_VENUES = {"02", "04", "07", "10", "14", "22"}
+# Official documents do not show where 直線 is measured here, but 直線 − 展示 sorted the next day's
+# results A<B<C<D (宮島: A and D only) and A beat D in every meeting, 2026/10/12〜11/14.
+# Shown as 算出・区間未確認 (source "unconfirmed_section"). Not here: 桐生・浜名湖 failed that check;
+# びわこ's official text puts 直線 on the back straight, not the turn exit.
+UNCONFIRMED_EXIT_VENUES = {"05", "08", "09", "15", "16", "17", "19", "20", "21", "23", "24"}
+EXIT_SECTION_VENUES = CONFIRMED_EXIT_VENUES | UNCONFIRMED_EXIT_VENUES
 # The replay found clear A/D separation but unstable intermediate ordering here.
 # Use B for the middle band rather than presenting two distinct grades.
-MIDDLE_BAND_VENUES = {"turn": {"09", "12", "15"}, "overall": {"06", "22"}}
+MIDDLE_BAND_VENUES = {"turn": {"09", "12", "15"}, "overall": {"06", "22"}, "acceleration": {"17"}}
 TWO_SECTION_VENUES = {"12", "13", "18"}
+# These venues publish 一周 and まわり足 but no 直線. The rest of the lap (一周 − まわり足) is the
+# straight running, so it stands in for 直線 there, marked with source "lap_minus_turn".
+# At the venues that publish all three, it follows the official 直線 inside a race (rank
+# correlation +0.11 to +0.50 by venue, 2026/09〜11), more closely than 直線 follows 展示.
+LAP_MINUS_TURN_VENUES = {"12", "13", "18"}
+# Edogawa publishes only the exhibition time. Straight and turn come from the BOATCAST replay,
+# measured by tools.boatcast_measure (numbers only) and labelled as our own measurement.
+VIDEO_VENUES = {"03"}
+VIDEO_METRICS = ("straight", "turn")
+VIDEO_MIN_BOATS = 4
+VIDEO_DIR = ROOT / "research" / "boatcast-measure"
 
 
 def day(value):
@@ -62,6 +84,34 @@ def observations(race, venue=None):
             continue
         baseline = sum(values) / len(values)
         deviations[key] = [value - baseline for value in values]
+    partial = {}
+    if venue in VIDEO_VENUES:
+        for key in VIDEO_METRICS:
+            measured = {int(b): v for b, v in ((race.get("video") or {}).get(key) or {}).items()
+                        if int(b) in lanes and isinstance(v, (int, float)) and math.isfinite(v) and 0 < v < 120}
+            if key not in deviations and len(measured) >= VIDEO_MIN_BOATS:
+                baseline = sum(measured.values()) / len(measured)
+                partial[key] = {b: v - baseline for b, v in measured.items()}
+    if partial:
+        # Not every boat is measured in every replay: rank the overall among the boats that are.
+        full = {k: dict(enumerate(v, 1)) for k, v in deviations.items()}
+        full.update(partial)
+        parts = ("exhibition", "straight", "turn")
+        boats = [b for b in range(1, 7) if all(b in full.get(k, {}) for k in parts)]
+        if len(boats) >= VIDEO_MIN_BOATS:
+            weights = {"exhibition": .25, "straight": .25, "turn": .5}
+            ranks = {}
+            for k in parts:
+                field = [full[k][b] for b in boats]
+                ranks[k] = {b: (sum(x < full[k][b] for x in field) + (field.count(full[k][b]) - 1) / 2)
+                            / (len(boats) - 1) for b in boats}
+            partial["overall"] = {b: sum(weights[k] * ranks[k][b] for k in parts) - .5 for b in boats}
+        for key, values in partial.items():
+            for b, value in values.items():
+                yield key, str(entries[b]["motor_no"]), str(entries[b]["toban"]), value
+    if (venue in LAP_MINUS_TURN_VENUES and "straight" not in deviations
+            and {"lap", "turn"} <= deviations.keys()):
+        deviations["straight"] = [lap - turn for lap, turn in zip(deviations["lap"], deviations["turn"])]
     if venue in EXIT_SECTION_VENUES and {"straight", "exhibition"} <= deviations.keys():
         deviations["acceleration"] = [early - late for early, late in
                                       zip(deviations["straight"], deviations["exhibition"])]
@@ -84,12 +134,17 @@ def observations(race, venue=None):
             yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
 
 
-def pairing_ratings(meets, venue):
+def pairing_ratings(meets, venue, items=None):
     samples = defaultdict(list)
+    cuts = defaultdict(list)
     for meet in meets:
         for d, title, race in meet:
             for key, motor, rider, value in observations(race, venue):
                 if key in ("turn", "acceleration", "overall"):
+                    if items is not None:
+                        cut = items.deduction(key, rider, venue, motor)
+                        value += cut
+                        cuts[key, meet[0][0], title, motor, rider].append(cut)
                     samples[key, meet[0][0], title, motor, rider].append((d, value))
 
     output = {}
@@ -115,15 +170,80 @@ def pairing_ratings(meets, venue):
                      "through": max(d for d, _ in xs)}
             if metric in ("acceleration", "overall"):
                 score["index"] = round((center - mean_delta) * (50 if metric == "acceleration" else 100))
+            if items is not None:
+                c = cuts[metric, start, title, motor, rider]
+                score["rider_deduction"] = round(sum(c) / len(c), 4)
+            if metric == "acceleration" and venue in UNCONFIRMED_EXIT_VENUES:
+                score["source"] = "unconfirmed_section"
+            if venue in VIDEO_VENUES:
+                score["source"] = "video"
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
     return output
 
 
-def profile(samples, as_of):
+def rider_baselines(term_profiles, through):
+    """Each rider's usual exhibition gap to the race average, in seconds (negative is faster).
+
+    Built from the official exhibition profiles per rating term. Newer terms weigh more and the
+    value is pulled toward zero for riders with few runs. Terms that start after `through` are ignored.
+    """
+    terms = sorted((t for t in ((term_profiles or {}).get("terms") or {}).values()
+                    if isinstance(t, dict) and str(t.get("available_from", "9")) <= through),
+                   key=lambda t: t["available_from"], reverse=True)
+    totals = defaultdict(lambda: [0.0, 0.0])
+    for age, term in enumerate(terms):
+        weight = RIDER_TERM_DECAY ** age
+        for rider, row in (term.get("players") or {}).items():
+            n, total = row.get("n"), row.get("dev_sum")
+            if type(n) is int and n > 0 and isinstance(total, (int, float)) and math.isfinite(total):
+                totals[str(rider)][0] += weight * n
+                totals[str(rider)][1] += weight * total
+    return {rider: total / (n + RIDER_SHRINK_RUNS) for rider, (n, total) in totals.items()}
+
+
+# Member ratings take off what the rider brings (research/improvements/RIDER_ADJUSTED_MOTOR.md).
+# Deduction only: a rider faster than usual makes the motor's time count slower; a slower rider
+# never makes it count faster. The rider baselines are official exhibition deviations, so only
+# the 展示 rating uses them.
+RIDER_DEDUCTION_METRICS = ("exhibition",)
+
+
+def rider_deduction(baselines, rider):
+    """Seconds to add to this rider's run (0 or more)."""
+    return max(0.0, -baselines.get(str(rider), 0.0))
+
+
+ITEM_DEDUCTION_METRICS = ("straight", "turn", "acceleration", "overall")
+
+
+class ItemBaselines:
+    """Each rider's usual gap to the race average per official item, from runs on OTHER motors
+    up to `through` (so the motor being rated does not lower its own score). Pulled toward 0
+    with RIDER_SHRINK_RUNS runs, like the exhibition baselines."""
+
+    def __init__(self, records, through):
+        self.total = defaultdict(lambda: [0, 0.0])
+        self.own = defaultdict(lambda: [0, 0.0])
+        for (d, venue, _), race in records.items():
+            if d > through:
+                continue
+            for key, motor, rider, value in observations(race, venue):
+                if key in ITEM_DEDUCTION_METRICS:
+                    for table, k in ((self.total, (key, rider)), (self.own, (key, rider, venue, motor))):
+                        table[k][0] += 1
+                        table[k][1] += value
+
+    def deduction(self, key, rider, venue, motor):
+        n, total = self.total.get((key, rider), (0, 0.0))
+        m, own = self.own.get((key, rider, venue, motor), (0, 0.0))
+        return max(0.0, -(total - own) / (n - m + RIDER_SHRINK_RUNS))
+
+
+def profile(samples, as_of, half_life=HALF_LIFE):
     days = {s[0] for s in samples}
     if len(samples) < MIN_RUNS or len(days) < 3:
         return None
-    weights = [2 ** (-(as_of - s[0]).days / HALF_LIFE) for s in samples]
+    weights = [2 ** (-(as_of - s[0]).days / half_life) for s in samples]
     avg = sum(s[3] * w for s, w in zip(samples, weights)) / sum(weights)
     # Whole meetings are the replication unit, not individual races from a single day.
     by_meet_rider = defaultdict(list)
@@ -154,7 +274,8 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None, periods=None):
+def build(records, motor_history, through, meeting_dates=None, periods=None, rider_profiles=None,
+          rider_deduction_profiles=None):
     from . import motor_generation
     active = motor_generation.boundaries(through, motor_generation.saved_starts(motor_history), periods)
     as_of = day(through)
@@ -167,6 +288,10 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
         if title and not (race.get("result") or {}).get("cancelled"):
             grouped[venue].append((d, title, race))
 
+    baselines = rider_baselines(rider_profiles, through) if rider_profiles else None
+    deductions = baselines if rider_deduction_profiles is None else (
+        rider_baselines(rider_deduction_profiles, through) if rider_deduction_profiles else None)
+    items = ItemBaselines(records, through) if deductions is not None else None
     output = {}
     for venue, races in grouped.items():
         boundary = active.get(venue, {}).get("date")
@@ -188,10 +313,20 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
         )]
         recent = complete[-3:]
         data = defaultdict(list)
+        deducted = defaultdict(list)
         for meeting in recent:
             meet = meeting[0][0]
             for d, _, race in meeting:
-                for key, motor, rider, delta in observations(race):
+                for key, motor, rider, delta in observations(race, venue):
+                    if key in RIDER_DEDUCTION_METRICS and deductions is not None:
+                        # A rider faster than usual carried the motor: take that off. Never add.
+                        cut = rider_deduction(deductions, rider)
+                        delta += cut
+                        deducted[key, motor].append(cut)
+                    elif key == "straight" and items is not None:
+                        cut = items.deduction(key, rider, venue, motor)
+                        delta += cut
+                        deducted[key, motor].append(cut)
                     data[key, motor].append((day(d), meet, rider, delta))
         metrics = {}
         for key in TRIAL_RATINGS:
@@ -204,11 +339,40 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
                     candidates[motor] = result
             # Trial thresholds in seconds. The S grade also requires two separate meetings.
             metrics[key] = rank_field(candidates, .03)
+            if deducted:
+                for motor, score in metrics[key].items():
+                    if (key, motor) not in deducted:
+                        continue
+                    cuts = deducted[key, motor]
+                    score["rider_deduction"] = round(sum(cuts) / len(cuts), 4) if cuts else 0.0
+        if venue in LAP_MINUS_TURN_VENUES:
+            for score in metrics["straight"].values():
+                score["source"] = "lap_minus_turn"
+        if venue in VIDEO_VENUES:
+            for score in metrics["straight"].values():
+                score["source"] = "video"
+        if baselines is not None:
+            # Every finished meeting in the window, minus what each rider usually does. A rider the
+            # profiles do not know is treated as average. Different riders must have used the motor.
+            adjusted = defaultdict(list)
+            for meeting in complete:
+                meet = meeting[0][0]
+                for d, _, race in meeting:
+                    for key, motor, rider, delta in observations(race, venue):
+                        if key == "exhibition":
+                            adjusted[motor].append((day(d), meet, rider, delta - baselines.get(rider, 0.0)))
+            candidates = {}
+            for motor, samples in adjusted.items():
+                result = profile(samples, as_of, ADJUSTED_HALF_LIFE)
+                if result and len({rider for _, _, rider, _ in samples}) >= 2:
+                    result[0]["riders"] = len({rider for _, _, rider, _ in samples})
+                    candidates[motor] = result
+            metrics["adjusted"] = rank_field(candidates, .03)
         motors = {}
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
                 motors.setdefault(motor, {})[key] = value
-        pairings = pairing_ratings(meets[-4:], venue)
+        pairings = pairing_ratings(meets[-4:], venue, items)
         if motors or pairings:
             output[venue] = {"period": boundary, "motors": motors, "pairings": pairings}
     return {"version": 1, "through": through, "venues": output}
@@ -309,7 +473,34 @@ def load_inputs():
     for path in (ROOT / "site" / "data" / "meetings").glob("*.json"):
         m = json.loads(path.read_text(encoding="utf-8"))
         schedules[m["jcd"]][m["title"].strip()][m["start"]] = m["end"]
-    return archived_records(), history, schedules
+    return attach_video(archived_records(), load_video()), history, schedules
+
+
+def load_video(directory=VIDEO_DIR):
+    """Own replay measurements: {(date, venue, race): {metric: {boat: seconds}}}. Only VIDEO_VENUES."""
+    video = defaultdict(lambda: defaultdict(dict))
+    for path in sorted(Path(directory).glob("*.json")):
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8")).get("rows") or []
+        except (ValueError, AttributeError):
+            continue
+        for r in rows:
+            if (isinstance(r, dict) and r.get("source") == "video" and r.get("venue") in VIDEO_VENUES
+                    and r.get("metric") in VIDEO_METRICS):
+                video[r["date"], r["venue"], int(r["race"])][r["metric"]][int(r["boat"])] = r["seconds"]
+    return video
+
+
+def attach_video(records, video):
+    for key, measured in video.items():
+        if key in records:
+            records[key] = {**records[key], "video": {k: dict(v) for k, v in measured.items()}}
+    return records
+
+
+def load_rider_profiles():
+    with gzip.open(ROOT / "scraper" / "exstats.json.gz", "rt", encoding="utf-8") as f:
+        return json.load(f).get("term_profiles") or {}
 
 
 def main():
@@ -318,6 +509,10 @@ def main():
     ap.add_argument("--output", type=Path, help="Write a private JSON file outside site/")
     ap.add_argument("--publish", action="store_true", help="Replace the protected Supabase snapshot")
     ap.add_argument("--require-complete", action="store_true", help="Apply the production checks to a local run")
+    ap.add_argument("--with-rider-adjusted", action="store_true",
+                    help="Add the rider-adjusted exhibition rating. Deploy the Premium function that accepts it first")
+    ap.add_argument("--without-rider-deduction", action="store_true",
+                    help="Leave out the rider deduction (for comparison only; members get it by default)")
     args = ap.parse_args()
     if not (args.output or args.publish):
         ap.error("choose --output or --publish")
@@ -331,7 +526,10 @@ def main():
             check_publish_inputs(records, through, today, ROOT / "site" / "data" / "races")
         from . import motor_generation
         periods = motor_generation.live_periods(ROOT / "site" / "data", through)
-        result = build(records, history, through, schedules, periods["venues"])
+        profiles = load_rider_profiles()
+        result = build(records, history, through, schedules, periods["venues"],
+                       profiles if args.with_rider_adjusted else None,
+                       {} if args.without_rider_deduction else profiles)
         for venue in periods["pending"]:
             result["venues"].pop(venue, None)
         if not result["venues"]:
