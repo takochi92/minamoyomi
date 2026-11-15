@@ -473,7 +473,36 @@ def load_inputs():
     for path in (ROOT / "site" / "data" / "meetings").glob("*.json"):
         m = json.loads(path.read_text(encoding="utf-8"))
         schedules[m["jcd"]][m["title"].strip()][m["start"]] = m["end"]
-    return attach_video(archived_records(), load_video()), history, schedules
+    return attach_video(apply_backfill(archived_records()), load_video()), history, schedules
+
+
+BACKFILL = ROOT / "history" / "premium_backfill.jsonl.gz"
+
+
+def apply_backfill(records, path=BACKFILL):
+    """Races the archive missed, and fields it missed, fetched afterwards from the same official sources
+    (race cards and exhibition times from the mbrace K-file, original exhibition data from BOATCAST).
+    Only fills what is missing; an archived value is never replaced."""
+    if not Path(path).is_file():
+        return records
+    with gzip.open(path, "rt", encoding="utf-8") as f:
+        for line in f:
+            row = json.loads(line)
+            key = (row["date"], row["jcd"], row["rno"])
+            if "patch" not in row:
+                records.setdefault(key, row)
+                continue
+            if key not in records:
+                continue
+            race = dict(records[key])
+            patch = row["patch"]
+            boats = (race.get("before") or {}).get("boats") or []
+            if "before" in patch and not (len(boats) == 6 and all(b.get("exhibit_time") for b in boats)):
+                race["before"] = {**(race.get("before") or {}), **patch["before"]}
+            if "oriten" in patch and len((race.get("oriten") or {}).get("items") or ()) < len(patch["oriten"]["items"]):
+                race["oriten"] = patch["oriten"]
+            records[key] = race
+    return records
 
 
 def load_video(directory=VIDEO_DIR):

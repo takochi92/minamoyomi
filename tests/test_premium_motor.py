@@ -328,3 +328,32 @@ def test_edogawa_video_fills_straight_turn_and_overall_only_there(tmp_path):
     assert {m for k, m in obs if k == "overall"} == {"1", "2", "4", "6"}
     # a venue that is not in VIDEO_VENUES ignores the measurement
     assert not any(k in ("straight", "turn") for k, *_ in observations(race, "04"))
+
+
+def test_backfill_adds_missing_races_and_fields_but_never_replaces(tmp_path):
+    import gzip
+    import json
+    from scraper.premium_motor import apply_backfill
+
+    ori = {"items": ["一周", "まわり足", "直線"], "rows": {str(i): [37.0, 5.5, 7.0] for i in range(1, 7)}}
+    rows = [
+        {"date": "20261101", "jcd": "04", "rno": 1, "racelist": {"title": "x", "boats": []}, "provenance": "backfill"},
+        {"date": "20261101", "jcd": "04", "rno": 2, "patch": {"oriten": ori}},
+        {"date": "20261101", "jcd": "04", "rno": 3, "patch": {"oriten": ori,
+                                                              "before": {"boats": [{"frame": 1, "exhibit_time": 6.5}]}}},
+        {"date": "20261101", "jcd": "04", "rno": 9, "patch": {"oriten": ori}},
+    ]
+    path = tmp_path / "b.jsonl.gz"
+    with gzip.open(path, "wt", encoding="utf-8") as f:
+        f.write("\n".join(json.dumps(r) for r in rows))
+    six = {"boats": [{"frame": i, "exhibit_time": 6.7} for i in range(1, 7)]}
+    kept = {"items": ["一周", "まわり足", "直線"], "rows": {}}
+    records = {("20261101", "04", 2): {"before": six},
+               ("20261101", "04", 3): {"before": six, "oriten": kept}}
+    apply_backfill(records, path)
+    assert records["20261101", "04", 1]["provenance"] == "backfill"
+    assert records["20261101", "04", 2]["oriten"] == ori
+    # archived values stay: complete exhibition times and a full item list are not replaced
+    assert records["20261101", "04", 3]["before"] == six and records["20261101", "04", 3]["oriten"] is kept
+    # a patch for a race that is not archived adds nothing
+    assert ("20261101", "04", 9) not in records
