@@ -63,11 +63,12 @@
         var url=new URL(result.url);
         if (url.protocol!=='https:' || !['checkout.stripe.com','billing.stripe.com'].includes(url.hostname)) throw Error('Unknown payment page');
         location.assign(url.href);
-      } catch (_) {
+      } catch (failure) {
         btn.disabled=false;
         var error=box.querySelector('.premium-error') || el('p');
         error.className='premium-error'; error.setAttribute('role','status');
-        error.textContent='決済ページを開けませんでした。少し待ってからもう一度お試しください。';
+        error.textContent='決済ページを開けませんでした。少し待ってからもう一度お試しください。'+
+          (failure && (failure.detail || failure.code) ? '（'+[failure.code,failure.detail].filter(Boolean).join('：')+'）' : '');
         box.append(error);
       }
     };
