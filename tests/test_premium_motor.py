@@ -216,7 +216,36 @@ def test_adjusted_rating_removes_the_rider_from_the_motor(monkeypatch):
     assert abs(out["1"]["adjusted"]["delta"]) < .01           # the quick riders no longer flatter motor 1
     assert plain["1"]["exhibition"]["delta"] < -.09
     assert out["1"]["adjusted"]["delta"] > out["2"]["adjusted"]["delta"]
-    assert out["1"]["exhibition"] == plain["1"]["exhibition"]   # the existing ratings are untouched
+    # the member 展示 rating now carries the deduction too
+    assert out["1"]["exhibition"]["delta"] > plain["1"]["exhibition"]["delta"] + .09
+    assert abs(out["1"]["exhibition"]["rider_deduction"] - 40 / 408) < .001   # shrunk toward 0 by 8 runs
+
+
+def test_rider_deduction_takes_off_quick_riders_and_never_credits_slow_ones(monkeypatch):
+    from scraper import premium_motor
+    riders = {m: [f"{1000 + m}", f"{2000 + m}", f"{3000 + m}"] for m in range(1, 13)}
+    quick = set(riders[1])                 # motor 1: riders usually .10 s quick
+    slow = set(riders[3])                  # motor 3: riders usually .10 s slow
+    def observations(race, venue=None):
+        for motor in range(1, 13):
+            rider = riders[motor][race["meet"]]
+            yield "exhibition", str(motor), rider, -.10 if rider in quick else .10 if rider in slow else 0.0
+            yield "straight", str(motor), rider, -.10 if rider in quick else 0.0
+    monkeypatch.setattr(premium_motor, "observations", observations)
+    records = {}
+    for meet, start in enumerate((20261012, 20261020, 20261028)):
+        for offset in range(3):
+            records[str(start + offset), "04", 1] = {"racelist": {"title": f"meet{meet}"}, "meet": meet}
+    history = {"04": {"1": {"history_boundary": "20260618"}}}
+    players = {**{r: {"n": 400, "dev_sum": -40.0} for r in quick}, **{r: {"n": 400, "dev_sum": 40.0} for r in slow}}
+    profiles = {"terms": {"t": {"available_from": "20260501", "players": players}}}
+    plain = premium_motor.build(records, history, "20261105", rider_deduction_profiles={})["venues"]["04"]["motors"]
+    out = premium_motor.build(records, history, "20261105", rider_deduction_profiles=profiles)["venues"]["04"]["motors"]
+    assert "rider_deduction" not in plain["1"]["exhibition"]
+    assert abs(out["1"]["exhibition"]["delta"]) < .01 and out["1"]["exhibition"]["rider_deduction"] > .09
+    assert out["3"]["exhibition"]["delta"] == plain["3"]["exhibition"]["delta"] > .09   # no credit for slow riders
+    assert out["3"]["exhibition"]["rider_deduction"] == 0
+    assert out["1"]["straight"] == plain["1"]["straight"]                               # 展示 only
 
 
 def test_lap_minus_turn_stands_in_for_straight_only_where_straight_is_not_published():

@@ -152,6 +152,18 @@ def rider_baselines(term_profiles, through):
     return {rider: total / (n + RIDER_SHRINK_RUNS) for rider, (n, total) in totals.items()}
 
 
+# Member ratings take off what the rider brings (research/improvements/RIDER_ADJUSTED_MOTOR.md).
+# Deduction only: a rider faster than usual makes the motor's time count slower; a slower rider
+# never makes it count faster. The rider baselines are official exhibition deviations, so only
+# the 展示 rating uses them.
+RIDER_DEDUCTION_METRICS = ("exhibition",)
+
+
+def rider_deduction(baselines, rider):
+    """Seconds to add to this rider's run (0 or more)."""
+    return max(0.0, -baselines.get(str(rider), 0.0))
+
+
 def profile(samples, as_of, half_life=HALF_LIFE):
     days = {s[0] for s in samples}
     if len(samples) < MIN_RUNS or len(days) < 3:
@@ -187,7 +199,8 @@ def rank_field(candidates, gap):
     return ranked
 
 
-def build(records, motor_history, through, meeting_dates=None, periods=None, rider_profiles=None):
+def build(records, motor_history, through, meeting_dates=None, periods=None, rider_profiles=None,
+          rider_deduction_profiles=None):
     from . import motor_generation
     active = motor_generation.boundaries(through, motor_generation.saved_starts(motor_history), periods)
     as_of = day(through)
@@ -201,6 +214,8 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
             grouped[venue].append((d, title, race))
 
     baselines = rider_baselines(rider_profiles, through) if rider_profiles else None
+    deductions = baselines if rider_deduction_profiles is None else (
+        rider_baselines(rider_deduction_profiles, through) if rider_deduction_profiles else None)
     output = {}
     for venue, races in grouped.items():
         boundary = active.get(venue, {}).get("date")
@@ -222,10 +237,16 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
         )]
         recent = complete[-3:]
         data = defaultdict(list)
+        deducted = defaultdict(list)
         for meeting in recent:
             meet = meeting[0][0]
             for d, _, race in meeting:
                 for key, motor, rider, delta in observations(race, venue):
+                    if key in RIDER_DEDUCTION_METRICS and deductions is not None:
+                        # A rider faster than usual carried the motor: take that off. Never add.
+                        cut = rider_deduction(deductions, rider)
+                        delta += cut
+                        deducted[key, motor].append(cut)
                     data[key, motor].append((day(d), meet, rider, delta))
         metrics = {}
         for key in TRIAL_RATINGS:
@@ -238,6 +259,10 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
                     candidates[motor] = result
             # Trial thresholds in seconds. The S grade also requires two separate meetings.
             metrics[key] = rank_field(candidates, .03)
+            if key in RIDER_DEDUCTION_METRICS and deductions is not None:
+                for motor, score in metrics[key].items():
+                    cuts = deducted[key, motor]
+                    score["rider_deduction"] = round(sum(cuts) / len(cuts), 4) if cuts else 0.0
         if venue in LAP_MINUS_TURN_VENUES:
             for score in metrics["straight"].values():
                 score["source"] = "lap_minus_turn"
@@ -379,6 +404,8 @@ def main():
     ap.add_argument("--require-complete", action="store_true", help="Apply the production checks to a local run")
     ap.add_argument("--with-rider-adjusted", action="store_true",
                     help="Add the rider-adjusted exhibition rating. Deploy the Premium function that accepts it first")
+    ap.add_argument("--without-rider-deduction", action="store_true",
+                    help="Leave out the rider deduction (for comparison only; members get it by default)")
     args = ap.parse_args()
     if not (args.output or args.publish):
         ap.error("choose --output or --publish")
@@ -392,8 +419,10 @@ def main():
             check_publish_inputs(records, through, today, ROOT / "site" / "data" / "races")
         from . import motor_generation
         periods = motor_generation.live_periods(ROOT / "site" / "data", through)
+        profiles = load_rider_profiles()
         result = build(records, history, through, schedules, periods["venues"],
-                       load_rider_profiles() if args.with_rider_adjusted else None)
+                       profiles if args.with_rider_adjusted else None,
+                       {} if args.without_rider_deduction else profiles)
         for venue in periods["pending"]:
             result["venues"].pop(venue, None)
         if not result["venues"]:
