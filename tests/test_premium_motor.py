@@ -217,3 +217,33 @@ def test_adjusted_rating_removes_the_rider_from_the_motor(monkeypatch):
     assert plain["1"]["exhibition"]["delta"] < -.09
     assert out["1"]["adjusted"]["delta"] > out["2"]["adjusted"]["delta"]
     assert out["1"]["exhibition"] == plain["1"]["exhibition"]   # the existing ratings are untouched
+
+
+def test_lap_minus_turn_stands_in_for_straight_only_where_straight_is_not_published():
+    from scraper.premium_motor import observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6.7} for i in range(1, 7)]
+    # 一周 and まわり足: boat 1 loses 0.10 s outside the turn, boat 6 gains 0.10 s
+    rows = {str(i): [37.0 + {1: .1, 6: -.1}.get(i, 0), 5.5] for i in range(1, 7)}
+    race = {"racelist": {"boats": boats}, "before": {"boats": before},
+            "oriten": {"items": ["一周", "まわり足"], "rows": rows}}
+    straight = {m: round(v, 4) for k, m, _, v in observations(race, "12") if k == "straight"}
+    assert straight["1"] == .1 and straight["6"] == -.1
+    assert not any(k == "straight" for k, *_ in observations(race, "03"))
+    assert not any(k == "straight" for k, *_ in observations(race, "04"))
+    # A venue that publishes 直線 keeps the official value
+    race["oriten"] = {"items": ["一周", "まわり足", "直線"], "rows": {k: v + [7.0] for k, v in rows.items()}}
+    assert all(v == 0 for k, _, _, v in observations(race, "12") if k == "straight")
+
+
+def test_mikuni_exit_side_straight_gives_acceleration():
+    from scraper.premium_motor import observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6 + i / 100} for i in range(1, 7)]
+    rows = {str(i): [5 + i / 100, 7 + i / 100] for i in range(1, 7)}
+    race = {"racelist": {"boats": boats}, "before": {"boats": before},
+            "oriten": {"items": ["まわり足", "直線"], "rows": rows}}
+    assert any(k == "acceleration" for k, *_ in observations(race, "10"))
+    assert not any(k == "acceleration" for k, *_ in observations(race, "11"))
