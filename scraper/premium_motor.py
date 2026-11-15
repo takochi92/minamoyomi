@@ -26,11 +26,16 @@ MIN_RUNS = 6
 HALF_LIFE = 14
 TRIAL_RATINGS = ("exhibition", "straight")
 # Official course maps document the early straight section at these venues.
-EXIT_SECTION_VENUES = {"02", "04", "07", "14", "22"}
+EXIT_SECTION_VENUES = {"02", "04", "07", "10", "14", "22"}
 # The replay found clear A/D separation but unstable intermediate ordering here.
 # Use B for the middle band rather than presenting two distinct grades.
 MIDDLE_BAND_VENUES = {"turn": {"09", "12", "15"}, "overall": {"06", "22"}}
 TWO_SECTION_VENUES = {"12", "13", "18"}
+# These venues publish 一周 and まわり足 but no 直線. The rest of the lap (一周 − まわり足) is the
+# straight running, so it stands in for 直線 there, marked with source "lap_minus_turn".
+# At the venues that publish all three, it follows the official 直線 inside a race (rank
+# correlation +0.11 to +0.50 by venue, 2026/09〜11), more closely than 直線 follows 展示.
+LAP_MINUS_TURN_VENUES = {"12", "13", "18"}
 
 
 def day(value):
@@ -62,6 +67,9 @@ def observations(race, venue=None):
             continue
         baseline = sum(values) / len(values)
         deviations[key] = [value - baseline for value in values]
+    if (venue in LAP_MINUS_TURN_VENUES and "straight" not in deviations
+            and {"lap", "turn"} <= deviations.keys()):
+        deviations["straight"] = [lap - turn for lap, turn in zip(deviations["lap"], deviations["turn"])]
     if venue in EXIT_SECTION_VENUES and {"straight", "exhibition"} <= deviations.keys():
         deviations["acceleration"] = [early - late for early, late in
                                       zip(deviations["straight"], deviations["exhibition"])]
@@ -191,7 +199,7 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
         for meeting in recent:
             meet = meeting[0][0]
             for d, _, race in meeting:
-                for key, motor, rider, delta in observations(race):
+                for key, motor, rider, delta in observations(race, venue):
                     data[key, motor].append((day(d), meet, rider, delta))
         metrics = {}
         for key in TRIAL_RATINGS:
@@ -204,6 +212,9 @@ def build(records, motor_history, through, meeting_dates=None, periods=None):
                     candidates[motor] = result
             # Trial thresholds in seconds. The S grade also requires two separate meetings.
             metrics[key] = rank_field(candidates, .03)
+        if venue in LAP_MINUS_TURN_VENUES:
+            for score in metrics["straight"].values():
+                score["source"] = "lap_minus_turn"
         motors = {}
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():

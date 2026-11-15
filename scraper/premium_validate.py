@@ -16,7 +16,7 @@ def evaluate(records, history, schedules, cutoff, end):
         field = snapshot.get(venue)
         if not field or not field["period"] <= date <= end:
             continue
-        for metric, motor, rider, delta in observations(race):
+        for metric, motor, rider, delta in observations(race, venue):
             if date <= cutoff:
                 previous_riders[venue, metric, motor].add(rider)
             elif rider not in previous_riders[venue, metric, motor]:
