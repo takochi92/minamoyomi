@@ -527,9 +527,11 @@ def assign_boats(records, boats, *, use_plate=False):
     return records
 
 
-def assign_by_reference(records, reference, *, tol=.8, min_matches=3):
+def assign_by_reference(records, reference, lag_range, *, tol=1.2, min_matches=3):
     """Boat numbers from another shot of the same lap whose boats are known. The boats keep their
-    spacing between the two cameras, so one time shift lines the curves up with the known boats."""
+    spacing between the two cameras, so one time shift lines the curves up with the known boats.
+    The shift is kept inside lag_range (measured on races where both shots saw every boat), which is
+    narrower than the gap between boats, so a shift by one whole boat cannot fit."""
     known = {r["boat"]: r["t_a"] for r in reference if r.get("boat") and r.get("t_a") is not None}
     times = [r.get("t_a") for r in records]
     best = None
@@ -538,6 +540,8 @@ def assign_by_reference(records, reference, *, tol=.8, min_matches=3):
             if t is None:
                 continue
             lag = tb - t
+            if not lag_range[0] <= lag <= lag_range[1]:
+                continue
             hits = sum(1 for x in times if x is not None and min(abs(x + lag - y) for y in known.values()) <= tol)
             if best is None or hits > best[0]:
                 best = (hits, lag)

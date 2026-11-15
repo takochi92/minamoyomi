@@ -83,7 +83,7 @@ def analyze_race(capture_dir, prof, date, venue, race):
         if not info["sizes"] or len(info["sizes"]) != 1 or info["sizes"][0] != "1920x1080":
             shot_reasons.append("resolution")
         if cfg.get("alignWith") and len(records) != len(boats) and cfg["alignWith"] in done:
-            bm.assign_by_reference(records, done[cfg["alignWith"]])
+            bm.assign_by_reference(records, done[cfg["alignWith"]], cfg["alignLag"])
         elif cfg.get("colours"):
             bm.assign_by_colour(records, boats, cfg["colours"])
         else:

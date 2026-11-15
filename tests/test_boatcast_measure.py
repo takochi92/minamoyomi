@@ -232,9 +232,9 @@ def test_assign_by_reference_lines_up_a_shot_with_missing_boats():
     reference = [{"boat": b, "t_a": 210 + 3.5 * b} for b in range(1, 7)]
     # boats 1 and 3 were not seen; the other camera is 30.2 s earlier
     records = [{"t_a": 210 + 3.5 * b - 30.2, "reasons": []} for b in (2, 4, 5, 6)]
-    bm.assign_by_reference(records, reference)
+    bm.assign_by_reference(records, reference, (29, 31))
     assert [r.get("boat") for r in records] == [2, 4, 5, 6]
     # too few to line up: nothing is guessed
     few = [{"t_a": 100.0, "reasons": []}, {"t_a": 140.0, "reasons": []}]
-    bm.assign_by_reference(few, reference)
+    bm.assign_by_reference(few, reference, (29, 31))
     assert all("boat" not in r and "no_reference_match" in r["reasons"] for r in few)

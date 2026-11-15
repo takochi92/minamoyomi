@@ -2817,7 +2817,12 @@
    "adopted": false,
    "officialNote": "2マークへの進入から旋回の入り（道すじ 300〜1300px）。出口側は引き波の跡と重なるので測らない。江戸川に公式のまわり足は無い",
    "dropUncovered": true,
-   "alignWith": "straight"
+   "alignWith": "straight",
+   "alignLag": [
+    29,
+    31
+   ],
+   "alignNote": "バック奥の場面は2マークの約30秒後（11/14 2〜4R で 29.5〜30.5秒）。艇の間は約3〜4秒なので、1艇ずれた合わせ方は入らない"
   }
  }
 }
