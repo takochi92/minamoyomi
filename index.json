@@ -1,6 +1,16 @@
 {
-  "updated": "2026-11-15T02:40:27.151Z",
+  "updated": "2026-11-15T19:08:36.599Z",
   "posts": [
+    {
+      "id": "2026-11-15-teirogu-X-evening",
+      "project": "teirogu",
+      "channel": "X",
+      "date": "2026-11-15",
+      "slot": "evening",
+      "text": "【11/15（日）の結果】\nAI本線 156R中33的中\n最高配当 びわこ8R 2-1-6 12,620円\n\n今日のフライングは0人でした\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
+      "images": [],
+      "created_at": "2026-11-15T19:08:36.599Z"
+    },
     {
       "id": "2026-11-15-teirogu-X-morning",
       "project": "teirogu",
@@ -240,36 +250,6 @@
       "text": "【11/3（火）の艇ろぐ】\n今日は13場で開催\n🏆津 G3\n🏆徳山 G3\n\nAIの自信が高いレース\n・徳山1R、芦屋1R\n\n昨日のAI本線：156レース中 38的中\n最高配当 平和島3R 2-3-6 6,510円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
       "images": [],
       "created_at": "2026-11-03T03:57:31.409Z"
-    },
-    {
-      "id": "2026-11-02-teirogu-X-evening",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-11-02",
-      "slot": "evening",
-      "text": "【11/2（月）の結果】\nAI本線 156R中38的中\n最高配当 平和島3R 2-3-6 6,510円\n\n今日のフライング 1人（F後はスタート控えめになりがち）\n・戸田12R 原田 才一郎\n\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-11-02T21:57:47.163Z"
-    },
-    {
-      "id": "2026-11-02-teirogu-X-exhibitionparts",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-11-02",
-      "slot": "exhibitionparts",
-      "text": "展示画面に、部品交換情報を追加しました。\n\n「部品交換」を開くと、号艇と交換部品、新ペラを確認できます。\n普段は小さな1行。交換が多いときも、画面が長くなりすぎないようにしています。\n\nhttps://teilog.com/\n#ボートレース #艇ろぐ",
-      "images": [],
-      "created_at": "2026-11-02T06:29:45.323126+00:00"
-    },
-    {
-      "id": "2026-11-02-teirogu-X-morning",
-      "project": "teirogu",
-      "channel": "X",
-      "date": "2026-11-02",
-      "slot": "morning",
-      "text": "【11/2（月）の艇ろぐ】\n今日は13場で開催\n🏆津 G3\n🏆徳山 G3\n\nAIの自信が高いレース\n・鳴門1R、徳山1R\n\n昨日のAI本線：168レース中 35的中\n最高配当 江戸川11R 2-3-6 17,700円\n\n予想・直前情報はこちら\nhttps://teilog.pages.dev\n※20歳未満は購入不可。のめり込みに注意\n#ボートレース #競艇予想",
-      "images": [],
-      "created_at": "2026-11-02T02:29:13.308Z"
     }
   ]
 }
