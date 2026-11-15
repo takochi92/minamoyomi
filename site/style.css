@@ -856,6 +856,8 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .premium-table thead th{white-space:normal;overflow-wrap:anywhere;line-height:1.2;vertical-align:bottom;font-size:clamp(.65rem,2.6vw,.82rem)}
 .premium-table tbody th{font-weight:400}
 .premium-content .premium-rating-date{font-size:.78rem;color:var(--ink2)}
+.premium-table .premium-source{font-size:.62rem;color:var(--ink2);margin-left:1px}
+.premium-content .premium-source-notes{margin:6px 0 0;padding-left:1.1em;font-size:.74rem;color:var(--ink2);line-height:1.5}
 .premium-table small,.premium-table strong{display:block}
 .premium-table small{color:var(--muted)}
 .premium-table [data-grade]{display:inline-block;min-width:1.65em;padding:1px 3px;border:1px solid currentColor;border-radius:5px;line-height:1.2}
