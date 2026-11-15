@@ -225,3 +225,16 @@ def test_landmark_shift_follows_the_camera():
     out = bm.landmark_shift(shot, land)
     assert np.abs(out["dy"] - (dy - np.median(dy))).max() < .08
     assert [e[2] for e in out["edges"]] == pytest.approx([421, 423, 425], abs=.6)
+
+
+def test_assign_by_reference_lines_up_a_shot_with_missing_boats():
+    from scraper import boatcast_measure as bm
+    reference = [{"boat": b, "t_a": 210 + 3.5 * b} for b in range(1, 7)]
+    # boats 1 and 3 were not seen; the other camera is 30.2 s earlier
+    records = [{"t_a": 210 + 3.5 * b - 30.2, "reasons": []} for b in (2, 4, 5, 6)]
+    bm.assign_by_reference(records, reference)
+    assert [r.get("boat") for r in records] == [2, 4, 5, 6]
+    # too few to line up: nothing is guessed
+    few = [{"t_a": 100.0, "reasons": []}, {"t_a": 140.0, "reasons": []}]
+    bm.assign_by_reference(few, reference)
+    assert all("boat" not in r and "no_reference_match" in r["reasons"] for r in few)

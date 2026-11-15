@@ -527,6 +527,38 @@ def assign_boats(records, boats, *, use_plate=False):
     return records
 
 
+def assign_by_reference(records, reference, *, tol=.8, min_matches=3):
+    """Boat numbers from another shot of the same lap whose boats are known. The boats keep their
+    spacing between the two cameras, so one time shift lines the curves up with the known boats."""
+    known = {r["boat"]: r["t_a"] for r in reference if r.get("boat") and r.get("t_a") is not None}
+    times = [r.get("t_a") for r in records]
+    best = None
+    for b, tb in known.items():
+        for t in times:
+            if t is None:
+                continue
+            lag = tb - t
+            hits = sum(1 for x in times if x is not None and min(abs(x + lag - y) for y in known.values()) <= tol)
+            if best is None or hits > best[0]:
+                best = (hits, lag)
+    if best is None or best[0] < min_matches:
+        for r in records:
+            r["reasons"].append("no_reference_match")
+        return records
+    lag = best[1]
+    taken = set()
+    for r in records:
+        if r.get("t_a") is None:
+            continue
+        b, d = min(((b, abs(r["t_a"] + lag - y)) for b, y in known.items()), key=lambda x: x[1])
+        if d <= tol and b not in taken:
+            r["boat"] = b
+            taken.add(b)
+        else:
+            r["reasons"].append("no_reference_match")
+    return records
+
+
 def colour_of(hue, colours):
     if hue is None:
         return None

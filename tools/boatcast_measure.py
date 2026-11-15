@@ -66,6 +66,7 @@ def analyze_race(capture_dir, prof, date, venue, race):
     if manifest.get("status") != "ok":
         return rows, report
     boats = sorted(card)
+    done = {}
     for name, cfg in prof["shots"].items():
         if name not in manifest["shots"]:
             report["shots"][name] = {"missing": True}
@@ -81,7 +82,9 @@ def analyze_race(capture_dir, prof, date, venue, race):
             shot_reasons.append("frames_skipped")
         if not info["sizes"] or len(info["sizes"]) != 1 or info["sizes"][0] != "1920x1080":
             shot_reasons.append("resolution")
-        if cfg.get("colours"):
+        if cfg.get("alignWith") and len(records) != len(boats) and cfg["alignWith"] in done:
+            bm.assign_by_reference(records, done[cfg["alignWith"]])
+        elif cfg.get("colours"):
             bm.assign_by_colour(records, boats, cfg["colours"])
         else:
             bm.assign_boats(records, boats, use_plate=False)
@@ -102,6 +105,7 @@ def analyze_race(capture_dir, prof, date, venue, race):
                          "motor": motor, "rider": rider, "metric": cfg["metric"], "source": "video",
                          "seconds": r["seconds"], "profile": f"{venue}-{name}-{PROFILE_VERSION}", "parts": parts})
         report["shots"][name] = {**info, "metric": cfg["metric"], "boats": records}
+        done[name] = records
     return rows, report
 
 
