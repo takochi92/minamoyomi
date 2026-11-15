@@ -89,7 +89,7 @@ profile：`tools/boatcast/profiles/03.json`（ブランチ claude/boatcast-repla
 - (b) 展示タイムの欠け：K ファイルから補った（139件のうち65件）。残り74件は欠場（K0・K1）の艇がいるレースで、その艇は展示を走っていないので公式にも数字が無い
 - (b) オリジナル展示（一周・まわり足・直線）の欠け：BOATCAST から取り直した（162件のうち159件）。3件は BOATCAST に公開されていない（403・空）
 - BOATCAST のオリジナル展示は 10/01 までは取れ、9/01 は 403（保持はおよそ1か月半）
-- 入れ先：`history/premium_backfill.jsonl.gz`（プレミアムの評価だけが読む。アーカイブ本体は書きかえない・アーカイブにある値は上書きしない。provenance は backfill_official_after_result）
+- 入れ先：`history/premium_backfill/backfill.jsonl.gz`（プレミアムの評価だけが読む。アーカイブ本体は書きかえない・アーカイブにある値は上書きしない。provenance は backfill_official_after_result）
 
 | 場 | 窓のレース | (a) 記録なし→取得 | (b) 展示タイム欠け→取得 | (b) オリジナル展示欠け→取得 | 空白 展示/伸び/まわり足/立ち上がり/総評（前→後） |
 |---|---|---|---|---|---|

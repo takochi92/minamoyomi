@@ -476,7 +476,7 @@ def load_inputs():
     return attach_video(apply_backfill(archived_records()), load_video()), history, schedules
 
 
-BACKFILL = ROOT / "history" / "premium_backfill.jsonl.gz"
+BACKFILL = ROOT / "history" / "premium_backfill" / "backfill.jsonl.gz"
 
 
 def apply_backfill(records, path=BACKFILL):
