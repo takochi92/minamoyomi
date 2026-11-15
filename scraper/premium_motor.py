@@ -103,12 +103,17 @@ def observations(race, venue=None):
             yield key, str(entries[i]["motor_no"]), str(entries[i]["toban"]), value
 
 
-def pairing_ratings(meets, venue):
+def pairing_ratings(meets, venue, items=None):
     samples = defaultdict(list)
+    cuts = defaultdict(list)
     for meet in meets:
         for d, title, race in meet:
             for key, motor, rider, value in observations(race, venue):
                 if key in ("turn", "acceleration", "overall"):
+                    if items is not None:
+                        cut = items.deduction(key, rider, venue, motor)
+                        value += cut
+                        cuts[key, meet[0][0], title, motor, rider].append(cut)
                     samples[key, meet[0][0], title, motor, rider].append((d, value))
 
     output = {}
@@ -134,6 +139,9 @@ def pairing_ratings(meets, venue):
                      "through": max(d for d, _ in xs)}
             if metric in ("acceleration", "overall"):
                 score["index"] = round((center - mean_delta) * (50 if metric == "acceleration" else 100))
+            if items is not None:
+                c = cuts[metric, start, title, motor, rider]
+                score["rider_deduction"] = round(sum(c) / len(c), 4)
             if metric == "acceleration" and venue in UNCONFIRMED_EXIT_VENUES:
                 score["source"] = "unconfirmed_section"
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
@@ -170,6 +178,32 @@ RIDER_DEDUCTION_METRICS = ("exhibition",)
 def rider_deduction(baselines, rider):
     """Seconds to add to this rider's run (0 or more)."""
     return max(0.0, -baselines.get(str(rider), 0.0))
+
+
+ITEM_DEDUCTION_METRICS = ("straight", "turn", "acceleration", "overall")
+
+
+class ItemBaselines:
+    """Each rider's usual gap to the race average per official item, from runs on OTHER motors
+    up to `through` (so the motor being rated does not lower its own score). Pulled toward 0
+    with RIDER_SHRINK_RUNS runs, like the exhibition baselines."""
+
+    def __init__(self, records, through):
+        self.total = defaultdict(lambda: [0, 0.0])
+        self.own = defaultdict(lambda: [0, 0.0])
+        for (d, venue, _), race in records.items():
+            if d > through:
+                continue
+            for key, motor, rider, value in observations(race, venue):
+                if key in ITEM_DEDUCTION_METRICS:
+                    for table, k in ((self.total, (key, rider)), (self.own, (key, rider, venue, motor))):
+                        table[k][0] += 1
+                        table[k][1] += value
+
+    def deduction(self, key, rider, venue, motor):
+        n, total = self.total.get((key, rider), (0, 0.0))
+        m, own = self.own.get((key, rider, venue, motor), (0, 0.0))
+        return max(0.0, -(total - own) / (n - m + RIDER_SHRINK_RUNS))
 
 
 def profile(samples, as_of, half_life=HALF_LIFE):
@@ -224,6 +258,7 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
     baselines = rider_baselines(rider_profiles, through) if rider_profiles else None
     deductions = baselines if rider_deduction_profiles is None else (
         rider_baselines(rider_deduction_profiles, through) if rider_deduction_profiles else None)
+    items = ItemBaselines(records, through) if deductions is not None else None
     output = {}
     for venue, races in grouped.items():
         boundary = active.get(venue, {}).get("date")
@@ -255,6 +290,10 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
                         cut = rider_deduction(deductions, rider)
                         delta += cut
                         deducted[key, motor].append(cut)
+                    elif key == "straight" and items is not None:
+                        cut = items.deduction(key, rider, venue, motor)
+                        delta += cut
+                        deducted[key, motor].append(cut)
                     data[key, motor].append((day(d), meet, rider, delta))
         metrics = {}
         for key in TRIAL_RATINGS:
@@ -267,8 +306,10 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
                     candidates[motor] = result
             # Trial thresholds in seconds. The S grade also requires two separate meetings.
             metrics[key] = rank_field(candidates, .03)
-            if key in RIDER_DEDUCTION_METRICS and deductions is not None:
+            if deducted:
                 for motor, score in metrics[key].items():
+                    if (key, motor) not in deducted:
+                        continue
                     cuts = deducted[key, motor]
                     score["rider_deduction"] = round(sum(cuts) / len(cuts), 4) if cuts else 0.0
         if venue in LAP_MINUS_TURN_VENUES:
@@ -295,7 +336,7 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
         for key, by_motor in metrics.items():
             for motor, value in by_motor.items():
                 motors.setdefault(motor, {})[key] = value
-        pairings = pairing_ratings(meets[-4:], venue)
+        pairings = pairing_ratings(meets[-4:], venue, items)
         if motors or pairings:
             output[venue] = {"period": boundary, "motors": motors, "pairings": pairings}
     return {"version": 1, "through": through, "venues": output}

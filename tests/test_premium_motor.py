@@ -245,7 +245,31 @@ def test_rider_deduction_takes_off_quick_riders_and_never_credits_slow_ones(monk
     assert abs(out["1"]["exhibition"]["delta"]) < .01 and out["1"]["exhibition"]["rider_deduction"] > .09
     assert out["3"]["exhibition"]["delta"] == plain["3"]["exhibition"]["delta"] > .09   # no credit for slow riders
     assert out["3"]["exhibition"]["rider_deduction"] == 0
-    assert out["1"]["straight"] == plain["1"]["straight"]                               # 展示 only
+    # 直線 uses the riders' runs on OTHER motors; these riders never rode another one
+    assert out["1"]["straight"]["delta"] == plain["1"]["straight"]["delta"]
+    assert out["1"]["straight"]["rider_deduction"] == 0
+
+
+def test_item_baseline_uses_only_other_motors_and_never_credits():
+    from scraper.premium_motor import ItemBaselines
+    def race(motors_riders, values):
+        boats = [{"frame": i + 1, "motor_no": m, "toban": r} for i, (m, r) in enumerate(motors_riders)]
+        before = [{"frame": i, "exhibit_time": 6.7} for i in range(1, 7)]
+        rows = {str(i + 1): [v] for i, v in enumerate(values)}
+        return {"racelist": {"boats": boats}, "before": {"boats": before},
+                "oriten": {"items": ["まわり足"], "rows": rows}}
+    quick, slow = "1111", "2222"
+    others = ["3333", "4444", "5555", "6666"]
+    records = {}
+    for k in range(16):    # quick rider: 0.12 s faster than the race on motor 1+k; slow rider 0.12 s slower
+        records["20261101", "05", k + 1] = race([(k + 1, quick), (50 + k, slow)] + [(80 + i + k, r) for i, r in enumerate(others)],
+                                                [5.38, 5.62, 5.5, 5.5, 5.5, 5.5])
+    b = ItemBaselines(records, "20261105")
+    cut = b.deduction("turn", quick, "05", "1")
+    assert abs(cut - .12 * 15 / 23) < .002          # 15 runs on other motors, shrunk by 8
+    assert b.deduction("turn", slow, "05", "50") == 0  # deduction only
+    assert b.deduction("turn", quick, "05", "99") > cut  # all 16 runs are on other motors
+    assert ItemBaselines(records, "20261031").deduction("turn", quick, "05", "1") == 0   # nothing after the cutoff
 
 
 def test_lap_minus_turn_stands_in_for_straight_only_where_straight_is_not_published():
