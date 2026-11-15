@@ -191,6 +191,12 @@
         if (out.error) throw out.error;
         if (actionEpoch === generation) await changeUser(null);
       } else if (name === 'delete') {
+        // アカウントを消しても Stripe の定期課金は止まらない。課金が残ったまま消すと、解約の画面にも入れなくなる
+        var billing = await premiumCall('status');
+        if (billing && billing.manage && billing.member && !billing.owner && !billing.tester) {
+          alert('プレミアムの定期課金が続いています。先に「支払い方法・解約」から解約し、解約が反映されてからアカウントを削除してください。');
+          return;
+        }
         if (!confirm('このアカウントと同期済みのメモ・お気に入り・収支を完全に削除します。元に戻せません。削除しますか？')) return;
         var removed = await client.rpc('teilog_delete_own_account', {expected_user_id:actionUser});
         if (removed.error) throw removed.error;
@@ -259,7 +265,14 @@
     if (epoch !== generation || !user || result.error) throw new Error('プレミアムに接続できませんでした。');
     return result.data;
   }
-  window.TeiNoteAccount = { premiumCall:premiumCall, notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,
+  // 受付中かどうか。ログイン前でも聞ける
+  async function premiumOffer() {
+    if (!client) throw new Error('プレミアムに接続できませんでした。');
+    var result = await client.functions.invoke('premium', {body:{action:'offer'}});
+    if (result.error) throw new Error('プレミアムに接続できませんでした。');
+    return result.data;
+  }
+  window.TeiNoteAccount = { premiumCall:premiumCall, premiumOffer:premiumOffer, notificationCall:notificationCall, identity:function(){return user?user.id:null;}, data:function () { return clone(data); }, save:save, importData:importData,
     subscribe:function (f) { callbacks.push(f); }, state:function () { return Object.assign({}, state, {user:!!user}); }, exportData:exportData };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

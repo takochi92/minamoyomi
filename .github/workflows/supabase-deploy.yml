@@ -1,0 +1,38 @@
+# Supabase の関数 premium（プレミアムの会員確認・決済）を本番に入れる。手動でだけ動く
+#  - Secrets の SUPABASE_ACCESS_TOKEN が必要（Supabase の Account → Access Tokens で作る）
+#  - 決済のキーや受付フラグは Supabase 側の Secrets に置く。ここでは扱わない
+name: supabase-deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: 先にテスト
+        run: |
+          node tests/test_premium_api.cjs
+          node tests/test_premium_live_guard.cjs
+          node tests/test_premium_open.cjs
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: premium を本番に入れる
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::error::Secrets に SUPABASE_ACCESS_TOKEN がありません"; exit 1; fi
+          supabase functions deploy premium --project-ref xkibgkdniwlfocwpmuzy --no-verify-jwt
+          echo "### premium を本番に入れました" >> "$GITHUB_STEP_SUMMARY"

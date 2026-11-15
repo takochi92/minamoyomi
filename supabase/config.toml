@@ -1,0 +1,6 @@
+# 関数ごとの設定。デプロイのときにこの設定が使われる。
+
+# premium は、夜間の評価データ登録（x-premium-publish-key だけで来る）を受けるため、
+# 入口での JWT 検査を切る。会員かどうかは関数の中でログイン情報と Stripe を見て確かめている。
+[functions.premium]
+verify_jwt = false
