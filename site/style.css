@@ -885,3 +885,4 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .premium-closed{font-weight:700}
 .premium-action:disabled{opacity:.55;cursor:not-allowed;border-color:var(--line)}
 .premium-error{overflow-wrap:anywhere}
+.premium-member-link{margin-top:10px;font-size:.9rem}

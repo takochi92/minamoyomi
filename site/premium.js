@@ -102,12 +102,16 @@
     if (state?.testCheckout) box.append(button('テスト決済を開く',checkout('checkout',state.amount)));
     if (state?.manage) box.append(button('支払い方法・解約',checkout('portal')));
   }
+  // 会員になったあとも、契約の確認・解約の入口がどの画面からも分かるようにする
+  function memberLink() {
+    var a=link('プレミアムの契約・解約','/premium'); a.classList.add('premium-member-link'); return a;
+  }
   function drawRace(data, reason) {
     if (!data || !data.rows.some(row => Object.keys(row.metrics).length)) {
       var why = reason==='snapshot_late' ? '評価データの更新が遅れています。復旧までしばらくお待ちください。'
         : reason==='new_motors' ? 'モーターが入れ替わったばかりのため、評価はデータがそろうまで保留しています。'
         : 'このレースに対応する評価データはまだありません。';
-      box.replaceChildren(el('p',why));
+      box.replaceChildren(el('p',why),memberLink());
       return;
     }
     var table=el('table'); table.className='premium-table'; table.setAttribute('aria-label','モーター評価');
@@ -136,7 +140,7 @@
     });
     var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点');
     date.className='premium-rating-date';
-    box.replaceChildren(date,table);
+    box.replaceChildren(date,table,memberLink());
   }
   function plot(canvas, data, period) {
     var width=Math.floor(canvas.getBoundingClientRect().width);
@@ -233,7 +237,7 @@
         chartObserver.observe(canvas);
       }
     } else box.append(el('p','この期間の記録はありません。'));
-    box.append(stats);
+    box.append(stats,memberLink());
   }
   async function load() {
     if (root.hasAttribute('data-premium-race') && root.closest('.tabp').hidden) return;
