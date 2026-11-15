@@ -72,19 +72,30 @@
       }
     };
   }
-  function plan(state) {
+  var CLOSED='現在、受付を中止しています（準備中）';
+  function closed() {
+    var note=el('p',CLOSED); note.className='premium-closed';
+    var b=el('button','会員登録（受付中止中）'); b.className='premium-action'; b.type='button'; b.disabled=true;
+    return [note,b];
+  }
+  // offer：ログイン前でも分かる「受付中かどうか」。分からないときは受付中止として見せる
+  function plan(state, offer) {
     var finished=new URLSearchParams(location.search).get('checkout')==='done';
+    var open=state ? !!state.checkout : !!(offer && offer.open);
     box.replaceChildren();
     if (!account.identity()) {
-      box.append(el('p','マイノートでログインすると、会員状況を確認できます。'),link('ログインへ','/mynote#note-account'));
-    } else if (state?.member) {
+      if (!open) box.append.apply(box,closed());
+      else box.append(el('p','月額'+Number(offer.amount).toLocaleString('ja-JP')+'円・自動更新。会員登録（無料）のあとに申し込めます。'),link('会員登録・ログインへ','/mynote#note-account'));
+      return;
+    }
+    if (state?.member) {
       box.append(el('p',state.owner ? 'オーナー権限でプレミアムをご利用中です。' : state.tester ? 'プレミアムの試用中です。' : 'プレミアム会員です。'),link('収支グラフを開く','/mynote#premium-chart'));
     } else if (finished) {
       box.append(el('p','会員状態の反映を確認しています。'),button('会員状態を確認',function(){load();}));
-    } else if (!state?.checkout) {
-      box.append(el('p','申込の受付は準備中です。'));
+    } else if (!open && !state?.testCheckout) {
+      box.append.apply(box,closed());
     }
-    if (state?.checkout && !state.member && state.amount) {
+    if (open && !state.member && state.amount) {
       box.append(el('p','月額'+Number(state.amount).toLocaleString('ja-JP')+'円・自動更新'),button('月額プランを申し込む',checkout('checkout',state.amount)));
     }
     if (state?.testCheckout) box.append(button('テスト決済を開く',checkout('checkout',state.amount)));
@@ -228,7 +239,14 @@
     var id=account.identity();
     if (!id) {
       status=null; box.innerHTML=preview;
-      if (root.hasAttribute('data-premium-plan') && account.state().mode !== 'loading') plan(null);
+      if (root.hasAttribute('data-premium-plan') && account.state().mode !== 'loading') {
+        plan(null);
+        var guest=++epoch;
+        try {
+          var offer=await account.premiumOffer();
+          if (guest===epoch && !account.identity()) plan(null,offer);
+        } catch (_) {}
+      }
       return;
     }
     if (request?.id === id) return;

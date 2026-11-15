@@ -33,6 +33,11 @@ const path = require('node:path');
   const call = body => handler(new Request('https://teilog.com/functions/v1/premium',{method:'POST',
     headers:{Origin:'https://teilog.com',Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify(body)}));
 
+  // 受付フラグが OFF：ログイン前の人にも「受付中止」と分かる。決済へは進めない
+  const guest = body => handler(new Request('https://teilog.com/functions/v1/premium',{method:'POST',
+    headers:{Origin:'https://teilog.com','Content-Type':'application/json'},body:JSON.stringify(body)}));
+  assert.deepEqual(await (await guest({action:'offer'})).json(),{open:false,amount:500});
+  assert.equal((await guest({action:'checkout',amount:500})).status,401,'Checkout always needs a login');
   const status = await (await call({action:'status'})).json();
   assert.equal(status.member,true,'A paying member keeps access when the sales flag is missing');
   assert.equal(status.manage,true,'A paying member can still reach the cancellation page');

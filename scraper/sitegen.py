@@ -2650,7 +2650,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <ul><li>レースごとに6艇の展示・伸び・まわり足を比較</li>
 <li>マイノートの収支を週・月・年のグラフで確認</li></ul>
 <p class="sub">計測や比較に必要なデータが少ない項目は評価保留になります。</p>
-<div class="premium-content" aria-live="polite"><p>申込の受付は準備中です。</p></div>
+<p>月額500円・自動更新。支払い方法の変更と解約は、いつでも会員ページからできます。</p>
+<div class="premium-content" aria-live="polite"><p class="premium-closed">現在、受付を中止しています（準備中）</p><button class="premium-action" type="button" disabled>会員登録（受付中止中）</button></div>
 </section>"""
         self.put(page.path, page.render(f"プレミアム｜{SITE_NAME}", "モーター評価とマイノートの収支グラフ。", body, [("", "プレミアム")], noindex=True))
         page = Page("tools/composite.html")

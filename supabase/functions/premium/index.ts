@@ -10,7 +10,10 @@ const stripeKey = env('TEILOG_STRIPE_SECRET_KEY');
 const price = env('TEILOG_STRIPE_PRICE_ID');
 const billing = env('TEILOG_BILLING_MODE');
 const validPrices = [price, ...env('TEILOG_STRIPE_PREVIOUS_PRICE_IDS').split(',').map(x => x.trim())].filter(x => /^price_[A-Za-z0-9_]+$/.test(x));
+// 受付フラグ。'true' のときだけ本番の新規申込を受け付ける。それ以外は「受付中止中」。
 const liveApproved = env('TEILOG_PREMIUM_LIVE_APPROVED') === 'true';
+// 案内している月額。Stripe の価格がこれと違えば、まちがった価格IDなので申込を開かない。
+const MONTHLY_YEN = 500;
 // Checking an existing membership and opening the billing portal must keep working when new sales
 // are paused or misconfigured. Otherwise a paying member loses access and the cancel button while
 // Stripe keeps charging. Only selling needs the approval flag and a valid current price.
@@ -52,7 +55,7 @@ async function stripe(path: string, values?: Record<string, string>, idempotency
 async function monthlyAmount() {
   const plan = await stripe('prices/' + encodeURIComponent(price));
   if (!plan.active || plan.currency !== 'jpy' || plan.recurring?.interval !== 'month' ||
-      plan.recurring.interval_count !== 1 || !Number.isInteger(plan.unit_amount) || plan.unit_amount <= 0) {
+      plan.recurring.interval_count !== 1 || plan.unit_amount !== MONTHLY_YEN) {
     throw Error('Invalid price');
   }
   return plan.unit_amount;
@@ -92,6 +95,13 @@ Deno.serve(async req => {
       return reply({ stored });
     }
 
+    // 受付中かどうかは、ログイン前の人にも見せる（秘密ではない）。Stripe には問い合わせない。
+    const raw = await req.text();
+    if (raw.length > 2000) return reply({ error: 'size' }, 413);
+    const body = JSON.parse(raw);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply({ error: 'invalid request' }, 400);
+    if (body.action === 'offer') return reply({ open: checkoutReady && billing === 'live', amount: MONTHLY_YEN });
+
     const auth = req.headers.get('authorization') || '';
     if (!auth.startsWith('Bearer ')) return reply({ error: 'unauthorized' }, 401);
     const account = await fetch(base + '/auth/v1/user', {
@@ -101,8 +111,6 @@ Deno.serve(async req => {
     if (!account.ok) throw Error('Authentication unavailable');
     const user = (await account.json()).id;
     if (typeof user !== 'string' || !/^[0-9a-f-]{36}$/.test(user)) return reply({ error: 'unauthorized' }, 401);
-    const body = await req.json();
-    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply({ error: 'invalid request' }, 400);
     const { action, date, venue, race, amount } = body;
     const tester = env('TEILOG_PREMIUM_TEST_USERS').split(',').map(x => x.trim()).includes(user);
     if (!['checkout', 'status', 'portal', 'race'].includes(action)) return reply({ error: 'invalid action' }, 400);

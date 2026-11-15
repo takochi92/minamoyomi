@@ -34,6 +34,13 @@ python -m scraper.premium_motor --publish
 | `TEILOG_STRIPE_PRICE_ID` | JPY月額プランのStripe価格ID |
 | `TEILOG_STRIPE_PREVIOUS_PRICE_IDS` | 旧料金の有効な契約を認める場合の価格ID。複数はカンマ区切り |
 
+### 受付フラグと月額
+
+- 受付フラグは `TEILOG_PREMIUM_LIVE_APPROVED`。`true` のときだけ本番の新規申込を受け付ける。それ以外は「現在、受付を中止しています（準備中）」と出て、決済へ進めない。すでに払っている会員の閲覧と解約は、フラグに関係なく使える。
+- 月額は500円。Stripe の価格が500円・月1回・JPY でなければ申込を開かない（価格IDのまちがい防止）。金額を変えるときは `index.ts` の `MONTHLY_YEN` とページの文言も変える。
+- 受付中かどうかは、ログイン前の人にも `action: offer` で返す（Stripe には問い合わせない）。
+- 関数の本番への反映は、GitHub Actions の `supabase-deploy` を手動で動かす（Secrets に `SUPABASE_ACCESS_TOKEN` が必要）。
+
 オーナーは本人確認した既存のログインIDを管理側で専用表に登録します。オーナーは決済なしでレースの評価と収支グラフを利用できます。決済未設定のときは招待アカウントも試用できます。テスト決済モードでは、招待アカウントだけがテスト画面を開けます。テストで支払いに失敗した場合は会員権限が付きません。契約は画面を開くたびにStripeで照合するため、申込画面から戻るURLだけでは会員になりません。支払い設定と解約はStripeの会員ページを使います。
 
 別期間の検証は `python -m scraper.premium_validate --window <締め日> <検証最終日>` で再現できます。締め日までにその号機を使用していない選手の後日成績を比較します。
