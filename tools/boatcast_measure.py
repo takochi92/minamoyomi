@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -41,8 +42,13 @@ def profile(venue):
     return json.loads((TOOLS / "profiles" / f"{venue}.json").read_text(encoding="utf-8"))
 
 
+def races_dir():
+    # the nightly job reads fresh race cards from origin/main (this checkout's site/data can be old)
+    return Path(os.environ.get("BOATCAST_RACES_DIR") or ROOT / "site" / "data" / "races")
+
+
 def race_file(date, venue, race):
-    path = ROOT / "site" / "data" / "races" / date / f"{venue}{race:02d}.json"
+    path = races_dir() / date / f"{venue}{race:02d}.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
 
 
