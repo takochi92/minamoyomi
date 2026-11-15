@@ -2644,8 +2644,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
         page = Page("premium.html")
-        body = f"""<h1>艇ろぐ プレミアム</h1>
-<p class="premium-lead">モーターの力を、6艇ならべてひと目で。展示・伸び・まわり足・立ち上がり・総評を S〜D の5段階で見られます。</p>
+        body = f"""<div class="premium-hero"><div><h1>艇ろぐ プレミアム</h1>
+<p class="premium-lead">モーターの力を、6艇ならべてひと目で。展示・伸び・まわり足・立ち上がり・総評を S〜D の5段階で見られます。</p></div>
+<img src="{page.u('img/boat-gold.webp')}" width="560" height="334" alt="" aria-hidden="true"></div>
 <section class="panel premium-panel" data-premium-plan>
 <h2>月額500円</h2>
 <p>自動更新。支払い方法の変更と解約は、いつでも会員ページからできます。</p>
@@ -2654,8 +2655,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section class="panel premium-feature">
 <div><h2>モーター評価</h2>
 <p>各レースの「プレミアム」タブに、6艇のモーター評価がならびます。</p>
-<ul><li>公式の展示データをもとに、同じ場のモーターどうしでくらべた位置を S・A・B・C・D で表示</li>
-<li>毎晩、前の日までの結果で更新</li>
+<ul><li>公式の計測データ（展示タイム・直線タイム・まわり足・一周タイムなど）を全場ぶん集めて、独自の計算で数値化</li>
+<li>同じレースの6艇とくらべた差に直すので、その日の水面や風のちがいに左右されにくい</li>
+<li>直近3節の走りを、新しいものほど重く見て集計</li>
+<li>同じ場の全モーターの中での順位を S・A・B・C・D で表示。毎晩、自動で更新</li>
 <li>モーターが入れかわったら、古いモーターの成績は引きつぎません</li></ul></div>
 <figure><img src="{page.u('img/premium-motor.webp')}" width="784" height="976" loading="lazy" alt="モーター評価の見本。6艇それぞれに、展示・伸び・まわり足・立ち上がり・総評の評価が S から D でならんでいる">
 <figcaption>画面の見本（数字は例です）</figcaption></figure>

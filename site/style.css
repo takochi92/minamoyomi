@@ -897,3 +897,6 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .premium-grades{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;text-align:left;font-size:.86rem}
 .premium-grades span{display:flex;align-items:center;gap:8px}
 .premium-grades b{display:inline-block;min-width:1.65em;text-align:center}
+.premium-hero{display:grid;grid-template-columns:minmax(0,1fr) clamp(110px,32vw,230px);gap:12px;align-items:center;margin-bottom:6px}
+.premium-hero h1{margin-top:0}
+.premium-hero img{display:block;width:100%;height:auto;filter:drop-shadow(0 6px 18px #e0b84a33)}
