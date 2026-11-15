@@ -106,16 +106,6 @@
   function memberLink() {
     var a=link('プレミアムの契約・解約','/premium'); a.classList.add('premium-member-link'); return a;
   }
-  // 公式の数字そのものでない評価の出どころ。算＝公式の数字から算出、独＝艇ろぐが展示リプレイから独自に計測
-  var SOURCES = {
-    lap_minus_turn: ['算','公式の一周−まわり足から算出（公式に直線がない場）・検証中'],
-    unconfirmed_section: ['算','公式の直線−展示から算出（直線の計測区間は公式資料で未確認・翌日の成績で並びを確認）'],
-    video: ['独','艇ろぐが展示リプレイから独自に計測（公式の数字ではありません）']
-  };
-  function sourceMark(source) {
-    if (!source) return null;
-    return SOURCES[source] || (String(source).indexOf('video')===0 ? SOURCES.video : null);
-  }
   function drawRace(data, reason) {
     if (!data || !data.rows.some(row => Object.keys(row.metrics).length)) {
       var why = reason==='snapshot_late' ? '評価データの更新が遅れています。復旧までしばらくお待ちください。'
@@ -133,7 +123,7 @@
       else th.textContent=label;
       header.append(th);
     });
-    var body=table.createTBody(), used={}, deducted=false;
+    var body=table.createTBody();
     data.rows.sort((a,b)=>a.frame-b.frame).forEach(function (row) {
       var tr=body.insertRow(), name=el('th');
       name.scope='row';
@@ -146,20 +136,11 @@
         }
         var grade=el('strong',score.grade); grade.dataset.grade=score.grade;
         td.append(grade);
-        var mark=sourceMark(score.source);
-        if (mark) {
-          var sup=el('sup',mark[0]); sup.className='premium-source'; sup.title=mark[1];
-          td.append(sup); td.setAttribute('aria-label',score.grade+'（'+mark[1]+'）'); used[mark[0]]=mark[1];
-        }
-        if (score.rider_deduction>0) deducted=true;
       });
     });
     var date=el('p',data.through.replace(/^(....)(..)(..)$/, '$1/$2/$3')+'時点');
     date.className='premium-rating-date';
-    var notes=el('ul'); notes.className='premium-source-notes';
-    notes.append(el('li','どの評価も、乗り手の腕は差し引き済み（速い選手が乗ったぶんだけ減点。加点はしません）'+(deducted?'':'。このレースでは減点の対象になった選手はいません')+'。'));
-    Object.keys(used).forEach(function (k) { notes.append(el('li',k+'：'+used[k])); });
-    box.replaceChildren(date,table,notes,memberLink());
+    box.replaceChildren(date,table,memberLink());
   }
   function plot(canvas, data, period) {
     var width=Math.floor(canvas.getBoundingClientRect().width);
