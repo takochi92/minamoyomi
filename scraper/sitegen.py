@@ -225,7 +225,7 @@ class Page:
 <footer><div class="wrap">
   <p>掲載している買い目・データは過去の公式データと直前情報にもとづく参考情報で、的中や利益を保証するものではありません。舟券の購入はご自身の判断と責任でお願いします。</p>
   <p>20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>
-  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a>　／　{X_PROFILE_LINK}</p>
+  <p>レースデータ出典：<a href="https://www.boatrace.jp/" rel="noopener" target="_blank">BOAT RACE オフィシャルウェブサイト</a>　／　<a href="{self.u('weekly.html')}">週ごとの成績</a>　／　<a href="{self.u('premium.html')}">プレミアム</a>　／　<a href="{self.u('about.html')}">運営者情報・プライバシーポリシー</a>　／　{X_PROFILE_LINK}</p>
   <p><a href="{self.u('install.html')}">ホーム画面に追加する方法</a></p>
 </div></footer>
 {script}
@@ -2644,15 +2644,44 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
         page = Page("premium.html")
-        body = """<h1>艇ろぐ プレミアム</h1>
+        body = f"""<h1>艇ろぐ プレミアム</h1>
+<p class="premium-lead">モーターの力を、6艇ならべてひと目で。展示・伸び・まわり足・立ち上がり・総評を S〜D の5段階で見られます。</p>
 <section class="panel premium-panel" data-premium-plan>
-<h2>モーター評価と収支グラフ</h2>
-<ul><li>レースごとに6艇の展示・伸び・まわり足を比較</li>
-<li>マイノートの収支を週・月・年のグラフで確認</li></ul>
-<p class="sub">計測や比較に必要なデータが少ない項目は評価保留になります。</p>
-<p>月額500円・自動更新。支払い方法の変更と解約は、いつでも会員ページからできます。</p>
+<h2>月額500円</h2>
+<p>自動更新。支払い方法の変更と解約は、いつでも会員ページからできます。</p>
 <div class="premium-content" aria-live="polite"><p class="premium-closed">現在、受付を中止しています（準備中）</p><button class="premium-action" type="button" disabled>会員登録（受付中止中）</button></div>
-</section>"""
+</section>
+<section class="panel premium-feature">
+<div><h2>モーター評価</h2>
+<p>各レースの「プレミアム」タブに、6艇のモーター評価がならびます。</p>
+<ul><li>公式の展示データをもとに、同じ場のモーターどうしでくらべた位置を S・A・B・C・D で表示</li>
+<li>毎晩、前の日までの結果で更新</li>
+<li>モーターが入れかわったら、古いモーターの成績は引きつぎません</li></ul></div>
+<figure><img src="{page.u('img/premium-motor.webp')}" width="784" height="976" loading="lazy" alt="モーター評価の見本。6艇それぞれに、展示・伸び・まわり足・立ち上がり・総評の評価が S から D でならんでいる">
+<figcaption>画面の見本（数字は例です）</figcaption></figure>
+</section>
+<section class="panel premium-feature">
+<div><h2>収支グラフ</h2>
+<p>マイノートに記録した舟券の収支を、グラフでふり返れます。</p>
+<ul><li>週・月・年で切りかえ</li>
+<li>日ごとの増減と、期間の累計をいっしょに表示</li>
+<li>購入・払戻・記録の件数もひと目で</li></ul></div>
+<figure><img src="{page.u('img/premium-chart.webp')}" width="784" height="1068" loading="lazy" alt="収支グラフの見本。月ごとの日別の増減と累計の線、購入・払戻・記録件数がならんでいる">
+<figcaption>画面の見本（金額は例です）</figcaption></figure>
+</section>
+<section class="panel premium-panel">
+<h2>評価の見方</h2>
+<div class="premium-grades premium-table"><span><strong data-grade="S">S</strong>とくに良い</span><span><strong data-grade="A">A</strong>良い</span><span><strong data-grade="B">B</strong>ふつうより上</span><span><strong data-grade="C">C</strong>ふつうより下</span><span><strong data-grade="D">D</strong>下位</span><span><b>—</b>評価保留</span></div>
+<p class="sub">評価は、同じ場のモーターの中での位置です。データが少ない項目や、その場が公式に出していない項目は「—」（評価保留）になります。節の初日は「—」が多くなります。</p>
+</section>
+<section class="panel premium-panel">
+<h2>料金と解約</h2>
+<ul><li>月額500円。申し込んだ日から1か月ごとに自動で更新します</li>
+<li>支払いはクレジットカード（決済は Stripe）。カード番号は艇ろぐには保存されません</li>
+<li>解約は会員ページからいつでもできます。解約しても、支払いずみの期間の終わりまでは見られます</li>
+<li>申し込みには、マイノートの会員登録（無料）が必要です</li></ul>
+</section>
+<p class="sub">モーター評価は過去の公式データにもとづく参考情報で、的中や利益を保証するものではありません。20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>"""
         self.put(page.path, page.render(f"プレミアム｜{SITE_NAME}", "モーター評価とマイノートの収支グラフ。", body, [("", "プレミアム")], noindex=True))
         page = Page("tools/composite.html")
         body = """<h1>合成オッズ計算ツール</h1>

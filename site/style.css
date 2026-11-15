@@ -886,3 +886,14 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .premium-action:disabled{opacity:.55;cursor:not-allowed;border-color:var(--line)}
 .premium-error{overflow-wrap:anywhere}
 .premium-member-link{margin-top:10px;font-size:.9rem}
+.premium-lead{margin:0 0 4px;color:var(--ink2)}
+.premium-feature{display:grid;gap:16px;align-items:center;min-width:0}
+.premium-feature h2,.premium-feature p{margin:0 0 8px}
+.premium-feature ul,.premium-panel ul{margin:0;padding-left:1.2em;display:grid;gap:5px}
+.premium-feature figure{margin:0;justify-self:center;max-width:340px;width:100%}
+.premium-feature img{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--line)}
+.premium-feature figcaption{margin-top:6px;text-align:center;font-size:.76rem;color:var(--ink2)}
+@media (min-width:720px){.premium-feature{grid-template-columns:minmax(0,1fr) 300px}}
+.premium-grades{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;text-align:left;font-size:.86rem}
+.premium-grades span{display:flex;align-items:center;gap:8px}
+.premium-grades b{display:inline-block;min-width:1.65em;text-align:center}
