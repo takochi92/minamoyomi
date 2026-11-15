@@ -1474,7 +1474,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         ana_cards.sort(key=lambda x: (x[0], x[1]))
         anah = self.home_race_group('条件に合うレース', '検証中・高配当を示すものではありません', [c for _, _, c in ana_cards], ana_done)
         targets = self.today_targets(page)
-        body = f"""<section class="insight-hero"><div><span class="eyebrow">BOAT RACE / DATA &amp; INSIGHT</span><h1>水面の変化を、<br>穴の根拠へ。</h1><p>機力、本人比展示、選手のコース成績。<br>買い目の理由を、ひとつの画面で。</p><div class="insight-links"><a href="{page.u('motor.html')}">モーター相場を見る →</a><a href="{page.u('targets.html')}">コース巧者を探す →</a></div></div><img src="{page.u('img/boat-v2.webp')}" width="960" height="640" alt="水面を走る白と青のボート" fetchpriority="high"></section>
+        body = f"""<section class="insight-hero"><div><span class="eyebrow">BOAT RACE / DATA &amp; INSIGHT</span><h1>水面の変化を、<br>穴の根拠へ。</h1><p>機力、本人比展示、選手のコース成績。<br>買い目の理由を、ひとつの画面で。</p><div class="insight-links"><a class="pill-link" href="{page.u('motor.html')}">モーター相場を見る →</a><a class="pill-link" href="{page.u('targets.html')}">コース巧者を探す →</a></div></div><img src="{page.u('img/boat-v2.webp')}" width="960" height="640" alt="水面を走る白と青のボート" fetchpriority="high"></section>
 <section style="display:grid;gap:6px"><span class="eyebrow">{jdate(d)}のボートレース予想</span>
 <h2>今日のレースと予想の根拠</h2>
 {self.freshness_block(page, self.idx.get('updated_at', ''))}
@@ -1484,7 +1484,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.buff_all_block(page)}
 {confidence_home}
 {anah}
-<section id="held-races" style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <a class="h2link" href="{page.u('results.html')}">払戻金一覧 →</a> <a class="h2link" href="{page.u('motor.html')}">モーター一覧 →</a> <a class="h2link" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></h2>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
+<section id="held-races" style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <span class="pill-row"><a class="pill-link pill-link-sm" href="{page.u('results.html')}">払戻金一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('motor.html')}">モーター一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></span></h2>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}
