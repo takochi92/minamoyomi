@@ -948,3 +948,5 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .pi-mark-unserved{color:var(--bad);border-color:var(--bad)}
 .pi-mark-served{color:var(--good);border-color:var(--good)}
 .pi-mark-unknown{color:var(--ink2)}
+.pi-mark-est{font-size:9px;margin-left:1px;font-weight:500}
+.pi-mark-date{display:block;font-size:10px;color:var(--ink2);margin-top:2px}

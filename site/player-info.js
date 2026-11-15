@@ -14,11 +14,18 @@
   const gap=n=>n==null?'未確認':n===0?'基準額':(n>0?'+':'−')+yen(Math.abs(n));
   const name=r=>`<a class="pi-name" href="racer/${esc(r.toban)}">${esc(r.name)}<small>${esc(r.toban)}${r.branch?' ／ '+esc(r.branch):''}</small></a>`;
   const safeSource=u=>{try{const x=new URL(u);return x.protocol==='https:'&&['www.boatrace.jp','boatrace.jp','www.boatrace-tsu.com','www.boatrace-hamanako.jp','pic.omurakyotei.jp'].includes(x.hostname);}catch(_){return false;}};
-  const leaveState=r=>r.leave_state||((r.rests||[]).some(s=>['scheduled','in_period','snapshot_unserved'].includes(s.status))?'unserved':'unknown');
-  const MARK={unserved:['未','公式資料に未消化の記載あり'],served:['済','公式資料に消化済みの明示あり'],unknown:['—','公式で確認できていない']};
-  function mark(r){const st=leaveState(r),[t,why]=MARK[st];const src=(r.rests||[]).find(x=>safeSource(x.source));
-    const inner=`<b class="pi-mark pi-mark-${st}" title="${esc(why)}">${t}</b>`;
-    return src&&st!=='unknown'?`<a href="${esc(src.source)}" target="_blank" rel="noopener" aria-label="${esc(why)}（公式資料）">${inner}</a>`:inner;}
+  const leaveRaw=r=>r.leave_state||((r.rests||[]).some(s=>['scheduled','in_period','snapshot_unserved'].includes(s.status))?'unserved':'unknown');
+  // 未＝公式の未消化 または 結果から確実。済＝公式の消化済み または 結果からの推定
+  const leaveState=r=>({unserved_sure:'unserved',served_estimated:'served'}[leaveRaw(r)]||leaveRaw(r));
+  const WHY={unserved:'公式資料に未消化の記載あり',served:'公式資料に消化済みの明示あり',unknown:'確認できない',
+    unserved_sure:'Fのあと、必要な日数ぶん続けて休んだ時期がない（確実）',served_estimated:'Fのあと、必要な日数ぶん続けて休んだ時期がある（推定）'};
+  function mark(r){const raw=leaveRaw(r),st=leaveState(r),why=WHY[raw]||'';const t={unserved:'未',served:'済',unknown:'—'}[st];
+    const rest=r.rest||{};
+    const sub=raw==='served_estimated'?'<small class="pi-mark-est">推</small>':'';
+    const back=raw==='served_estimated'&&rest.back?`<small class="pi-mark-date">${date(rest.back).slice(5)}復帰</small>`:'';
+    const inner=`<b class="pi-mark pi-mark-${st}" title="${esc(why)}">${t}${sub}</b>${back}`;
+    const src=(r.rests||[]).find(x=>safeSource(x.source));
+    return src&&(raw==='unserved'||raw==='served')?`<a href="${esc(src.source)}" target="_blank" rel="noopener" aria-label="${esc(why)}（公式資料）">${inner}</a>`:inner;}
   function fTable(rows){
     if(!rows.length)return'';
     return `<table class="pi-ftable"><thead><tr><th scope="col">選手</th><th scope="col" class="r">F</th><th scope="col" class="r">休み</th></tr></thead><tbody>${
@@ -48,9 +55,9 @@
   }
   function renderHidden(){if(!hiddenBox||data.kind!=='f')return;const search=normalize(q.value);
     const rows=(data.rows||[]).filter(r=>r.rollover).filter(r=>!search||normalize([r.name,r.kana,r.toban,r.branch].join(' ')).includes(search))
-      .sort((a,b)=>String(b.prev_last||b.last_f||'').localeCompare(String(a.prev_last||a.last_f||''))||kana(a).localeCompare(kana(b),'ja'));
+      .sort((a,b)=>(leaveState(a)==='unserved'?0:1)-(leaveState(b)==='unserved'?0:1)||String(b.prev_last||b.last_f||'').localeCompare(String(a.prev_last||a.last_f||''))||kana(a).localeCompare(kana(b),'ja'));
     hiddenBox.innerHTML=hiddenTable(rows.slice(0,hiddenLimit));
-    if(hiddenCount)hiddenCount.textContent=rows.length?`${rows.length}人（前期最後のFが新しい順）`:'';
+    if(hiddenCount)hiddenCount.textContent=rows.length?`${rows.length}人（うち休み未 ${rows.filter(r=>leaveState(r)==='unserved').length}人）。未の選手から順に表示`:'';
     if(hiddenMore)hiddenMore.hidden=rows.length<=hiddenLimit;}
   renderHidden();
   if(hiddenMore)hiddenMore.addEventListener('click',()=>{hiddenLimit+=30;renderHidden();});

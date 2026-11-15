@@ -83,10 +83,14 @@ def build_f_report(report, snapshots, leaves, today, racers):
         cleared=max((r.get('document_date','') for r in served),default='')
         pending_date=max((r.get('document_date','') for r in pending),default='')
         state='served' if served and cleared>pending_date else 'unserved' if pending else 'served' if served else 'unknown'
+        inferred=(report.get('f_rest') or {}).get(t) or {}
+        if state=='unknown' and inferred.get('state') in {'unserved_sure','served_estimated'}:
+            state=inferred['state']
         row={'toban':t,'name':info.get('name') or history.get('name') or (rest[0].get('name') if rest else t),
              'kana':info.get('kana',''),'branch':info.get('branch') or history.get('branch',''),
              'f':f,'programme':snapshot,'history_count':len(history.get('events',[])),
              'last_f':history.get('last_f',''),'rests':rest,'rollover':hidden,'leave_state':state,
+             'rest':{k:inferred.get(k) for k in ('need','rest_from','back') if inferred.get(k)},
              'prev_f':len(previous_events),'prev_last':max((x.get('date','') for x in previous_events),default='')}
         rows.append(row)
     return {'kind':'f','as_of':today,'through':report.get('through',''),'period':report.get('f_period',{}),
@@ -115,10 +119,12 @@ def f_page(page, data):
 <div class="pi-controls">
 <select id="pi-filter" aria-label="しぼりこみ"><option value="f">Fあり</option><option value="f2">F2以上</option><option value="leave">休み 未</option><option value="served">休み 済</option><option value="all">すべて</option></select>
 <select id="pi-sort" aria-label="ならべかえ"><option value="f">F本数が多い順</option><option value="kana">名前順</option><option value="toban">登録番号順</option></select></div>
-<p class="pi-legend">休み：<b class="pi-mark pi-mark-unserved">未</b> 公式資料に未消化の記載あり　<b class="pi-mark pi-mark-served">済</b> 公式資料に消化済みの明示あり　<b class="pi-mark pi-mark-unknown">—</b> 公式で確認できていない（未消化とは限りません）</p>
+<p class="pi-legend">休み：<b class="pi-mark pi-mark-unserved">未</b> まだ休んでいない　<b class="pi-mark pi-mark-served">済</b> 休みが終わった（<small>推</small>＝レース結果からの推定）</p>
 <p id="pi-count" class="sub" role="status"></p><div id="pi-list" class="pi-list"></div><button id="pi-more" class="btn" type="button" hidden>もっと見る</button></section>
-<details class="more"><summary>確認範囲・表示の意味</summary><p>F本数は、各選手のいちばん新しい出走表の数字です。休みの未・済は、公式資料（津・大村など）で確かめられた選手だけに付きます。出走が空いた・日数が過ぎた・F0になった、だけでは「済」にしません。</p>
-<p>隠れFは「前期にFがあり、期替わり後の出走表がF0」の選手です。休みが残っているかどうかは、これだけでは決められません。</p>
+<details class="more"><summary>未・済の決め方</summary><p>F休みは、期の1本目のFで30日、2本目で60日、3本目で90日。分けずに続けて取ります。</p>
+<p><b>未</b>：Fのあと、必要な日数ぶん続けてレースに出ていない時期が一度もない選手です。休みはまだ終わっていません（レース結果から確実に言えます）。公式資料に未消化とある選手も未です。</p>
+<p><b>済</b>：公式資料に消化済みとある選手。<small>推</small>が付いたものは、Fのあと必要な日数ぶん続けてレースに出ていない時期がある選手です。けが・病気の欠場と区別できないので推定です。</p>
+<p>F本数は、各選手のいちばん新しい出走表の数字です。隠れFは「前期にFがあり、期替わり後の出走表がF0」の選手です。</p>
 <p class="sub">F履歴は{date(data.get('through'))}の保存結果まで。</p></details>
 <script id="pi-data" type="application/json">{payload(data)}</script><script src="{page.asset('player-info.js')}" defer></script>'''
 
