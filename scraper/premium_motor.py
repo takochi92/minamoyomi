@@ -31,10 +31,16 @@ ADJUSTED_HALF_LIFE = 45
 RIDER_SHRINK_RUNS = 8
 RIDER_TERM_DECAY = .5
 # Official course maps document the early straight section at these venues.
-EXIT_SECTION_VENUES = {"02", "04", "07", "10", "14", "22"}
+CONFIRMED_EXIT_VENUES = {"02", "04", "07", "10", "14", "22"}
+# Official documents do not show where 直線 is measured here, but 直線 − 展示 sorted the next day's
+# results A<B<C<D (宮島: A and D only) and A beat D in every meeting, 2026/10/12〜11/14.
+# Shown as 算出・区間未確認 (source "unconfirmed_section"). Not here: 桐生・浜名湖 failed that check;
+# びわこ's official text puts 直線 on the back straight, not the turn exit.
+UNCONFIRMED_EXIT_VENUES = {"05", "08", "09", "15", "16", "17", "19", "20", "21", "23", "24"}
+EXIT_SECTION_VENUES = CONFIRMED_EXIT_VENUES | UNCONFIRMED_EXIT_VENUES
 # The replay found clear A/D separation but unstable intermediate ordering here.
 # Use B for the middle band rather than presenting two distinct grades.
-MIDDLE_BAND_VENUES = {"turn": {"09", "12", "15"}, "overall": {"06", "22"}}
+MIDDLE_BAND_VENUES = {"turn": {"09", "12", "15"}, "overall": {"06", "22"}, "acceleration": {"17"}}
 TWO_SECTION_VENUES = {"12", "13", "18"}
 # These venues publish 一周 and まわり足 but no 直線. The rest of the lap (一周 − まわり足) is the
 # straight running, so it stands in for 直線 there, marked with source "lap_minus_turn".
@@ -128,6 +134,8 @@ def pairing_ratings(meets, venue):
                      "through": max(d for d, _ in xs)}
             if metric in ("acceleration", "overall"):
                 score["index"] = round((center - mean_delta) * (50 if metric == "acceleration" else 100))
+            if metric == "acceleration" and venue in UNCONFIRMED_EXIT_VENUES:
+                score["source"] = "unconfirmed_section"
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
     return output
 
