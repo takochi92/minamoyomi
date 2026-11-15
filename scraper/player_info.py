@@ -86,7 +86,8 @@ def build_f_report(report, snapshots, leaves, today, racers):
         row={'toban':t,'name':info.get('name') or history.get('name') or (rest[0].get('name') if rest else t),
              'kana':info.get('kana',''),'branch':info.get('branch') or history.get('branch',''),
              'f':f,'programme':snapshot,'history_count':len(history.get('events',[])),
-             'last_f':history.get('last_f',''),'rests':rest,'rollover':hidden,'leave_state':state}
+             'last_f':history.get('last_f',''),'rests':rest,'rollover':hidden,'leave_state':state,
+             'prev_f':len(previous_events),'prev_last':max((x.get('date','') for x in previous_events),default='')}
         rows.append(row)
     return {'kind':'f','as_of':today,'through':report.get('through',''),'period':report.get('f_period',{}),
             'new_start':report.get('new_start',''),'preparing':report.get('f_preparing',True),'rows':rows}
@@ -104,15 +105,21 @@ def hub(page, prizes):
 
 
 def f_page(page, data):
-    upcoming=(f'<p class="sub">次の期替わりは{date(data.get("new_start"))}。期初のF0表示との比較は期替わり後からです。</p>' if data.get('preparing') else '')
+    upcoming=(f'<p class="sub">次の期替わりは{date(data.get("new_start"))}。期替わりのあと、ここに前期のF持ちが出ます。</p>' if data.get('preparing') else '')
     return f'''<h1>F・休み</h1>
-<div class="pi-controls"><input id="pi-q" type="search" placeholder="選手名・登録番号・支部" aria-label="選手を検索">
-<select id="pi-filter" aria-label="F情報の絞り込み"><option value="f">Fあり</option><option value="f2">F2以上</option><option value="leave">未消化</option><option value="served">消化済み（確認分）</option><option value="rollover">期またぎF</option><option value="all">すべて</option></select></div>
-<details class="more"><summary>確認範囲・表示の意味</summary><p>F本数と休みの未消化は別です。全国全選手の未消化一覧ではありません。空欄・日程経過・F0だけで消化済みとは判定しません。消化済みは公式の明示を確認できた場合のみです。</p>
-<details class="more"><summary>期またぎF（通称「隠れF」）について</summary><p>期替わり後の出走表がF0でも、前期のF歴がある選手を確認する欄です。これだけで休みが未消化とは断定できません。休みは公式資料の確認日と記載内容で別に確認します。</p>{upcoming}</details>
-<p class="sub">F履歴は{date(data.get('through'))}の保存結果まで。出走表のF本数は各選手に確認日を表示します。</p>
-</details>
-<p id="pi-count" class="sub" role="status"></p><div id="pi-list" class="pi-list"></div><button id="pi-more" class="btn" type="button" hidden>もっと見る</button>
+<div class="pi-controls"><input id="pi-q" type="search" placeholder="選手名・登録番号・支部" aria-label="選手を検索"></div>
+<section class="pi-hidden-box" aria-labelledby="pi-hidden-title"><h2 id="pi-hidden-title">隠れF（前期から持ち越し）</h2>
+<p class="sub">いまの出走表はF0でも、前期にFがある選手です。期替わりのあと自動で出て、次の期替わりの準備に入ると消えます。</p>{upcoming}
+<p id="pi-hidden-count" class="sub" role="status"></p><div id="pi-hidden"></div><button id="pi-hidden-more" class="btn" type="button" hidden>もっと見る</button></section>
+<section aria-labelledby="pi-list-title"><h2 id="pi-list-title">F持ちの選手</h2>
+<div class="pi-controls">
+<select id="pi-filter" aria-label="しぼりこみ"><option value="f">Fあり</option><option value="f2">F2以上</option><option value="leave">休み 未</option><option value="served">休み 済</option><option value="all">すべて</option></select>
+<select id="pi-sort" aria-label="ならべかえ"><option value="f">F本数が多い順</option><option value="kana">名前順</option><option value="toban">登録番号順</option></select></div>
+<p class="pi-legend">休み：<b class="pi-mark pi-mark-unserved">未</b> 公式資料に未消化の記載あり　<b class="pi-mark pi-mark-served">済</b> 公式資料に消化済みの明示あり　<b class="pi-mark pi-mark-unknown">—</b> 公式で確認できていない（未消化とは限りません）</p>
+<p id="pi-count" class="sub" role="status"></p><div id="pi-list" class="pi-list"></div><button id="pi-more" class="btn" type="button" hidden>もっと見る</button></section>
+<details class="more"><summary>確認範囲・表示の意味</summary><p>F本数は、各選手のいちばん新しい出走表の数字です。休みの未・済は、公式資料（津・大村など）で確かめられた選手だけに付きます。出走が空いた・日数が過ぎた・F0になった、だけでは「済」にしません。</p>
+<p>隠れFは「前期にFがあり、期替わり後の出走表がF0」の選手です。休みが残っているかどうかは、これだけでは決められません。</p>
+<p class="sub">F履歴は{date(data.get('through'))}の保存結果まで。</p></details>
 <script id="pi-data" type="application/json">{payload(data)}</script><script src="{page.asset('player-info.js')}" defer></script>'''
 
 

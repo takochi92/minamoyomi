@@ -64,8 +64,11 @@ def test_rollover_flag_is_only_a_crosscheck_and_never_claims_unserved_leave():
             'f_players':[{'toban':'4001','name':'確認選手','events':[{'date':'20261031'}]}]}
     snapshot={'4001':{'date':'20261101','jcd':'04','rno':1,'f':0}}
     data=build_f_report(report,snapshot,{},'20261102',{})
-    assert data['rows'][0]['rollover'] is True and data['rows'][0]['rests']==[]
-    assert '未消化とは断定できません' in f_page(Page('players-f.html'),data)
+    row=data['rows'][0]
+    assert row['rollover'] is True and row['rests']==[] and row['leave_state']=='unknown'
+    assert row['prev_f']==1 and row['prev_last']=='20261031'
+    text=f_page(Page('players-f.html'),data)
+    assert '隠れF（前期から持ち越し）' in text and '休みが残っているかどうかは、これだけでは決められません' in text
     report['f_players'][0]['current_f_known']=True
     assert not build_f_report(report,snapshot,{},'20261102',{})['rows'][0]['rollover']
 
