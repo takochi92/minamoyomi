@@ -42,6 +42,7 @@ const path = require('node:path');
   assert.equal(checkout.status,200);
   assert.equal((await checkout.json()).url,'https://checkout.stripe.com/live');
   assert.equal(created.get('mode'),'subscription');
+  assert.equal([...created.keys()].some(k=>k.startsWith('payment_method_types')),false,'Stripe no longer accepts payment_method_types here');
   assert.equal(created.get('success_url'),'https://teilog.com/premium?checkout=done');
 
   // まちがった価格ID（500円ではない）をつないだら、申込を開かない
