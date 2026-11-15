@@ -300,3 +300,31 @@ def test_mikuni_exit_side_straight_gives_acceleration():
             "oriten": {"items": ["まわり足", "直線"], "rows": rows}}
     assert any(k == "acceleration" for k, *_ in observations(race, "10"))
     assert not any(k == "acceleration" for k, *_ in observations(race, "11"))
+
+
+def test_edogawa_video_fills_straight_turn_and_overall_only_there(tmp_path):
+    import json
+    from scraper.premium_motor import attach_video, load_video, observations
+
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6.7 + i / 100} for i in range(1, 7)]
+    rows = [{"source": "video", "date": "20261114", "venue": v, "race": 6, "boat": b, "metric": m,
+             "seconds": s + b / 10} for v in ("03", "04") for m, s in (("straight", 5.0), ("turn", 2.0))
+            for b in (1, 2, 4, 6)]
+    rows.append({"source": "video", "date": "20261114", "venue": "03", "race": 6, "boat": 3,
+                 "metric": "turn", "seconds": 2.3})
+    (tmp_path / "20261114-03.json").write_text(json.dumps({"rows": rows}))
+    video = load_video(tmp_path)
+    assert ("20261114", "04", 6) not in video
+    records = attach_video({("20261114", "03", 6): {"racelist": {"boats": boats},
+                                                    "before": {"boats": before}}}, video)
+    race = records["20261114", "03", 6]
+    obs = {(k, m): v for k, m, _, v in observations(race, "03")}
+    # straight: 4 boats measured, against their own mean (5.325)
+    assert round(obs["straight", "1"], 4) == -.225 and ("straight", "3") not in obs
+    # turn: 5 boats measured
+    assert ("turn", "3") in obs and ("turn", "5") not in obs
+    # overall only for boats with exhibition, straight and turn
+    assert {m for k, m in obs if k == "overall"} == {"1", "2", "4", "6"}
+    # a venue that is not in VIDEO_VENUES ignores the measurement
+    assert not any(k in ("straight", "turn") for k, *_ in observations(race, "04"))

@@ -47,6 +47,12 @@ TWO_SECTION_VENUES = {"12", "13", "18"}
 # At the venues that publish all three, it follows the official 直線 inside a race (rank
 # correlation +0.11 to +0.50 by venue, 2026/09〜11), more closely than 直線 follows 展示.
 LAP_MINUS_TURN_VENUES = {"12", "13", "18"}
+# Edogawa publishes only the exhibition time. Straight and turn come from the BOATCAST replay,
+# measured by tools.boatcast_measure (numbers only) and labelled as our own measurement.
+VIDEO_VENUES = {"03"}
+VIDEO_METRICS = ("straight", "turn")
+VIDEO_MIN_BOATS = 4
+VIDEO_DIR = ROOT / "research" / "boatcast-measure"
 
 
 def day(value):
@@ -78,6 +84,31 @@ def observations(race, venue=None):
             continue
         baseline = sum(values) / len(values)
         deviations[key] = [value - baseline for value in values]
+    partial = {}
+    if venue in VIDEO_VENUES:
+        for key in VIDEO_METRICS:
+            measured = {int(b): v for b, v in ((race.get("video") or {}).get(key) or {}).items()
+                        if int(b) in lanes and isinstance(v, (int, float)) and math.isfinite(v) and 0 < v < 120}
+            if key not in deviations and len(measured) >= VIDEO_MIN_BOATS:
+                baseline = sum(measured.values()) / len(measured)
+                partial[key] = {b: v - baseline for b, v in measured.items()}
+    if partial:
+        # Not every boat is measured in every replay: rank the overall among the boats that are.
+        full = {k: dict(enumerate(v, 1)) for k, v in deviations.items()}
+        full.update(partial)
+        parts = ("exhibition", "straight", "turn")
+        boats = [b for b in range(1, 7) if all(b in full.get(k, {}) for k in parts)]
+        if len(boats) >= VIDEO_MIN_BOATS:
+            weights = {"exhibition": .25, "straight": .25, "turn": .5}
+            ranks = {}
+            for k in parts:
+                field = [full[k][b] for b in boats]
+                ranks[k] = {b: (sum(x < full[k][b] for x in field) + (field.count(full[k][b]) - 1) / 2)
+                            / (len(boats) - 1) for b in boats}
+            partial["overall"] = {b: sum(weights[k] * ranks[k][b] for k in parts) - .5 for b in boats}
+        for key, values in partial.items():
+            for b, value in values.items():
+                yield key, str(entries[b]["motor_no"]), str(entries[b]["toban"]), value
     if (venue in LAP_MINUS_TURN_VENUES and "straight" not in deviations
             and {"lap", "turn"} <= deviations.keys()):
         deviations["straight"] = [lap - turn for lap, turn in zip(deviations["lap"], deviations["turn"])]
@@ -144,6 +175,8 @@ def pairing_ratings(meets, venue, items=None):
                 score["rider_deduction"] = round(sum(c) / len(c), 4)
             if metric == "acceleration" and venue in UNCONFIRMED_EXIT_VENUES:
                 score["source"] = "unconfirmed_section"
+            if venue in VIDEO_VENUES:
+                score["source"] = "video"
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
     return output
 
@@ -315,6 +348,9 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
         if venue in LAP_MINUS_TURN_VENUES:
             for score in metrics["straight"].values():
                 score["source"] = "lap_minus_turn"
+        if venue in VIDEO_VENUES:
+            for score in metrics["straight"].values():
+                score["source"] = "video"
         if baselines is not None:
             # Every finished meeting in the window, minus what each rider usually does. A rider the
             # profiles do not know is treated as average. Different riders must have used the motor.
@@ -437,7 +473,29 @@ def load_inputs():
     for path in (ROOT / "site" / "data" / "meetings").glob("*.json"):
         m = json.loads(path.read_text(encoding="utf-8"))
         schedules[m["jcd"]][m["title"].strip()][m["start"]] = m["end"]
-    return archived_records(), history, schedules
+    return attach_video(archived_records(), load_video()), history, schedules
+
+
+def load_video(directory=VIDEO_DIR):
+    """Own replay measurements: {(date, venue, race): {metric: {boat: seconds}}}. Only VIDEO_VENUES."""
+    video = defaultdict(lambda: defaultdict(dict))
+    for path in sorted(Path(directory).glob("*.json")):
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8")).get("rows") or []
+        except (ValueError, AttributeError):
+            continue
+        for r in rows:
+            if (isinstance(r, dict) and r.get("source") == "video" and r.get("venue") in VIDEO_VENUES
+                    and r.get("metric") in VIDEO_METRICS):
+                video[r["date"], r["venue"], int(r["race"])][r["metric"]][int(r["boat"])] = r["seconds"]
+    return video
+
+
+def attach_video(records, video):
+    for key, measured in video.items():
+        if key in records:
+            records[key] = {**records[key], "video": {k: dict(v) for k, v in measured.items()}}
+    return records
 
 
 def load_rider_profiles():
