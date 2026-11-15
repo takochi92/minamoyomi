@@ -170,6 +170,18 @@ def test_line_correction_brings_times_to_the_common_line():
     assert recs[0]["seconds_raw"] == 3.0
 
 
+def test_per_race_line_fit_keeps_only_what_the_line_does_not_explain():
+    recs = [{"seconds": 3.0 * (1 + .003 * x), "line_px": x, "boat": b, "reasons": []}
+            for b, x in enumerate([-20.0, -5.0, 0.0, 10.0, 15.0], 1)]
+    recs[2]["seconds"] *= 1.01          # boat 3 is 1 % slower than its line says
+    bm.line_correct(recs, "per_race")
+    t = [r["seconds"] for r in recs]
+    assert max(t) == t[2] and max(t[:2] + t[3:]) - min(t[:2] + t[3:]) < .015 < t[2] - max(t[:2] + t[3:])
+    few = [{"seconds": 3.0, "line_px": 0.0, "boat": 1, "reasons": []}]
+    bm.line_correct(few, "per_race")
+    assert few[0]["reasons"] == ["line_fit_short"] and few[0]["seconds"] == 3.0
+
+
 def test_a_colour_seen_on_several_passes_anchors_nothing():
     recs = bm.assign_by_colour(passes([None, None, 344, 213, 218, 55, 216]), [1, 2, 3, 4, 5, 6], COLOURS)
     boats = [r.get("boat") for r in recs if r.get("boat")]

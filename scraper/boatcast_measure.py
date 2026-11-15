@@ -603,9 +603,29 @@ def assign_by_colour(records, boats, colours):
     return records
 
 
+LINE_FIT_MIN_BOATS = 4
+
+
 def line_correct(records, slope):
     """Side-on camera: a boat nearer the camera crosses the image faster. Bring every time to the
-    common line (offset 0) with the venue's slope (seconds per pixel of offset), estimated inside races."""
+    common line with the venue's slope (seconds per pixel of offset, a number), or with
+    slope "per_race": fit log(time) on the line inside this race's boats and keep only what the
+    line does not explain (the line effect, real or not, is removed exactly; needs 4 boats)."""
+    if slope == "per_race":
+        use = [r for r in records if "seconds" in r and r.get("line_px") is not None
+               and "boat" in r and not r["reasons"]]
+        if len(use) < LINE_FIT_MIN_BOATS:
+            for r in use:
+                r["reasons"].append("line_fit_short")
+            return records
+        x = np.array([r["line_px"] for r in use])
+        y = np.log([r["seconds"] for r in use])
+        c = float(np.polyfit(x, y, 1)[0])
+        for r in use:
+            r["seconds_raw"] = r["seconds"]
+            r["seconds"] = round(float(np.exp(np.log(r["seconds"]) - c * (r["line_px"] - x.mean()))), 4)
+            r["line_fit"] = round(c, 6)
+        return records
     for r in records:
         if "seconds" in r and r.get("line_px") is not None:
             r["seconds_raw"] = r["seconds"]

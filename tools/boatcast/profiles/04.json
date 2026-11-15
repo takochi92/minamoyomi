@@ -2812,8 +2812,8 @@
    },
    "minDuration": 8,
    "feature": "front",
-   "lineSlope": 0.0127,
-   "lineSlopeNote": "20261114 平和島 7レース37艇のレース内回帰（秒/px）。手前を走るほど速く横切る分を戻す",
+   "lineSlope": "per_race",
+   "lineSlopeNote": "レースごとに log(時間) を引き波の線で回帰し、線で説明できない分だけ残す（4艇以上）。平和島 9日 244艇で 公式直線と +0.16・展示と +0.13（固定の傾き 0.0127 は +0.07）",
    "adopted": false,
    "channels": 1,
    "fine": {
