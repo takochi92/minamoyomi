@@ -48,7 +48,14 @@ async function stripe(path: string, values?: Record<string, string>, idempotency
     method: values ? 'POST' : 'GET', headers, body: values && new URLSearchParams(values),
     signal: AbortSignal.timeout(12000), redirect: 'error',
   });
-  if (!r.ok) throw Error('Billing unavailable');
+  if (!r.ok) {
+    // Stripe が断った理由（コード・項目・説明）。キーや顧客の情報は入らない。
+    const problem = (await r.json().catch(() => null))?.error;
+    const error = Error('Billing unavailable') as Error & { detail?: string };
+    error.detail = [r.status, problem?.type, problem?.code, problem?.param, problem?.message]
+      .filter(x => x !== undefined && x !== null && x !== '').join(' | ').slice(0, 400);
+    throw error;
+  }
   return r.json();
 }
 
@@ -199,8 +206,10 @@ Deno.serve(async req => {
     return reply({ error: 'unavailable' }, 409);
   } catch (error) {
     // Only the message: never the request, headers or keys.
-    console.error('premium', error instanceof Error ? error.message : 'unknown error');
+    const detail = (error as { detail?: string })?.detail;
+    console.error('premium', error instanceof Error ? error.message : 'unknown error', detail || '');
     if (error instanceof SyntaxError) return reply({ error: 'invalid JSON' }, 400);
-    return reply({ error: 'temporarily unavailable' }, 503);
+    // テスト決済の間だけ、Stripe が断った理由を画面に返す（テスト用アカウントしかここまで来ない）
+    return reply(billing === 'test' && detail ? { error: 'temporarily unavailable', detail } : { error: 'temporarily unavailable' }, 503);
   }
 });

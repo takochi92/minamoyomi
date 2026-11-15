@@ -262,7 +262,12 @@
     if (!client || !user) throw new Error('ログインが必要です。');
     var epoch = generation;
     var result = await client.functions.invoke('premium', {body:Object.assign({}, fields, {action:action})});
-    if (epoch !== generation || !user || result.error) throw new Error('プレミアムに接続できませんでした。');
+    if (epoch !== generation || !user || result.error) {
+      var failure = new Error('プレミアムに接続できませんでした。');
+      // 断られた理由（テスト決済のときだけサーバーが返す）
+      try { var info = await result.error.context.json(); failure.code = info.error; failure.detail = info.detail; } catch (_) {}
+      throw failure;
+    }
     return result.data;
   }
   // 受付中かどうか。ログイン前でも聞ける
