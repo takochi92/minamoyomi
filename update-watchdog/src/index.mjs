@@ -5,6 +5,10 @@ const STALE_MS = 5 * 60_000;
 // seconds of registration skew, otherwise every five-minute boundary is missed
 // and the one-minute poll silently turns the cadence into six minutes.
 const BACKOFF_MS = 5 * 60_000 - 5_000;
+// A run that GitHub accepted but never started (no job assigned) can stay "queued" for hours
+// (2026-11-16 #10473: queued from 12:41 with zero jobs, while later runs ran normally).
+// Waiting runs older than this no longer count as active, so one ghost cannot stop the cadence.
+const GHOST_MS = 10 * 60_000;
 
 export function operatingTime(now) {
   const hour = new Date(now.getTime() + 9 * 3600_000).getUTCHours();
@@ -47,7 +51,11 @@ export async function tick(env, now = new Date(), request = fetch) {
   const result = await api(WORKFLOW + '/runs?branch=main&per_page=20');
   if (!Array.isArray(result.workflow_runs)) throw new Error('invalid-run-list');
   const runs = result.workflow_runs;
-  const active = runs.filter(run => run.status !== 'completed');
+  const waiting = run => run.status !== 'completed' && run.status !== 'in_progress';
+  const ghost = run => waiting(run) && now.getTime() - Date.parse(run.created_at) >= GHOST_MS;
+  const ghosts = runs.filter(ghost).length;
+  if (ghosts) health.ghosts = ghosts;
+  const active = runs.filter(run => run.status !== 'completed' && !ghost(run));
   if (active.length) {
     const oldest = Math.min(...active.map(run => Date.parse(run.run_started_at || run.created_at)).filter(Number.isFinite));
     return {state:now.getTime() - oldest > 20 * 60_000 ? 'update-stuck' : 'update-running', ...health};

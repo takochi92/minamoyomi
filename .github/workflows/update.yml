@@ -96,6 +96,8 @@ concurrency:
 
 permissions:
   contents: write
+  # 次の更新の起動（tools/update_chain.py）と、始まらないまま残った実行の取り消しに使う
+  actions: write
 
 jobs:
   update:
@@ -107,6 +109,8 @@ jobs:
       HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
       SITEGEN_SPARSE: '1'
     steps:
+      - name: 開始時刻を記録（次の更新は、ここから5分あける）
+        run: echo "UPDATE_STARTED=$(date +%s)" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           sparse-checkout-cone-mode: false
@@ -154,3 +158,11 @@ jobs:
         with:
           path: .cache/sitegen
           key: public-site-v1-${{ github.run_id }}
+      # 中の監視：GitHub のスケジュールが抜けても5分おきが続くよう、終わるたびに次を起動する。
+      # 外の監視（Cloudflare の update-watchdog）や直前の起動があれば重ねない。失敗した回でも続ける
+      - name: 次の更新を起動
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+        timeout-minutes: 7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/update_chain.py
