@@ -127,3 +127,14 @@ def test_rest_state_is_sure_only_without_a_long_enough_break():
     assert two['4003']['state'] == 'unserved_sure' and two['4003']['need'] == 90, 'F2 needs 90 days in one block'
     short = rest_states(races[4:8], '20260815', '20260501')
     assert short['4002']['state'] == 'unserved_sure' and short['4002']['need'] == 30
+
+
+def test_f_count_includes_results_before_the_next_programme():
+    """Fのあと、まだ出走表に出ていない選手も一覧に出す。F2は結果の本数で数える。"""
+    report={'period':period('20261116'),'f_period':period('20261031'),'f_preparing':False,'f_players':[],
+            'players':[{'toban':'5038','name':'金田','f':[{'date':'20261105'},{'date':'20261107'}]},
+                       {'toban':'4001','name':'前期','f':[]}]}
+    data=build_f_report(report,{'5038':{'date':'20261106','jcd':'03','rno':1,'f':1}},{},'20261116',{})
+    row=next(r for r in data['rows'] if r['toban']=='5038')
+    assert row['f']==2 and row['last_f']=='20261107'
+    assert not any(r['toban']=='4001' for r in data['rows'])

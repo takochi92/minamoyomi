@@ -61,7 +61,11 @@ def build_f_report(report, snapshots, leaves, today, racers):
     for r in leaves.get('records',[]):
         if official_url(r.get('source')):
             rests.setdefault(r['toban'],[]).append(r)
-    ids=set(histories)|set(snapshots)|set(rests)
+    # 今期のレース結果のF。出走表に出る前の選手も、ここで拾う
+    results={str(p['toban']):[x for x in p.get('f') or [] if current['from']<=x.get('date','')<=today]
+             for p in report.get('players',[]) if p.get('toban') and isinstance(p.get('f'),list)}
+    results={t:v for t,v in results.items() if v}
+    ids=set(histories)|set(snapshots)|set(rests)|set(results)
     rows=[]
     rollover_ready=not report.get('f_preparing',True) and report.get('period')==current
     for t in sorted(ids):
@@ -73,6 +77,9 @@ def build_f_report(report, snapshots, leaves, today, racers):
         f=snapshot.get('f') if snapshot else None
         if type(f) is not int or not 0<=f<=9:
             f=None;snapshot=None
+        counted=len(results.get(t,[]))
+        if counted and (f is None or counted>f):
+            f=counted   # 結果のFのほうが新しい（出走表の取りこみ前）
         rest=rests.get(t,[])
         if not history and not rest and not f:
             continue
@@ -89,7 +96,7 @@ def build_f_report(report, snapshots, leaves, today, racers):
         row={'toban':t,'name':info.get('name') or history.get('name') or (rest[0].get('name') if rest else t),
              'kana':info.get('kana',''),'branch':info.get('branch') or history.get('branch',''),
              'f':f,'programme':snapshot,'history_count':len(history.get('events',[])),
-             'last_f':history.get('last_f',''),'rests':rest,'rollover':hidden,'leave_state':state,
+             'last_f':max([x['date'] for x in results.get(t,[])]+[history.get('last_f','')]),'rests':rest,'rollover':hidden,'leave_state':state,
              'rest':{k:inferred.get(k) for k in ('need','rest_from','back') if inferred.get(k)},
              'prev_f':len(previous_events),'prev_last':max((x.get('date','') for x in previous_events),default='')}
         rows.append(row)
