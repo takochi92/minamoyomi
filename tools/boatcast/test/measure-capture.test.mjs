@@ -36,3 +36,19 @@ test('findShots: どれにも似ていなければ何も返さない', () => {
   const r = findShots(flat, flat.map((_, i) => i / 10), p);
   assert.deepEqual(Object.keys(r.shots), []);
 });
+
+test('findShots: しきい値に届かなくても、window の中なら低いしきい値で場面を取る（window の無い場面は取らない）', () => {
+  const { profile: p, a } = profile();
+  // a に少しだけ似たコマ（相関 0.4 未満・0.3 以上）
+  const weak = a.map((x, i) => (i % 3 === 0 ? 255 - x : x));
+  const noise = Array.from({ length: 12 }, (_, i) => (i % 2) * 255);
+  const frames = [], times = [];
+  const push = (fr, n) => { for (let i = 0; i < n; i++) { frames.push(fr); times.push(times.length / 10); } };
+  push(noise, 20); push(weak, 40); push(noise, 20);
+  assert.deepEqual(Object.keys(findShots(frames, times, p).shots), []);
+  p.shots.turn1.window = [1, 7]; p.shots.turn1.windowMinCorr = 0.1;
+  const r = findShots(frames, times, p);
+  assert.equal(r.shots.turn1.byWindow, true);
+  assert.equal(r.shots.turn1.from, 2.0);
+  assert.equal(r.shots.straight, undefined);
+});

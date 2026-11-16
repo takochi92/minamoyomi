@@ -76,13 +76,15 @@ export function findShots(gray, times, profile) {
     const [r0, r1] = shot.scanRows || [profile.scan.maskTopRows, h - 1];
     return [name, Array.from({ length: n }, (_, i) => Math.floor(i / w) >= r0 && Math.floor(i / w) <= r1)];
   }));
+  const sigs = Object.fromEntries(Object.entries(profile.shots).map(([name, shot]) => [name, shot.signature.flat()]));
   const labels = gray.map((fr) => {
-    let best = null, bc = -1;
-    for (const [name, shot] of Object.entries(profile.shots)) {
-      const c = ncc(fr, shot.signature.flat(), masks[name]);
+    let best = null, bc = -1; const all = {};
+    for (const name of Object.keys(profile.shots)) {
+      const c = ncc(fr, sigs[name], masks[name]);
+      all[name] = c;
       if (c > bc) { bc = c; best = name; }
     }
-    return { label: bc >= profile.scan.minCorr ? best : null, corr: bc };
+    return { label: bc >= profile.scan.minCorr ? best : null, corr: bc, all };
   });
   const runs = [];
   for (let f = 0; f < labels.length; f++) {
@@ -97,6 +99,25 @@ export function findShots(gray, times, profile) {
   for (const s of segments) {
     if (s.to - s.from < (profile.shots[s.label].minDuration ?? 5)) continue;
     if (!out[s.label] || s.to - s.from > out[s.label].to - out[s.label].from) out[s.label] = s;
+  }
+  // 見つからなかった場面は、profile の window（いつも映る時刻の範囲）の中だけで、低いしきい値（windowMinCorr）でもう一度さがす。
+  // 日や天気で見た目が変わる場（浜名湖など）向け。window の無い場面には効かない
+  for (const [name, shot] of Object.entries(profile.shots)) {
+    if (out[name] || !shot.window) continue;
+    const [w0, w1] = shot.window; const floor = shot.windowMinCorr ?? 0.3;
+    let cur = null, best = null;
+    for (let f = 0; f < labels.length; f++) {
+      const t = times[f];
+      if (t < w0 || t > w1) continue;
+      const c = labels[f].all[name];
+      if (c >= floor && cur && t - cur.to <= (profile.scan.bridge ?? 1.5)) { cur.to = t; cur.n++; cur.sum += c; }
+      else if (c >= floor) { cur = { from: t, to: t, n: 1, sum: c }; }
+      else continue;
+      if (!best || cur.to - cur.from > best.to - best.from) best = cur;
+    }
+    if (best && best.to - best.from >= (shot.minDuration ?? 5)) {
+      out[name] = { label: name, from: best.from, to: best.to, corr: Math.round((best.sum / best.n) * 1000) / 1000, byWindow: true };
+    }
   }
   return { shots: out, segments };
 }
