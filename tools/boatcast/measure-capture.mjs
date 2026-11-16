@@ -76,11 +76,12 @@ export function findShots(gray, times, profile) {
     const [r0, r1] = shot.scanRows || [profile.scan.maskTopRows, h - 1];
     return [name, Array.from({ length: n }, (_, i) => Math.floor(i / w) >= r0 && Math.floor(i / w) <= r1)];
   }));
-  const sigs = Object.fromEntries(Object.entries(profile.shots).map(([name, shot]) => [name, shot.signature.flat()]));
+  // altSignatures: the same camera looks different by daylight and under the night lights (nighter venues); the best one counts
+  const sigs = Object.fromEntries(Object.entries(profile.shots).map(([name, shot]) => [name, [shot.signature, ...(shot.altSignatures || [])].map((x) => x.flat())]));
   const labels = gray.map((fr) => {
     let best = null, bc = -1; const all = {};
     for (const name of Object.keys(profile.shots)) {
-      const c = ncc(fr, sigs[name], masks[name]);
+      const c = Math.max(...sigs[name].map((sg) => ncc(fr, sg, masks[name])));
       all[name] = c;
       if (c > bc) { bc = c; best = name; }
     }

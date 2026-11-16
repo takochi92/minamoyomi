@@ -52,3 +52,14 @@ test('findShots: しきい値に届かなくても、window の中なら低い�
   assert.equal(r.shots.turn1.from, 2.0);
   assert.equal(r.shots.straight, undefined);
 });
+
+test('findShots: altSignatures（昼と夜の見た目）のどれかに似ていれば同じ場面とみなす', () => {
+  const { profile: p, a, b } = profile();
+  delete p.shots.straight;
+  const frames = [], times = [];
+  const push = (fr, n) => { for (let i = 0; i < n; i++) { frames.push(fr); times.push(times.length / 10); } };
+  push(b, 30);
+  assert.deepEqual(Object.keys(findShots(frames, times, p).shots), []);
+  p.shots.turn1.altSignatures = [b];
+  assert.equal(findShots(frames, times, p).shots.turn1.from, 0);
+});

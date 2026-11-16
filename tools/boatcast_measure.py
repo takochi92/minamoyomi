@@ -64,6 +64,21 @@ def entries(race):
     return out
 
 
+def drop_non_boats(records, cfg):
+    """Traces that cannot be a boat, dropped before counting boats (only when the profile asks):
+    dropUncovered — a turn seen from the side leaves a second trace (the wake on the way out) that never spans the gates;
+    minSeconds — a scene cut lights the whole band at once and reads as a "curve" crossing it in ~0 s."""
+    keep = list(records)
+    if cfg.get("dropUncovered"):
+        keep = [r for r in keep if "gates_not_covered" not in r["reasons"] and r.get("cover", 0) >= .25]
+    if cfg.get("minSeconds"):
+        keep = [r for r in keep if r.get("seconds") is None or r["seconds"] >= cfg["minSeconds"]]
+    if len(keep) != len(records):
+        for i, r in enumerate(keep):
+            r["order"] = i + 1
+    return keep
+
+
 def analyze_race(capture_dir, prof, date, venue, race):
     manifest = json.loads((capture_dir / "manifest.json").read_text(encoding="utf-8"))
     card = entries(race_file(date, venue, race))
@@ -78,11 +93,7 @@ def analyze_race(capture_dir, prof, date, venue, race):
             report["shots"][name] = {"missing": True}
             continue
         records, info = bm.measure_shot(capture_dir, name, cfg)
-        if cfg.get("dropUncovered"):
-            # a turn seen from the side leaves a second trace (the wake on the way out) that never spans the gates
-            records = [r for r in records if "gates_not_covered" not in r["reasons"] and r.get("cover", 0) >= .25]
-            for i, r in enumerate(records):
-                r["order"] = i + 1
+        records = drop_non_boats(records, cfg)
         shot_reasons = []
         if info["skipped"] and info["skipped"] > MAX_SKIPPED_SHARE * info["frames"]:
             shot_reasons.append("frames_skipped")

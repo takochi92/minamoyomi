@@ -238,3 +238,13 @@ def test_assign_by_reference_lines_up_a_shot_with_missing_boats():
     few = [{"t_a": 100.0, "reasons": []}, {"t_a": 140.0, "reasons": []}]
     bm.assign_by_reference(few, reference, (29, 31))
     assert all("boat" not in r and "no_reference_match" in r["reasons"] for r in few)
+
+
+def test_drop_non_boats_removes_a_scene_cut_trace_only_when_the_profile_asks():
+    from tools.boatcast_measure import drop_non_boats
+    recs = [{"order": i + 1, "seconds": 4.3, "reasons": [], "cover": .9} for i in range(6)]
+    recs.append({"order": 7, "seconds": 0.01, "reasons": [], "cover": .5})
+    assert len(drop_non_boats([dict(r) for r in recs], {})) == 7
+    kept = drop_non_boats([dict(r) for r in recs], {"minSeconds": 1.5})
+    assert [r["order"] for r in kept] == [1, 2, 3, 4, 5, 6]
+    assert all(r["seconds"] > 1 for r in kept)

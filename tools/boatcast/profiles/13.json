@@ -1414,7 +1414,8 @@
     193,
     255
    ],
-   "windowMinCorr": 0.4
+   "windowMinCorr": 0.4,
+   "minSeconds": 1.5
   }
  }
 }
