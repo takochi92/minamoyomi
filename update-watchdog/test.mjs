@@ -31,7 +31,11 @@ for(const at of ['bad','2026-10-27T18:00']) {
   s=await scenario({at});await assert.rejects(s.run(),/invalid-freshness/);assert.equal(s.calls.length,1);
 }
 s=await scenario({fail:true});await assert.rejects(s.run(),/freshness-status-503/);assert.equal(s.calls.length,1);
-s=await scenario({runs:[{status:'queued',created_at:'2026-10-27T05:00:00Z'}]});assert.equal((await s.run()).state,'update-stuck');
+// A run left queued for over ten minutes without starting is a ghost: keep the cadence going.
+s=await scenario({runs:[{status:'queued',created_at:'2026-10-27T05:00:00Z'},{status:'completed',created_at:'2026-10-27T06:10:00Z'}]});
+let r=await s.run();assert.equal(r.state,'dispatched');assert.equal(r.ghosts,1);
+s=await scenario({runs:[{status:'queued',created_at:'2026-10-27T06:12:00Z'}]});assert.equal((await s.run()).state,'update-running','a fresh queued run is still waiting for a runner');
+s=await scenario({runs:[{status:'in_progress',created_at:'2026-10-27T05:00:00Z',run_started_at:'2026-10-27T05:00:00Z'}]});assert.equal((await s.run()).state,'update-stuck','a long running job is reported, not doubled');
 s=await scenario({at:'2026-10-27T15:14'});assert.equal((await s.run()).state,'dispatched');
 s=await scenario({at:'2026-10-27T15:16'});assert.equal((await s.run()).state,'fresh');
 s=await scenario({at:'2026-10-27T15:16',runs:[{status:'completed',created_at:'2026-10-27T06:15:00Z'}]});
