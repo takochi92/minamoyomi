@@ -81,10 +81,6 @@ def buffs(parts: dict) -> list[tuple[str, int]]:
             out.append((k, -1, v))
     out.sort(key=lambda x: -x[2])
     return [(k, lv) for k, lv, _ in out]
-# 攻めた艇が1着のときの2着のコース（過去3年）と、まくりで勝ったときの2着
-SECOND_ALL = {3: {1: .40, 2: .20, 4: .20, 5: .14, 6: .06}, 4: {1: .31, 5: .23, 2: .19, 3: .16, 6: .10}}
-SECOND_MK = {3: {4: .28, 1: .23, 2: .20, 5: .20, 6: .09}, 4: {5: .34, 1: .23, 2: .18, 6: .15, 3: .10}}
-FOLLOW_NOTE = {3: "3がまくると4が連れて2着に来やすい", 4: "2・3着は、5・6コースを中心に選手の力と展示で選んだ目", 5: "5がまくると叩かれた4は残りにくく、6と2が来やすい"}
 MIN_STARTS = 20
 OP_MIN = 15          # 実力補正スコアを出す最低出走数（そのコースで）
 OP_MARK = 1.6        # 狙い目とみなすスコア
@@ -427,6 +423,20 @@ class Site:
     def buff_chips(bf):
         return "".join(f'<span class="buff {"up" if lv > 0 else "dn"}">{"▲▲" if lv == 2 else ("▲" if lv == 1 else "▼")}{e(k)}</span>' for k, lv in bf)
 
+    # AIの見立て：要因5つを、全艇で同じ位置に並べて点灯させる（コース／場／スタート／展示／モーター）
+    SLOTS = (("得意コース", "コース"), ("得意場", "場"), ("スタート", "スタート"), ("展示", "展示"), ("モーター", "モーター"))
+
+    @classmethod
+    def buff_slots(cls, bf):
+        lv = dict(bf)
+        out = []
+        for key, label in cls.SLOTS:
+            v = lv.get(key, 0)
+            state, mark = {2: ("up2", "▲▲"), 1: ("up", "▲"), -1: ("dn", "▼")}.get(v, ("off", ""))
+            name = f'{mark}{key}' if mark else f'{key}（該当なし）'
+            out.append(f'<span class="slot slot-{state}" aria-label="{e(name)}" title="{e(name)}">{e(label)}</span>')
+        return '<div class="ai-slots">' + "".join(out) + '</div>'
+
     def ai_block(self, p, names):
         """AIの見立て：1着・2着以内・3着以内の確率を棒で。各艇を押し上げている要素（バフ）を下に"""
         boats = sorted(p.get("boats") or [], key=lambda b: b["frame"])
@@ -440,10 +450,10 @@ class Site:
                 full.append((b, bf))
             tr = buff_tier(bf)
             tag = {"gold": '<span class="tier-tag">金バフ</span>', "silver": '<span class="tier-tag">銀バフ</span>'}.get(tr, "")
-            rows.append(f'<div class="ai-r{" tier-" + tr if tr else ""}"><div class="ai-n">{bt(b["frame"])}<span>{e(names.get(b["frame"], "").split(" ")[0])}</span></div>'
+            rows.append(f'<div class="ai-r{" tier-" + tr if tr else ""}"><div class="ai-n">{bt(b["frame"])}<span>{e(names.get(b["frame"], "").split(" ")[0])}</span>{tag}</div>'
                         f'<div class="ai-t" title="1着{w1}%・2着以内{w2}%・3着以内{w3}%"><i class="ai3" style="width:{w3}%"></i><i class="ai2" style="width:{w2}%"></i><i class="ai1" style="width:{w1}%"></i></div>'
                         f'<div class="ai-v num"><b>{w1}%</b></div>'
-                        + (f'<div class="ai-b">{tag}{self.buff_chips(bf)}</div>' if bf else "") + "</div>")
+                        + f'<div class="ai-b">{self.buff_slots(bf)}</div>' + "</div>")
         top = ""
         for b, bf in full:
             top += (f'<div class="buffall tier-gold"><p style="margin:0"><b class="tl">金バフ・全部のせ</b><br>{bt(b["frame"])} {e(names.get(b["frame"], ""))}（{b["course"]}コース）</p>'
@@ -451,8 +461,8 @@ class Site:
         return (f'<section class="panel" style="display:grid;gap:10px"><h2>AIの見立て <small>{e(p.get("stage", ""))}予想</small></h2>{top}'
                 f'<div class="ai-lg"><span><i class="ai1"></i>1着</span><span><i class="ai2"></i>2着以内</span><span><i class="ai3"></i>3着以内</span></div>'
                 f'<div class="ai-rows">{"".join(rows)}</div>'
-                '<p class="sub">棒の濃い部分が1着、だんだんうすくなって2着以内・3着以内の確率（右の数字は1着。棒をタップすると全部の数字）。▲は、AIがその艇を強く見ている理由（展示・モーター・得意コース・得意場・スタート）。'
-                '▲▲はとくに強く、▼は弱み。<b>金バフ</b>は▲が4つ以上（全部のせ）、<b>銀バフ</b>は▲モーターに▲展示か▲得意コースが重なったとき。'
+                '<p class="sub">棒の濃い部分が1着、だんだんうすくなって2着以内・3着以内の確率（右の数字は1着。棒をタップすると全部の数字）。下の5つの枠は、AIがその艇を見ている理由（得意コース・得意場・スタート・展示・モーター）。'
+                '緑の枠が▲（強み）、緑でぬったものが▲▲（とくに強い）、灰色の枠が▼（弱み）、うすい文字は該当なし。<b>金バフ</b>は▲が4つ以上（全部のせ）、<b>銀バフ</b>は▲モーターに▲展示か▲得意コースが重なったとき。'
                 '過去1年（確定オッズのある約1.1万レース）では、▲なしの艇の1着が12%に対し、金バフは44%で、オッズの見込み（39%）の1.13倍。期間を前半・後半に分けてもどちらも1.13倍でした。'
                 '銀バフは1着29%でオッズの見込みの1.08倍ですが、後半は1.04倍と小さく、まだ検証中です。控除率があるので、これだけで儲かるわけではありません。</p></section>')
 
@@ -543,7 +553,6 @@ class Site:
             vals = sorted(v for v in col.values() if v)
             rank[it] = {f: (vals.index(v) + 1 if v else None) for f, v in col.items()}
         names = {str(b["frame"]): b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
-        dmeans = self.day_means(race.get("date", ""), race.get("jcd", "")) if race.get("date") and race.get("jcd") else {}
         head = "".join(f'<th class="r">{e("展示T" if it == "展示タイム" else it)}</th>' for it in items)
         rows = []
         for f in map(str, range(1, 7)):
@@ -551,29 +560,22 @@ class Site:
             for it in items:
                 v, r = cols[it].get(f), rank[it].get(f)
                 cls = "best" if r == 1 else ("second" if r == 2 else ("sub" if r and r >= 5 else ""))
-                dm = dmeans.get(it)
-                dd = ""
-                if v and dm:
-                    diff = v - dm[0]
-                    dd = f'<small class="{"dgood" if diff <= -0.05 else ("dbad" if diff >= 0.05 else "sub")}">{diff:+.2f}</small>'
-                cells.append(f'<td class="r num {cls}" data-label="{e(it)}"><span class="ex-value">{f"{v:.2f}" if v else "-"}</span><small class="sub ex-rank">{f" {r}位" if r else ""}</small>{dd}</td>')
-            rows.append(f'<tr><td><span class="ex-boat">{bt(int(f))}<span>{e(names.get(f, ""))}</span></span></td>{"".join(cells)}</tr>')
+                cells.append(f'<td class="r num {cls}" data-label="{e(it)}"><span class="ex-value">{f"{v:.2f}" if v else "-"}</span><small class="sub ex-rank">{f" {r}位" if r else ""}</small></td>')
+            rows.append(f'<tr><td><span class="ex-boat">{bt(int(f))}<span>{e(re.sub(r"[ 　]", "", names.get(f, "")))}</span></span></td>{"".join(cells)}</tr>')
         tops = []
         for it in items:
             best = [f for f, r in rank[it].items() if r == 1]
             if best:
                 tops.append(f"{it}1位 {'・'.join(best)}号艇")
-        note = "展示タイムは公式、一周・まわり足・直線などは各レース場が独自に計測したオリジナル展示データ（BOATCAST掲載）。数字が小さいほど速い。" if ot else "展示タイムは公式。数字が小さいほど速い。"
+        note = ("展示タイムは公式、一周・まわり足・直線などは各レース場が独自に計測したオリジナル展示データ（BOATCAST掲載）。数字が小さいほど速い。" if ot else "展示タイムは公式。数字が小さいほど速い。")
+        note += "各項目の1位は金、2位はティールの色。"
         if late:
             note += "詳細展示は締切後に補完した公式掲載値です（締切前の予想には未使用）。"
-        if dmeans:
-            note += ("緑の±はこの場の今日ここまでの平均との差（-0.05以上速いと緑）。過去3年・約98万走では、展示タイムが場の当日平均より0.10秒以上速い艇は、"
-                     "1コース1着61%（平均並み54%）・4コース19%（10%）・6コース5.8%（1.7%）。ただしオッズもほぼ同じだけ見ていて、6コースは逆に売れすぎ（実際5.2%・オッズ7.3%）。")
         return (f'<section class="panel ex-compact ex-primary"><h2>展示タイム・足の比較</h2>'
                 + ('' if ot else '<p class="ex-data-status">一周・まわり足・直線などの詳細展示は未取得です。現在は展示タイムのみ表示しています。</p>')
                 +
                 f'<div class="tbl-wrap"><table class="t-ori{" ex-many" if len(items) > 4 else ""}{" ex-dense" if len(items) > 5 else ""}"><thead><tr><th>艇</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                f'<details class="ex-explain"><summary>順位・平均との差の見方</summary><p class="sub">{e("・".join(tops))}</p><p class="sub">{note}</p></details></section>')
+                f'<details class="ex-explain"><summary>順位の見方</summary><p class="sub">{e("・".join(tops))}</p><p class="sub">{note}</p></details></section>')
 
     def worry_block(self, p):
         w = p.get("in_worry")
@@ -619,19 +621,6 @@ class Site:
         return f"""<section class="panel"><h2>F持ちのスタート <small>フライング後、同じコースでのスタートの変化</small></h2>
 <ul class="comments">{"".join(li)}</ul>
 <p class="sub">過去2年の検証：F後のスタート順が平均4番目以降の選手が2・3コースにいると、すぐ外の艇の1着率が同じ級別の平均より1〜2ポイント高くなっていました。</p></section>"""
-
-    @staticmethod
-    def follow_line(t):
-        """4コースの攻め方（過去の4コース勝ちの決まり手）から、5・6コースの連れ込み"""
-        sty = t.get("style")
-        if not sty or sty == "両方":
-            return ""
-        mk, ms = t.get("style_n", [0, 0])
-        if sty == "まくり":
-            return (f'<br>{t["att_name"]}は4コースで勝つときの多くがまくり（まくり{mk}回・まくり差し{ms}回）。まくり切ると外の5・6コースが連れて来やすく、'
-                    f'<span class="sub">この形で4がまくり型だと「4が1着で5も3着内」が12.5%（全レース平均4.6%）、6の3着内も26.5%（平均22.0%）。4-5・4-6の筋に注意。</span>')
-        return (f'<br>{t["att_name"]}は4コースで勝つときの多くがまくり差し（まくり{mk}回・まくり差し{ms}回）。内に切り込むため外の5・6は残りにくく、'
-                f'<span class="sub">この形でまくり差し型だと6の3着内は19.3%（平均22.0%）。</span>')
 
     # ------------------------------------------------------------ スタート展示（スリット図）
     BOAT = {1: ("#F4F6F8", "#1B1B1B"), 2: ("#23272B", "#FFFFFF"), 3: ("#E0362C", "#FFFFFF"),
@@ -966,71 +955,6 @@ class Site:
 <div class="bets">{cells}</div>{hit}{pre}
 <p class="sub">5つの条件がすべてそろったレースだけを出しています（1日2レース前後）。過去約9,000レースの検証では、条件を重ねるほど回収率が上がり（2つ65%→3つ84%→4つ92%→5つ97%）、的中率は約20%でした。100%を約束するものではありません。成績は実績ページで集計します。</p></section>"""
 
-    @staticmethod
-    def second_line(c):
-        if c != 4:
-            return ""
-        return ('<span class="sub">スリットの形で出目が変わります（過去3年・実際のスタート）。'
-                '<b>4が3を叩いた</b>（4が3より0.05以上早く、内より早い・2.4万レース）：4の1着33%、4が勝つと2着は5が33%・1が28%で3は10%。'
-                '4-156-156が15.1%、1-4-256が7.8%、裏目の5-146-146が6.0%。'
-                '<b>3が先に出た</b>（1.1万レース）：4の1着は8%しかなく、4が勝っても2着は3が36%（3が内を叩いて、4がまくり差しで続く4-3の形）。'
-                '事前に「どちらの形になるか」は、平均スタート順と展示STを使っても当たるのは3回に1回ほどです。</span>')
-
-    def tenkai_block(self, p):
-        tk = p.get("tenkai") or []
-        if not tk:
-            return ""
-        li = []
-        for t in tk:
-            if t.get("type") == "motor":
-                extra = f"前節は{t['last_n']}走でまくり・まくり差しの1着{t['last_makuri']}回。" if t.get("last_makuri") else ""
-                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}の<b>{t["motor_no"]}号機</b>：{"、".join(e(x) for x in t["reasons"])}。'
-                          f'<span class="sub">このモーターの{(str(int(t["since"][4:6])) + "/" + str(int(t["since"][6:])) + "の入れ替えから") if t.get("since") else "直近"}{t["n"]}走で1着{t["win"]}回（うちまくり系{t["makuri"]}回）。{extra}モーターの数字は乗り手の実力も混ざるので、参考程度に。</span></li>')
-                continue
-            if t.get("type") == "resist":
-                ws = "・".join(f"{c}コース{pct(v)}" for c, v in t["wins"].items())
-                if t["style"] == "飛び付き":
-                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は、<b>負けたとき着外が多い</b>（インで負けた{t["beaten"]}回のうち{t["out"]}回が4着以下）。'
-                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}との組合せは参考材料です。抵抗・飛び付き・共倒れの動きは未確認です。')
-                else:
-                    body = (f'インの{bt(t["in"])} {e(t["in_name"])}は<b>負けても2・3着に残った例が多い</b>（{t["beaten"] - t["out"]}/{t["beaten"]}回）。'
-                            f'{t["att_course"]}コースの{bt(t["att"])} {e(t["att_name"])}との組合せは参考材料です。抵抗しない意図や攻め方は断定できません。')
-                li.append(f'<li>{body}<span class="sub">過去2年、{t["att_course"]}コースがスタートの早い選手でこのタイプのイン（{t["n"]:,}レース）：インの1着{pct(t["in_win"])}・4着以下{pct(t["in_out"])}、1着は{ws}、配当の中央値{t["pay"]:,}円。</span></li>')
-                continue
-            if t.get("type") == "exgap":
-                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}（{t["course"]}コース）は展示タイムが内の{bt(t["inner"])} {e(t["inner_name"])}より<b>{t["gap"]:.2f}秒</b>速い。足で内を叩ける形で、<b>まくり</b>が決まりやすくなります。'
-                          f'<span class="sub">過去1年、{t["course"]}コースが内より0.10秒以上速いとき（{t["n"]}回）の1着は{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span></li>')
-                continue
-            if t.get("type") == "tilt":
-                over = "オッズではそれ以上に売れやすく、頭で買うなら妙味は薄め" if t["mkt"] > t["win"] else "オッズの評価とほぼ同じ"
-                li.append(f'<li>{bt(t["frame"])} {e(t["name"])}（{t["course"]}コース）はチルト<b>{t["tilt"]:+.1f}</b>の伸び型。スタート後の伸びで一気に攻める形があります。'
-                          f'<span class="sub">過去1年、{t["course"]}コースでチルト1.0以上（{t["n"]}回）の1着は{pct(t["win"])}（通常{pct(t["base_win"])}）、3着内は{pct(t["top3"])}（通常{pct(t["base_top3"])}）。{over}（オッズの見込み{pct(t["mkt"])}）。</span></li>')
-                continue
-            wall = f'{bt(t["wall"])} {e(t["wall_name"])}（{t["wall_course"]}コース）は最近のスタートが平均{t["wall_rank"]:.1f}番手' + ("、しかもF持ちでF後はさらに慎重" if t["wall_f"] else "")
-            wb_ = t.get("wall_beaten")
-            if wb_ and wb_[0] >= 15:
-                wall += f"。{t['wall_course']}コースのとき{t['att_course']}コースに勝たれた率は{wb_[1] / wb_[0] * 100:.0f}%（{wb_[0]}走・うちまくり{wb_[2]}回）"
-            att = f'{bt(t["att"])} {e(t["att_name"])}（{t["att_course"]}コース）は平均{t["att_rank"]:.1f}番手と早い'
-            li.append(f'<li>{wall}。{att}。<b>{t["att_course"]}コースのまくり展開</b>があります。'
-                      f'<span class="sub">過去2年この形（{t["n"]:,}レース）では{t["att_course"]}コースの1着が{pct(t["win"])}（通常{pct(t["base_win"])}）、まくりで勝ったのは{pct(t["makuri"])}（通常{pct(t["base_makuri"])}）。</span>'
-                      + self.follow_line(t) + self.second_line(t["att_course"]) + '</li>')
-        return f"""<section class="panel"><h2>展開メモ <small>スタートの早さ・チルトから見た展開</small></h2>
-<ul class="comments">{"".join(self.shorten(x) for x in li)}</ul></section>"""
-
-    @staticmethod
-    def shorten(li):
-        """小さい字の根拠データは「データを見る」に畳む（本文は太字の結論だけ）"""
-        import re as _re
-        subs = _re.findall(r'<span class="sub">.*?</span>', li, flags=_re.S)
-        if not subs:
-            return li
-        body = li
-        for x in subs:
-            body = body.replace(x, "")
-        body = body.replace("</li>", "")
-        det = "".join("<p>" + x[len('<span class="sub">'):-len("</span>")] + "</p>" for x in subs)
-        return f'{body}<details class="more"><summary>データを見る</summary>{det}</details></li>'
-
     def result_block(self, d, race, p, res, page):
         """レース結果（出走表のすぐ下）。締切後で結果待ちなら、その旨だけ出す。"""
         if not res:
@@ -1209,7 +1133,7 @@ class Site:
             mcell = (f'<a href="{page.u("venue/" + SLUG[jcd] + "-motor.html")}#m{b["motor_no"]}">{mot}<span class="sub">／{b["motor_no"]}号</span></a>'
                      if b.get("motor_no") is not None else mot)
             rows.append(f'<tr data-frame="{f}" data-toban="{e(b.get("toban", ""))}" data-name="{e(name)}" data-motor="{jcd}-{b.get("motor_no") if b.get("motor_no") is not None else ""}"><td>{bt(f)}</td><td class="race-person"><strong class="race-name">{nm}</strong><span class="race-meta sub"><span>{e(b.get("class", ""))}</span><span class="race-region">{e(b.get("branch", ""))}</span>{fl}</span></td>'
-                        f'<td class="r num" data-label="コース">{q.get("course", f)}</td><td class="r num" data-label="全国勝率">{b.get("nat_win") or "-"}</td><td class="r num" data-label="当地勝率">{b.get("loc_win") or "-"}</td><td class="r num" data-label="モーター">{mcell}</td></tr>')
+                        f'<td class="r num" data-label="コース">{q.get("course", f)}</td><td class="r num" data-label="全国勝率">{b.get("nat_win") or "-"}</td><td class="r num" data-label="当地勝率">{b.get("loc_win") or "-"}</td><td class="r num" data-label="モーター2連率">{mcell}</td></tr>')
         w = bi.get("weather") or {}
         wind = p.get("wind") or {}
         comments = "".join(f"<li>{e(c)}</li>" for c in p.get("comments", []))
@@ -1270,7 +1194,7 @@ class Site:
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
-<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race" role="table" aria-label="出走選手とコース・勝率・モーター2連率"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地</th><th class="r">モーター2連</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
+<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-race" role="table" aria-label="出走選手とコース・勝率・モーター2連率"><thead><tr><th>枠</th><th>選手</th><th class="r">コース</th><th class="r">全国勝率</th><th class="r">当地勝率</th><th class="r">モーター2連率</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {self.course_swap_block(page, rl, pb)}
 </section>
 {self.cond_block(jcd, p, [{"frame": b["frame"], "name": b.get("name", ""), "toban": b.get("toban", ""), "course": pb.get(b["frame"], {}).get("course", b["frame"])} for b in rl["boats"]])}
@@ -1282,7 +1206,6 @@ class Site:
 {self.arechu_block(race)}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p)) if not race.get('primary_slip') else ''}
 {self.worry_block(p)}
-{self.tenkai_block(p)}
 {self.fstart_block(p)}
 {loss}
 <section class="panel nb" id="mynote" data-date="{d}" data-jcd="{jcd}" data-venue="{e(v)}" data-rno="{rno}" hidden></section>
