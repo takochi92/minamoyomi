@@ -248,3 +248,13 @@ def test_drop_non_boats_removes_a_scene_cut_trace_only_when_the_profile_asks():
     kept = drop_non_boats([dict(r) for r in recs], {"minSeconds": 1.5})
     assert [r["order"] for r in kept] == [1, 2, 3, 4, 5, 6]
     assert all(r["seconds"] > 1 for r in kept)
+
+
+def test_tone_squeezes_highlights_keeps_order_and_white():
+    import numpy as np
+    from scraper.boatcast_measure import tone
+    x = np.array([0.0, 0.3, 0.6, 0.8, 0.95, 1.0])
+    y = tone(x)
+    assert np.all(np.diff(y) > 0)                 # order kept
+    assert y[-1] == 1.0 and y[0] == 0.0           # blown-out white stays white: nothing is recovered from it
+    assert (y[4] - y[3]) < (x[4] - x[3])          # the bright end is squeezed

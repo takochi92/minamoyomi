@@ -83,7 +83,15 @@ def band_rgb(capture_dir, name):
     return rgb[:, :nb].reshape(len(shot["times"]), shot["nS"], shot["nO"], rgb.shape[-1])
 
 
-def pass_hue(rgb, band, s, t, *, min_pixels=20):
+def tone(x, knee=.7, slope=.25, gamma=1.6):
+    """Highlight compression and gamma on 0..1 values (night glare): the part above `knee` is squeezed to
+    `slope` of its height, then gamma > 1 darkens mid-tones so colour (hue) carries more than brightness.
+    A fully blown-out pixel stays white: no colour comes back from it."""
+    x = np.where(x > knee, knee + (x - knee) * slope, x)
+    return np.power(np.clip(x / (knee + (1 - knee) * slope), 0, 1), gamma)
+
+
+def pass_hue(rgb, band, s, t, *, min_pixels=20, tone_cfg=None):
     """Median hue (degrees) of the saturated pixels that move with this boat: the rider's colour.
     None when too few coloured pixels (white and black riders, or spray hiding the colour)."""
     T = len(band)
@@ -91,6 +99,8 @@ def pass_hue(rgb, band, s, t, *, min_pixels=20):
     si = s.astype(int)
     moving = np.abs(band[fs, si] - band[fs - 2, si]) > MOTION_THRESHOLD
     px = rgb[fs, si][moving].astype(np.float32) / 255
+    if tone_cfg:
+        px = tone(px, **tone_cfg)
     if not len(px):
         return None, 0
     mx, mn = px.max(1), px.min(1)
@@ -425,6 +435,9 @@ def measure_shot(capture_dir, name, cfg):
         k = int((shot["nO"] - 1) / 2 - cfg["frontHalf"] / cfg["ostep"])
         band = band[:, :, k:shot["nO"] - k]
         shot = {**shot, "nO": band.shape[2]}
+    if cfg.get("toneDetect") and cfg.get("tone"):
+        # detection on the tone-mapped band: glare peaks are squeezed before the bow (front) is looked for
+        band = tone(band / 255, **cfg["tone"]) * 255
     if cfg.get("feature", "front") == "motion":
         count, lateral = motion_map(band)
         ev = ridges(count)
@@ -442,7 +455,7 @@ def measure_shot(capture_dir, name, cfg):
     for i, (s, t) in enumerate(found):
         rec = {"order": i + 1, "points": int(len(s)), "reasons": []}
         if rgb is not None:
-            rec["hue"], rec["hue_pixels"] = pass_hue(rgb, band, s, t)
+            rec["hue"], rec["hue_pixels"] = pass_hue(rgb, band, s, t, tone_cfg=cfg.get("tone"))
         coef, keep, spread = _fit(s.astype(float), t, 2)
         if coef is None:
             rec["reasons"].append("fit_failed")

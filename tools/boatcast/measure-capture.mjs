@@ -186,7 +186,7 @@ async function main() {
   const races = (a.races || '1,2,3,4,5,6,7,8,9,10,11,12').split(',').map(Number);
   const results = [];
   await withChrome(async (ctx) => {
-    for (const race of races) results.push(await captureRace(ctx, { date: a.date, venue: a.venue, race, profile, out: a.out, denseRate: Number(a.rate || 0.5), shots: a.shots ? a.shots.split(',') : null }));
+    for (const race of races) results.push(await captureRace(ctx, { date: a.date, venue: a.venue, race, profile, out: a.out, denseRate: Number(a.rate || 0.5), shots: a.shots ? a.shots.split(',') : null, withPlate: a.plate !== '0' }));
   });
   const ok = results.filter((r) => r.manifest.status === 'ok').length;
   console.log(`取得 ${ok}/${results.length} レース`);
