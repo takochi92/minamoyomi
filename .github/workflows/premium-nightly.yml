@@ -76,6 +76,8 @@ jobs:
           set -e
           tail -3 "$RUNNER_TEMP/premium.log"
           if [ $code -eq 0 ]; then
+            # 公開の判断材料：場ごと・項目ごとの埋まり具合（件数だけ。評価の中身は出さない）
+            python -m scraper.premium_coverage "$RUNNER_TEMP/premium/$CUTOFF.json" >> "$GITHUB_STEP_SUMMARY" || true
             echo "state=$MODE" >> "$GITHUB_OUTPUT"
           elif grep -q "incomplete official archive\|no scheduled race files" "$RUNNER_TEMP/premium.log"; then
             echo "state=waiting" >> "$GITHUB_OUTPUT"      # 結果がまだそろっていない。次の回でやり直す

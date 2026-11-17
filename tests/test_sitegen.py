@@ -92,7 +92,7 @@ def test_pages_and_links(tmp_path):
     assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
     assert race_html.index('data-t="yoso"') < race_html.index('data-t="setsukan"') < race_html.index('data-t="tenji"')
     assert 'data-p="setsukan"' in race_html
-    assert 'data-t="premium"' in race_html and 'data-p="premium" hidden' in race_html
+    assert 'data-t="premium"' not in race_html, 'The premium tab stays hidden until scraper/features.json turns it on'
     assert 'href="/premium"' in race_html
     assert 'data-premium-plan' in files['premium.html']
     assert 'id="premium-chart" data-premium-chart' in files['mynote.html']
@@ -407,3 +407,19 @@ def test_course_swap_block_is_closed_and_keeps_the_entry_table(tmp_path):
         for row in b["c"].values():
             assert len(row) == 6 and row[0] > 0 and row[1] + row[2] + row[3] <= row[0]
     assert "買い目・バフは元の進入が前提です。" in html
+
+
+def test_premium_tab_is_hidden_by_default_and_returns_with_the_flag(tmp_path, monkeypatch):
+    """プレミアムタブは表示フラグで出し分ける。既定は出さない。コードは残す。"""
+    import json as _json
+    assert _json.loads((Path(sitegen.__file__).with_name('features.json')).read_text(encoding='utf-8'))['premium_tab'] is False
+    monkeypatch.setattr(sitegen, 'PREMIUM_TAB', False)
+    s, files = _site(tmp_path / 'off')
+    html = next(v for k, v in (files if isinstance(files, dict) else s.files).items() if k.startswith('race/'))
+    assert 'data-t="premium"' not in html and 'data-p="premium"' not in html and 'premium.js' not in html
+    assert 'data-t="kekka"' in html
+    monkeypatch.setattr(sitegen, 'PREMIUM_TAB', True)
+    s, files = _site(tmp_path / 'on')
+    html = next(v for k, v in (files if isinstance(files, dict) else s.files).items() if k.startswith('race/'))
+    assert 'data-t="premium"' in html and 'data-premium-race' in html and 'premium.js' in html
+    assert 'premium.html' in (files if isinstance(files, dict) else s.files)

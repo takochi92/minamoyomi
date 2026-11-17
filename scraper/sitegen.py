@@ -130,6 +130,11 @@ def load_json(p, default=None):
         return default
 
 
+# 表示の出し分け。scraper/features.json を変えると、ソースの版が変わるので全ページが作りなおされる
+FEATURES = load_json(Path(__file__).with_name('features.json'), {}) or {}
+PREMIUM_TAB = FEATURES.get('premium_tab') is True
+
+
 def display_confidence(label):
     """Old saved confidence labels remain intact; soften only the UI wording."""
     return '1着軸強め' if label == '鉄板' else label
@@ -206,7 +211,7 @@ class Page:
 <script src="{self.asset('note-store.js')}" defer></script>
 <script src="{self.asset('note-account.js')}" defer></script>
 <script src="{self.asset('note.js')}" defer></script>
-{f'<script src="{self.asset("premium.js")}" defer></script>' if self.path.startswith('race/') or self.path in ('mynote.html', 'premium.html') else ''}
+{f'<script src="{self.asset("premium.js")}" defer></script>' if (self.path.startswith('race/') and PREMIUM_TAB) or self.path in ('mynote.html', 'premium.html') else ''}
 <script src="{self.asset('race-notifications.js')}" defer></script>
 <script src="{self.asset('pwa.js')}" defer></script>
 <script src="{self.asset('freshness.js')}" defer></script>
@@ -1261,7 +1266,7 @@ class Site:
 <h1 data-dl="{race.get('date', '')} {e(race.get('deadline', ''))}">{e(v)} {rno}R 予想 <span class="sub num" style="font-size:14px">締切 {e(race.get('deadline', ''))}</span></h1></div></section>
 {self.freshness_block(page, race.get('updated_at', ''), f'{d}-{jcd}-{rno}') if d == self.idx.get('date') and not res else ''}
 <div class="race-grid"><div style="display:grid;gap:16px;min-width:0">
-<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button><button data-t="premium" role="tab">プレミアム</button></nav>
+<nav class="rtabs race-tabs" role="tablist"><button data-t="yoso" role="tab">出走表</button><button data-t="setsukan" role="tab">節間</button><button data-t="tenji" role="tab">展示{'' if bi.get('boats') else ' <small>前</small>'}</button><button data-t="odds" role="tab">オッズ</button><button data-t="kekka" role="tab">結果{'' if res else ' <small>待ち</small>'}</button>{'<button data-t="premium" role="tab">プレミアム</button>' if PREMIUM_TAB else ''}</nav>
 <div class="tabp" data-p="yoso" style="display:grid;gap:16px;min-width:0">
 {'' if rl['boats'] else '<section class="panel"><p style="margin:0">出走表はまだ取り込んでいません。締切の2時間前ごろから、予想・展示・オッズの順に自動で表示されます。</p></section>'}
 <section style="display:grid;gap:8px"><h2>出走表と予想 <small>進入 {''.join(bt(x) for x in p.get('entry', []))}{' 進入変化あり' if p.get('entry_changed') else ''}</small></h2>
@@ -1296,7 +1301,7 @@ class Site:
 <div class="tabp" data-p="kekka" style="display:grid;gap:16px;min-width:0" hidden>
 {self.result_block(d, race, p, res, page) or '<section class="panel"><p class="sub" style="margin:0">レースが終わると、着順・払戻・本番のスタートをここに表示します（締切の15分後ごろ）。</p></section>'}
 </div>
-<div class="tabp" data-p="premium" hidden>
+{'' if not PREMIUM_TAB else f'''<div class="tabp" data-p="premium" hidden>
 <section class="panel premium-panel" data-premium-race data-date="{e(d)}" data-venue="{e(jcd)}" data-race="{int(rno)}">
 <h2>モーター評価</h2>
 <div class="premium-content" aria-live="polite">
@@ -1304,10 +1309,10 @@ class Site:
 <p>直近3節をもとに、6艇のモーター評価と場内での順位と秒差が見られます。</p>
 <a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a>
 </div></section>
-</div>
+</div>'''}
 <script>(function(){{var bs=document.querySelectorAll('.rtabs button'),ps=document.querySelectorAll('.tabp');
 function sh(t){{bs.forEach(function(b){{b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}});ps.forEach(function(x){{x.hidden=x.dataset.p!==t}});try{{history.replaceState(null,'','#'+t)}}catch(e){{}}}}
-bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka','premium'].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
+bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(location.hash||'').slice(1);sh(h==='evidence'?'yoso':(['yoso','setsukan','tenji','odds','kekka'{",'premium'" if PREMIUM_TAB else ''}].indexOf(h)>=0?h:'{'kekka' if res else 'yoso'}'));if(h==='evidence')document.getElementById('evidence')?.scrollIntoView()}})()</script>
 
 </div>
 <aside class="panel" style="display:grid;gap:6px"><h2>水面気象 <small>{e(w.get('as_of', '') or '展示前')}</small></h2>

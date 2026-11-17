@@ -1,0 +1,4 @@
+{
+  "premium_tab": false,
+  "_note": "premium_tab: レースページの「プレミアム」タブを出すか。false の間もモーター評価の生成・夜間の計測・蓄積は続く。公開はオーナーが決める（目安 2026年12月中旬）。カバレッジは python -m scraper.premium_coverage で確認"
+}
