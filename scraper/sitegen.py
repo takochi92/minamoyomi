@@ -2028,6 +2028,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             ps = self._pairs.get(t, [])
             sm = self.st_summary(ps)
             extras = (f'<details class="panel"><summary>展示STと本番STの比較（別集計）</summary><p class="sub">参照{sm["n"]}走。この欄は期間ボタンの対象外です。</p>{self.st_chart(ps)}</details>' if sm else '')
+            extras += self.racer_neighbors(page, t, info)
             body = f'<link rel="stylesheet" href="{page.u("racer.css")}">' + rd.render(t, info, profile, meta, page, VENUES, SLUG, tod, extras)
             self.put(page.path, page.render(f'{info["name"]}（{t}）選手データ・コース別・場別・年別成績｜{SITE_NAME}',
                 f'{info["name"]}のコース別・場別・年別・展示順位別成績と保存全出走結果。出走数、期間、決まり手を確認できます。', body,
@@ -2038,6 +2039,32 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         from .database_views import catalog_pages
         if database.get('compiled'):
             catalog_pages(self,Page,VENUES)
+
+    def racer_neighbors(self, page, toban, info):
+        """選手ページから、同じ支部・同じ養成期の選手へ（いまの名簿だけ。勝率の高い順に12人まで）"""
+        if not hasattr(self, '_neighbor_groups'):
+            groups = defaultdict(list)
+            for t, r in self.racers.items():
+                if r.get('historical') or not re.fullmatch(r'[0-9]{4}', str(t)):
+                    continue
+                if r.get('branch'):
+                    groups['branch', r['branch']].append(t)
+                if r.get('ki'):
+                    groups['ki', r['ki']].append(t)
+            win = lambda t: -(self.racers[t].get('win') or 0)
+            self._neighbor_groups = {k: sorted(v, key=lambda t: (win(t), t)) for k, v in groups.items()}
+        parts = []
+        for key, label, hub in ((('branch', info.get('branch')), f"{info.get('branch', '')}支部の選手", 'database/branches.html'),
+                                (('ki', info.get('ki')), f"{info.get('ki', '')}期（同期）の選手", 'database/terms.html')):
+            if not key[1]:
+                continue
+            others = [t for t in self._neighbor_groups.get(key, []) if t != toban][:12]
+            if not others:
+                continue
+            links = ''.join(f'<a href="{page.u(f"racer/{t}.html")}">{e(self.racers[t]["name"])}<small>{e(self.racers[t].get("class", ""))}</small></a>' for t in others)
+            parts.append(f'<section class="panel racer-neighbors"><h2>{e(label)} <small>勝率の高い順・{len(others)}人</small></h2>'
+                         f'<div class="racer-list">{links}</div><p class="sub"><a href="{page.u(hub)}">{"支部" if key[0] == "branch" else "養成期"}から探す →</a></p></section>')
+        return ''.join(parts)
 
     def fav_today(self, today):
         """お気に入り選手の「今日の出走」用。登番 → [[場, R, ページ, 締切, 枠]]（ブラウザ側で読む）"""
@@ -2116,6 +2143,19 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                      body, [('racer/index.html#racer-directory', '選手一覧'), ('', label)]))
         return ''.join(directory_links)
 
+    def racer_index_links(self, page, rs, today):
+        """検索の結果は画面の中で作るので、たどれるリンクを静的に置く（今日出走する選手・勝率上位）"""
+        active = [(t, i) for t, i in rs if not i.get('historical')]
+        racing = [(t, i) for t, i in active if today.get(t)]
+        racing.sort(key=lambda x: (-(x[1].get('win') or 0), x[0]))
+        top = sorted(active, key=lambda x: (-(x[1].get('win') or 0), x[0]))[:30]
+        def block(title, rows, note):
+            links = ''.join(f'<a href="{page.u(f"racer/{t}.html")}">{e(i["name"])}<small>{e(i.get("branch", ""))} {e(i.get("class", ""))}</small></a>' for t, i in rows)
+            return f'<section class="panel racer-neighbors"><h2>{title} <small>{note}</small></h2><div class="racer-list">{links}</div></section>' if rows else ''
+        return (block('今日出走する選手', racing[:60], f'勝率の高い順・{min(len(racing), 60)}人') +
+                block('勝率の高い選手', top, '公式期別勝率・上位30人') +
+                f'<p class="sub"><a href="{page.u("database/branches.html")}">支部から探す →</a>　<a href="{page.u("database/terms.html")}">養成期から探す →</a></p>')
+
     def racer_index(self, listing, today):
         page = Page("racer/index.html")
         bo = {b: i for i, b in enumerate(self.BRANCH_ORDER)}
@@ -2151,6 +2191,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 </div>
 <div class="tbl-wrap"><table class="sx-tbl"><thead><tr><th></th><th>名前</th><th>級</th><th>支部</th>{'<th class="r">期</th>' if has_ki else ''}<th class="r">勝率</th><th>今日</th></tr></thead><tbody id="sx-rows"></tbody></table></div>
 <p class="sx-more" hidden><button type="button" class="btn" id="sx-more">もっと見る</button></p>
+{self.racer_index_links(page, rs, today)}
 <section class="panel" id="racer-directory"><h2>全選手一覧 <small>登録番号順</small></h2><div class="racer-list">{directory}</div></section>
 </section>
 <section class="tabp sx" id="sx-m" data-tab="m" hidden>
@@ -2262,8 +2303,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <section class="panel"><h2>コース別成績と決まり手 <small>直近1年・{int(vn):,}レース</small></h2><div class="tbl-wrap"><table class="t-vc"><thead><tr><th>コース</th><th class="r">1着率</th><th class="r">全国</th><th class="r">2連対率</th><th class="r">3連対率</th><th>1着の決まり手</th></tr></thead><tbody>{''.join(rows)}</tbody></table></div>
 {f'<p class="sub">1コースの負け方（全レースに対する割合）：{e(loss)}</p>' if loss else ''}</section>
 {self.venue_extra(jcd)}"""
-            self.put(page.path, page.render(f"{v['name']}競艇場（ボートレース{v['name']}）の特徴・コース別1着率・決まり手｜{SITE_NAME}",
-                                            f"{v['name']}ボートレース場の水面の特徴、コース別1着率・連対率、決まり手、1コースの負け方を公式データから集計。", body, [("", v["name"])], script=f'<script src="{page.asset("day-browser.js")}" defer></script>'))
+            self.put(page.path, page.render(f"{v['name']}競艇場（ボートレース{v['name']}）の今日の予想・特徴・コース別1着率｜{SITE_NAME}",
+                                            f"{v['name']}ボートレース場の今日の全レースの予想と、水面の特徴、コース別1着率・連対率、決まり手を公式データから集計。", body, [("", v["name"])], script=f'<script src="{page.asset("day-browser.js")}" defer></script>'))
 
     def motor_pages(self):
         data = self.motor_data()

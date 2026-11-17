@@ -423,3 +423,20 @@ def test_premium_tab_is_hidden_by_default_and_returns_with_the_flag(tmp_path, mo
     html = next(v for k, v in (files if isinstance(files, dict) else s.files).items() if k.startswith('race/'))
     assert 'data-t="premium"' in html and 'data-premium-race' in html and 'premium.js' in html
     assert 'premium.html' in (files if isinstance(files, dict) else s.files)
+
+
+def test_venue_title_sitemap_and_racer_links(tmp_path):
+    """場ページのタイトル、サイトマップの正規URL、選手ページ間のリンク。"""
+    import re
+    from scraper.public_urls import public_url
+    s, files = _site(tmp_path)
+    files = files if isinstance(files, dict) else s.files
+    title = re.search(r'<title>(.*?)</title>', files['venue/edogawa.html']).group(1)
+    assert title == '江戸川競艇場（ボートレース江戸川）の今日の予想・特徴・コース別1着率｜艇ろぐ'
+    pages = {public_url('/' + k) for k in files if k.endswith('.html')}
+    urls = [u for k, v in files.items() if k.startswith('sitemap-') for u in re.findall(r'<loc>https://[^/]+(/[^<]*)</loc>', v)]
+    assert urls and not any(u.endswith('.html') for u in urls), 'Sitemap lists only canonical URLs'
+    assert all(u in pages for u in urls), 'Every sitemap URL is a generated page'
+    racer = next(v for k, v in files.items() if re.fullmatch(r'racer/\d{4}\.html', k) and v.count('racer-neighbors') == 2)
+    assert '支部の選手' in racer and '期（同期）の選手' in racer
+    assert '今日出走する選手' in files['racer/index.html'] or '勝率の高い選手' in files['racer/index.html']
