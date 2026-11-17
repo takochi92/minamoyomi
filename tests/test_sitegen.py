@@ -92,7 +92,7 @@ def test_pages_and_links(tmp_path):
     assert race_html.index('pick.js?v=') < race_html.index('live.js?v=')
     assert race_html.index('data-t="yoso"') < race_html.index('data-t="setsukan"') < race_html.index('data-t="tenji"')
     assert 'data-p="setsukan"' in race_html
-    assert 'data-t="premium"' in race_html and 'data-p="premium" hidden' in race_html
+    assert 'data-t="premium"' not in race_html, 'The premium tab stays hidden until scraper/features.json turns it on'
     assert 'href="/premium"' in race_html
     assert 'data-premium-plan' in files['premium.html']
     assert 'id="premium-chart" data-premium-chart' in files['mynote.html']
