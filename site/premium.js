@@ -73,10 +73,10 @@
       }
     };
   }
-  var CLOSED='現在、受付を中止しています（準備中）';
+  var CLOSED='プレミアムの申し込みは、現在受付を中止しています（準備中）';
   function closed() {
     var note=el('p',CLOSED); note.className='premium-closed';
-    var b=el('button','会員登録（受付中止中）'); b.className='premium-action'; b.type='button'; b.disabled=true;
+    var b=el('button','プレミアムに申し込む（受付中止中）'); b.className='premium-action'; b.type='button'; b.disabled=true;
     return [note,b];
   }
   // offer：ログイン前でも分かる「受付中かどうか」。分からないときは受付中止として見せる
@@ -86,7 +86,7 @@
     box.replaceChildren();
     if (!account.identity()) {
       if (!open) box.append.apply(box,closed());
-      else box.append(el('p','月額'+Number(offer.amount).toLocaleString('ja-JP')+'円・自動更新。会員登録（無料）のあとに申し込めます。'),link('会員登録・ログインへ','/mynote#note-account'));
+      else box.append(el('p','月額'+Number(offer.amount).toLocaleString('ja-JP')+'円・自動更新。会員登録（無料）のあとに申し込めます。'),link('無料で会員登録・ログイン','/mynote#note-account'));
       return;
     }
     if (state?.member) {
