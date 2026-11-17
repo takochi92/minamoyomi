@@ -958,3 +958,45 @@ button:hover,.btn:hover{filter:brightness(1.1)}
 .pi-mark-unknown{color:var(--ink2)}
 .pi-mark-est{font-size:9px;margin-left:1px;font-weight:500}
 .pi-mark-date{display:block;font-size:10px;color:var(--ink2);margin-top:2px}
+
+/* ===== 2026-11 調整：色の系統（ティール）はそのまま、背景を一段暗く・アクセントはティール1色に ===== */
+:root,:root[data-theme="dark"]{
+  --bg:#05080B;--accent:#59D8C7;--accent-ink:#04110F;
+  --nav-ink:#8FA5B8;--guide-rule:#22344A;--guide-sub:#7E93A6;
+}
+body{background:var(--bg)}
+.top{background:rgba(5,8,11,.96)}
+/* ナビ：丸ピルをやめて文字だけ。現在地はティールの下線 */
+.nav a{border-radius:0;background:none;color:var(--nav-ink);opacity:1;border-bottom:2px solid transparent;padding:6px 4px;margin:0 6px}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current="page"]{background:none;color:var(--ink);border-bottom-color:var(--accent)}
+.nav a{white-space:nowrap}
+.nav .nav-login{color:var(--accent)}
+.nav .nav-login.is-in{color:var(--nav-ink)}
+@media (min-width:721px) and (max-width:1180px){.tagline{display:none}}
+@media (max-width:720px){
+  .nav{background:rgba(5,8,11,.97);grid-template-columns:repeat(7,1fr)}
+  .nav a{margin:0;padding:4px 1px;border-radius:0;border-bottom:0;border-top:2px solid transparent;color:var(--nav-ink)}
+  .nav a[aria-current="page"]{background:none;color:var(--accent);border-top-color:var(--accent)}
+  .nav .nav-login{color:var(--accent)}
+}
+
+/* ===== 案内ページ（/premium・/mynote）：箱をやめ、罫線と余白で区切る ===== */
+.guide .panel{background:none;border:0;border-top:1px solid var(--guide-rule);border-radius:0;box-shadow:none;padding:28px 0 8px}
+.guide .panel h2:before{display:none}
+.guide .panel h2{font-size:clamp(20px,4.6vw,26px);font-weight:900;margin:2px 0 10px;letter-spacing:.01em}
+.guide h1{font-size:clamp(26px,6vw,34px);font-weight:900;margin:2px 0 8px}
+.guide-label{display:block;font:600 11px/1.4 "Barlow Condensed",var(--body);letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
+.guide .sub,.guide .premium-lead,.guide figcaption,.guide .pi-legend,.guide .account-status{color:var(--guide-sub)}
+.guide-price{margin:2px 0 6px}
+.guide-price b{font-size:clamp(34px,8vw,44px);font-weight:900;color:var(--ink);letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.guide .premium-closed{font-weight:700;color:var(--ink)}
+.guide .premium-action,.guide .premium-link,.guide .note-account button,.guide .btn{border-radius:2px;box-shadow:none;filter:none}
+.guide .premium-action{border:1px solid var(--accent);background:none;color:var(--accent);padding:10px 18px;font-weight:700}
+.guide .premium-action:disabled{border-color:var(--guide-rule);color:var(--guide-sub)}
+.guide .premium-signup{display:inline-block;justify-self:start;background:var(--accent);color:var(--accent-ink);text-decoration:none;margin-top:4px}
+.guide .premium-signup:hover{filter:brightness(1.08)}
+.guide .premium-feature img{border-radius:2px;border-color:var(--guide-rule)}
+.guide .premium-hero img{filter:none}
+.guide .account-first{margin:4px 0 0;font-weight:700;color:var(--ink)}
+.guide .note-account button[data-account="login"]{background:var(--accent);color:var(--accent-ink);border:0;padding:10px 18px;font-weight:700}

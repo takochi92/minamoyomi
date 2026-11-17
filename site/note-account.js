@@ -152,13 +152,21 @@
     if (typeof v === 'number') return v.toLocaleString() + '円';
     return v.text || v.name || ((v.date || '') + ' 購入' + (v.inv || 0) + '円／払戻' + (v.ret || 0) + '円 ' + (v.memo || ''));
   }
+  function headerLink() {
+    if (typeof document.querySelectorAll !== 'function') return;
+    document.querySelectorAll('[data-login-link]').forEach(function (a) {
+      a.textContent = user ? 'ログイン中' : 'ログイン';
+      a.closest('a') && a.closest('a').classList.toggle('is-in', !!user);
+    });
+  }
   function draw() {
+    headerLink();
     if (!panel) return;
     var ownGuest = false;
     try { ownGuest = Object.keys(M.flatten(guest())).length > 1 || guest().budget > 0; } catch (_) {}
     panel.hidden = !configured && !state.message;
     if (panel.hidden) return;
-    panel.innerHTML = '<div class="account-line"><h2>' + (user ? 'アカウントのノート' : 'ノートを端末間で共有') + '</h2>' +
+    panel.innerHTML = '<span class="guide-label">ACCOUNT</span><div class="account-line"><h2>' + (user ? 'アカウントのノート' : 'ノートを端末間で共有') + '</h2>' +
       (user ? '<span class="sub account-user">' + esc(user.email || 'ログイン中') + '</span>' : '') + '</div>' +
       '<p class="sub account-status" role="status">' + esc(state.message || (configured ? 'Googleでログインすると、お気に入り・メモ・収支をスマホとPCで共有できます。登録せずにも使えます。' : '')) + '</p>' +
       (configured ? '<div class="account-actions">' + (user ?
@@ -166,6 +174,7 @@
         (ownGuest && state.ready ? '<button type="button" data-account="import">この端末の記録を取り込む</button>' : '') :
         '<button type="button" data-account="login"' + (!client ? ' disabled' : '') + '>Googleでログイン</button>' +
         (state.mode === 'error' ? '<button type="button" data-account="reload">再読み込み</button>' : '')) + '</div>' : '') +
+      (configured && !user ? '<p class="account-first">初めての方も、Googleでログインすればそのまま登録できます。</p>' : '') +
       (configured && !user ? '<p class="sub">ログインにはGoogleの認証情報を使い、記録はSupabaseに保存します。<a href="' + (window.SITE_ROOT || '') + 'about">プライバシーポリシー</a></p>' : '') +
       (user ? '<p class="sub">ログイン中の編集は、このアカウントに保存します。端末内の記録は勝手に取り込みません。</p>' : '') +
       state.conflicts.map(function (c) { return '<div class="account-conflict"><strong>' + esc(label(c)) + '</strong><div class="account-compare"><div><small>別の端末の記録</small><p>' + esc(describe(c.remote)) + '</p><button type="button" data-choice="remote" data-key="' + esc(c.key) + '">こちらを残す</button></div><div><small>この端末の変更</small><p>' + esc(describe(c.local)) + '</p><button type="button" data-choice="local" data-key="' + esc(c.key) + '">こちらを残す</button></div></div></div>'; }).join('') +
