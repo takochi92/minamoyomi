@@ -240,11 +240,28 @@
     save(); favBtns(); marks(); favCbs.forEach(function (f) { try { f(); } catch (e) { } });
     var ft = document.getElementById("fav-today"); if (ft) favToday(ft);
   }
+  // ログアウトのままお気に入りを付けた直後に、1行だけログインの案内を出す（1回のブラウザ利用で1度だけ）
+  function loginHint(btn, kind) {
+    var A = window.TeiNoteAccount, st = A && A.state();
+    if (!st || !st.configured || st.user) return;
+    try { if (sessionStorage.getItem('teilog-fav-hint')) return; sessionStorage.setItem('teilog-fav-hint', '1'); } catch (e) { }
+    var text = kind === 'motor' ? 'ログインすると、お気に入りが端末間で共有できます'
+      : 'ログインすると、お気に入りが端末間で共有できて、この選手が出る朝に通知が届きます';
+    var html = '<span>' + esc(text) + '</span> <a href="' + ROOT + 'mynote#note-account">ログインへ</a>';
+    var row = btn.closest('tr');
+    if (row) {
+      var tr = document.createElement('tr'); tr.className = 'fav-hint-row';
+      var td = document.createElement('td'); td.colSpan = row.children.length || 1; td.innerHTML = '<p class="fav-hint" role="status">' + html + '</p>';
+      tr.appendChild(td); row.after(tr); return;
+    }
+    var p = document.createElement('p'); p.className = 'fav-hint'; p.setAttribute('role', 'status'); p.innerHTML = html;
+    (btn.closest('h1,h2,h3') || btn).after(p);
+  }
   function favBtns(root) {
     (root || document).querySelectorAll('.motor-fav-btn').forEach(function (b) {
       var on = !!(D.motor[b.dataset.mkey] || {}).favorite;
       b.textContent = on ? '★ お気に入り' : '☆ お気に入り'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
-      if (!b.dataset.bound) { b.dataset.bound = 1; b.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); var ex = {}; try { ex = JSON.parse(b.dataset.extra || '{}'); } catch (_) {} motorFavSet(b.dataset.mkey, ex, !(D.motor[b.dataset.mkey] || {}).favorite); }); }
+      if (!b.dataset.bound) { b.dataset.bound = 1; b.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); var ex = {}; try { ex = JSON.parse(b.dataset.extra || '{}'); } catch (_) {} var on = !(D.motor[b.dataset.mkey] || {}).favorite; motorFavSet(b.dataset.mkey, ex, on); if (on) loginHint(b, 'motor'); }); }
     });
     (root || document).querySelectorAll(".fav-btn").forEach(function (b) {
       var on = !!D.fav[b.dataset.toban];
@@ -253,7 +270,7 @@
       b.title = on ? "お気に入りから外す" : "お気に入りに入れる";
       if (!b.dataset.bound) {
         b.dataset.bound = 1;
-        b.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); favSet(b.dataset.toban, b.dataset.name, !D.fav[b.dataset.toban]); });
+        b.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); var on = !D.fav[b.dataset.toban]; favSet(b.dataset.toban, b.dataset.name, on); if (on) loginHint(b, 'racer'); });
       }
     });
   }
