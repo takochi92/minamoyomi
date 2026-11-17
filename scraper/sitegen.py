@@ -197,7 +197,7 @@ class Page:
 {'<meta name="robots" content="noindex">' if noindex else ''}
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:type" content="website">
 <meta property="og:image" content="{SITE_URL}/{og or 'img/og.jpg'}"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="{SITE_NAME}">
-<meta name="theme-color" content="#0B1116">
+<meta name="theme-color" content="#05080B">
 <link rel="manifest" href="{self.asset('manifest.webmanifest')}">
 <link rel="apple-touch-icon" sizes="180x180" href="{self.u('img/pwa-180-v2.png')}">
 <meta name="apple-mobile-web-app-title" content="艇ろぐ">
@@ -216,11 +216,11 @@ class Page:
 <script src="{self.asset('pwa.js')}" defer></script>
 <script src="{self.asset('freshness.js')}" defer></script>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
-</head><body>
+</head><body{' class="guide"' if self.path in ('premium.html', 'mynote.html') else ''}>
 <header class="top"><div class="wrap">
   <a class="brand" href="{self.u('index.html')}"><img src="{self.u('img/boat-v2.webp')}" width="58" height="34" alt=""><span>{SITE_NAME}</span></a>
   {f'<span class="tagline">{e(TAGLINE)}</span>' if TAGLINE else ''}
-  <nav class="nav">{navh}</nav>
+  <nav class="nav">{navh}<a class="nav-login" href="{self.u('mynote.html')}#note-account"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5"/></svg><span class="l" data-login-link>ログイン</span><span class="s" data-login-link>ログイン</span></a></nav>
 </div></header>
 <main class="wrap">
 <p class="crumbs">{bc}</p>
@@ -2676,24 +2676,30 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                  install_body, [('', 'ホーム画面に追加')]))
         page = Page("mynote.html")
         vj = e(json.dumps({j: VENUES[j]["name"] for j in sorted(VENUES)}, ensure_ascii=False))
-        body = f"""<h1>マイノート</h1>
+        body = f"""<span class="guide-label">MY NOTE</span><h1>マイノート</h1>
 <p class="sub">収支表・選手メモ・モーターメモ。登録せずにも使えます。保存先は、下のログイン状態と案内を確認してください。</p>
 <div id="note-app" data-venues="{vj}" data-slugs="{e(json.dumps(SLUG, ensure_ascii=False))}" style="display:grid;gap:16px"><p class="empty">読み込み中…</p></div>
-<section class="panel premium-panel" id="premium-chart" data-premium-chart><h2>収支グラフ</h2><div class="premium-content"><p>収支の推移を週・月・年で見られます。</p><a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a></div></section>
+<section class="panel premium-panel" id="premium-chart" data-premium-chart><span class="guide-label">CHART</span><h2>収支グラフ</h2><div class="premium-content"><p>収支の推移を週・月・年で見られます。</p><a class="premium-link" href="{page.u('premium.html')}">プレミアムを見る</a></div></section>
 <section class="panel" id="race-notifications" aria-live="polite"></section>
 <p class="sub">舟券は余裕のあるお金の範囲で。予算を決めて、超えたらその月はやめるのがおすすめです。20歳未満の方は舟券を購入できません。</p>"""
         self.put(page.path, page.render(f"マイノート（収支表・選手メモ）｜{SITE_NAME}", "舟券の収支表と、選手・モーターのメモ。登録せずにも使えます。", body, [("", "マイノート")], noindex=True))
         page = Page("premium.html")
-        body = f"""<div class="premium-hero"><div><h1>艇ろぐ プレミアム</h1>
+        body = f"""<div class="premium-hero"><div><span class="guide-label">PREMIUM</span><h1>艇ろぐ プレミアム</h1>
 <p class="premium-lead">モーターの力を、6艇ならべてひと目で。展示・伸び・まわり足・立ち上がり・総評を S〜D の5段階で見られます。</p></div>
 <img src="{page.u('img/boat-gold.webp')}" width="560" height="334" alt="" aria-hidden="true"></div>
-<section class="panel premium-panel" data-premium-plan>
-<h2>月額500円</h2>
+<section class="panel premium-panel guide-block">
+<span class="guide-label">FREE</span><h2>無料会員登録</h2>
+<p>Googleでログインすると、そのまま登録できます。マイノートの収支・メモ・お気に入りを、スマホとパソコンで共有できます。</p>
+<a class="premium-action premium-signup" href="{page.u('mynote.html')}#note-account">無料で会員登録</a>
+</section>
+<section class="panel premium-panel guide-block" data-premium-plan>
+<span class="guide-label">PREMIUM</span><h2>プレミアム</h2>
+<p class="guide-price"><b>月額500円</b></p>
 <p>自動更新。支払い方法の変更と解約は、いつでも会員ページからできます。</p>
-<div class="premium-content" aria-live="polite"><p class="premium-closed">現在、受付を中止しています（準備中）</p><button class="premium-action" type="button" disabled>会員登録（受付中止中）</button></div>
+<div class="premium-content" aria-live="polite"><p class="premium-closed">プレミアムの申し込みは、現在受付を中止しています（準備中）</p><button class="premium-action" type="button" disabled>プレミアムに申し込む（受付中止中）</button></div>
 </section>
 <section class="panel premium-feature">
-<div><h2>モーター評価</h2>
+<div><span class="guide-label">MOTOR</span><h2>モーター評価</h2>
 <p>各レースの「プレミアム」タブに、6艇のモーター評価がならびます。</p>
 <ul><li>公式の計測データ（展示タイム・直線タイム・まわり足・一周タイムなど）を全場ぶん集めて、独自の計算で数値化</li>
 <li>同じレースの6艇とくらべた差に直すので、その日の水面や風のちがいに左右されにくい</li>
@@ -2707,7 +2713,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <figcaption>画面の見本（数字は例です）</figcaption></figure>
 </section>
 <section class="panel premium-feature">
-<div><h2>収支グラフ</h2>
+<div><span class="guide-label">CHART</span><h2>収支グラフ</h2>
 <p>マイノートに記録した舟券の収支を、グラフでふり返れます。</p>
 <ul><li>週・月・年で切りかえ</li>
 <li>日ごとの増減と、期間の累計をいっしょに表示</li>
@@ -2716,16 +2722,16 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <figcaption>画面の見本（金額は例です）</figcaption></figure>
 </section>
 <section class="panel premium-panel">
-<h2>評価の見方</h2>
+<span class="guide-label">GRADES</span><h2>評価の見方</h2>
 <div class="premium-grades premium-table"><span><strong data-grade="S">S</strong>とくに良い</span><span><strong data-grade="A">A</strong>良い</span><span><strong data-grade="B">B</strong>ふつうより上</span><span><strong data-grade="C">C</strong>ふつうより下</span><span><strong data-grade="D">D</strong>下位</span><span><b>—</b>評価保留</span></div>
 <p class="sub">評価は、同じ場のモーターの中での位置です。データが少ない項目や、その場が公式に出していない項目は「—」（評価保留）になります。節の初日は「—」が多くなります。</p>
 </section>
 <section class="panel premium-panel">
-<h2>料金と解約</h2>
+<span class="guide-label">PRICE</span><h2>料金と解約</h2>
 <ul><li>月額500円。申し込んだ日から1か月ごとに自動で更新します</li>
-<li>支払いはクレジットカード（決済は Stripe）。カード番号は艇ろぐには保存されません</li>
+<li>支払いはクレジットカード。カード番号は艇ろぐには保存されません</li>
 <li>解約は会員ページからいつでもできます。解約しても、支払いずみの期間の終わりまでは見られます</li>
-<li>申し込みには、マイノートの会員登録（無料）が必要です</li></ul>
+<li>申し込みには、<a href="{page.u('mynote.html')}#note-account">マイノートの会員登録（無料）</a>が必要です</li></ul>
 </section>
 <p class="sub">モーター評価は過去の公式データにもとづく参考情報で、的中や利益を保証するものではありません。20歳未満の方は舟券を購入できません。のめり込みに注意し、無理のない範囲でお楽しみください。</p>"""
         self.put(page.path, page.render(f"プレミアム｜{SITE_NAME}", "モーター評価とマイノートの収支グラフ。", body, [("", "プレミアム")], noindex=True))
