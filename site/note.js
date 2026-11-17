@@ -246,7 +246,7 @@
     if (!st || !st.configured || st.user) return;
     try { if (sessionStorage.getItem('teilog-fav-hint')) return; sessionStorage.setItem('teilog-fav-hint', '1'); } catch (e) { }
     var text = kind === 'motor' ? 'ログインすると、お気に入りが端末間で共有できます'
-      : 'ログインすると、お気に入りが端末間で共有できて、この選手が出る朝に通知が届きます';
+      : 'ログインすると、お気に入りが端末間で共有できて、この選手が出る朝に通知を受け取れます';
     var html = '<span>' + esc(text) + '</span> <a href="' + ROOT + 'mynote#note-account">ログインへ</a>';
     var row = btn.closest('tr');
     if (row) {
