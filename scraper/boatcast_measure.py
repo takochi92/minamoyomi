@@ -508,6 +508,8 @@ def measure_shot(capture_dir, name, cfg):
         out.append(rec)
     info = {"frames": len(times), "skipped": shot.get("skipped"), "sizes": shot.get("sizes"),
             "window": shot.get("window"), "curves": len(found)}
+    if cfg.get("assign") == "caption":
+        info["captions"] = caption_runs(times, plate)
     if shake:
         info["shake_sd"] = shake["shake_sd"]
         info["landmarks"] = shake["edges"]
@@ -537,6 +539,64 @@ def assign_boats(records, boats, *, use_plate=False):
         r["boat"] = b
         if use_plate and "plate" in r and r["plate"] != b:
             r["reasons"].append("plate_mismatch")
+    return records
+
+
+CAPTION_HUES = {3: (330, 20), 4: (195, 250), 5: (40, 75), 6: (90, 160)}
+
+
+def caption_colour(c):
+    """Boat number from the caption's number-box colour (median RGB): white 1, black 2, then by hue.
+    The caption is an overlay, so night glare on the water does not touch it. None when no box shows."""
+    r, g, b = (float(x) for x in c)
+    mx, mn = max(r, g, b), min(r, g, b)
+    if mn > 200:
+        return 1
+    if mx < 120 and mx - mn < 30:
+        return 2
+    if mx - mn < 40:
+        return None
+    h = np.degrees(np.arctan2(np.sqrt(3) * (g - b), 2 * r - g - b)) % 360
+    for boat, (lo, hi) in CAPTION_HUES.items():
+        if (lo <= h <= hi) if lo <= hi else (h >= lo or h <= hi):
+            return boat
+    return None
+
+
+def caption_runs(times, plate, min_seconds=.8):
+    """(boat, start time) for each caption shown: a run of one steady box colour lasting min_seconds."""
+    if plate is None or not len(plate) or plate.shape[1] == 0:
+        return []
+    lab = [caption_colour(np.median(plate[i], 0)) for i in range(len(times))]
+    runs, k = [], 0
+    while k < len(lab):
+        j = k
+        while j + 1 < len(lab) and lab[j + 1] == lab[k]:
+            j += 1
+        if lab[k] and times[j] - times[k] >= min_seconds:
+            runs.append((int(lab[k]), float(times[k])))
+        k = j + 1
+    # black (2) is also what dark water reads when no caption shows (night): keep a 2 only next to a 1 or a 3
+    return [(b, t) for b, t in runs if b != 2 or any((o == 1 and 0 < t - u <= 6) or (o == 3 and 0 < u - t <= 6) for o, u in runs)]
+
+
+def assign_by_caption(records, runs, boats, lag=(0.0, 2.0)):
+    """Boat numbers from the captions: a pass takes the one caption that starts lag seconds after it entered.
+    No caption, two captions, or a caption claimed by two passes: no boat (never guessed from the order)."""
+    claims = {}
+    for i, r in enumerate(records):
+        ta = r.get("t_a")
+        hit = [b for b, t0 in runs if ta is not None and lag[0] <= t0 - ta <= lag[1]] if ta is not None else []
+        if len(hit) != 1 or hit[0] not in boats:
+            r["reasons"].append("no_caption")
+            continue
+        claims.setdefault(hit[0], []).append(i)
+    for boat, idx in claims.items():
+        if len(idx) > 1:
+            for i in idx:
+                records[i]["reasons"].append("caption_claimed_twice")
+            continue
+        records[idx[0]]["boat"] = boat
     return records
 
 

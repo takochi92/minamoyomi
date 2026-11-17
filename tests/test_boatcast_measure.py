@@ -258,3 +258,36 @@ def test_tone_squeezes_highlights_keeps_order_and_white():
     assert np.all(np.diff(y) > 0)                 # order kept
     assert y[-1] == 1.0 and y[0] == 0.0           # blown-out white stays white: nothing is recovered from it
     assert (y[4] - y[3]) < (x[4] - x[3])          # the bright end is squeezed
+
+
+def test_caption_colour_reads_the_six_number_boxes():
+    from scraper.boatcast_measure import caption_colour
+    assert caption_colour((250, 251, 252)) == 1
+    assert caption_colour((81, 83, 81)) == 2
+    assert caption_colour((236, 46, 50)) == 3
+    assert caption_colour((2, 77, 191)) == 4
+    assert caption_colour((249, 245, 33)) == 5
+    assert caption_colour((18, 184, 16)) == 6
+    assert caption_colour((140, 145, 166)) is None      # caption background, no box
+
+
+def test_assign_by_caption_never_guesses():
+    from scraper.boatcast_measure import assign_by_caption
+    recs = [{"t_a": t, "reasons": []} for t in (10.0, 13.5, 20.0, 24.0)]
+    runs = [(1, 10.7), (2, 14.2), (4, 24.6), (5, 24.9)]      # no caption after 20.0; two after 24.0
+    assign_by_caption(recs, runs, [1, 2, 3, 4, 5, 6])
+    assert [r.get("boat") for r in recs] == [1, 2, None, None]
+    assert "no_caption" in recs[2]["reasons"] and "no_caption" in recs[3]["reasons"]
+    twice = [{"t_a": 10.0, "reasons": []}, {"t_a": 10.5, "reasons": []}]
+    assign_by_caption(twice, [(3, 11.0)], [1, 2, 3, 4, 5, 6])
+    assert [r.get("boat") for r in twice] == [None, None]
+
+
+def test_caption_runs_drop_a_lone_black_that_is_dark_water():
+    import numpy as np
+    from scraper.boatcast_measure import caption_runs
+    seq = [(20, 20, 20)] * 10 + [(250, 250, 250)] * 10 + [(20, 20, 20)] * 10 + [(236, 46, 50)] * 10 + [(140, 145, 166)] * 40 + [(20, 20, 20)] * 10
+    times = np.arange(len(seq)) * 0.3          # captions about 3 s apart, as on the video
+    plate = np.array(seq, float)[:, None, :].repeat(4, 1)
+    runs = caption_runs(times, plate)
+    assert [b for b, _ in runs] == [1, 2, 3]

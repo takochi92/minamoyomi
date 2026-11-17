@@ -1415,7 +1415,15 @@
     252
    ],
    "windowMinCorr": 0.4,
-   "minSeconds": 1.5
+   "minSeconds": 1.5,
+   "plate": {
+    "center": [
+     255,
+     945
+    ],
+    "radius": 4
+   },
+   "plateNote": "名前の帯の艇番の色の箱。通過順で決めた艇番を確かめるため（assign はまだ通過順）"
   }
  }
 }
