@@ -5723,13 +5723,13 @@
   "excluded_reason_counts": {
     "entry_mismatch": 2533,
     "no_tickets": 2270,
-    "missing_or_invalid_timestamps": 2404,
     "fingerprint_mismatch": 2533,
-    "unverified_inputs": 2270,
-    "missing_exhibition_model_decision": 2270,
+    "missing_or_invalid_timestamps": 2404,
     "fixed_tickets_mismatch": 2533,
-    "missing_fixed_decision": 2270,
+    "missing_exhibition_model_decision": 2270,
+    "unverified_inputs": 2270,
     "missing_or_changed_protocol": 2533,
+    "missing_fixed_decision": 2270,
     "no_research_tickets": 7768,
     "incomplete_odds": 278
   },
