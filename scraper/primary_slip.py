@@ -34,7 +34,7 @@ def prepare(race, now, field=None):
     selected = list(dict.fromkeys(tp['bets'])) if ana else standard_tickets(race)
     final = bool(tk.get('final')) if ana else bool((race.get('reco') or {}).get('final'))
     source = ''
-    # 荒れ注意（A級1号艇で万舟が出やすい条件）のうち、プレミアムのモーター総評で選んだ「厳選荒れレース」だけ、
+    # 荒れ注意（A級1号艇で万舟が出やすい条件）のうち、「インがA1なのにAIはイン40%未満」の「厳選荒れレース」だけ、
     # 無難な本線をやめて穴予想に一本化する（arechu_pick。頭はAIの外1位、買い目はその頭のAI上位12点）。
     # 券の種類は「穴予想」（ana）と同じ扱いにして、的中・投資・払戻もほかのレースと同じ集計に入れる。
     if (race.get('primary_slip') or {}).get('source') == 'arechu':

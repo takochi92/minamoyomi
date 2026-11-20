@@ -1,17 +1,16 @@
-"""厳選荒れレース（検証中）：荒れ注意のレースのうち、プレミアムのモーター総評で荒れやすいものだけを選ぶ。
+"""厳選荒れレース（検証中）：荒れ注意のレースのうち「インがA1なのに、AIはインを弱いと見ている」レースだけを選ぶ。
 
-選ぶ条件（どちらか）
-  ・1コースの艇の総評が D … インのエンジンがいちばん下の評価
-  ・頭（外の艇でAIの1着確率1位）の総評が S … 攻める側のエンジンがいちばん上の評価
-総評は今節の号機×選手の評価（前日までの今節のレースから作る。初日は無い）。
+選ぶ条件（両方）
+  ・1コースの選手が A1 … 人気が集まりやすく、外の頭のオッズに妙味が出る
+  ・AIが見ているインの1着確率が 40% 未満
+買い目は arechu.tickets_for（頭＝外の艇でAIの1着確率1位、その頭のAI上位12点）。
 
-検証（2026/9/27〜11/16・51日、荒れ注意336レース。AIはそれより前で学習、総評は前日までのデータで作成。12点）
-  荒れ注意全部                    336レース 的中20.8%・回収102%
-  1コースD または 頭S（採用）       56レース 的中26.8%・回収148%（1日1〜3レース）
-  1コースC・D または 頭S・A         125レース 的中23.2%・回収129%（2026/11/19 は17レース中12レースが該当し、多すぎた）
-  頭S・A かつ 1コースC・D            37レース 的中27.0%・回収115%
-  （総評C・Dの艇を2着から切る形は、どれも回収が下がったので使わない）
-9つの選び方を比べていちばん良いものを選んだので、偶然の可能性もある。件数も少ないので「検証中」とし、成績は続けて記録する。
+検証（過去1年＝2025/11/17〜2026/11/16、荒れ注意9,823レース。AIはそれより前のデータで学習。12点）
+  荒れ注意すべて                     9,823レース（1日27） 的中17% 回収82%（前半86%・後半78%）
+  インA1 かつ イン確率40%未満（採用）   369レース（1日約1）  的中24% 回収119%（前半115%・後半123%）
+  ＋インの展示5位以下                   253レース            的中28% 回収142%（前半123%・後半161%）
+  約500通りの組み合わせから選んだので偶然の分は割り引いて見る。上位はどれも「インがA1なのにデータでは弱い」形で、
+  前半・後半の両方で100%を超えたものを採った。プレミアムの総評（2026/9/27〜しか無い）は選ぶ条件に使わず、参考として表示するだけ。
 """
 from __future__ import annotations
 
@@ -20,8 +19,8 @@ import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
-HEAD_GOOD = ("S",)
-IN_WEAK = ("D",)
+IN_CLASS = "A1"
+IN_P_MAX = 0.40
 _CACHE: dict = {}
 _LOCK = threading.Lock()
 LEDGER = "arechu_pick.json"
@@ -61,18 +60,22 @@ def overall(race: dict, field: dict) -> dict:
     return out
 
 
-def pick(race: dict, head: int, field: dict) -> dict | None:
-    """厳選なら {'head', 'reasons': [{frame, name, grade, role}]}。外れたら None"""
-    grades = overall(race, field)
+def pick(race: dict, head: int, field: dict | None = None) -> dict | None:
+    """厳選なら {'head', 'reasons': [{frame, name, class, p_win, role, grade?}]}。外れたら None。
+    grade はプレミアムの総評（あるときだけ。選ぶ条件には使わない）"""
     pb = {b["frame"]: b for b in (race.get("prediction") or {}).get("boats") or []}
-    names = {b["frame"]: b.get("name", "") for b in (race.get("racelist") or {}).get("boats", [])}
-    inb = next((f for f, b in pb.items() if b.get("course") == 1), 1)
-    reasons = []
-    if grades.get(inb) in IN_WEAK:
-        reasons.append({"frame": inb, "name": names.get(inb, ""), "grade": grades[inb], "role": "in"})
-    if grades.get(head) in HEAD_GOOD:
-        reasons.append({"frame": head, "name": names.get(head, ""), "grade": grades[head], "role": "head"})
-    return {"head": head, "reasons": reasons} if reasons else None
+    rl = {b["frame"]: b for b in (race.get("racelist") or {}).get("boats", [])}
+    inb = next((f for f, b in pb.items() if b.get("course") == 1), None)
+    if inb is None or inb not in rl:
+        return None
+    p_in = pb[inb].get("p_win")
+    if rl[inb].get("class") != IN_CLASS or p_in is None or p_in >= IN_P_MAX:
+        return None
+    reason = {"frame": inb, "name": rl[inb].get("name", ""), "class": IN_CLASS, "p_win": round(p_in, 3), "role": "in"}
+    grade = overall(race, field or {}).get(inb)
+    if grade:
+        reason["grade"] = grade
+    return {"head": head, "reasons": [reason]}
 
 
 def update_ledger(data: Path, dates) -> dict:

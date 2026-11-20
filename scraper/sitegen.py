@@ -1623,8 +1623,13 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'回収{pct(t["roi"])}（検証中）。')
 
     def pick_reasons(self, pick):
-        return "".join(f'<li>{bt(x["frame"])} {e(x["name"])}　モーター総評 <b class="grade grade-{e(x["grade"]).lower()}">{e(x["grade"])}</b>'
-                       f'<span class="sub">（{"インが弱い" if x["role"] == "in" else "攻める艇が強い"}）</span></li>' for x in pick["reasons"])
+        out = []
+        for x in pick["reasons"]:
+            g = (f'<span class="sub">参考：モーター総評 <b class="grade grade-{e(x["grade"]).lower()}">{e(x["grade"])}</b>（プレミアムの評価）</span>'
+                 if x.get("grade") else "")
+            out.append(f'<li>{bt(x["frame"])} {e(x["name"])}（{e(x.get("class", ""))}）　AIの1着確率 <b>{pct(x.get("p_win"))}</b>'
+                       f'<span class="sub">（A1でインなのに、データでは弱い）</span>{g}</li>')
+        return "".join(out)
 
     def arechu_block(self, race, page=None):
         ar = arechu.from_race(race)
@@ -1655,8 +1660,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             link = f' <a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
             top = (f'<div class="pick-box"><b class="pick-tag">厳選荒れレース <small>検証中</small></b>'
                    f'<p style="margin:0">選んだ理由</p><ul class="pick-why">{self.pick_reasons(pick)}</ul>'
-                   f'<p class="sub" style="margin:0">総評は、プレミアムのモーター評価です（展示・直線・まわり足を、同じ場の直近の節とくらべてA〜D）。'
-                   f'6艇すべての評価と出足・伸び・まわり足の内訳は、プレミアムで見られるようにする予定です。{link}</p>'
+                   f'<p class="sub" style="margin:0">インがA1だと人気が集まりやすく、外の頭のオッズに妙味が出ます。過去1年で、この条件の369レースは的中約24%・回収約119%（前半・後半の半年ずつ、どちらも100%超え）。'
+                   f'モーター総評はプレミアムの評価です。6艇すべての評価と出足・伸び・まわり足の内訳は、プレミアムで見られるようにする予定です。{link}</p>'
                    f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}</p></div>')
         return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030">{head}{top}'
                 f'<p style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。{why}{e(tk["kimarite"])}</p>'
@@ -1687,15 +1692,16 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if not items:
             return ""
         d = self.idx.get("date")
-        chip = lambda x: f'<span class="pick-chip">{"イン" if x["role"] == "in" else "頭の"}総評{e(x["grade"])}</span>'
+        chip = lambda x: (f'<span class="pick-chip">インA1・AI{pct(x.get("p_win"))}</span>'
+                          + (f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""))
         rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{dl}</span></td>'
                        f'<td class="r num">{pick["head"]}号艇頭</td><td class="r">{"".join(chip(x) for x in pick["reasons"])}</td></tr>'
                        for dl, v, r, pick in items)
         return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れレース（{len(items)}） <small>検証中</small></h2>'
                 f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">選んだ理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<p class="sub" style="margin:0">プレミアムのモーター評価で「インが弱い」「攻める艇が強い」荒れ注意のレースを選んでいます。{e(self.arechu_record_line())}</p>'
-                f'<details class="more"><summary>くわしく</summary><p>荒れ注意（1号艇がA1・A2で、外との勝率の差が小さい・展示が遅いなどの条件）のレースのうち、1コースの艇のモーター総評がD、または頭の艇の総評がSのレースだけを選びます。'
-                f'買い目は、外の艇でAIの1着確率がいちばん高い艇を頭に、AIの確率が高い順に12点。2026年9月27日〜11月16日で試すと、この条件の56レースで的中約27%・回収約148%でしたが、件数が少なく偶然の可能性もあるため「検証中」です。'
+                f'<p class="sub" style="margin:0">荒れ注意のうち「インがA1なのに、AIはインの1着を40%未満と見ている」レースを選んでいます（参考にプレミアムのモーター総評も表示）。{e(self.arechu_record_line())}</p>'
+                f'<details class="more"><summary>くわしく</summary><p>荒れ注意（1号艇がA1・A2で、外との勝率の差が小さい・展示が遅いなどの条件）のレースのうち、1コースの選手がA1で、AIの1着確率が40%未満のレースだけを選びます。インがA1だと人気が集まりやすく、外の頭のオッズに妙味が出ます。'
+                f'買い目は、外の艇でAIの1着確率がいちばん高い艇を頭に、AIの確率が高い順に12点。過去1年（2025年11月〜2026年11月）で試すと、この条件の369レースで的中約24%・回収約119%、前半・後半の半年ずつでも115%・123%でした。それでも先のことは分からないので「検証中」です。'
                 f'必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></details></section>')
 
     def today_targets(self, page):

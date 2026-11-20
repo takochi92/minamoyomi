@@ -390,19 +390,19 @@ def test_arechu_shown_on_race_and_top(tmp_path):
     assert "荒れ注意" in block and "本線・押さえ" in block and "pick-box" not in block and "総評 <b" not in block
     # 厳選荒れレース：理由（総評）とプレミアムへの案内、台帳の成績
     head = sitegen.arechu.from_race(race)["head"]
-    race["arechu_pick"] = {"head": head, "reasons": [{"frame": 1, "name": "谷津 幸宏", "grade": "D", "role": "in"}]}
+    race["arechu_pick"] = {"head": head, "reasons": [{"frame": 1, "name": "谷津 幸宏", "class": "A1", "p_win": 0.29, "grade": "D", "role": "in"}]}
     race["primary_slip"] = {"policy": "single_slip_v1", "kind": "ana", "source": "arechu", "tickets": sitegen.arechu.from_race(race)["tickets"]}
     p.write_text(json.dumps(race, ensure_ascii=False), encoding="utf-8")
     (tmp_path / "data" / "arechu_pick.json").write_text(json.dumps({"races": {"x": {"date": "20260924", "hit": True, "invest": 1200, "return": 3000}}}), encoding="utf-8")
     s._arechu_rec = None
     block = s.arechu_block(race, sitegen.Page("race/20260925/x.html"))
-    assert "厳選荒れレース" in block and "モーター総評" in block and "プレミアムとは" in block and "回収250%" in block
+    assert "厳選荒れレース" in block and "AIの1着確率 <b>29%</b>" in block and "モーター総評" in block and "プレミアムとは" in block and "回収250%" in block
     assert "20歳未満" in block and "のめり込み" in block
     for r in s.idx["venues"][0]["races"]:
         r.pop("result", None)
     s._arechu = None
     top = s.arechu_top(sitegen.Page("index.html"))
-    assert "今日の厳選荒れレース（1）" in top and "イン総評D" in top
+    assert "今日の厳選荒れレース（1）" in top and "インA1・AI29%" in top and "総評D" in top
     race["racelist"]["boats"][0]["class"] = "B1"
     assert s.arechu_block(race) == ""
 
