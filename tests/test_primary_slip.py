@@ -72,7 +72,7 @@ def field(grades, title='一般戦', through='20261009'):
 
 def test_arechu_race_without_pick_keeps_the_standard_slip():
     """荒れ注意でも、総評の条件に当てはまらなければ本線・押さえのまま"""
-    for grades in ({}, {1: 'A', 4: 'B'}, {2: 'D'}):
+    for grades in ({}, {1: 'A', 4: 'B'}, {2: 'D'}, {1: 'C', 4: 'A'}):
         r = arechu_race()
         assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST), field(grades))
         assert r['primary_slip']['kind'] == 'standard' and 'arechu_pick' not in r
@@ -83,7 +83,7 @@ def test_arechu_race_without_pick_keeps_the_standard_slip():
 
 
 def test_arechu_pick_when_the_in_is_weak_or_the_head_is_strong():
-    for grades, roles in (({1: 'D'}, ['in']), ({4: 'S'}, ['head']), ({1: 'C', 4: 'A'}, ['in', 'head'])):
+    for grades, roles in (({1: 'D'}, ['in']), ({4: 'S'}, ['head']), ({1: 'D', 4: 'S'}, ['in', 'head'])):
         r = arechu_race()
         assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST), field(grades))
         assert r['primary_slip']['source'] == 'arechu'
@@ -110,7 +110,7 @@ def test_arechu_slip_follows_the_ai_head_and_is_rebuilt_before_the_deadline():
     r['prediction']['boats'] = [{'frame': f, 'course': f, 'p_win': pw[f]} for f in range(1, 7)]
     r['prediction']['p3'] = [pw[a] * (7 - b) / 100 for a, b, c in permutations(range(1, 7), 3)]
     r['primary_slip'] = {'policy': 'single_slip_v1', 'source': 'arechu', 'tickets': ['4-1-2']}
-    assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST), field({3: 'A'}))
+    assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST), field({3: 'S'}))
     s = r['primary_slip']
     assert s['source'] == 'arechu' and len(s['tickets']) == 12 and all(t.startswith('3-') for t in s['tickets'])
     assert s['tickets'][0] in ('3-1-2', '3-1-4', '3-1-5', '3-1-6')

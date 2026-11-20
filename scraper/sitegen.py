@@ -1443,6 +1443,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.freshness_block(page, self.idx.get('updated_at', ''))}
 <details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
+{self.arechu_top(page)}
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
 {confidence_home}
@@ -1693,8 +1694,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れレース（{len(items)}） <small>検証中</small></h2>'
                 f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">選んだ理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
                 f'<p class="sub" style="margin:0">プレミアムのモーター評価で「インが弱い」「攻める艇が強い」荒れ注意のレースを選んでいます。{e(self.arechu_record_line())}</p>'
-                f'<details class="more"><summary>くわしく</summary><p>荒れ注意（1号艇がA1・A2で、外との勝率の差が小さい・展示が遅いなどの条件）のレースのうち、1コースの艇のモーター総評がC・D、または頭の艇の総評がS・Aのレースだけを選びます。'
-                f'買い目は、外の艇でAIの1着確率がいちばん高い艇を頭に、AIの確率が高い順に12点。2026年9月27日〜11月16日で試すと、この条件のレースは回収120%台でしたが、件数が60〜100レースと少なく偶然の可能性もあるため「検証中」です。'
+                f'<details class="more"><summary>くわしく</summary><p>荒れ注意（1号艇がA1・A2で、外との勝率の差が小さい・展示が遅いなどの条件）のレースのうち、1コースの艇のモーター総評がD、または頭の艇の総評がSのレースだけを選びます。'
+                f'買い目は、外の艇でAIの1着確率がいちばん高い艇を頭に、AIの確率が高い順に12点。2026年9月27日〜11月16日で試すと、この条件の56レースで的中約27%・回収約148%でしたが、件数が少なく偶然の可能性もあるため「検証中」です。'
                 f'必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></details></section>')
 
     def today_targets(self, page):
