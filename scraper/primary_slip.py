@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from . import arechu
 
+
 POLICY = 'single_slip_v1'
 JST = timezone(timedelta(hours=9))
 
@@ -33,7 +34,10 @@ def prepare(race, now):
     final = bool(tk.get('final')) if ana else bool((race.get('reco') or {}).get('final'))
     source = ''
     # 荒れ注意（A級1号艇で万舟が出やすい条件）のレースは、無難な本線をやめて穴予想に一本化する。
+    # 頭は外の艇でAIの1着確率1位（「穴・攻めの材料」と同じ）、買い目はその頭のAI上位12点（arechu.tickets_for）。
     # 券の種類は「穴予想」（ana）と同じ扱いにして、的中・投資・払戻もほかのレースと同じ集計に入れる。
+    if (race.get('primary_slip') or {}).get('source') == 'arechu':
+        race.pop('primary_slip')          # 締切前は作り直す（前の決め方で固定した券を残さない）
     ar = arechu.from_race(race)
     if ar:
         ana, selected, source = True, ar['tickets'], 'arechu'

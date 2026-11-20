@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime
-from scraper.primary_slip import prepare, tickets, JST
+from scraper.primary_slip import standard_tickets, prepare, tickets, JST
 from scraper.run import judge
 from scraper.probability_view import explain, soft
 
@@ -72,3 +72,17 @@ def test_arechu_race_uses_ana_slip_and_counts_in_normal_totals():
     judge(r)
     assert r['hit'] and r['invest'] == 1200 and r['return'] == 15000
     assert r['hit_main'] and r['invest_main'] == 1200
+
+
+def test_arechu_slip_follows_the_ai_head_and_is_rebuilt_before_the_deadline():
+    """2026-11-19 徳山10R：頭は外の艇でAIの1着確率1位。前の決め方で固定した券は締切前なら作り直す"""
+    from itertools import permutations
+    r = arechu_race()
+    pw = {1: 0.5, 2: 0.14, 3: 0.24, 4: 0.06, 5: 0.06, 6: 0.0}
+    r['prediction']['boats'] = [{'frame': f, 'course': f, 'p_win': pw[f]} for f in range(1, 7)]
+    r['prediction']['p3'] = [pw[a] * (7 - b) / 100 for a, b, c in permutations(range(1, 7), 3)]
+    r['primary_slip'] = {'policy': 'single_slip_v1', 'source': 'arechu', 'tickets': ['4-1-2']}
+    assert prepare(r, datetime(2026, 10, 10, 11, 55, tzinfo=JST))
+    s = r['primary_slip']
+    assert s['source'] == 'arechu' and len(s['tickets']) == 12 and all(t.startswith('3-') for t in s['tickets'])
+    assert s['tickets'][0] in ('3-1-2', '3-1-4', '3-1-5', '3-1-6')
