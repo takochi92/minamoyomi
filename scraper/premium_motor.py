@@ -49,7 +49,10 @@ TWO_SECTION_VENUES = {"12", "13", "18"}
 LAP_MINUS_TURN_VENUES = {"12", "13", "18"}
 # Edogawa publishes only the exhibition time. Straight and turn come from the BOATCAST replay,
 # measured by tools.boatcast_measure (numbers only) and labelled as our own measurement.
-VIDEO_VENUES = {"03"}
+# Own replay measurements fill an item only where the official one is missing for that race, and only
+# with 4+ boats measured. Venues here passed a 12-race check of their profile (tools/boatcast/profiles,
+# research/improvements/BOATCAST_PROFILES.md). Only scores built from video carry source "video".
+VIDEO_VENUES = {"02", "03", "04", "05", "08", "09", "10", "11", "12", "13", "16", "17", "18", "22", "23"}
 VIDEO_METRICS = ("straight", "turn")
 VIDEO_MIN_BOATS = 4
 VIDEO_DIR = ROOT / "research" / "boatcast-measure"
@@ -61,7 +64,20 @@ def day(value):
     return date(int(value[:4]), int(value[4:6]), int(value[6:8]))
 
 
+def video_keys(race, venue):
+    """(item, motor, rider) whose value in this race is the own replay measurement, not an official time."""
+    used = set()
+    if venue in VIDEO_VENUES and (race or {}).get("video"):
+        for _ in _observations(race, venue, used):
+            pass
+    return used
+
+
 def observations(race, venue=None):
+    return _observations(race, venue, None)
+
+
+def _observations(race, venue=None, from_video=None):
     boats = (race.get("racelist") or {}).get("boats") or []
     entries = {b["frame"]: b for b in boats if b.get("motor_no") and b.get("toban")}
     lanes = set(range(1, 7))
@@ -108,6 +124,9 @@ def observations(race, venue=None):
             partial["overall"] = {b: sum(weights[k] * ranks[k][b] for k in parts) - .5 for b in boats}
         for key, values in partial.items():
             for b, value in values.items():
+                if from_video is not None:
+                    # this value is the own replay measurement, not an official time
+                    from_video.add((key, str(entries[b]["motor_no"]), str(entries[b]["toban"])))
                 yield key, str(entries[b]["motor_no"]), str(entries[b]["toban"]), value
     if (venue in LAP_MINUS_TURN_VENUES and "straight" not in deviations
             and {"lap", "turn"} <= deviations.keys()):
@@ -137,10 +156,14 @@ def observations(race, venue=None):
 def pairing_ratings(meets, venue, items=None):
     samples = defaultdict(list)
     cuts = defaultdict(list)
+    video_samples = set()
     for meet in meets:
         for d, title, race in meet:
+            used = video_keys(race, venue)
             for key, motor, rider, value in observations(race, venue):
                 if key in ("turn", "acceleration", "overall"):
+                    if (key, motor, rider) in used:
+                        video_samples.add((key, meet[0][0], title, motor, rider))
                     if items is not None:
                         cut = items.deduction(key, rider, venue, motor)
                         value += cut
@@ -175,7 +198,7 @@ def pairing_ratings(meets, venue, items=None):
                 score["rider_deduction"] = round(sum(c) / len(c), 4)
             if metric == "acceleration" and venue in UNCONFIRMED_EXIT_VENUES:
                 score["source"] = "unconfirmed_section"
-            if venue in VIDEO_VENUES:
+            if (metric, start, title, motor, rider) in video_samples:
                 score["source"] = "video"
             output.setdefault(motor, {}).setdefault(rider, {})[metric] = {**score, "start": start, "title": title}
     return output
@@ -314,10 +337,14 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
         recent = complete[-3:]
         data = defaultdict(list)
         deducted = defaultdict(list)
+        video_motors = set()
         for meeting in recent:
             meet = meeting[0][0]
             for d, _, race in meeting:
+                used = video_keys(race, venue)
                 for key, motor, rider, delta in observations(race, venue):
+                    if (key, motor, rider) in used:
+                        video_motors.add((key, motor))
                     if key in RIDER_DEDUCTION_METRICS and deductions is not None:
                         # A rider faster than usual carried the motor: take that off. Never add.
                         cut = rider_deduction(deductions, rider)
@@ -348,8 +375,8 @@ def build(records, motor_history, through, meeting_dates=None, periods=None, rid
         if venue in LAP_MINUS_TURN_VENUES:
             for score in metrics["straight"].values():
                 score["source"] = "lap_minus_turn"
-        if venue in VIDEO_VENUES:
-            for score in metrics["straight"].values():
+        for motor, score in metrics["straight"].items():
+            if ("straight", motor) in video_motors:
                 score["source"] = "video"
         if baselines is not None:
             # Every finished meeting in the window, minus what each rider usually does. A rider the
