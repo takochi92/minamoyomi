@@ -201,7 +201,7 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
     # pre-race update atomic, including odds-based ticket filtering and snapshots.
     locked_fields = ('racelist', 'race_name', 'before', 'oriten', 'before_final', 'prediction',
                      'start_timing', 'start_slit', 'odds_pre', 'value', 'reco', 'honmei',
-                     'seme', 'tsuke', 'win_odds', 'primary_slip', 'research_snapshot', 'research_fetched_at')
+                     'seme', 'tsuke', 'win_odds', 'primary_slip', 'arechu_pick', 'research_snapshot', 'research_fetched_at')
     prior = deepcopy({k: race[k] for k in locked_fields if k in race}) if now < dl else {}
     changed = False
     if race.get('deadline') != r['deadline']:
@@ -550,6 +550,8 @@ def main(argv=None):
     if (Path(__file__).parent / "model_report.json").exists():
         shutil.copyfile(Path(__file__).parent / "model_report.json", DATA / "model_report.json")
     build_stats()
+    from . import arechu_pick
+    arechu_pick.update_ledger(DATA, sorted({date, (datetime.strptime(date, "%Y%m%d") - timedelta(days=1)).strftime("%Y%m%d")}))
     prune(date)
     print(f"done: {f.count} requests in {time.time() - getattr(f, 'started', time.time()):.0f}s{' (budget reached; rest next run)' if f.exhausted else ''}", flush=True)
     return 0

@@ -383,10 +383,26 @@ def test_arechu_shown_on_race_and_top(tmp_path):
     race["before"]["weather"] = {"wave_cm": 5, "wind_speed": 4}
     for b in race["before"]["boats"]:
         b["exhibit_time"] = 6.9 if b["frame"] == 1 else 6.75
+    race.pop("primary_slip", None)
+    race.pop("result", None)
+    # 厳選に当てはまらない荒れ注意：注意だけで、荒れ用の買い目は出さない
+    block = s.arechu_block(race, sitegen.Page("race/20260925/x.html"))
+    assert "荒れ注意" in block and "本線・押さえ" in block and "pick-box" not in block and "総評 <b" not in block
+    # 厳選荒れレース：理由（総評）とプレミアムへの案内、台帳の成績
+    head = sitegen.arechu.from_race(race)["head"]
+    race["arechu_pick"] = {"head": head, "reasons": [{"frame": 1, "name": "谷津 幸宏", "grade": "D", "role": "in"}]}
+    race["primary_slip"] = {"policy": "single_slip_v1", "kind": "ana", "source": "arechu", "tickets": sitegen.arechu.from_race(race)["tickets"]}
     p.write_text(json.dumps(race, ensure_ascii=False), encoding="utf-8")
-    assert "荒れ注意" in s.arechu_block(race)
+    (tmp_path / "data" / "arechu_pick.json").write_text(json.dumps({"races": {"x": {"date": "20260924", "hit": True, "invest": 1200, "return": 3000}}}), encoding="utf-8")
+    s._arechu_rec = None
+    block = s.arechu_block(race, sitegen.Page("race/20260925/x.html"))
+    assert "厳選荒れレース" in block and "モーター総評" in block and "プレミアムとは" in block and "回収250%" in block
+    assert "20歳未満" in block and "のめり込み" in block
+    for r in s.idx["venues"][0]["races"]:
+        r.pop("result", None)
     s._arechu = None
-    assert "荒れ注意のレース" in s.arechu_top(sitegen.Page("index.html"))
+    top = s.arechu_top(sitegen.Page("index.html"))
+    assert "今日の厳選荒れレース（1）" in top and "イン総評D" in top
     race["racelist"]["boats"][0]["class"] = "B1"
     assert s.arechu_block(race) == ""
 
