@@ -309,13 +309,13 @@ def test_edogawa_video_fills_straight_turn_and_overall_only_there(tmp_path):
     boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
     before = [{"frame": i, "exhibit_time": 6.7 + i / 100} for i in range(1, 7)]
     rows = [{"source": "video", "date": "20261114", "venue": v, "race": 6, "boat": b, "metric": m,
-             "seconds": s + b / 10} for v in ("03", "04") for m, s in (("straight", 5.0), ("turn", 2.0))
+             "seconds": s + b / 10} for v in ("03", "06") for m, s in (("straight", 5.0), ("turn", 2.0))
             for b in (1, 2, 4, 6)]
     rows.append({"source": "video", "date": "20261114", "venue": "03", "race": 6, "boat": 3,
                  "metric": "turn", "seconds": 2.3})
     (tmp_path / "20261114-03.json").write_text(json.dumps({"rows": rows}))
     video = load_video(tmp_path)
-    assert ("20261114", "04", 6) not in video
+    assert ("20261114", "06", 6) not in video
     records = attach_video({("20261114", "03", 6): {"racelist": {"boats": boats},
                                                     "before": {"boats": before}}}, video)
     race = records["20261114", "03", 6]
@@ -327,4 +327,21 @@ def test_edogawa_video_fills_straight_turn_and_overall_only_there(tmp_path):
     # overall only for boats with exhibition, straight and turn
     assert {m for k, m in obs if k == "overall"} == {"1", "2", "4", "6"}
     # a venue that is not in VIDEO_VENUES ignores the measurement
-    assert not any(k in ("straight", "turn") for k, *_ in observations(race, "04"))
+    assert not any(k in ("straight", "turn") for k, *_ in observations(race, "06"))
+
+
+def test_video_fills_only_missing_items_and_only_those_carry_the_video_label():
+    from scraper.premium_motor import observations, video_keys
+    boats = [{"frame": i, "motor_no": i, "toban": str(1000 + i)} for i in range(1, 7)]
+    before = [{"frame": i, "exhibit_time": 6.7 + i / 100} for i in range(1, 7)]
+    video = {"straight": {b: 5.0 + b / 10 for b in range(1, 7)}, "turn": {b: 2.0 + b / 10 for b in range(1, 7)}}
+    official = {"items": ["一周", "まわり足", "直線"], "rows": {str(i): [37.0, 5.5 + i / 50, 7.0 + i / 50] for i in range(1, 7)}}
+    with_official = {"racelist": {"boats": boats}, "before": {"boats": before}, "oriten": official, "video": video}
+    # 11 (びわこ) publishes まわり足 and 直線: the official times are used, the video is not
+    obs = {(k, m): v for k, m, _, v in observations(with_official, "11")}
+    assert round(obs["straight", "1"], 4) == round(7.02 - sum(7.0 + i / 50 for i in range(1, 7)) / 6, 4)
+    assert video_keys(with_official, "11") == set()
+    # the same race without the official sheet: the video fills, and exactly those values are marked
+    no_official = {k: v for k, v in with_official.items() if k != "oriten"}
+    marked = video_keys(no_official, "11")
+    assert {k for k, _, _ in marked} == {"straight", "turn", "overall"} and len(marked) == 18
