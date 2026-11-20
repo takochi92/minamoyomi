@@ -1170,7 +1170,7 @@ class Site:
                 if ana:
                     pmap = dict(zip(COMBO_LIST, p.get('p3') or []))
                     content = '<div class="bets">'+cells([{'combo':c, 'p':pmap.get(c,0)} for c in selected['tickets']])+'</div>'
-                    content += ('<p class="primary-note">厳選荒れレース（検証中）なので、無難な本線・押さえは出さず、この穴予想だけを採用します（頭は外の艇でAIの1着確率がいちばん高い艇。選んだ理由は下の「荒れ注意の展開予想」）。</p>' if selected.get('source') == 'arechu' else
+                    content += ('<p class="primary-note">厳選荒れ：この12点だけ（理由は下）</p>' if selected.get('source') == 'arechu' else
                                 '<p class="primary-note">厳選穴の条件が成立したため、通常の本線・押さえを追加せず、この券だけを採用します。的中率は低くなり得ます。回収率改善は未確認です。</p>')
                 else:
                     content = self.slip_body(p, cells)
@@ -1618,18 +1618,22 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     def arechu_record_line(self):
         t = self.arechu_record()
         if not t:
-            return "成績はこれから記録します（検証中）。"
-        return (f'{jdate(t["since"])}からの成績：{t["races"]}レース・的中{t["hits"]}（{pct(t["hits"] / t["races"])}）・'
-                f'回収{pct(t["roi"])}（検証中）。')
+            return "記録：これから"
+        return f'記録（{jdate(t["since"])}〜）：{t["races"]}R・的中{t["hits"]}・回収{pct(t["roi"])}'
+
+    ARECHU_STATS = (("過去1年", "369R"), ("的中", "24%"), ("回収", "119%"))
+    ARECHU_WARN = '20歳未満は購入不可・のめり込み注意'
+
+    def arechu_stats(self):
+        return '<div class="pick-stats">' + "".join(f'<span><small>{k}</small><b>{v}</b></span>' for k, v in self.ARECHU_STATS) + '</div>'
 
     def pick_reasons(self, pick):
         out = []
         for x in pick["reasons"]:
-            g = (f'<span class="sub">参考：モーター総評 <b class="grade grade-{e(x["grade"]).lower()}">{e(x["grade"])}</b>（プレミアムの評価）</span>'
-                 if x.get("grade") else "")
-            out.append(f'<li>{bt(x["frame"])} {e(x["name"])}（{e(x.get("class", ""))}）　AIの1着確率 <b>{pct(x.get("p_win"))}</b>'
-                       f'<span class="sub">（A1でインなのに、データでは弱い）</span>{g}</li>')
-        return "".join(out)
+            g = f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""
+            out.append(f'{bt(x["frame"])}<b>{e(x["name"])}</b><span class="pick-chip">{e(x.get("class", ""))}</span>'
+                       f'<span class="pick-chip">AI {pct(x.get("p_win"))}</span>{g}')
+        return '<div class="pick-why">' + "".join(out) + '</div>'
 
     def arechu_block(self, race, page=None):
         ar = arechu.from_race(race)
@@ -1638,35 +1642,24 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         pr, tk, h = ar["p"], ar["tenkai"], ar["head"]
         slip = race.get("primary_slip") or {}
         pick = race.get("arechu_pick")
-        head = f'<h2>⚠ 荒れ注意の展開予想 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
-        warn = '必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。'
+        warn = f'<p class="sub" style="margin:0">{self.ARECHU_WARN}</p>'
         if slip.get("source") != "arechu":
-            # 荒れ注意でも、厳選の条件に当てはまらないレースは、買い目はいつもの本線・押さえ（荒れ用の券は出さない）
-            pw = f'（{pct(ar["p_win"], 1)}）' if ar.get("p_win") is not None else ""
-            return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030">{head}'
-                    f'<p style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。荒れた場合の頭の目安は、外の艇でAIの1着確率がいちばん高い{bt(h)}{pw}です。</p>'
-                    f'<p class="sub" style="margin:0">モーターの評価から選ぶ「厳選荒れレース」には当てはまらないので、買い目は上の採用予想（本線・押さえ）のままです。荒れ用の買い目は足しません。{warn}</p></section>')
-        if ar["basis"] == "legacy":
-            why = f'このレースは、以前の決め方（外で全国勝率1位の頭・展開の多い順12点）で{bt(h)}の頭を採用券にしました。'
-            how = f'以前の決め方で固定した採用券の{len(ar["tickets"])}点です。'
-        else:
-            pw = f'（{pct(ar["p_win"], 1)}）' if ar.get("p_win") is not None else ""
-            why = f'ここは無難な本線ではなく、外の艇でAIの1着確率がいちばん高い<b>{bt(h)}</b>{pw}の頭で狙います。'
-            how = f'{h}号艇が頭の3連単を、AIの確率が高い順に{len(ar["tickets"])}点。上の採用予想と同じ買い目です。'
-        groups = "".join(
-            f'<li><b>2着{bt(g["second"])}</b> {e(g["story"])}<br><span class="num">{" ".join(g["tickets"])}</span></li>' for g in tk["groups"])
-        top = ""
+            # 厳選に当てはまらない荒れ注意：注意だけ。買い目は本線・押さえのまま（荒れ用の券は出さない）
+            return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
+                    f'<p style="margin:0">荒れたら頭は {bt(h)}。買い目は本線・押さえのまま。</p>{warn}</section>')
+        groups = "".join(f'<li>2着{bt(g["second"])} <span class="num">{" ".join(g["tickets"])}</span></li>' for g in tk["groups"])
+        pw = f' <span class="sub">AI {pct(ar["p_win"])}</span>' if ar.get("p_win") is not None else ""
         if pick:
-            link = f' <a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
-            top = (f'<div class="pick-box"><b class="pick-tag">厳選荒れレース <small>検証中</small></b>'
-                   f'<p style="margin:0">選んだ理由</p><ul class="pick-why">{self.pick_reasons(pick)}</ul>'
-                   f'<p class="sub" style="margin:0">インがA1だと人気が集まりやすく、外の頭のオッズに妙味が出ます。過去1年で、この条件の369レースは的中約24%・回収約119%（前半・後半の半年ずつ、どちらも100%超え）。'
-                   f'モーター総評はプレミアムの評価です。6艇すべての評価と出足・伸び・まわり足の内訳は、プレミアムで見られるようにする予定です。{link}</p>'
-                   f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}</p></div>')
-        return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030">{head}{top}'
-                f'<p style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。{why}{e(tk["kimarite"])}</p>'
-                f'<ul style="margin:0;padding-left:18px;display:grid;gap:6px">{groups}</ul>'
-                f'<p class="sub" style="margin:0">{how}{warn}</p></section>')
+            link = f'<a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
+            title = f'<h2>⚠ 厳選荒れ <small>検証中・万舟 約{round(pr * 100)}%</small></h2>'
+            top = (f'{self.pick_reasons(pick)}<p style="margin:0">A1のインは人気 → でもAIは低評価 → <b>外の頭に妙味</b></p>'
+                   f'{self.arechu_stats()}<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{link}</p>')
+        else:
+            title = f'<h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
+            top = '<p class="sub" style="margin:0">以前の決め方で固定した買い目です。</p>' if ar["basis"] == "legacy" else ""
+        return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030">{title}{top}'
+                f'<p style="margin:0">頭 <b>{bt(h)}</b>{pw}　{len(ar["tickets"])}点</p>'
+                f'<ul class="pick-tickets">{groups}</ul>{warn}</section>')
 
     def arechu_races(self):
         """今日のまだ終わっていない厳選荒れレース"""
@@ -1695,14 +1688,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         chip = lambda x: (f'<span class="pick-chip">インA1・AI{pct(x.get("p_win"))}</span>'
                           + (f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""))
         rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{dl}</span></td>'
-                       f'<td class="r num">{pick["head"]}号艇頭</td><td class="r">{"".join(chip(x) for x in pick["reasons"])}</td></tr>'
+                       f'<td class="r num">{bt(pick["head"])}頭</td><td class="r">{"".join(chip(x) for x in pick["reasons"])}</td></tr>'
                        for dl, v, r, pick in items)
-        return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れレース（{len(items)}） <small>検証中</small></h2>'
-                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">選んだ理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<p class="sub" style="margin:0">荒れ注意のうち「インがA1なのに、AIはインの1着を40%未満と見ている」レースを選んでいます（参考にプレミアムのモーター総評も表示）。{e(self.arechu_record_line())}</p>'
-                f'<details class="more"><summary>くわしく</summary><p>荒れ注意（1号艇がA1・A2で、外との勝率の差が小さい・展示が遅いなどの条件）のレースのうち、1コースの選手がA1で、AIの1着確率が40%未満のレースだけを選びます。インがA1だと人気が集まりやすく、外の頭のオッズに妙味が出ます。'
-                f'買い目は、外の艇でAIの1着確率がいちばん高い艇を頭に、AIの確率が高い順に12点。過去1年（2025年11月〜2026年11月）で試すと、この条件の369レースで的中約24%・回収約119%、前半・後半の半年ずつでも115%・123%でした。それでも先のことは分からないので「検証中」です。'
-                f'必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></details></section>')
+        return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れ（{len(items)}） <small>検証中</small></h2>'
+                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴</th><th class="r">理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'<p class="sub" style="margin:0">インA1なのにAIは低評価のレース</p>{self.arechu_stats()}'
+                f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{self.ARECHU_WARN}</p></section>')
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""

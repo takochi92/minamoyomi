@@ -1070,3 +1070,11 @@ body{background:var(--bg)}
 .grade-s,.grade-a{background:#3ECF8E;color:#06211e}
 .grade-c,.grade-d{background:rgba(255,255,255,.14);color:#e8f0f3;border:1px solid rgba(255,255,255,.3)}
 .pick-chip{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid rgba(224,160,48,.6);color:#F2B84B;margin-left:4px;white-space:nowrap}
+.pick-why{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pick-why .pick-chip{margin-left:0}
+.pick-stats{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0}
+.pick-stats span{display:grid;gap:0;padding:4px 10px;border-radius:8px;background:rgba(224,160,48,.10);border:1px solid rgba(224,160,48,.35);min-width:64px;text-align:center}
+.pick-stats small{font-size:11px;color:var(--sub,#9bb0b9)}
+.pick-stats b{font-size:17px;color:#F2B84B}
+.pick-tickets{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.pick-tickets li{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
