@@ -44,7 +44,7 @@ def score(boats: list, ex: dict | None = None, wave_cm=None, wind=None):
     return 1 / (1 + math.exp(-z))
 
 
-# 頭の枠別：荒れ注意のレース（過去約3年・約1万）で、2着・3着の組み合わせが多かった順（上位12）。
+# 頭の枠別：荒れ注意のレース（過去約3年・約1万）で、2着・3着の組み合わせが多かった順（上位12）。AIの予想がまだ無いときだけ使う。
 # 頭が外のとき、1号艇が2着に残る形（差し・まくり差しで頭を譲る）がいちばん多く、次に外・内の艇が続く。
 PAIRS = {
     2: [(1, 3), (1, 4), (1, 5), (1, 6), (4, 1), (3, 1), (3, 4), (3, 5), (3, 6), (4, 5), (5, 1), (4, 3)],
@@ -63,18 +63,41 @@ KIM = {
 }
 
 
-def ana(boats: list):
-    """荒れ注意のレースの穴予想：頭＝外（2〜6号艇）で全国勝率1位。2・3着は、その頭の枠で多かった展開の順に12点。
-    （頭の枠なりの進入を想定）。過去の荒れ注意レースで試すと、的中約13%・回収約84%（学習2025年前・検証2025年以降で同じ）。
-    1号艇を入れない12点（的中約7%・回収約82%）より、同じ回収で的中が約2倍。"""
+def head_of(boats: list, pred: dict | None = None):
+    """荒れた場合の頭：外（1コース以外）の艇で、AIの1着確率がいちばん高い艇（レースページの「穴・攻めの材料」と同じ決め方）。
+    AIの予想がまだ無いときだけ、外（2〜6号艇）で全国勝率1位。(枠, 'ai'|'nat_win') を返す"""
+    pb = [b for b in (pred or {}).get("boats") or [] if b.get("p_win") is not None and b.get("course", b.get("frame")) != 1]
+    if pb:
+        return max(pb, key=lambda b: b["p_win"])["frame"], "ai"
     out = sorted(range(2, 7), key=lambda f: -(_f(next((b.get("nat_win") for b in boats if b.get("frame") == f), 0)) or 0))
-    head = out[0]
-    return head, [(head, b, c) for b, c in PAIRS[head]]
+    return out[0], "nat_win"
 
 
-def tenkai(head: int, combos: list, ex_rank: dict | None = None) -> dict:
-    """穴予想の展開の説明。{'kimarite': 文, 'groups': [{'second': 2着の枠, 'story': 文, 'tickets': [...]}]}（2着の枠ごと）"""
-    km = "・".join(f"{k}{v}%" for k, v in KIM[head])
+N_TICKETS = 12
+
+
+def tickets_for(race: dict):
+    """荒れ注意のレースの穴予想（採用券）：(頭, 決め方, 買い目)。
+    頭＝外の艇でAIの1着確率1位、買い目＝その頭の3連単をAIの確率の高い順に12点。
+    過去1年（2025/11〜2026/11、荒れ注意の印がつく約9,800レース、学習はそれより前）で、的中約17%・回収約82%。
+    以前の「外で全国勝率1位の頭×展開の多い順12点」は同じ期間で的中約12%・回収約73%、AIの上位6点（ふつうの形）は回収約79%。
+    AIの予想（3連単の確率）がまだ無いときは、以前の決め方で出す。"""
+    from itertools import permutations
+    rl = (race.get("racelist") or {}).get("boats", [])
+    pred = race.get("prediction") or {}
+    head, basis = head_of(rl, pred)
+    p3 = pred.get("p3") or []
+    if basis == "ai" and len(p3) == 120:
+        pm = dict(zip((f"{a}-{b}-{c}" for a, b, c in permutations(range(1, 7), 3)), p3))
+        mine = sorted((c for c in pm if c.startswith(f"{head}-")), key=lambda c: -pm[c])[:N_TICKETS]
+        return head, basis, mine
+    head = sorted(range(2, 7), key=lambda f: -(_f(next((b.get("nat_win") for b in rl if b.get("frame") == f), 0)) or 0))[0]
+    return head, "nat_win", [f"{head}-{b}-{c}" for b, c in PAIRS[head]]
+
+
+def tenkai(head: int, combos: list, ex_rank: dict | None = None, course: int | None = None) -> dict:
+    """荒れた場合の展開の説明。combos は (頭, 2着, 3着)。{'kimarite': 文, 'groups': [{'second': 2着の枠, 'story': 文, 'tickets': [...]}]}（2着の枠ごと）"""
+    km = "・".join(f"{k}{v}%" for k, v in KIM.get(course or head, []))
     groups, order = {}, []
     for _, b, c in combos:
         if b not in groups:
@@ -91,12 +114,15 @@ def tenkai(head: int, combos: list, ex_rank: dict | None = None) -> dict:
             story[b] = f"内の{b}号艇が残る（{head}号艇が攻めたあと、内で粘る）"
     rank = (ex_rank or {}).get(head)
     ex = f"展示タイムは6艇中{rank}位。" if rank else ""
-    return {"kimarite": f"{head}号艇は、{head}コースから{km}で頭に立つ形が多い。{ex}",
+    c = course or head
+    how = f"{head}号艇は、{c}コースから{km}で頭に立つ形が多い。" if km else ""
+    return {"kimarite": how + ex,
             "groups": [{"second": b, "story": story[b], "tickets": groups[b]} for b in order]}
 
 
 def from_race(race: dict):
-    """レースのデータ（出走表・展示・水面）から荒れ注意を判定。印がつくなら {p, head, tickets}、つかなければ None"""
+    """レースのデータ（出走表・展示・水面）から荒れ注意を判定。印がつくなら {p, head, basis, p_win, tickets, tenkai}、つかなければ None。
+    tickets は採用券そのもの（締切前に固定した券があればそれ。ページの採用予想と同じ券しか出さない）。"""
     rl = (race.get("racelist") or {}).get("boats", [])
     bi = race.get("before") or {}
     w = bi.get("weather") or {}
@@ -104,7 +130,17 @@ def from_race(race: dict):
     pr = score(rl, ex, w.get("wave_cm"), w.get("wind_speed"))
     if pr is None or pr < MARK:
         return None
-    head, combos = ana(rl)
+    pred = race.get("prediction") or {}
+    head, basis, tickets = tickets_for(race)
+    saved = race.get("primary_slip") or {}
+    if saved.get("source") == "arechu" and saved.get("tickets"):
+        fixed = list(saved["tickets"])
+        if int(fixed[0].split("-")[0]) != head:
+            basis = "legacy"          # 2026-11-19 までの決め方（外で全国勝率1位の頭）で固定した券
+        head, tickets = int(fixed[0].split("-")[0]), fixed
+    combos = [tuple(map(int, t.split("-"))) for t in tickets]
     ts = {f: _f(t) for f, t in ex.items()}
     rank = {f: 1 + sum(1 for t in ts.values() if t < ts[f]) for f in ts} if len(ts) == 6 and all(ts.values()) else None
-    return {"p": pr, "head": head, "tickets": [f"{a}-{b}-{c}" for a, b, c in combos], "tenkai": tenkai(head, combos, rank)}
+    pb = next((b for b in pred.get("boats") or [] if b.get("frame") == head), {})
+    return {"p": pr, "head": head, "basis": basis, "p_win": pb.get("p_win"), "tickets": tickets,
+            "tenkai": tenkai(head, combos, rank, pb.get("course"))}
