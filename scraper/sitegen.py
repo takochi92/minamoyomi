@@ -1170,7 +1170,7 @@ class Site:
                 if ana:
                     pmap = dict(zip(COMBO_LIST, p.get('p3') or []))
                     content = '<div class="bets">'+cells([{'combo':c, 'p':pmap.get(c,0)} for c in selected['tickets']])+'</div>'
-                    content += ('<p class="primary-note">荒れ注意のレースなので、無難な本線・押さえは出さず、展開から選んだこの穴予想だけを採用します（展開は下の「荒れ注意の展開予想」）。</p>' if selected.get('source') == 'arechu' else
+                    content += ('<p class="primary-note">厳選荒れ：この12点だけ（理由は下）</p>' if selected.get('source') == 'arechu' else
                                 '<p class="primary-note">厳選穴の条件が成立したため、通常の本線・押さえを追加せず、この券だけを採用します。的中率は低くなり得ます。回収率改善は未確認です。</p>')
                 else:
                     content = self.slip_body(p, cells)
@@ -1203,7 +1203,7 @@ class Site:
 {self.evidence_block(page, race, p)}
 {ai_rows}
 {self.in_survivor_block(race)}
-{self.arechu_block(race)}
+{self.arechu_block(race, page)}
 {self.alt_block(alt_list, self.tsuke_block(race, p, res), self.ana_block(race, p)) if not race.get('primary_slip') else ''}
 {self.worry_block(p)}
 {self.fstart_block(p)}
@@ -1443,6 +1443,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.freshness_block(page, self.idx.get('updated_at', ''))}
 <details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
+{self.arechu_top(page)}
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
 {confidence_home}
@@ -1604,19 +1605,65 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         ar = arechu.from_race(race)
         return ar["p"] if ar else None
 
-    def arechu_block(self, race):
+    PICK_ROLE = {"in": "1コース", "head": "頭"}
+
+    def arechu_record(self):
+        """厳選荒れレースの成績（台帳）。記録が無ければ None"""
+        if getattr(self, "_arechu_rec", None) is None:
+            from . import arechu_pick
+            self._arechu_rec = arechu_pick.totals(load_json(DATA / arechu_pick.LEDGER, {}) or {})
+        t = self._arechu_rec
+        return t if t["races"] else None
+
+    def arechu_record_line(self):
+        t = self.arechu_record()
+        if not t:
+            return "記録：これから"
+        return f'記録（{jdate(t["since"])}〜）：{t["races"]}R・的中{t["hits"]}・回収{pct(t["roi"])}'
+
+    ARECHU_STATS = (("過去1年", "369R"), ("的中", "24%"), ("回収", "119%"))
+    ARECHU_WARN = '20歳未満は購入不可・のめり込み注意'
+
+    def arechu_stats(self):
+        return '<div class="pick-stats">' + "".join(f'<span><small>{k}</small><b>{v}</b></span>' for k, v in self.ARECHU_STATS) + '</div>'
+
+    def pick_reasons(self, pick):
+        out = []
+        for x in pick["reasons"]:
+            g = f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""
+            out.append(f'{bt(x["frame"])}<b>{e(x["name"])}</b><span class="pick-chip">{e(x.get("class", ""))}</span>'
+                       f'<span class="pick-chip">AI {pct(x.get("p_win"))}</span>{g}')
+        return '<div class="pick-why">' + "".join(out) + '</div>'
+
+    def arechu_block(self, race, page=None):
         ar = arechu.from_race(race)
         if ar is None:
             return ""
-        pr, tk = ar["p"], ar["tenkai"]
-        groups = "".join(
-            f'<li><b>2着{bt(g["second"])}</b> {e(g["story"])}<br><span class="num">{" ".join(g["tickets"])}</span></li>' for g in tk["groups"])
-        return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030"><h2>⚠ 荒れ注意の展開予想 <small>万舟（3連単1万円以上）が出る確率の目安 約{round(pr * 100)}%</small></h2>'
-                f'<p style="margin:0">1号艇はA級でも、外との勝率の差が小さく、展示・水面も安心できません。ここは無難な本線ではなく、<b>{bt(ar["head"])}の頭</b>で狙います。{e(tk["kimarite"])}</p>'
-                f'<ul style="margin:0;padding-left:18px;display:grid;gap:6px">{groups}</ul>'
-                f'<p class="sub" style="margin:0">過去の荒れ注意のレースで、頭が{ar["head"]}号艇のときに2着・3着へ多かった形を、多い順に{len(ar["tickets"])}点にしています（A級1号艇のレース全体の万舟率は約{round(arechu.BASE * 100)}%）。必ず来るわけではありません。20歳未満は購入できません。のめり込みに注意。</p></section>')
+        pr, tk, h = ar["p"], ar["tenkai"], ar["head"]
+        slip = race.get("primary_slip") or {}
+        pick = race.get("arechu_pick")
+        warn = f'<p class="sub" style="margin:0">{self.ARECHU_WARN}</p>'
+        if slip.get("source") != "arechu":
+            # 厳選に当てはまらない荒れ注意：注意だけ。買い目は本線・押さえのまま（荒れ用の券は出さない）
+            return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
+                    f'<p style="margin:0">荒れたら頭は {bt(h)}。買い目は本線・押さえのまま。</p>{warn}</section>')
+        # 2着ごとにまとめる：3-1-5264（頭-2着-3着の候補）
+        groups = "".join(f'<li class="num">{h}-{g["second"]}-{"".join(t.split("-")[2] for t in g["tickets"])}</li>' for g in tk["groups"])
+        pw = f' <span class="sub">AI {pct(ar["p_win"])}</span>' if ar.get("p_win") is not None else ""
+        if pick:
+            link = f'<a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
+            title = f'<h2>⚠ 厳選荒れ <small>検証中・万舟 約{round(pr * 100)}%</small></h2>'
+            top = (f'{self.pick_reasons(pick)}'
+                   f'{self.arechu_stats()}<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{link}</p>')
+        else:
+            title = f'<h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
+            top = '<p class="sub" style="margin:0">以前の決め方で固定した買い目です。</p>' if ar["basis"] == "legacy" else ""
+        return (f'<section class="panel" style="display:grid;gap:8px;border-color:#E0A030">{title}{top}'
+                f'<p style="margin:0">頭 <b>{bt(h)}</b>{pw}　{len(ar["tickets"])}点</p>'
+                f'<ul class="pick-tickets">{groups}</ul>{warn}</section>')
 
     def arechu_races(self):
+        """今日のまだ終わっていない厳選荒れレース"""
         if getattr(self, "_arechu", None) is not None:
             return self._arechu
         items, d = [], self.idx.get("date")
@@ -1627,10 +1674,10 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 if r.get("result"):
                     continue
                 race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
-                pr = self.arechu_of(race)
-                if pr is not None:
-                    items.append((pr, v, r, arechu.from_race(race)["head"]))
-        items.sort(key=lambda x: -x[0])
+                pick = race.get("arechu_pick")
+                if pick and (race.get("primary_slip") or {}).get("source") == "arechu" and self.arechu_of(race) is not None:
+                    items.append((r["deadline"], v, r, pick))
+        items.sort(key=lambda x: x[0])
         self._arechu = items
         return items
 
@@ -1639,11 +1686,15 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if not items:
             return ""
         d = self.idx.get("date")
-        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{r["deadline"]}</span></td><td class="r num">{head}号艇頭</td><td class="r num best">約{round(pr * 100)}%</td></tr>'
-                       for pr, v, r, head in items[:5])
-        return (f'<section style="display:grid;gap:8px"><h2>荒れ注意のレース <small>本線より穴予想で</small></h2>'
-                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴予想</th><th class="r">万舟の確率の目安</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<details class="more"><summary>くわしく</summary><p>1号艇がA1・A2で、外の選手との勝率の差が小さい・展示が遅いなどの条件がそろったレースです。過去約3年の検証で、印のつくレースの約22%に万舟が出ました（A級1号艇のレース全体は約16%）。穴予想は「外で勝率1位を頭に、展開から2・3着を選んだ12点」です。必ず来るわけではありません。</p></details></section>')
+        chip = lambda x: (f'<span class="pick-chip">インA1・AI{pct(x.get("p_win"))}</span>'
+                          + (f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""))
+        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{dl}</span></td>'
+                       f'<td class="r num">{bt(pick["head"])}頭</td><td class="r">{"".join(chip(x) for x in pick["reasons"])}</td></tr>'
+                       for dl, v, r, pick in items)
+        return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れ（{len(items)}） <small>検証中</small></h2>'
+                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴</th><th class="r">理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'{self.arechu_stats()}'
+                f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{self.ARECHU_WARN}</p></section>')
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""
