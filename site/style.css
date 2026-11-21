@@ -1001,8 +1001,8 @@ body{background:var(--bg)}
 .guide .account-first{margin:4px 0 0;font-weight:700;color:var(--ink)}
 .guide .note-account button[data-account="login"]{background:var(--accent);color:var(--accent-ink);border:0;padding:10px 18px;font-weight:700}
 /* お気に入りを付けた直後のログイン案内（1行） */
-.fav-hint{margin:6px 0 0;font-size:12.5px;font-weight:400;line-height:1.6;color:var(--ink2)}
-.fav-hint a{color:var(--accent);font-weight:700;white-space:nowrap}
+.fav-hint{margin:10px 0 0;padding:10px 12px;border:1px solid rgba(89,216,199,.35);border-radius:8px;background:rgba(89,216,199,.08);font-size:13px;font-weight:400;line-height:1.6;letter-spacing:0;color:#d8e4ea}
+.fav-hint a{color:#59d8c7;font-weight:700;text-decoration:none;white-space:nowrap}
 .fav-hint-row td{padding-top:0;border-top:0}
 /* 同支部・同期・今日出走する選手へのリンク */
 .racer-neighbors .racer-list a small{margin-left:4px;font-size:11px;color:var(--ink2)}
