@@ -42,3 +42,6 @@ private/
 .wrangler/
 supabase/.temp/
 site/premium.html
+
+# boatcast 計測の一時ファイル（数値・確認用の静止画）。コミットしない
+.bc-tmp/
