@@ -1353,7 +1353,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             return ''
         history = (f'<details class="home-race-history"><summary>本日の結果 {len(completed)}R</summary>'
                    f'<div class="home-race-list">{"".join(completed)}</div></details>') if completed else ''
-        return (f'<section class="home-race-group"><h2>{e(title)}</h2><p class="sub">{e(note)}</p>'
+        return (f'<section class="home-race-group"><h2>{e(title)}</h2>{f"<p class=sub>{e(note)}</p>" if note else ""}'
                 f'<div class="home-race-list">{"".join(upcoming)}</div>{history}</section>')
 
     def freshness_manifest(self):
@@ -1390,19 +1390,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             soonh.append(f'<a data-dl="{d} {r["deadline"]}" data-soon="1"{" hidden" if k >= 4 else ""} href="{self.race_link(page, d, v["jcd"], r["rno"])}"><strong>{e(v["name"])} {r["rno"]}R</strong>'
                          f'<span class="num">{r["deadline"]}<small>締切</small></span></a>')
         soonh = "".join(soonh)
-        cards, done = [], []
-        conf.sort(key=lambda x: x[1]["deadline"])
-        for v, r in conf:
-            rc = r["reco"]
-            href = self.race_link(page, d, v["jcd"], r["rno"])
-            if self.finished(r):
-                h = rc.get("hit")
-                pay = f" {yen(r.get('payout'))}" if h else ""
-                done.append(f'<a class="home-race-row" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub">{"的中" if h else "不的中"}{pay}</span></a>')
-                continue
-            cards.append(f'<a class="home-race-row" data-dl="{d} {r["deadline"]}" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span>'
-                         f'<span class="sub num">{r["deadline"]}締切</span></a>')
-        confidence_home = self.home_race_group('AIの注目レース', '展示・オッズから抽出したレース', cards, done)
         hon_cards, hon_done = [], []
         for v in self.idx.get("venues", []):
             for r in v["races"]:
@@ -1443,10 +1430,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.freshness_block(page, self.idx.get('updated_at', ''))}
 <details class="more"><summary>この予想について</summary><p>公式の出走表・展示・オッズからAIが着順を予想し、全レースに本線・押さえを出しています。その中から合成オッズ5倍以上に絞れて見込みも高いレースは「自信あり」、本命が売れすぎているレースは「購入非推奨」です。</p></details></section>
 {f'<section style="display:grid;gap:10px"><h2>まもなく締切</h2><div class="soon">{soonh}</div></section>' if soonh else ''}
-{self.arechu_top(page)}
 {self.grade_banner(page)}
 {self.buff_all_block(page)}
-{confidence_home}
+{self.arechu_top(page)}
 {anah}
 <section id="held-races" style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <span class="pill-row"><a class="pill-link pill-link-sm" href="{page.u('results.html')}">払戻金一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('motor.html')}">モーター一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></span></h2>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
@@ -1663,7 +1649,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'<ul class="pick-tickets">{groups}</ul>{warn}</section>')
 
     def arechu_races(self):
-        """今日のまだ終わっていない厳選荒れレース"""
+        """今日の厳選荒れレース [(締切, 場, index のレース, pick, 終わったか)]"""
         if getattr(self, "_arechu", None) is not None:
             return self._arechu
         items, d = [], self.idx.get("date")
@@ -1671,30 +1657,29 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             if v.get("cancelled"):
                 continue
             for r in v["races"]:
-                if r.get("result"):
-                    continue
                 race = load_json(DATA / "races" / d / f"{v['jcd']}{r['rno']:02d}.json", {})
                 pick = race.get("arechu_pick")
-                if pick and (race.get("primary_slip") or {}).get("source") == "arechu" and self.arechu_of(race) is not None:
-                    items.append((r["deadline"], v, r, pick))
+                if pick and (race.get("primary_slip") or {}).get("source") == "arechu":
+                    items.append((r["deadline"], v, r, pick, self.finished(r)))
         items.sort(key=lambda x: x[0])
         self._arechu = items
         return items
 
     def arechu_top(self, page):
-        items = self.arechu_races()
-        if not items:
-            return ""
+        """トップ：今日の厳選荒れ（説明の文は出さない）"""
         d = self.idx.get("date")
-        chip = lambda x: (f'<span class="pick-chip">インA1・AI{pct(x.get("p_win"))}</span>'
-                          + (f'<span class="pick-chip">総評{e(x["grade"])}</span>' if x.get("grade") else ""))
-        rows = "".join(f'<tr><td><a href="{self.race_link(page, d, v["jcd"], r["rno"])}">{e(v["name"])} {r["rno"]}R</a> <span class="sub num">{dl}</span></td>'
-                       f'<td class="r num">{bt(pick["head"])}頭</td><td class="r">{"".join(chip(x) for x in pick["reasons"])}</td></tr>'
-                       for dl, v, r, pick in items)
-        return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れ（{len(items)}） <small>検証中</small></h2>'
-                f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴</th><th class="r">理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'{self.arechu_stats()}'
-                f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{self.ARECHU_WARN}</p></section>')
+        up, done = [], []
+        for dl, v, r, pick, fin in self.arechu_races():
+            href = self.race_link(page, d, v["jcd"], r["rno"])
+            if fin:
+                pay = f" {yen(r.get('payout'))}" if r.get("hit") else ""
+                done.append(f'<a class="home-race-row" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub">{"的中" if r.get("hit") else "不的中"}{pay}</span></a>')
+            else:
+                up.append(f'<a class="home-race-row" data-dl="{d} {dl}" href="{href}"><span>{e(v["name"])} {r["rno"]}R {bt(pick["head"])}頭</span>'
+                          f'<span class="sub num">{dl}締切</span></a>')
+        if not up and not done:
+            up.append('<p class="sub" style="margin:0">まだなし</p>')
+        return self.home_race_group("厳選荒れ", "", up, done)
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""
@@ -1756,7 +1741,6 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <p class="sub tm-period">決まり手集計：{method_date(self.op_since)}〜{method_date(self.op_through)}。横棒全体は巧者スコアと同じ対象出走の100％です。</p>
 <details class="more"><summary>横棒の集計条件</summary><p>6艇・進入・番組情報などを確認できる、巧者スコアと同じ走だけを集計しています。固定進入や欠損等は同じ条件で除外。「その他」は逃げ・抜き・恵まれ。決まり手が不明の1着は「未確認」として区別します。決まり手は1着になった結果の内訳で、攻めを試みた全回数に対する成功率ではありません。</p></details>
 <p class="toc">{' '.join(f'<a href="#c{c}">{c}コース</a>' for c in range(2, 7))} <a href="#esc">逃げ</a> <a href="#mk">捲られやすいイン</a></p></section>
-{self.arechu_top(page)}
 {self.today_targets(page)}
 {''.join(secs)}
 <section class="panel" id="esc"><h2>実力以上にインで逃げる選手 <small>1コース{OP_MIN}走以上・全国の1コース1着率 {pct(p1, 1)}</small></h2><div class="tbl-wrap"><table class="t-esc"><thead><tr><th class="r">#</th><th>選手</th><th class="r">1コース出走</th><th class="r">実際の1着率</th><th class="r">実力どおりなら</th><th class="r">スコア</th></tr></thead><tbody>{esc_rows}</tbody></table></div></section>

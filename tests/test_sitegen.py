@@ -402,9 +402,12 @@ def test_arechu_shown_on_race_and_top(tmp_path):
         r.pop("result", None)
     s._arechu = None
     top = s.arechu_top(sitegen.Page("index.html"))
-    assert "今日の厳選荒れ（1）" in top and "インA1・AI29%" in top and "総評D" in top
+    assert "厳選荒れ" in top and "頭" in top and "まだなし" not in top
     race["racelist"]["boats"][0]["class"] = "B1"
     assert s.arechu_block(race) == ""
+    # 厳選が無い日は「まだなし」だけ
+    s._arechu = []
+    assert "まだなし" in s.arechu_top(sitegen.Page("index.html"))
 
 
 def test_course_swap_block_is_closed_and_keeps_the_entry_table(tmp_path):
