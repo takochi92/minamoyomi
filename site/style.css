@@ -636,7 +636,7 @@ tr.is-fav td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .ai-rows{display:grid;gap:8px}.ai-r{display:grid;grid-template-columns:76px 1fr 44px;gap:4px 8px;align-items:center}
 .ai-n{display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;overflow:hidden}.ai-t{position:relative;height:18px;border-radius:4px;background:var(--surface2);overflow:hidden}
-.ai-t i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}.ai1{background:var(--accent)}.ai2{background:color-mix(in srgb,var(--accent) 55%,transparent)}.ai3{background:color-mix(in srgb,var(--accent) 25%,transparent)}
+.ai-t i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}.ai1{background:#2fe8c9}.ai2{background:#17b39a}.ai3{background:#0f7a6c}
 .ai-v{text-align:right;line-height:1.1}.ai-v small{display:block;font-size:10px;color:var(--ink2)}.ai-b{grid-column:2/4;display:flex;flex-wrap:wrap;gap:4px}
 .ai-lg{display:flex;gap:12px;font-size:12px;color:var(--ink2)}.ai-lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
 .buff{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}.buff.up{color:#3BD17A}.buff.dn{color:var(--ink2)}
@@ -1036,9 +1036,9 @@ body{background:var(--bg)}
 /* 3. AIの見立て：5つの固定スロット。該当する要因だけ点灯 */
 .ai-b{grid-column:1/-1}
 .ai-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:100%}
-.ai-slots .slot{display:block;text-align:center;font-size:11px;line-height:1;padding:5px 0;border:1px solid transparent;border-radius:4px;white-space:nowrap;color:color-mix(in srgb,var(--ink2) 45%,transparent)}
-.ai-slots .slot-up{border-color:#3ECF8E;background:rgba(62,207,142,.12);color:#3ECF8E;font-weight:700}
-.ai-slots .slot-up2{border-color:#3ECF8E;background:#3ECF8E;color:#06261A;font-weight:900}
+.ai-slots .slot{display:block;text-align:center;font-size:11px;line-height:1;padding:5px 0;border:1px solid transparent;border-radius:4px;white-space:nowrap;color:#8b99a2}
+.ai-slots .slot-up{border-color:#2fd67c;background:transparent;color:#d5dee3;font-weight:700}
+.ai-slots .slot-up2{border-color:#2fd67c;background:#2fd67c;color:#06130b;font-weight:900}
 .ai-slots .slot-dn{border-color:#5E6C78;background:rgba(150,165,180,.10);color:#9AA8B5}
 .ai-n .tier-tag{margin-left:2px;font-size:10px;padding:1px 6px}
 .ai-n{overflow:visible}
@@ -1080,18 +1080,34 @@ body{background:var(--bg)}
 .pick-tickets li{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
 /* PICK UP 2026-11-21：トップで主役にならない大きさ。帯1行＋最小の行 */
-.pickup{display:grid;gap:0;border:1px solid rgba(165,31,20,.55);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
-.pu-band{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:5px 12px;background:linear-gradient(90deg,#7a130c,#a51f14);color:#fff}
-.pu-band b{font-family:"Barlow Condensed",var(--display),sans-serif;font-weight:700;font-size:17px;letter-spacing:.18em;line-height:1.2}
-.pu-band small{font-size:11px;opacity:.85;white-space:nowrap}
+.pickup{display:grid;gap:0}
+.pu-band{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:6px 12px;border-radius:3px;background:linear-gradient(90deg,#7a130c,#a51f14);color:#fff}
+.pu-band b{font-family:"Barlow Condensed",var(--display),sans-serif;font-weight:700;font-size:18px;letter-spacing:.28em;line-height:1.2}
+.pu-band small{font-size:10px;opacity:.8;white-space:nowrap;letter-spacing:.04em}
 .pu-list{display:grid}
-.pu-row{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 12px;text-decoration:none;color:inherit;border-top:1px solid rgba(255,255,255,.07)}
-.pu-row:first-child{border-top:0}
-.pu-head{display:inline-grid;grid-auto-flow:column;align-items:baseline;justify-content:center;gap:1px;width:34px;height:34px;place-content:center;border-radius:6px;border:1px solid rgba(0,0,0,.25)}
-.pu-head b{font:700 16px/1 var(--mono)}.pu-head small{font-size:9px;font-weight:700}
-.pu-race{font-size:16px;white-space:nowrap}
-.pu-dots{flex:1;min-width:16px;border-bottom:1px dotted rgba(255,255,255,.28);transform:translateY(3px)}
-.pu-dl{font-family:"Barlow Condensed",var(--mono),sans-serif;font-weight:600;font-size:19px;white-space:nowrap}.pu-dl small{font-size:10px;margin-left:2px;color:var(--sub,#9bb0b9)}
-.pu-more,.pu-none{display:block;padding:8px 12px;font-size:13px;border-top:1px solid rgba(255,255,255,.07);margin:0}
+.pu-row{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 2px;text-decoration:none;color:inherit;border-bottom:1px solid color-mix(in srgb,var(--ink) 8%,transparent)}
+.pu-head{display:flex;align-items:baseline;justify-content:center;gap:1px;flex:none;width:34px;height:34px;padding-top:7px;border-radius:3px}
+.pu-head.bt1{box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}.pu-head.bt2{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.pu-head.bt3{background:#d92d20}.pu-head.bt4{background:#1f6fd0}
+.pu-head b{font:700 19px/1 "Barlow Condensed",var(--mono),sans-serif}.pu-head small{font-size:9px;font-weight:900}
+.pu-race{font-size:17px;font-weight:900;letter-spacing:.03em;white-space:nowrap}
+.pu-dots{flex:1;min-width:16px;border-bottom:1px dotted color-mix(in srgb,var(--ink) 22%,transparent);transform:translateY(4px)}
+.pu-dl{font-family:"Barlow Condensed",var(--mono),sans-serif;font-weight:600;font-size:19px;white-space:nowrap}.pu-dl small{font-family:var(--body);font-size:9px;letter-spacing:.18em;margin-left:5px;color:var(--ink2)}
+.pu-more,.pu-none{display:block;padding:8px 2px;font-size:13px;margin:0}
 .pu-more{text-align:right;text-decoration:none}
-.pu-none{color:var(--sub,#9bb0b9)}
+.pu-none{color:var(--ink2)}
+
+/* ===== 2026-11-21 本日の開催：見出しと凡例・ボタンを分ける。カードは高さ固定で4段を全場そろえる ===== */
+#held-races .vhead h2{margin:0}
+#held-races .vsub{display:flex;flex-wrap:wrap;gap:2px 14px;align-items:center;margin:4px 0 0;font-size:12.5px;color:var(--ink2)}
+#held-races .vsub span{white-space:nowrap}
+.vpills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vpills .pill-link{justify-content:center;width:100%;min-width:0}
+.vpills .vp-wide{grid-column:1/-1}
+.vtiles .vt{display:flex;flex-direction:column;height:102px}
+.vtiles .vt b{flex:none}
+.vtiles .vt>span{padding-left:2px;padding-right:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtiles .vt>span:nth-of-type(1){padding-top:7px}
+.vtiles .vt .st{border-bottom:0;padding-bottom:0}
+.vtiles .vt .bd{margin-top:auto;flex-wrap:nowrap;padding:0 4px 7px;min-height:24px;align-items:center}
+

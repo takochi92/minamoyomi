@@ -1434,7 +1434,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 {self.buff_all_block(page)}
 {self.arechu_top(page)}
 {anah}
-<section id="held-races" style="display:grid;gap:10px"><h2>本日の開催 <small>{len(held)}場・タップでレース一覧・🌄モーニング 🌆ナイター 🌃ミッドナイト</small> <span class="pill-row"><a class="pill-link pill-link-sm" href="{page.u('results.html')}">払戻金一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('motor.html')}">モーター一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></span></h2>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
+<section id="held-races" style="display:grid;gap:10px"><div class="vhead"><h2>本日の開催</h2><p class="vsub"><span>{len(held)}場・タップでレース一覧</span><span>🌄 モーニング</span><span>🌆 ナイター</span><span>🌃 ミッドナイト</span></p></div><div class="vpills"><a class="pill-link pill-link-sm" href="{page.u('results.html')}">払戻金一覧 →</a><a class="pill-link pill-link-sm" href="{page.u('motor.html')}">モーター一覧 →</a><a class="pill-link pill-link-sm vp-wide" href="{page.u('racer/index.html')}">選手・モーター検索 →</a></div>{date_picker(page, d, d)}<div class="vtiles">{tiles}</div></section>
 {f'<p class="sub">判定済み {checked}レース：購入非推奨（ガチガチ） {gachi}・{"自信あり " + str(len(conf)) + "・" if conf else ""}残りは通常の推奨</p>' if checked else ''}
 <div class="ad-slot" data-slot="home_mid"></div>
 {targets}
@@ -1668,11 +1668,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     PICKUP_MAX = 3
 
     def arechu_top(self, page):
-        """トップの PICK UP：締切前の厳選荒れを、締切の早い順に最大3件。1行＝レース・締切だけ"""
+        """トップの PICK UP：締切前の厳選荒れを、締切の早い順に最大3件。1行＝頭・レース・締切だけ"""
         d = self.idx.get("date")
         up = [(dl, v, r, pick) for dl, v, r, pick, fin in self.arechu_races() if not fin]
         rows = "".join(
             f'<a class="pu-row" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}">'
+            f'<span class="pu-head bt{pick["head"]}"><b>{pick["head"]}</b><small>頭</small></span>'
             f'<b class="pu-race">{e(v["name"])} {r["rno"]}R</b><i class="pu-dots"></i>'
             f'<span class="pu-dl num">{dl}<small>締切</small></span></a>'
             for dl, v, r, pick in up[:self.PICKUP_MAX])

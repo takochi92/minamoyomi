@@ -100,6 +100,10 @@ def test_pages_and_links(tmp_path):
     assert 'id="page-freshness"' in files['venue/kiryu.html']
     assert 'data-revision="2026-09-25T20:00"' in files['venue/kiryu.html']
     assert 'id="page-freshness"' not in files['venue/omura.html']
+    # 本日の開催：凡例とボタンは見出し（h2）の外。凡例は1項目ずつ、ボタンは2列＋全幅
+    top = files['index.html']
+    assert '<h2>本日の開催</h2>' in top and '<span>🌄 モーニング</span><span>🌆 ナイター</span><span>🌃 ミッドナイト</span>' in top
+    assert 'class="vpills"' in top and 'vp-wide" href="/racer/"' in top
     stats=files['stats.html']; logic=files['logic.html']
     assert 'id="logic-details" class="evidence-fold"' in stats
     assert '<summary>締切前に固定した研究券の成績</summary>' in stats
@@ -413,6 +417,8 @@ def test_arechu_shown_on_race_and_top(tmp_path):
     s._arechu = [item] * 5
     top = s.arechu_top(sitegen.Page("index.html"))
     assert top.count("pu-row") == 3 and "ほか2件 →" in top
+    # 行の左は艇番カラーの「③頭」チップ（選手名・根拠はトップに出さない）
+    assert top.count('<span class="pu-head bt3"><b>3</b><small>頭</small></span>') == 3
 
 
 def test_course_swap_block_is_closed_and_keeps_the_entry_table(tmp_path):
