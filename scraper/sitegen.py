@@ -1170,7 +1170,7 @@ class Site:
                 if ana:
                     pmap = dict(zip(COMBO_LIST, p.get('p3') or []))
                     content = '<div class="bets">'+cells([{'combo':c, 'p':pmap.get(c,0)} for c in selected['tickets']])+'</div>'
-                    content += ('<p class="primary-note">厳選荒れ：この12点だけ（理由は下）</p>' if selected.get('source') == 'arechu' else
+                    content += ('<p class="primary-note">PICK UP：この12点だけ（理由は下）</p>' if selected.get('source') == 'arechu' else
                                 '<p class="primary-note">厳選穴の条件が成立したため、通常の本線・押さえを追加せず、この券だけを採用します。的中率は低くなり得ます。回収率改善は未確認です。</p>')
                 else:
                     content = self.slip_body(p, cells)
@@ -1638,7 +1638,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         pw = f' <span class="sub">AI {pct(ar["p_win"])}</span>' if ar.get("p_win") is not None else ""
         if pick:
             link = f'<a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
-            title = f'<h2>⚠ 厳選荒れ <small>検証中・万舟 約{round(pr * 100)}%</small></h2>'
+            title = f'<h2>⚠ PICK UP <small>検証中・万舟 約{round(pr * 100)}%</small></h2>'
             top = (f'{self.pick_reasons(pick)}'
                    f'{self.arechu_stats()}<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{link}</p>')
         else:
@@ -1649,7 +1649,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 f'<ul class="pick-tickets">{groups}</ul>{warn}</section>')
 
     def arechu_races(self):
-        """今日の厳選荒れレース [(締切, 場, index のレース, pick, 終わったか)]"""
+        """今日の PICK UP（厳選荒れ）レース [(締切, 場, index のレース, pick, 終わったか)]"""
         if getattr(self, "_arechu", None) is not None:
             return self._arechu
         items, d = [], self.idx.get("date")
@@ -1665,21 +1665,24 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         self._arechu = items
         return items
 
+    PICKUP_MAX = 3
+
     def arechu_top(self, page):
-        """トップ：今日の厳選荒れ（説明の文は出さない）"""
+        """トップの PICK UP：締切前の厳選荒れを、締切の早い順に最大3件。1行＝頭・レース・締切だけ"""
         d = self.idx.get("date")
-        up, done = [], []
-        for dl, v, r, pick, fin in self.arechu_races():
-            href = self.race_link(page, d, v["jcd"], r["rno"])
-            if fin:
-                pay = f" {yen(r.get('payout'))}" if r.get("hit") else ""
-                done.append(f'<a class="home-race-row" href="{href}"><span>{e(v["name"])} {r["rno"]}R</span><span class="sub">{"的中" if r.get("hit") else "不的中"}{pay}</span></a>')
-            else:
-                up.append(f'<a class="home-race-row" data-dl="{d} {dl}" href="{href}"><span>{e(v["name"])} {r["rno"]}R {bt(pick["head"])}頭</span>'
-                          f'<span class="sub num">{dl}締切</span></a>')
-        if not up and not done:
-            up.append('<p class="sub" style="margin:0">まだなし</p>')
-        return self.home_race_group("厳選荒れ", "", up, done)
+        up = [(dl, v, r, pick) for dl, v, r, pick, fin in self.arechu_races() if not fin]
+        rows = "".join(
+            f'<a class="pu-row" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}">'
+            f'<span class="pu-head bt{pick["head"]}"><b>{pick["head"]}</b><small>頭</small></span>'
+            f'<b class="pu-race">{e(v["name"])}{r["rno"]}R</b><i class="pu-dots"></i>'
+            f'<span class="pu-dl num">{dl}<small>締切</small></span></a>'
+            for dl, v, r, pick in up[:self.PICKUP_MAX])
+        if len(up) > self.PICKUP_MAX:
+            rows += f'<a class="pu-more" href="{page.u("index.html")}#held-races">ほか{len(up) - self.PICKUP_MAX}件 →</a>'
+        if not rows:
+            rows = '<p class="pu-none">まだなし</p>'
+        return (f'<section class="pickup"><div class="pu-band"><b>PICK UP</b><small>本命が崩れる根拠のあるレース</small></div>'
+                f'<div class="pu-list">{rows}</div></section>')
 
     def today_targets(self, page):
         """今日走る選手のうち、今日の枠（展示後は進入）のコースで巧者の選手"""

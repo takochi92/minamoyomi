@@ -1078,3 +1078,20 @@ body{background:var(--bg)}
 .pick-stats b{font-size:17px;color:#F2B84B}
 .pick-tickets{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:18px;font-weight:700}
 .pick-tickets li{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* PICK UP 2026-11-21：トップで主役にならない大きさ。帯1行＋最小の行 */
+.pickup{display:grid;gap:0;border:1px solid rgba(165,31,20,.55);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
+.pu-band{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:5px 12px;background:linear-gradient(90deg,#7a130c,#a51f14);color:#fff}
+.pu-band b{font-family:"Barlow Condensed",var(--display),sans-serif;font-weight:700;font-size:17px;letter-spacing:.18em;line-height:1.2}
+.pu-band small{font-size:11px;opacity:.85;white-space:nowrap}
+.pu-list{display:grid}
+.pu-row{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 12px;text-decoration:none;color:inherit;border-top:1px solid rgba(255,255,255,.07)}
+.pu-row:first-child{border-top:0}
+.pu-head{display:inline-grid;grid-auto-flow:column;align-items:baseline;justify-content:center;gap:1px;width:34px;height:34px;place-content:center;border-radius:6px;border:1px solid rgba(0,0,0,.25)}
+.pu-head b{font:700 16px/1 var(--mono)}.pu-head small{font-size:9px;font-weight:700}
+.pu-race{font-size:16px;white-space:nowrap}
+.pu-dots{flex:1;min-width:16px;border-bottom:1px dotted rgba(255,255,255,.28);transform:translateY(3px)}
+.pu-dl{font-size:15px;white-space:nowrap}.pu-dl small{font-size:10px;margin-left:2px;color:var(--sub,#9bb0b9)}
+.pu-more,.pu-none{display:block;padding:8px 12px;font-size:13px;border-top:1px solid rgba(255,255,255,.07);margin:0}
+.pu-more{text-align:right;text-decoration:none}
+.pu-none{color:var(--sub,#9bb0b9)}

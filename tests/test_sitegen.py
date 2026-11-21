@@ -396,18 +396,23 @@ def test_arechu_shown_on_race_and_top(tmp_path):
     (tmp_path / "data" / "arechu_pick.json").write_text(json.dumps({"races": {"x": {"date": "20260924", "hit": True, "invest": 1200, "return": 3000}}}), encoding="utf-8")
     s._arechu_rec = None
     block = s.arechu_block(race, sitegen.Page("race/20260925/x.html"))
-    assert "厳選荒れ" in block and "AI 29%" in block and "総評D" in block and "プレミアムとは" in block and "回収250%" in block
+    assert "PICK UP" in block and "AI 29%" in block and "総評D" in block and "プレミアムとは" in block and "回収250%" in block
     assert "20歳未満" in block and "のめり込み" in block
     for r in s.idx["venues"][0]["races"]:
         r.pop("result", None)
     s._arechu = None
     top = s.arechu_top(sitegen.Page("index.html"))
-    assert "厳選荒れ" in top and "頭" in top and "まだなし" not in top
+    assert "PICK UP" in top and "pu-row" in top and "まだなし" not in top and "総評" not in top
     race["racelist"]["boats"][0]["class"] = "B1"
     assert s.arechu_block(race) == ""
     # 厳選が無い日は「まだなし」だけ
     s._arechu = []
     assert "まだなし" in s.arechu_top(sitegen.Page("index.html"))
+    # 4件以上は3件だけ出して「ほか◯件」
+    item = ("10:00", {"jcd": "01", "name": "桐生"}, {"rno": 1, "deadline": "10:00"}, {"head": 3, "reasons": []}, False)
+    s._arechu = [item] * 5
+    top = s.arechu_top(sitegen.Page("index.html"))
+    assert top.count("pu-row") == 3 and "ほか2件 →" in top
 
 
 def test_course_swap_block_is_closed_and_keeps_the_entry_table(tmp_path):
