@@ -1652,7 +1652,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
         if pick:
             link = f'<a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
             title = f'<h2>⚠ 厳選荒れ <small>検証中・万舟 約{round(pr * 100)}%</small></h2>'
-            top = (f'{self.pick_reasons(pick)}<p style="margin:0">A1のインは人気 → でもAIは低評価 → <b>外の頭に妙味</b></p>'
+            top = (f'{self.pick_reasons(pick)}'
                    f'{self.arechu_stats()}<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{link}</p>')
         else:
             title = f'<h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
@@ -1692,7 +1692,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                        for dl, v, r, pick in items)
         return (f'<section style="display:grid;gap:8px"><h2>今日の厳選荒れ（{len(items)}） <small>検証中</small></h2>'
                 f'<div class="panel tbl-wrap" style="padding:4px 8px"><table class="t-arechu"><thead><tr><th>レース</th><th class="r">穴</th><th class="r">理由</th></tr></thead><tbody>{rows}</tbody></table></div>'
-                f'<p class="sub" style="margin:0">インA1なのにAIは低評価のレース</p>{self.arechu_stats()}'
+                f'{self.arechu_stats()}'
                 f'<p class="sub" style="margin:0">{e(self.arechu_record_line())}　{self.ARECHU_WARN}</p></section>')
 
     def today_targets(self, page):
