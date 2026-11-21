@@ -240,14 +240,15 @@
     save(); favBtns(); marks(); favCbs.forEach(function (f) { try { f(); } catch (e) { } });
     var ft = document.getElementById("fav-today"); if (ft) favToday(ft);
   }
-  // ログアウトのままお気に入りを付けた直後に、1行だけログインの案内を出す（1回のブラウザ利用で1度だけ）
+  // ログアウトのままお気に入りを付けた直後に、ボタンの近くへ1行だけログインの案内を出す
+  // その訪問（タブのセッション）で最初の1回だけ。ログイン中・ログイン状態の確認中は出さない
   function loginHint(btn, kind) {
     var A = window.TeiNoteAccount, st = A && A.state();
-    if (!st || !st.configured || st.user) return;
+    if (!st || !st.configured || st.user || !st.ready || st.mode === 'loading') return;
     try { if (sessionStorage.getItem('teilog-fav-hint')) return; sessionStorage.setItem('teilog-fav-hint', '1'); } catch (e) { }
     var text = kind === 'motor' ? 'ログインすると、お気に入りが端末間で共有できます'
-      : 'ログインすると、お気に入りが端末間で共有できて、この選手が出る朝に通知を受け取れます';
-    var html = '<span>' + esc(text) + '</span> <a href="' + ROOT + 'mynote#note-account">ログインへ</a>';
+      : 'ログインすると、お気に入りが端末間で共有できて、この選手が出る朝に通知が届きます';
+    var html = '<span>' + esc(text) + '</span>\u3000<a href="' + ROOT + 'mynote#note-account">ログイン →</a>';
     var row = btn.closest('tr');
     if (row) {
       var tr = document.createElement('tr'); tr.className = 'fav-hint-row';
