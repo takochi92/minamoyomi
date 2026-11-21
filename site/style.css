@@ -1091,7 +1091,7 @@ body{background:var(--bg)}
 .pu-head b{font:700 16px/1 var(--mono)}.pu-head small{font-size:9px;font-weight:700}
 .pu-race{font-size:16px;white-space:nowrap}
 .pu-dots{flex:1;min-width:16px;border-bottom:1px dotted rgba(255,255,255,.28);transform:translateY(3px)}
-.pu-dl{font-size:15px;white-space:nowrap}.pu-dl small{font-size:10px;margin-left:2px;color:var(--sub,#9bb0b9)}
+.pu-dl{font-family:"Barlow Condensed",var(--mono),sans-serif;font-weight:600;font-size:19px;white-space:nowrap}.pu-dl small{font-size:10px;margin-left:2px;color:var(--sub,#9bb0b9)}
 .pu-more,.pu-none{display:block;padding:8px 12px;font-size:13px;border-top:1px solid rgba(255,255,255,.07);margin:0}
 .pu-more{text-align:right;text-decoration:none}
 .pu-none{color:var(--sub,#9bb0b9)}

@@ -1668,13 +1668,12 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
     PICKUP_MAX = 3
 
     def arechu_top(self, page):
-        """トップの PICK UP：締切前の厳選荒れを、締切の早い順に最大3件。1行＝頭・レース・締切だけ"""
+        """トップの PICK UP：締切前の厳選荒れを、締切の早い順に最大3件。1行＝レース・締切だけ"""
         d = self.idx.get("date")
         up = [(dl, v, r, pick) for dl, v, r, pick, fin in self.arechu_races() if not fin]
         rows = "".join(
             f'<a class="pu-row" data-dl="{d} {dl}" href="{self.race_link(page, d, v["jcd"], r["rno"])}">'
-            f'<span class="pu-head bt{pick["head"]}"><b>{pick["head"]}</b><small>頭</small></span>'
-            f'<b class="pu-race">{e(v["name"])}{r["rno"]}R</b><i class="pu-dots"></i>'
+            f'<b class="pu-race">{e(v["name"])} {r["rno"]}R</b><i class="pu-dots"></i>'
             f'<span class="pu-dl num">{dl}<small>締切</small></span></a>'
             for dl, v, r, pick in up[:self.PICKUP_MAX])
         if len(up) > self.PICKUP_MAX:
