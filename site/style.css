@@ -1076,5 +1076,5 @@ body{background:var(--bg)}
 .pick-stats span{display:grid;gap:0;padding:4px 10px;border-radius:8px;background:rgba(224,160,48,.10);border:1px solid rgba(224,160,48,.35);min-width:64px;text-align:center}
 .pick-stats small{font-size:11px;color:var(--sub,#9bb0b9)}
 .pick-stats b{font-size:17px;color:#F2B84B}
-.pick-tickets{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.pick-tickets{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:18px;font-weight:700}
 .pick-tickets li{display:flex;align-items:center;gap:6px;flex-wrap:wrap}

@@ -1647,7 +1647,8 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
             # 厳選に当てはまらない荒れ注意：注意だけ。買い目は本線・押さえのまま（荒れ用の券は出さない）
             return (f'<section class="panel" style="display:grid;gap:6px;border-color:#E0A030"><h2>⚠ 荒れ注意 <small>万舟 約{round(pr * 100)}%</small></h2>'
                     f'<p style="margin:0">荒れたら頭は {bt(h)}。買い目は本線・押さえのまま。</p>{warn}</section>')
-        groups = "".join(f'<li>2着{bt(g["second"])} <span class="num">{" ".join(g["tickets"])}</span></li>' for g in tk["groups"])
+        # 2着ごとにまとめる：3-1-5264（頭-2着-3着の候補）
+        groups = "".join(f'<li class="num">{h}-{g["second"]}-{"".join(t.split("-")[2] for t in g["tickets"])}</li>' for g in tk["groups"])
         pw = f' <span class="sub">AI {pct(ar["p_win"])}</span>' if ar.get("p_win") is not None else ""
         if pick:
             link = f'<a href="{page.u("premium.html")}">プレミアムとは →</a>' if page else ""
