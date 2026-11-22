@@ -291,3 +291,36 @@ def test_caption_runs_drop_a_lone_black_that_is_dark_water():
     plate = np.array(seq, float)[:, None, :].repeat(4, 1)
     runs = caption_runs(times, plate)
     assert [b for b, _ in runs] == [1, 2, 3]
+
+
+def test_caption_passes_find_the_bow_inside_the_caption_window_despite_glare():
+    """Night glare: many false onsets everywhere. Each caption window holds one boat line; it is found,
+    and a glare streak outside every caption window is never returned."""
+    rng = np.random.default_rng(3)
+    n_s, gate_a, fps = 540, 40, 30.0
+    times = np.arange(1500) / fps + 200.0
+    ev = [np.column_stack([rng.integers(0, n_s, 6000), rng.uniform(0, 1500, 6000)])]   # glare
+    truth = {}
+    for boat, f_a, k in ((1, 300, .22), (2, 430, .24), (3, 560, .21)):
+        s = np.arange(n_s)
+        s = s[rng.random(n_s) < .7]                                                     # broken by glare
+        ev.append(np.column_stack([s, f_a + k * (s - gate_a) + rng.normal(0, .4, len(s))]))
+        truth[boat] = (f_a, k)
+    ev.append(np.column_stack([np.arange(n_s), 1200 + .22 * np.arange(n_s)]))          # a streak, no caption
+    ev = np.vstack(ev)
+    caps = [(b, float(times[f_a]) + .6) for b, (f_a, _) in truth.items()]
+    found = bm.caption_passes(ev, caps, times, gate_a, n_s)
+    assert [b for b, _, _ in found] == [1, 2, 3]
+    for b, s, t in found:
+        f_a, k = truth[b]
+        coef = np.polyfit(s, t, 1)
+        assert abs(np.polyval(coef, gate_a) - f_a) < 1 and abs(coef[0] - k) < .01 and len(s) > .6 * n_s
+        assert t.max() < 1150
+
+
+def test_assign_by_caption_detect_drops_a_boat_whose_caption_showed_twice():
+    recs = [{"caption_boat": b, "reasons": []} for b in (1, 2, 2, 7)]
+    bm.assign_by_caption_detect(recs, [1, 2, 3, 4, 5, 6])
+    assert recs[0]["boat"] == 1 and not recs[0]["reasons"]
+    assert "boat" not in recs[1] and recs[1]["reasons"] == ["caption_claimed_twice"] == recs[2]["reasons"]
+    assert recs[3]["reasons"] == ["no_caption"]

@@ -272,6 +272,64 @@ def all_passes(ev, n_s, *, min_gap=30):
     return kept
 
 
+def caption_passes(ev, captions, times, gate_a, n_s, *, lag=(0.1, 1.1), slope=(0.17, 0.29), tol=2.0, grow=4):
+    """One curve per caption, looked for only where that caption says a boat came in (night glare elsewhere
+    is never searched). A caption appears lag seconds after its boat reached gate A, and a boat crosses the
+    path at slope frames per column: the line (slope, time at gate A) that holds the most path columns within
+    tol frames is the bow; it is then grown along a quadratic fit. Returns [(boat, s, t)] in caption order.
+    The usual checks (spread, cover, both gates) still decide whether the curve is measured."""
+    out = []
+    if not len(ev):
+        return out
+    s_all, t_all = ev[:, 0], ev[:, 1]
+    span = n_s * slope[1] + 10
+    for boat, t0 in captions:
+        f_lo = int(np.searchsorted(times, t0 - lag[1]))
+        f_hi = int(np.searchsorted(times, t0 - lag[0]))
+        m = (t_all >= f_lo - gate_a * slope[1] - 5) & (t_all <= f_hi + span)
+        s, t = s_all[m], t_all[m]
+        if len(s) < 10:
+            continue
+        best_n, best = 0, None
+        bins = np.arange(f_lo - 2, f_hi + 3, .5)
+        for k in np.arange(slope[0], slope[1] + 1e-9, .004):
+            b = t - k * (s - gate_a)            # frame at gate A if the point sits on this line
+            ok = (b >= f_lo - 2) & (b <= f_hi + 2)
+            if ok.sum() < 10:
+                continue
+            h, e = np.histogram(b[ok], bins)
+            for j in np.argsort(-h)[:3]:
+                c = (e[j] + e[j + 1]) / 2
+                n = len(np.unique(s[ok & (np.abs(b - c) <= tol)]))
+                if n > best_n:
+                    best_n, best = n, (k, c)
+        if best is None:
+            continue
+        k, c = best
+        idx = _nearest_per_column(s, np.abs(t - (c + k * (s - gate_a))), tol)
+        for _ in range(grow):
+            if len(idx) < 20:
+                break
+            coef = np.polyfit(s[idx], t[idx], 2)
+            new = _nearest_per_column(s, np.abs(t - np.polyval(coef, s)), tol)
+            if len(new) == len(idx) and (new == idx).all():
+                break
+            idx = new
+        if len(idx) >= 3:
+            out.append((int(boat), s[idx], t[idx]))
+    return out
+
+
+def _nearest_per_column(s, r, tol):
+    """Indices of the point nearest the line in each column, among points within tol."""
+    keep = {}
+    for i in np.nonzero(r <= tol)[0]:
+        j = keep.get(s[i])
+        if j is None or r[i] < r[j]:
+            keep[s[i]] = i
+    return np.array(sorted(keep.values()), dtype=int)
+
+
 def frame_time(times, f):
     return float(np.interp(f, np.arange(len(times)), times))
 
@@ -444,8 +502,16 @@ def measure_shot(capture_dir, name, cfg):
     else:
         jump, lateral = jump_map(band)
         ev = onsets(jump, cfg.get("threshold", JUMP_THRESHOLD))
-    found = all_passes(ev, shot["nS"])
     gate_a, gate_b = (g / cfg["step"] for g in cfg["gates"]["main"])
+    caption_boats = None
+    if cfg.get("detect") == "caption":
+        # night venues: glare breaks the bow curves; each caption says when one boat came in, so look only there
+        caps = caption_runs(times, plate)
+        cp = caption_passes(ev, caps, times, gate_a, shot["nS"], **(cfg.get("captionDetect") or {}))
+        caption_boats = [b for b, _, _ in cp]
+        found = [(s, t) for _, s, t in cp]
+    else:
+        found = all_passes(ev, shot["nS"])
     rgb = band_rgb(capture_dir, name) if cfg.get("colours") else None
     fine = land = shake = None
     if shot.get("nFineS"):
@@ -454,6 +520,8 @@ def measure_shot(capture_dir, name, cfg):
     out = []
     for i, (s, t) in enumerate(found):
         rec = {"order": i + 1, "points": int(len(s)), "reasons": []}
+        if caption_boats is not None:
+            rec["caption_boat"] = caption_boats[i]
         if rgb is not None:
             rec["hue"], rec["hue_pixels"] = pass_hue(rgb, band, s, t, tone_cfg=cfg.get("tone"))
         coef, keep, spread = _fit(s.astype(float), t, 2)
@@ -508,7 +576,7 @@ def measure_shot(capture_dir, name, cfg):
         out.append(rec)
     info = {"frames": len(times), "skipped": shot.get("skipped"), "sizes": shot.get("sizes"),
             "window": shot.get("window"), "curves": len(found)}
-    if cfg.get("assign") == "caption":
+    if cfg.get("assign") == "caption" or cfg.get("detect") == "caption":
         info["captions"] = caption_runs(times, plate)
     if shake:
         info["shake_sd"] = shake["shake_sd"]
@@ -597,6 +665,22 @@ def assign_by_caption(records, runs, boats, lag=(0.0, 2.0)):
                 records[i]["reasons"].append("caption_claimed_twice")
             continue
         records[idx[0]]["boat"] = boat
+    return records
+
+
+def assign_by_caption_detect(records, boats):
+    """Curves found from captions already carry their boat. A boat whose caption showed twice is not measured."""
+    count = {}
+    for r in records:
+        count[r.get("caption_boat")] = count.get(r.get("caption_boat"), 0) + 1
+    for r in records:
+        b = r.get("caption_boat")
+        if b not in boats:
+            r["reasons"].append("no_caption")
+        elif count[b] > 1:
+            r["reasons"].append("caption_claimed_twice")
+        else:
+            r["boat"] = b
     return records
 
 
