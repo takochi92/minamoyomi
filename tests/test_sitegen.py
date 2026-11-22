@@ -470,3 +470,17 @@ def test_venue_title_sitemap_and_racer_links(tmp_path):
     racer = next(v for k, v in files.items() if re.fullmatch(r'racer/\d{4}\.html', k) and v.count('racer-neighbors') == 2)
     assert '支部の選手' in racer and '期（同期）の選手' in racer
     assert '今日出走する選手' in files['racer/index.html'] or '勝率の高い選手' in files['racer/index.html']
+
+
+def test_venue_course_table_keeps_each_kimarite_whole(tmp_path):
+    """場ページ「コース別成績と決まり手」：決まり手は1項目ずつのかたまり（スマホで単語の途中で折らない）。"""
+    import re
+    s, files = _site(tmp_path)
+    files = files if isinstance(files, dict) else s.files
+    table = re.search(r'<table class="t-vc">.*?</table>', files['venue/edogawa.html'], re.S).group(0)
+    items = re.findall(r'<span class="kim">([^<]*)</span>', table)
+    assert items and all(re.fullmatch(r'\D+\d+%', x) for x in items)
+    assert '・' not in ''.join(re.findall(r'<td class="vc-kim">(.*?)</td>', table)).replace('<span class="kim">', '').replace('</span>', '')
+    assert '<span class="vc-cn"> 1コース</span>' in table
+    css = open('site/style.css', encoding='utf-8').read()
+    assert '.t-vc .kim{white-space:nowrap}' in css and '.t-vc .kim{display:block}' in css
