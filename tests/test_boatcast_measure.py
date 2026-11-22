@@ -324,3 +324,11 @@ def test_assign_by_caption_detect_drops_a_boat_whose_caption_showed_twice():
     assert recs[0]["boat"] == 1 and not recs[0]["reasons"]
     assert "boat" not in recs[1] and recs[1]["reasons"] == ["caption_claimed_twice"] == recs[2]["reasons"]
     assert recs[3]["reasons"] == ["no_caption"]
+
+
+def test_caption_colour_reads_a_flat_grey_one_only_where_the_profile_says():
+    box_one, water = (163, 163, 163), (151, 167, 163)     # 津 (11/15): the 1 box and the empty water
+    assert bm.caption_colour(box_one) is None and bm.caption_colour(water) is None
+    assert bm.caption_colour(box_one, (140, 6)) == 1 and bm.caption_colour(water, (140, 6)) is None
+    assert bm.caption_colour((105, 122, 148)) is None    # bluish water by day (芦屋) is not a 4
+    assert bm.caption_colour((30, 120, 220)) == 4

@@ -506,7 +506,7 @@ def measure_shot(capture_dir, name, cfg):
     caption_boats = None
     if cfg.get("detect") == "caption":
         # night venues: glare breaks the bow curves; each caption says when one boat came in, so look only there
-        caps = caption_runs(times, plate)
+        caps = caption_runs(times, plate, grey_one=(cfg.get("plate") or {}).get("greyOne"))
         cp = caption_passes(ev, caps, times, gate_a, shot["nS"], **(cfg.get("captionDetect") or {}))
         caption_boats = [b for b, _, _ in cp]
         found = [(s, t) for _, s, t in cp]
@@ -577,7 +577,7 @@ def measure_shot(capture_dir, name, cfg):
     info = {"frames": len(times), "skipped": shot.get("skipped"), "sizes": shot.get("sizes"),
             "window": shot.get("window"), "curves": len(found)}
     if cfg.get("assign") == "caption" or cfg.get("detect") == "caption":
-        info["captions"] = caption_runs(times, plate)
+        info["captions"] = caption_runs(times, plate, grey_one=(cfg.get("plate") or {}).get("greyOne"))
     if shake:
         info["shake_sd"] = shake["shake_sd"]
         info["landmarks"] = shake["edges"]
@@ -613,16 +613,21 @@ def assign_boats(records, boats, *, use_plate=False):
 CAPTION_HUES = {3: (330, 20), 4: (195, 250), 5: (40, 75), 6: (90, 160)}
 
 
-def caption_colour(c):
+def caption_colour(c, grey_one=None):
     """Boat number from the caption's number-box colour (median RGB): white 1, black 2, then by hue.
-    The caption is an overlay, so night glare on the water does not touch it. None when no box shows."""
+    The caption is an overlay, so night glare on the water does not touch it. None when no box shows.
+    grey_one (min level, max spread): a venue whose 1 box shows as a flat grey (津: about 163,163,163,
+    while the empty water there is a tinted grey, 151,167,163) reads that grey as 1."""
     r, g, b = (float(x) for x in c)
     mx, mn = max(r, g, b), min(r, g, b)
     if mn > 200:
         return 1
+    if grey_one and mn >= grey_one[0] and mx - mn <= grey_one[1]:
+        return 1
     if mx < 120 and mx - mn < 30:
         return 2
-    if mx - mn < 40:
+    if mx - mn < 60:
+        # a coloured box is strongly coloured (100+); bluish water by day is about 40 and must not read as a 4
         return None
     h = np.degrees(np.arctan2(np.sqrt(3) * (g - b), 2 * r - g - b)) % 360
     for boat, (lo, hi) in CAPTION_HUES.items():
@@ -631,11 +636,11 @@ def caption_colour(c):
     return None
 
 
-def caption_runs(times, plate, min_seconds=.8):
+def caption_runs(times, plate, min_seconds=.8, grey_one=None):
     """(boat, start time) for each caption shown: a run of one steady box colour lasting min_seconds."""
     if plate is None or not len(plate) or plate.shape[1] == 0:
         return []
-    lab = [caption_colour(np.median(plate[i], 0)) for i in range(len(times))]
+    lab = [caption_colour(np.median(plate[i], 0), grey_one) for i in range(len(times))]
     runs, k = [], 0
     while k < len(lab):
         j = k
