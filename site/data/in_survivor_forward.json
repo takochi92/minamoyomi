@@ -15,13 +15,13 @@
   "baseline_on_same_races": {
     "strategy": "existing_ai_main_sub_100_v1",
     "simulation": true,
-    "races": 269,
+    "races": 273,
     "hits": 74,
-    "invested": 137300,
+    "invested": 138700,
     "refund": 1700,
     "payout": 102870.0,
-    "gross_roi": 0.7616168973051711,
-    "net_roi": 0.7586283185840708,
+    "gross_roi": 0.7539293439077145,
+    "net_roi": 0.7508759124087592,
     "excluded_reason_counts": {},
     "settled_details": [
       {
@@ -2974,8 +2974,52 @@
       },
       {
         "date": "20261121",
+        "jcd": "01",
+        "rno": 9,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 300,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "07",
+        "rno": 10,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 500,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
         "jcd": "14",
         "rno": 5,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 300,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "17",
+        "rno": 9,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 300,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "17",
+        "rno": 11,
         "model_version": "04e7251078043050",
         "status": "settled",
         "invested": 300,
@@ -2988,13 +3032,13 @@
       {
         "model_version": "04e7251078043050",
         "month": "202611",
-        "races": 135,
+        "races": 139,
         "hits": 43,
-        "invested": 69600,
+        "invested": 71000,
         "refund": 300,
         "payout": 68200.0,
-        "gross_roi": 0.9841954022988506,
-        "net_roi": 0.9841269841269841
+        "gross_roi": 0.9647887323943662,
+        "net_roi": 0.9646393210749646
       },
       {
         "model_version": "da32adf1f120889c",
@@ -3023,12 +3067,12 @@
   "shadow": {
     "strategy": "in_survivor_value_v1",
     "simulation": true,
-    "races": 269,
+    "races": 273,
     "hits": 0,
-    "invested": 29500,
+    "invested": 29900,
     "refund": 300,
     "payout": 0,
-    "gross_roi": 0.010169491525423728,
+    "gross_roi": 0.010033444816053512,
     "net_roi": 0.0,
     "excluded_reason_counts": {},
     "settled_details": [
@@ -5982,8 +6026,52 @@
       },
       {
         "date": "20261121",
+        "jcd": "01",
+        "rno": 9,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "07",
+        "rno": 10,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
         "jcd": "14",
         "rno": 5,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "17",
+        "rno": 9,
+        "model_version": "04e7251078043050",
+        "status": "settled",
+        "invested": 100,
+        "refund": 0,
+        "payout": 0,
+        "hit": false
+      },
+      {
+        "date": "20261121",
+        "jcd": "17",
+        "rno": 11,
         "model_version": "04e7251078043050",
         "status": "settled",
         "invested": 100,
@@ -5996,12 +6084,12 @@
       {
         "model_version": "04e7251078043050",
         "month": "202611",
-        "races": 135,
+        "races": 139,
         "hits": 0,
-        "invested": 14800,
+        "invested": 15200,
         "refund": 100,
         "payout": 0,
-        "gross_roi": 0.006756756756756757,
+        "gross_roi": 0.006578947368421052,
         "net_roi": 0.0
       },
       {
@@ -6029,17 +6117,17 @@
     ]
   },
   "excluded_reason_counts": {
-    "fixed_tickets_mismatch": 2648,
-    "unverified_inputs": 2385,
-    "no_tickets": 2385,
-    "missing_or_changed_protocol": 2648,
-    "no_research_tickets": 8220,
-    "missing_or_invalid_timestamps": 2519,
-    "missing_exhibition_model_decision": 2385,
-    "entry_mismatch": 2648,
-    "missing_fixed_decision": 2385,
-    "fingerprint_mismatch": 2648,
-    "incomplete_odds": 317
+    "missing_exhibition_model_decision": 2236,
+    "no_research_tickets": 8216,
+    "unverified_inputs": 2236,
+    "missing_or_invalid_timestamps": 2370,
+    "missing_or_changed_protocol": 2499,
+    "missing_fixed_decision": 2236,
+    "entry_mismatch": 2499,
+    "fixed_tickets_mismatch": 2499,
+    "no_tickets": 2236,
+    "fingerprint_mismatch": 2499,
+    "incomplete_odds": 311
   },
   "limits": [
     "券は締切前のオッズ・予想・選手のコース成績から固定し、後から追加しない",
