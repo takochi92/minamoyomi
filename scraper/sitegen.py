@@ -2230,8 +2230,9 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
                 a, n = vc[c], self.S.nc[c]
                 if not a[0]:
                     continue
-                kim = "・".join(f"{k}{a[4 + i] / a[1] * 100:.0f}%" for i, k in enumerate(KIM) if a[1] and a[4 + i] / a[1] >= 0.05)
-                rows.append(f'<tr><td>{bt(c)} {c}コース</td><td class="r num"><b>{pct(a[1] / a[0], 1)}</b></td><td class="r num sub">{pct(n[1] / n[0], 1)}</td><td class="r num">{pct((a[1] + a[2]) / a[0], 1)}</td><td class="r num">{pct((a[1] + a[2] + a[3]) / a[0], 1)}</td><td>{e(kim)}</td></tr>')
+                # 決まり手は1項目ずつ折らない（スマホでは項目ごとに縦に積む。区切りの「・」は CSS で付ける）
+                kim = "".join(f'<span class="kim">{k}{a[4 + i] / a[1] * 100:.0f}%</span>' for i, k in enumerate(KIM) if a[1] and a[4 + i] / a[1] >= 0.05)
+                rows.append(f'<tr><td>{bt(c)}<span class="vc-cn"> {c}コース</span></td><td class="r num"><b>{pct(a[1] / a[0], 1)}</b></td><td class="r num sub">{pct(n[1] / n[0], 1)}</td><td class="r num">{pct((a[1] + a[2]) / a[0], 1)}</td><td class="r num">{pct((a[1] + a[2] + a[3]) / a[0], 1)}</td><td class="vc-kim">{kim}</td></tr>')
             mx = max(c["win"] for c in v["courses"])
             bars = "".join(f'<div><small>{c["win"]:.1f}%</small><i style="height:{c["win"] / mx * 76:.0f}px"></i>{bt(c["course"])}</div>' for c in v["courses"])
             c1 = vc[1][1] / vc[1][0] if vc[1][0] else None
