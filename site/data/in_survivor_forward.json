@@ -6339,14 +6339,14 @@
   "excluded_reason_counts": {
     "missing_exhibition_model_decision": 2178,
     "missing_or_changed_protocol": 2441,
-    "entry_mismatch": 2441,
-    "missing_fixed_decision": 2178,
-    "fingerprint_mismatch": 2441,
-    "fixed_tickets_mismatch": 2441,
-    "no_tickets": 2178,
     "missing_or_invalid_timestamps": 2312,
-    "unverified_inputs": 2178,
+    "fixed_tickets_mismatch": 2441,
+    "entry_mismatch": 2441,
     "no_research_tickets": 8542,
+    "unverified_inputs": 2178,
+    "fingerprint_mismatch": 2441,
+    "missing_fixed_decision": 2178,
+    "no_tickets": 2178,
     "incomplete_odds": 188
   },
   "limits": [
