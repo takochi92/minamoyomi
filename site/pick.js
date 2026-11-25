@@ -55,7 +55,7 @@
     const mk = chosen.reduce((a, x) => a + 0.75 / x.o, 0);
     const grid=G.render(odds,{first,selected:sel,selectable:true});
     const rows = chosen.map((x, i) => `<tr><td><span class="combo">${x.c.split("-").map(bt).join('<span class="sep">-</span>')}</span></td><td class="r num" data-label="オッズ">${f1(x.o)}倍</td><td class="r num" data-label="配分">${pending?'—':yen(al[i])}</td><td class="r num" data-label="当たれば">${pending?'—':yen(al[i] * x.o)}</td></tr>`).join("");
-    box.innerHTML = `<h2>3連単オッズ <small>${at ? at + "時点" : ""}・タップで買い目を選択</small></h2>
+    box.innerHTML = `<h2>3連単オッズ <small>${R.odds_final ? "確定" : at ? at + "時点" : ""}・タップで買い目を選択</small></h2>
       <details class="pk-selection"${selectionOpen?' open':''}><summary>選択中 ${sel.size}点 · ${pending?'未取得あり':comp?'合成 '+comp.toFixed(2)+'倍':'配分を見る'}</summary>
       <div class="tiles"><div class="tile ${comp && comp < 5 ? "warn" : ""}"><small>合成オッズ</small><b>${comp ? comp.toFixed(2) + "倍" : "-"}</b></div>
       <div class="tile"><small>点数</small><b>${sel.size}点</b></div><div class="tile"><small>的中の目安（オッズから）</small><b>${chosen.length&&!pending ? Math.round(mk * 100) + "%" : "-"}</b></div>
@@ -73,6 +73,6 @@
     if(focus)box.querySelector(focus)?.focus({preventScroll:true});
   }
   // ライブオッズが届いたら差し替え
-  window.addEventListener("liveodds", (e) => { odds = e.detail.o3; at = e.detail.t; render(); });
+  window.addEventListener("liveodds", (e) => { if (R.odds_final) return; odds = e.detail.o3; at = e.detail.t; render(); });
   render();
 })();

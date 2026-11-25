@@ -856,11 +856,19 @@ class Site:
         return (f'<details class="alt-bets"><summary><b>ほかの買い方</b> <span class="sub">{n}つ・参考。全部足すと点数が多くなるので、買うなら本線・押さえか、この中のどれか1つに</span></summary>'
                 f'<div style="display:grid;gap:12px;margin-top:10px">{inner}</div></details>')
 
+    @staticmethod
+    def shown_odds(race):
+        """表示用の3連単オッズ。終わったレースは確定オッズ（odds_final）、それ以外は締切前（odds_pre）。買い目の計算には使わない"""
+        fin = race.get("odds_final") if (race.get("result") or {}).get("finished") else None
+        if fin:
+            return {"v": fin, "at": "", "final": True}
+        return race.get("odds_pre") or {}
+
     def ana_block(self, race, p):
         a = p.get("ana_pick")
         if not a:
             return ""
-        o = (race.get("odds_pre") or {}).get("v")
+        o = self.shown_odds(race).get("v")
         def od(c):
             if not o:
                 return ""
@@ -870,7 +878,7 @@ class Site:
         hit = ""
         if res:
             h = res["trifecta"] in a["bets"]
-            hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}</p>'
+            hit = f'<p><span class="pill {"hit" if h else "miss"}">{"的中" if h else "不的中"}</span> 結果 {combo(res["trifecta"])} {yen(res["trifecta_payout"])}{"・確定オッズ" if self.shown_odds(race).get("final") else ""}</p>'
         cells = "".join(f'<span class="bet">{combo(c)}{od(c)}</span>' for c in a["bets"])
         return f"""<section class="panel ana"><h2><span class="chip an">高回収狙い</span> {bt(a["frame"])} {e(a["name"])}の頭 <small>検証中</small></h2>
 <p>5コースの{e(a["name"])}は展示タイムが4コースより<b>{a["gap"]:.2f}秒</b>速いという条件に該当します。伸びや攻め方はタイムだけでは断定できません。頭固定・相手はAIの3着内上位3艇で{len(a["bets"])}点。</p>
@@ -1139,7 +1147,7 @@ class Site:
         comments = "".join(f"<li>{e(c)}</li>" for c in p.get("comments", []))
         ai_rows, alt_list = "", []
         if p.get("bets"):
-            o = race.get("odds_pre") or {}
+            o = self.shown_odds(race)
 
             def odds_of(c):
                 if not o.get("v"):
@@ -1160,7 +1168,7 @@ class Site:
             hitp = ""
             if res:
                 hitp = f'<span class="pill {"hit" if race.get("hit") else "miss"}">{"的中" if race.get("hit") else "不的中"}</span> '
-            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(display_confidence(p.get('confidence', {}).get('label', '')))}・{e(p.get('stage', ''))}予想{'・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
+            ai_rows = f"""<section class="slip"><div class="slip-h"><b>{hitp}予想（本線・押さえ）</b><span>{e(display_confidence(p.get('confidence', {}).get('label', '')))}・{e(p.get('stage', ''))}予想{'・確定オッズ' if o.get('final') else '・オッズ ' + e(o.get('at', '')) + '時点' if o.get('at') else ''}</span></div>
 <div class="slip-b">{self.slip_body(p, cells)}</div></section>"""
             alt_list = self.alt_bets(p, cells)
             selected = race.get('primary_slip')
@@ -1175,7 +1183,7 @@ class Site:
                 else:
                     content = self.slip_body(p, cells)
                 label = '確定' if selected.get('final') else '締切前は更新あり'
-                ai_rows = f'<section class="slip primary-{"ana" if ana else "standard"}"><div class="slip-h"><b>{hitp}{heading}</b><span>{len(selected["tickets"])}点・{label}</span></div><div class="slip-b">{content}</div></section>'
+                ai_rows = f'<section class="slip primary-{"ana" if ana else "standard"}"><div class="slip-h"><b>{hitp}{heading}</b><span>{len(selected["tickets"])}点・{label}{"・確定オッズ" if o.get("final") else ""}</span></div><div class="slip-b">{content}</div></section>'
                 ai_rows += f'<p class="sub" style="margin:0">このレースの結果と検証は、夜にXへ投稿します。 {X_PROFILE_LINK}</p>'
                 alt_list = []
         inp = (p.get("course_stats") or {}).get("in")
@@ -1245,7 +1253,7 @@ bs.forEach(function(b){{b.onclick=function(){{sh(b.dataset.t)}}}});var h=(locati
 <div class="ad-slot" data-slot="race_side"></div></aside></div>"""
         live = {"date": d, "jcd": jcd, "rno": rno, "deadline": race.get("deadline", ""), "historical": d < self.idx.get('date', d),
                 "bets": race['primary_slip']['tickets'] if race.get('primary_slip') else ([b["combo"] for b in (race.get("reco") or {}).get("bets", [])] if (race.get("reco") or {}).get("verdict") == "自信あり" else []), "targets": self.targets_in(jcd, rno) if d == self.idx.get("date") else [],
-                "odds": (race.get("odds_pre") or {}).get("v"), "odds_at": (race.get("odds_pre") or {}).get("at", ""),
+                "odds": self.shown_odds(race).get("v"), "odds_at": self.shown_odds(race).get("at", ""), "odds_final": bool(self.shown_odds(race).get("final")),
                 "p3": (race.get("prediction") or {}).get("p3")}
         script = f'<script>window.__RACE__={json.dumps(live)};</script><script src="{page.asset("pick.js")}"></script><script src="{page.asset("live.js")}"></script>'
         # 小さい字の説明（根拠・検証の数字）は「くわしく」に畳む

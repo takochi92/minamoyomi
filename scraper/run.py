@@ -355,8 +355,8 @@ def process_race(f: Fetcher, date: str, v: dict, r: dict, now: datetime) -> dict
         res = parse.parse_result(f.result(jcd, rno, date))
         race["result_tries"] = race.get("result_tries", 0) + 1
         race["result"] = res
-        if res.get("finished") and race.get("reco") and "odds_final" not in race:
-            # 確定オッズ（締切前に見ていたオッズとの差を表示するため）
+        if res.get("finished") and not res.get("cancelled") and "odds_final" not in race:
+            # 確定オッズ（終わったレースのページは確定オッズで表示する。1レース1回だけ取る）
             try:
                 ov = O.parse_odds3t(f.odds3t(jcd, rno, date))
                 if ov:
