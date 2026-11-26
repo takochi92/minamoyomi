@@ -152,6 +152,7 @@ def test_run_cycle(tmp_path, monkeypatch):
     race = json.loads((tmp_path / "races/20260925/0101.json").read_text())
     assert race["result"]["trifecta"] == "1-5-4" and race["hit"] is not None
     assert race["prediction"]["made_at"] == "15:14"
+    assert race["odds_final"][0] == 8.0 and race["odds_pre"]["v"][0] == 8.0
     if race["value"]["bets"]:
         assert "value_hit" in race and race["v_invest"] == 100 * len(race["value"]["bets"])
     stats = json.loads((tmp_path / "stats.json").read_text())
@@ -194,3 +195,23 @@ def test_motor_adj_current():
     later = [race("20260105", r, [6, 5, 4, 3, 2, 1], m2=40.0) for r in range(1, 13)]     # 6号機がずっと1着
     cur = motoradj.current(old + renew + later)
     assert cur["01"]["6"] > 0 > cur["01"]["1"]
+
+
+def test_final_odds_fetched_once_for_every_finished_race(tmp_path, monkeypatch):
+    monkeypatch.setattr(run, "DATA", tmp_path)
+    fake = FakeFetcher()
+    monkeypatch.setattr(run, "Fetcher", lambda max_requests: fake)
+    simulate_run(monkeypatch, "2026-09-25T15:14")
+    path = tmp_path / "races/20260925/0101.json"
+    race = json.loads(path.read_text())
+    race.pop("reco", None)      # 買い目（reco）が無いレースでも確定オッズを取る
+    path.write_text(json.dumps(race))
+    calls = []
+    real = fake.odds3t
+    fake.odds3t = lambda *a: calls.append(a) or real(*a)
+    simulate_run(monkeypatch, "2026-09-25T15:41")
+    race = json.loads(path.read_text())
+    assert race["result"]["finished"] and race["odds_final"][0] == 8.0 and "reco" not in race
+    n = len([c for c in calls if c[1] == 1])
+    simulate_run(monkeypatch, "2026-09-25T15:50")
+    assert len([c for c in calls if c[1] == 1]) == n    # 取ったら2回目は取らない

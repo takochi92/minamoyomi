@@ -470,3 +470,37 @@ def test_venue_title_sitemap_and_racer_links(tmp_path):
     racer = next(v for k, v in files.items() if re.fullmatch(r'racer/\d{4}\.html', k) and v.count('racer-neighbors') == 2)
     assert '支部の選手' in racer and '期（同期）の選手' in racer
     assert '今日出走する選手' in files['racer/index.html'] or '勝率の高い選手' in files['racer/index.html']
+
+
+def test_race_page_shows_final_odds_after_result(tmp_path):
+    s, files = _site(tmp_path)
+    race = json.loads((tmp_path / 'data/races/20260925/0112.json').read_text(encoding='utf-8'))
+    main = race['prediction']['bets']['main'][0]['combo']
+    j = sitegen.COMBO_LIST.index(main)
+    pre, fin = [11.1] * 120, [99.9] * 120
+    race['odds_pre'] = {'at': '20:30', 'v': pre, 'ex': {}}
+
+    def live(html):
+        return json.loads(re.search(r'window.__RACE__=(\{.*?\});</script>', html).group(1))
+
+    # 締切前：今までどおり締切前オッズ（取得時刻つき）
+    s.race_page('20260925', '01', dict(race))
+    html = s.files['race/20260925/kiryu-12.html']
+    assert '11.1倍' in html and 'オッズ 20:30時点' in html and '・確定オッズ' not in html
+    assert live(html)['odds'][j] == 11.1 and live(html)['odds_final'] is False
+    # 確定オッズがあっても、結果が出るまでは締切前オッズのまま
+    s.race_page('20260925', '01', dict(race, odds_final=fin))
+    assert 'オッズ 20:30時点' in s.files['race/20260925/kiryu-12.html']
+    # 終わったレース：確定オッズで表示し、「確定」と分かる表記を付ける
+    done = dict(race, odds_final=fin, result=parse.parse_result(fx.RESULT))
+    s.race_page('20260925', '01', done)
+    html = s.files['race/20260925/kiryu-12.html']
+    assert '99.9倍' in html and '・確定オッズ' in html and 'オッズ 20:30時点' not in html
+    assert live(html)['odds'][j] == 99.9 and live(html)['odds_final'] is True
+    # 採用予想（primary_slip）の見出しにも付く
+    s.race_page('20260925', '01', dict(done, primary_slip={'kind': 'standard', 'final': True, 'tickets': [main]}))
+    assert '1点・確定・確定オッズ' in s.files['race/20260925/kiryu-12.html']
+    # 表示だけ。保存している締切前オッズ（買い目の計算の入力）は変えない
+    assert done['odds_pre']['v'] == pre
+    pick = (Path(__file__).resolve().parent.parent / 'site/pick.js').read_text(encoding='utf-8')
+    assert 'R.odds_final ? "確定"' in pick and 'if (R.odds_final) return;' in pick
