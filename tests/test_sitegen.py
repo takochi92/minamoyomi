@@ -504,3 +504,12 @@ def test_race_page_shows_final_odds_after_result(tmp_path):
     assert done['odds_pre']['v'] == pre
     pick = (Path(__file__).resolve().parent.parent / 'site/pick.js').read_text(encoding='utf-8')
     assert 'R.odds_final ? "確定"' in pick and 'if (R.odds_final) return;' in pick
+
+
+def test_result_table_column_never_grows_past_panel_on_mobile():
+    # 結果表と払戻は同じ1列に積む。列は panel の幅で止め（minmax(0,1fr)）、3連単の「○番人気」は次の行に回す
+    css = (Path(__file__).resolve().parent.parent / 'site/style.css').read_text(encoding='utf-8')
+    mobile = re.search(r'@media \(max-width:720px\)\{\.rres\{([^}]*)\}(.*?)\}\n', css, re.S)
+    assert mobile and 'grid-template-columns:minmax(0,1fr)' in mobile.group(1)
+    assert '.rpay>span:last-child{grid-column:1/-1' in mobile.group(2)
+    assert '.rpay>span:last-child:empty{display:none}' in mobile.group(2)
